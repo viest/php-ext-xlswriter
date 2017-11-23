@@ -30,7 +30,7 @@ extern zend_module_entry vtiful_module_entry;
 #include "TSRM.h"
 #endif
 
-static int le_vtiful;
+extern int le_vtiful;
 
 #define VTIFUL_STARTUP_MODULE(module) ZEND_MODULE_STARTUP_N(vtiful_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define VTIFUL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(vtiful_##module)

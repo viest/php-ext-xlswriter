@@ -22,6 +22,8 @@
 #include "kernel/excel.h"
 #include "kernel/exception.h"
 
+int le_vtiful;
+
 PHP_MINIT_FUNCTION(vtiful)
 {
 	/* If you have INI entries, uncomment these lines

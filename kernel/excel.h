@@ -1,9 +1,10 @@
 #ifndef VTIFUL_EXCEL_H
 #define VTIFUL_EXCEL_H
 
+#define V_EXCEL_HEADER "header"
+#define V_EXCEL_HANDLE "handle"
 #define V_EXCEL_FIL "fileName"
 #define V_EXCEL_COF "config"
-#define V_EXCEL_HEADER "header"
 #define V_EXCEL_DATA "data"
 #define V_EXCEL_PAT "path"
 

@@ -95,16 +95,15 @@ PHP_METHOD(vtiful_excel, fileName)
     ZVAL_STR(&tmp_file_name, file_name);
     concat_function(&file_path, tmp_path, &tmp_file_name);
 
-    res = malloc(sizeof(excel_resource_t));
+    res = emalloc(sizeof(excel_resource_t));
     res->workbook  = workbook_new(ZSTR_VAL(zval_get_string(&file_path)));
     res->worksheet = workbook_add_worksheet(res->workbook, NULL);
+    zval_ptr_dtor(&file_path);
 
     ZVAL_RES(&handle, zend_register_resource(res, le_vtiful));
 
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_FIL), &file_path);
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
-
-    zval_ptr_dtor(&file_path);
     zval_ptr_dtor(&file_path);
 }
 /* }}} */

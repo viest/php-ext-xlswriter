@@ -33,7 +33,7 @@ PHP_MINIT_FUNCTION(vtiful)
     VTIFUL_STARTUP_MODULE(vtiful_exception);
 	VTIFUL_STARTUP_MODULE(excel);
 
-	le_vtiful = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, "vtiful", module_number);
+	le_vtiful = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 
 	return SUCCESS;
 }
@@ -94,21 +94,12 @@ PHP_MINFO_FUNCTION(vtiful)
  *
  * List destructor for FSS handles
  */
-static void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC)
-{
-//	int i;
-//	fss_resource_t * res = (fss_resource_t *)rsrc->ptr;
-//	/* Destroy the replace strings */
-//	for (i = 0; i < res->replace_size; i++) {
-//		if (res->replace[i]) {
-//			zval_ptr_dtor(res->replace[i]);
-//		}
-//	}
-//	/* Destroy the kwset structure */
-//	kwsfree(res->set);
+//static void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC)
+//{
+//	excel_resource_t * res = (excel_resource_t *)rsrc->ptr;
 //	/* Destroy the resource structure itself */
 //	efree(res);
-}
+//}
 /* }}} */
 
 

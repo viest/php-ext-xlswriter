@@ -10,23 +10,10 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef VTIFUL_EXCEL_H
-#define VTIFUL_EXCEL_H
+#ifndef VTIFUL_EXCEL_WRITE_H
+#define VTIFUL_EXCEL_WRITE_H
 
-#include "xlsxwriter.h"
-
-typedef struct {
-    lxw_workbook *workbook;
-    lxw_worksheet *worksheet;
-} excel_resource_t;
-
-#define V_EXCEL_HANDLE "handle"
-#define V_EXCEL_FIL "fileName"
-#define V_EXCEL_COF "config"
-#define V_EXCEL_PAT "path"
-
-extern zend_class_entry *vtiful_excel_ce;
-
-VTIFUL_STARTUP_FUNCTION(excel);
+void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
+lxw_error workbook_file(excel_resource_t *self, zval *handle);
 
 #endif

@@ -1,4 +1,4 @@
-PHP-Excel-Writer
+![php-excel](https://github.com/viest/php-excel-writer/blob/master/resource/logo.png)
 
 #### 1、Install the dependencies
 
@@ -9,8 +9,7 @@ git clone https://github.com/jmcnamara/libxlsxwriter.git
 
 cd libxlsxwriter
 
-make
-sudo make install
+make && sudo make install
 ```
 
 #### 2、Get the source code via Git
@@ -24,36 +23,12 @@ phpize
 
 ./configure
 
-make
-
-make install
+make && make install
 ```
 
-#### 3、Examples
+#### 3、Documents
 
-```php
-try {
-    $config = [
-        'path' => '/vagrant/'
-    ];
-
-    $excel = new \Vtiful\Kernel\Excel($config);
-
-    for($a = 0; $a < 200000; ++$a) {
-        $data[$a] = ['viest', 20];
-    }
-
-    $excel->fileName("test.xlsx")
-        ->header(['name', 'age'])
-        ->data([
-            ['viest', 20]
-        ])
-        ->output();
-
-} catch (\Exception $exception) {
-    //....
-}
-```
+[Wiki](https://github.com/viest/php-excel-writer/wiki)
 
 #### License
 

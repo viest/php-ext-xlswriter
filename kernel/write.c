@@ -33,7 +33,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t
             worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), NULL);
             break;
         case IS_DOUBLE:
-            worksheet_write_string(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
+            worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
             break;
     }
 }

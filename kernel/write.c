@@ -122,7 +122,10 @@ workbook_file(excel_resource_t *self, zval *handle)
     mem_error:
     if (handle) {
         zend_list_close(Z_RES_P(handle));
+        lxw_packager_free(packager);
+        lxw_workbook_free(self->workbook);
     }
+
     return error;
 }
 

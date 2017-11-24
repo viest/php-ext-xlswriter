@@ -17,7 +17,7 @@ if test "$PHP_VTIFUL" != "no"; then
             [
                 PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, VTIFUL_SHARED_LIBADD)
                 AC_DEFINE([VTIFUL_XLSX_WRITER], [1], [Have libxlsxwriter support])
-                vtiful_sources="$vtiful_sources kernel/excel.c "
+                vtiful_sources="$vtiful_sources kernel/excel.c kernel/write.c"
             ],[
                 AC_MSG_ERROR([Wrong libxlsxwriter version or library not found])
             ],[
@@ -32,6 +32,10 @@ if test "$PHP_VTIFUL" != "no"; then
 
     if test -z "$XLSXWRITER_DIR"; then
         AC_MSG_ERROR([libxlsxwriter library not found])
+    fi
+
+    if test -z "$PHP_DEBUG"; then
+        AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no] )
     fi
 
     PHP_SUBST(VTIFUL_SHARED_LIBADD)

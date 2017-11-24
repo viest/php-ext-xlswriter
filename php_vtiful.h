@@ -30,13 +30,15 @@ extern zend_module_entry vtiful_module_entry;
 #include "TSRM.h"
 #endif
 
-static int le_vtiful;
+#define VTIFUL_RESOURCE_NAME "vtiful"
+
+extern int le_vtiful;
 
 #define VTIFUL_STARTUP_MODULE(module) ZEND_MODULE_STARTUP_N(vtiful_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define VTIFUL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(vtiful_##module)
 #define VTIFUL_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(vtiful, v)
 
-static void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
+void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
 
 #if defined(ZTS) && defined(COMPILE_DL_VTIFUL)
 ZEND_TSRMLS_CACHE_EXTERN();

@@ -24,12 +24,10 @@
 
 int le_vtiful;
 
+/* {{{ PHP_MINIT_FUNCTION
+ */
 PHP_MINIT_FUNCTION(vtiful)
 {
-	/* If you have INI entries, uncomment these lines
-	REGISTER_INI_ENTRIES();
-	*/
-
     VTIFUL_STARTUP_MODULE(vtiful_exception);
 	VTIFUL_STARTUP_MODULE(excel);
 
@@ -44,15 +42,10 @@ PHP_MINIT_FUNCTION(vtiful)
  */
 PHP_MSHUTDOWN_FUNCTION(vtiful)
 {
-	/* uncomment this line if you have INI entries
-	UNREGISTER_INI_ENTRIES();
-	*/
 	return SUCCESS;
 }
 /* }}} */
 
-
-/* Remove if there's nothing to do at request start */
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(vtiful)
@@ -64,8 +57,6 @@ PHP_RINIT_FUNCTION(vtiful)
 }
 /* }}} */
 
-
-/* Remove if there's nothing to do at request end */
 /* {{{ PHP_RSHUTDOWN_FUNCTION
  */
 PHP_RSHUTDOWN_FUNCTION(vtiful)
@@ -81,27 +72,12 @@ PHP_MINFO_FUNCTION(vtiful)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "vtiful support", "enabled");
+#if defined(PHP_VTIFUL_VERSION)
+    php_info_print_table_row(2, "Version", PHP_VTIFUL_VERSION);
+#endif
 	php_info_print_table_end();
-
-	/* Remove comments if you have entries in php.ini
-	DISPLAY_INI_ENTRIES();
-	*/
 }
 /* }}} */
-
-
-/* {{{ _php_fss_close
- *
- * List destructor for FSS handles
- */
-//static void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC)
-//{
-//	excel_resource_t * res = (excel_resource_t *)rsrc->ptr;
-//	/* Destroy the resource structure itself */
-//	efree(res);
-//}
-/* }}} */
-
 
 /* {{{ vtiful_functions[]
  *

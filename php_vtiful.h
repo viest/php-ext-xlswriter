@@ -16,7 +16,7 @@
 extern zend_module_entry vtiful_module_entry;
 #define phpext_vtiful_ptr &vtiful_module_entry
 
-#define PHP_VTIFUL_VERSION "0.1.0"
+#define PHP_VTIFUL_VERSION "1.0.0"
 
 #ifdef PHP_WIN32
 #	define PHP_VTIFUL_API __declspec(dllexport)

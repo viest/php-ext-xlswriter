@@ -39,6 +39,22 @@ void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t
 }
 
 /*
+ * Write the image to the file
+ */
+void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res)
+{
+    worksheet_insert_image(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)));
+}
+
+/*
+ * Write the image to the file
+ */
+void formula_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res)
+{
+    worksheet_write_formula(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

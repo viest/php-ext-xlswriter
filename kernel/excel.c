@@ -43,6 +43,24 @@ ZEND_BEGIN_ARG_INFO_EX(excel_data_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(excel_insert_text_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(excel_insert_image_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, image)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(excel_insert_formula_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, formula)
+ZEND_END_ARG_INFO()
+
 /* {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
 PHP_METHOD(vtiful_excel, __construct)
@@ -185,8 +203,9 @@ PHP_METHOD(vtiful_excel, output)
 
     workbook_file(res, handle);
 
-    ZVAL_NULL(&null_handle);
+    efree(res);
 
+    ZVAL_NULL(&null_handle);
     zend_update_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), &null_handle);
 }
 /* }}} */
@@ -204,6 +223,93 @@ PHP_METHOD(vtiful_excel, getHandle)
 }
 /* }}} */
 
+/* {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data)
+ */
+PHP_METHOD(vtiful_excel, insertText)
+{
+    zval rv, res_handle;
+    zval *attr_handle, *data;
+    zend_long *row, *column;
+    excel_resource_t *res;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(data)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
+    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
+    }
+
+    type_writer(data, row, column, res);
+
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
+/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+ */
+PHP_METHOD(vtiful_excel, insertImage)
+{
+    zval rv, res_handle;
+    zval *attr_handle, *image;
+    zend_long *row, *column;
+    excel_resource_t *res;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(image)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
+    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
+    }
+
+    image_writer(image, row, column, res);
+
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
+/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+ */
+PHP_METHOD(vtiful_excel, insertFormula)
+{
+    zval rv, res_handle;
+    zval *attr_handle, *formula;
+    zend_long *row, *column;
+    excel_resource_t *res;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(formula)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
+    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
+    }
+
+    formula_writer(formula, row, column, res);
+
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
 zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, __construct, excel_construct_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_excel, fileName,    excel_file_name_arginfo, ZEND_ACC_PUBLIC)
@@ -211,6 +317,9 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, data,        excel_data_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, output,      NULL,                    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, getHandle,   NULL,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, insertText,  excel_insert_text_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, insertImage, excel_insert_image_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 

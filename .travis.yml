@@ -1,0 +1,29 @@
+language: php
+
+compiler:
+  - gcc
+  - clang
+
+os:
+  - linux
+
+php:
+  - 7.0
+  - 7.1
+
+notifications:
+  email: dev@service.viest.me
+
+before_script:
+  - sudo apt-get install zlib1g-dev -y
+  - git clone https://github.com/jmcnamara/libxlsxwriter.git
+  - cd libxlsxwriter
+  - make && sudo make install
+  - ./travis/compile.sh
+
+branches:
+  only:
+    - dev
+
+script:
+  - exit 0

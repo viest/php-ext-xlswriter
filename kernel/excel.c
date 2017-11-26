@@ -317,8 +317,8 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, data,        excel_data_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, output,      NULL,                    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, getHandle,   NULL,                    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, insertText,  excel_insert_text_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, insertImage, excel_insert_image_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, insertText,    excel_insert_text_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, insertImage,   excel_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };

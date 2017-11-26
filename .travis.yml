@@ -17,13 +17,13 @@ notifications:
 before_script:
   - sudo apt-get install zlib1g-dev -y
   - git clone https://github.com/jmcnamara/libxlsxwriter.git
-  - cd libxlsxwriter
-  - make && sudo make install
-  - ./travis/compile.sh
+  - make -C ./libxlsxwriter && sudo make -C ./libxlsxwriter install
+  - phpize && ./configure && make clean && make
 
 branches:
   only:
-    - dev
+    - master
+    _ dev
 
 script:
   - exit 0

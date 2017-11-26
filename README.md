@@ -1,3 +1,1 @@
-PHP-Excel-Writer
-
-[![Build Status](https://travis-ci.org/viest/php-excel-writer.svg?branch=dev)](https://travis-ci.org/viest/php-excel-writer)
+![php-excel](https://github.com/viest/php-excel-writer/blob/master/resource/logo.png)

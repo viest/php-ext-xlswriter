@@ -21,5 +21,9 @@ before_script:
   - make && sudo make install
   - ./travis/compile.sh
 
+branches:
+  only:
+    - dev
+
 script:
   - exit 0

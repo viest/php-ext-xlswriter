@@ -22,7 +22,8 @@ before_script:
 
 branches:
   only:
-    - dev
+    - master
+    _ dev
 
 script:
   - exit 0

@@ -18,7 +18,7 @@ before_script:
   - sudo apt-get install zlib1g-dev -y
   - git clone https://github.com/jmcnamara/libxlsxwriter.git
   - make -C ./libxlsxwriter && sudo make -C ./libxlsxwriter install
-  - sudo ./travis/compile.sh
+  - phpize && ./configure && make clean && make
 
 branches:
   only:

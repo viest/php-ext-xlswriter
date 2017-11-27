@@ -20,7 +20,6 @@
 
 #include "php.h"
 
-#include "php_vtiful.h"
 #include "excel.h"
 #include "exception.h"
 #include "write.h"
@@ -244,7 +243,7 @@ PHP_METHOD(vtiful_excel, insertText)
 {
     zval rv, res_handle;
     zval *attr_handle, *data;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
@@ -273,7 +272,7 @@ PHP_METHOD(vtiful_excel, insertImage)
 {
     zval rv, res_handle;
     zval *attr_handle, *image;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
@@ -302,7 +301,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
 {
     zval rv, res_handle;
     zval *attr_handle, *formula;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)

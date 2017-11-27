@@ -13,6 +13,7 @@
 #ifndef VTIFUL_EXCEL_H
 #define VTIFUL_EXCEL_H
 
+#include "php_vtiful.h"
 #include "xlsxwriter.h"
 
 typedef struct {
@@ -28,5 +29,7 @@ typedef struct {
 extern zend_class_entry *vtiful_excel_ce;
 
 excel_resource_t * zval_get_resource(zval *handle);
+
+VTIFUL_STARTUP_FUNCTION(excel);
 
 #endif

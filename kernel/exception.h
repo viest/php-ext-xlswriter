@@ -15,4 +15,6 @@
 
 extern zend_class_entry *vtiful_exception_ce;
 
+VTIFUL_STARTUP_FUNCTION(vtiful_exception);
+
 #endif

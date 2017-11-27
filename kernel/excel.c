@@ -61,6 +61,21 @@ ZEND_BEGIN_ARG_INFO_EX(excel_insert_formula_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, formula)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(excel_auto_filter_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
+excel_resource_t * zval_get_resource(zval *handle)
+{
+    excel_resource_t *res;
+
+    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
+    }
+
+    return res;
+}
+
 /* {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
 PHP_METHOD(vtiful_excel, __construct)
@@ -310,6 +325,31 @@ PHP_METHOD(vtiful_excel, insertFormula)
 }
 /* }}} */
 
+/* {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
+ */
+PHP_METHOD(vtiful_excel, autoFilter)
+{
+    zval rv, res_handle;
+    zval *attr_handle;
+    zend_string *range;
+    excel_resource_t *res;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(range)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
+    res = zval_get_resource(attr_handle);
+
+    auto_filter(range, res);
+
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
 zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, __construct, excel_construct_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_excel, fileName,    excel_file_name_arginfo, ZEND_ACC_PUBLIC)
@@ -317,6 +357,7 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, data,        excel_data_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, output,      NULL,                    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, getHandle,   NULL,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, autoFilter,    excel_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertText,    excel_insert_text_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertImage,   excel_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)

@@ -29,4 +29,6 @@ extern zend_class_entry *vtiful_excel_ce;
 
 VTIFUL_STARTUP_FUNCTION(excel);
 
+excel_resource_t * zval_get_resource(zval *handle);
+
 #endif

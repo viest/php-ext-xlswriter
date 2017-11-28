@@ -26,6 +26,8 @@
 
 zend_class_entry *vtiful_excel_ce;
 
+/* {{{ ARG_INFO
+ */
 ZEND_BEGIN_ARG_INFO_EX(excel_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
@@ -63,7 +65,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(excel_auto_filter_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, range)
 ZEND_END_ARG_INFO()
+/* }}} */
 
+/* {{{ */
 excel_resource_t * zval_get_resource(zval *handle)
 {
     excel_resource_t *res;
@@ -74,6 +78,7 @@ excel_resource_t * zval_get_resource(zval *handle)
 
     return res;
 }
+/* }}} */
 
 /* {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
@@ -155,9 +160,7 @@ PHP_METHOD(vtiful_excel, header)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value) {
          type_writer(header_value, 0, header_l_key, res);
@@ -184,9 +187,7 @@ PHP_METHOD(vtiful_excel, data)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data), data_r_key, data_r_value) {
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
@@ -210,10 +211,7 @@ PHP_METHOD(vtiful_excel, output)
     excel_resource_t *res;
 
     handle = zend_read_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(handle);
 
     workbook_file(res, handle);
 
@@ -255,9 +253,7 @@ PHP_METHOD(vtiful_excel, insertText)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     type_writer(data, row, column, res);
 
@@ -284,9 +280,7 @@ PHP_METHOD(vtiful_excel, insertImage)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     image_writer(image, row, column, res);
 
@@ -313,9 +307,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     formula_writer(formula, row, column, res);
 

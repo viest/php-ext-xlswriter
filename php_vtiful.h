@@ -44,6 +44,12 @@ void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
 ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 
+PHP_MINIT_FUNCTION(vtiful);
+PHP_MSHUTDOWN_FUNCTION(vtiful);
+PHP_RINIT_FUNCTION(vtiful);
+PHP_RSHUTDOWN_FUNCTION(vtiful);
+PHP_MINFO_FUNCTION(vtiful);
+
 #endif
 
 

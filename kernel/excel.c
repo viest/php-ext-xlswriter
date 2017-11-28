@@ -4,7 +4,7 @@
   +----------------------------------------------------------------------+
   | Copyright (c) 2017-2017 The Viest                                    |
   +----------------------------------------------------------------------+
-  | http://www.vtiful.com                                                |
+  | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
   | Author: viest <dev@service.viest.me>                                 |
   +----------------------------------------------------------------------+
@@ -20,13 +20,14 @@
 
 #include "php.h"
 
-#include "php_vtiful.h"
 #include "excel.h"
 #include "exception.h"
 #include "write.h"
 
 zend_class_entry *vtiful_excel_ce;
 
+/* {{{ ARG_INFO
+ */
 ZEND_BEGIN_ARG_INFO_EX(excel_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
@@ -64,7 +65,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(excel_auto_filter_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, range)
 ZEND_END_ARG_INFO()
+/* }}} */
 
+/* {{{ */
 excel_resource_t * zval_get_resource(zval *handle)
 {
     excel_resource_t *res;
@@ -75,8 +78,9 @@ excel_resource_t * zval_get_resource(zval *handle)
 
     return res;
 }
+/* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::__construct(array $config)
+/** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
 PHP_METHOD(vtiful_excel, __construct)
 {
@@ -100,7 +104,7 @@ PHP_METHOD(vtiful_excel, __construct)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::filename(string $fileName)
+/** {{{ \Vtiful\Kernel\Excel::filename(string $fileName)
  */
 PHP_METHOD(vtiful_excel, fileName)
 {
@@ -141,7 +145,7 @@ PHP_METHOD(vtiful_excel, fileName)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::header(array $header)
+/** {{{ \Vtiful\Kernel\Excel::header(array $header)
  */
 PHP_METHOD(vtiful_excel, header)
 {
@@ -156,9 +160,7 @@ PHP_METHOD(vtiful_excel, header)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value) {
          type_writer(header_value, 0, header_l_key, res);
@@ -170,7 +172,7 @@ PHP_METHOD(vtiful_excel, header)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::data(array $data)
+/** {{{ \Vtiful\Kernel\Excel::data(array $data)
  */
 PHP_METHOD(vtiful_excel, data)
 {
@@ -185,9 +187,7 @@ PHP_METHOD(vtiful_excel, data)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data), data_r_key, data_r_value) {
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
@@ -203,7 +203,7 @@ PHP_METHOD(vtiful_excel, data)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::output()
+/** {{{ \Vtiful\Kernel\Excel::output()
  */
 PHP_METHOD(vtiful_excel, output)
 {
@@ -211,10 +211,7 @@ PHP_METHOD(vtiful_excel, output)
     excel_resource_t *res;
 
     handle = zend_read_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(handle);
 
     workbook_file(res, handle);
 
@@ -225,7 +222,7 @@ PHP_METHOD(vtiful_excel, output)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::getHandle()
+/** {{{ \Vtiful\Kernel\Excel::getHandle()
  */
 PHP_METHOD(vtiful_excel, getHandle)
 {
@@ -238,13 +235,13 @@ PHP_METHOD(vtiful_excel, getHandle)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data)
+/** {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data)
  */
 PHP_METHOD(vtiful_excel, insertText)
 {
     zval rv, res_handle;
     zval *attr_handle, *data;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
@@ -256,9 +253,7 @@ PHP_METHOD(vtiful_excel, insertText)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     type_writer(data, row, column, res);
 
@@ -267,13 +262,13 @@ PHP_METHOD(vtiful_excel, insertText)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_excel, insertImage)
 {
     zval rv, res_handle;
     zval *attr_handle, *image;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
@@ -285,9 +280,7 @@ PHP_METHOD(vtiful_excel, insertImage)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     image_writer(image, row, column, res);
 
@@ -296,13 +289,13 @@ PHP_METHOD(vtiful_excel, insertImage)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_excel, insertFormula)
 {
     zval rv, res_handle;
     zval *attr_handle, *formula;
-    zend_long *row, *column;
+    zend_long row, column;
     excel_resource_t *res;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
@@ -314,9 +307,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
     ZVAL_COPY(return_value, getThis());
 
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(attr_handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
+    res = zval_get_resource(attr_handle);
 
     formula_writer(formula, row, column, res);
 
@@ -325,7 +316,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
+/** {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
  */
 PHP_METHOD(vtiful_excel, autoFilter)
 {
@@ -350,6 +341,8 @@ PHP_METHOD(vtiful_excel, autoFilter)
 }
 /* }}} */
 
+/** {{{ excel_methods
+*/
 zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, __construct, excel_construct_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_excel, fileName,    excel_file_name_arginfo, ZEND_ACC_PUBLIC)
@@ -363,7 +356,10 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
+/* }}} */
 
+/** {{{ VTIFUL_STARTUP_FUNCTION
+*/
 VTIFUL_STARTUP_FUNCTION(excel) {
     zend_class_entry ce;
 
@@ -377,6 +373,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
 
     return SUCCESS;
 }
+/* }}} */
 
 
 

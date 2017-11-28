@@ -41,4 +41,6 @@ if test "$PHP_VTIFUL" != "no"; then
     PHP_SUBST(VTIFUL_SHARED_LIBADD)
 
     PHP_NEW_EXTENSION(vtiful, $vtiful_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+
+    PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
 fi

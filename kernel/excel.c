@@ -4,7 +4,7 @@
   +----------------------------------------------------------------------+
   | Copyright (c) 2017-2017 The Viest                                    |
   +----------------------------------------------------------------------+
-  | http://www.vtiful.com                                                |
+  | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
   | Author: viest <dev@service.viest.me>                                 |
   +----------------------------------------------------------------------+
@@ -80,7 +80,7 @@ excel_resource_t * zval_get_resource(zval *handle)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::__construct(array $config)
+/** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
 PHP_METHOD(vtiful_excel, __construct)
 {
@@ -104,7 +104,7 @@ PHP_METHOD(vtiful_excel, __construct)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::filename(string $fileName)
+/** {{{ \Vtiful\Kernel\Excel::filename(string $fileName)
  */
 PHP_METHOD(vtiful_excel, fileName)
 {
@@ -145,7 +145,7 @@ PHP_METHOD(vtiful_excel, fileName)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::header(array $header)
+/** {{{ \Vtiful\Kernel\Excel::header(array $header)
  */
 PHP_METHOD(vtiful_excel, header)
 {
@@ -172,7 +172,7 @@ PHP_METHOD(vtiful_excel, header)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::data(array $data)
+/** {{{ \Vtiful\Kernel\Excel::data(array $data)
  */
 PHP_METHOD(vtiful_excel, data)
 {
@@ -203,7 +203,7 @@ PHP_METHOD(vtiful_excel, data)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::output()
+/** {{{ \Vtiful\Kernel\Excel::output()
  */
 PHP_METHOD(vtiful_excel, output)
 {
@@ -222,7 +222,7 @@ PHP_METHOD(vtiful_excel, output)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::getHandle()
+/** {{{ \Vtiful\Kernel\Excel::getHandle()
  */
 PHP_METHOD(vtiful_excel, getHandle)
 {
@@ -235,7 +235,7 @@ PHP_METHOD(vtiful_excel, getHandle)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data)
+/** {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data)
  */
 PHP_METHOD(vtiful_excel, insertText)
 {
@@ -262,7 +262,7 @@ PHP_METHOD(vtiful_excel, insertText)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_excel, insertImage)
 {
@@ -289,7 +289,7 @@ PHP_METHOD(vtiful_excel, insertImage)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_excel, insertFormula)
 {
@@ -316,7 +316,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
 }
 /* }}} */
 
-/* {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
+/** {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
  */
 PHP_METHOD(vtiful_excel, autoFilter)
 {
@@ -341,6 +341,8 @@ PHP_METHOD(vtiful_excel, autoFilter)
 }
 /* }}} */
 
+/** {{{ excel_methods
+*/
 zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, __construct, excel_construct_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_excel, fileName,    excel_file_name_arginfo, ZEND_ACC_PUBLIC)
@@ -354,7 +356,10 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
+/* }}} */
 
+/** {{{ VTIFUL_STARTUP_FUNCTION
+*/
 VTIFUL_STARTUP_FUNCTION(excel) {
     zend_class_entry ce;
 
@@ -368,6 +373,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
 
     return SUCCESS;
 }
+/* }}} */
 
 
 

@@ -4,7 +4,7 @@
   +----------------------------------------------------------------------+
   | Copyright (c) 2017-2017 The Viest                                    |
   +----------------------------------------------------------------------+
-  | http://www.vtiful.com                                                |
+  | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
   | Author: viest <dev@service.viest.me>                                 |
   +----------------------------------------------------------------------+
@@ -17,10 +17,15 @@
 
 zend_class_entry *vtiful_exception_ce;
 
+/** {{{ exception_methods
+*/
 zend_function_entry exception_methods[] = {
         PHP_FE_END
 };
+/* }}} */
 
+/** {{{ VTIFUL_STARTUP_FUNCTION
+*/
 VTIFUL_STARTUP_FUNCTION(vtiful_exception) {
     zend_class_entry ce;
 
@@ -30,3 +35,4 @@ VTIFUL_STARTUP_FUNCTION(vtiful_exception) {
 
     return SUCCESS;
 }
+/* }}} */

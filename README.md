@@ -28,6 +28,8 @@ phpize
 make && make install
 ```
 
+add the `extension=excel_writer.so` to `php.ini` file.
+
 #### 3、Documents
 
 [Wiki](https://github.com/viest/php-excel-writer/wiki)

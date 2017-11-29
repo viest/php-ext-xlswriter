@@ -1,8 +1,8 @@
-PHP_ARG_ENABLE(vtiful, whether to enable vtiful support,
-[  --enable-vtiful           Enable vtiful support])
+PHP_ARG_ENABLE(excel_writer, whether to enable excel_writer support,
+[  --enable-excel_writer           Enable excel_writer support])
 
-if test "$PHP_VTIFUL" != "no"; then
-    vtiful_sources="vtiful.c \
+if test "$PHP_EXCEL_WRITER" != "no"; then
+    excel_writer_sources="excel_writer.c \
     kernel/exception.c \
     "
 
@@ -15,9 +15,8 @@ if test "$PHP_VTIFUL" != "no"; then
             PHP_ADD_INCLUDE($i/include)
             PHP_CHECK_LIBRARY(xlsxwriter, worksheet_write_string,
             [
-                PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, VTIFUL_SHARED_LIBADD)
-                AC_DEFINE([VTIFUL_XLSX_WRITER], [1], [Have libxlsxwriter support])
-                vtiful_sources="$vtiful_sources kernel/excel.c kernel/write.c"
+                PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, EXCEL_WRITER_SHARED_LIBADD)
+                excel_writer_sources="$excel_writer_sources kernel/excel.c kernel/write.c"
             ],[
                 AC_MSG_ERROR([Wrong libxlsxwriter version or library not found])
             ],[
@@ -35,12 +34,12 @@ if test "$PHP_VTIFUL" != "no"; then
     fi
 
     if test -z "$PHP_DEBUG"; then
-        AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no] )
+        AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])
     fi
 
-    PHP_SUBST(VTIFUL_SHARED_LIBADD)
+    PHP_SUBST(EXCEL_WRITER_SHARED_LIBADD)
 
-    PHP_NEW_EXTENSION(vtiful, $vtiful_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+    PHP_NEW_EXTENSION(excel_writer, $excel_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 
     PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
 fi

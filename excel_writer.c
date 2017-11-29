@@ -16,22 +16,22 @@
 
 #include "php.h"
 #include "php_ini.h"
-#include "php_vtiful.h"
+#include "php_excel_writer.h"
 #include "ext/standard/info.h"
 
 #include "kernel/excel.h"
 #include "kernel/exception.h"
 
-int le_vtiful;
+int le_excel_writer;
 
 /* {{{ PHP_MINIT_FUNCTION
  */
-PHP_MINIT_FUNCTION(vtiful)
+PHP_MINIT_FUNCTION(excel_writer)
 {
-    VTIFUL_STARTUP_MODULE(vtiful_exception);
+    VTIFUL_STARTUP_MODULE(exception);
 	VTIFUL_STARTUP_MODULE(excel);
 
-	le_vtiful = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
+    le_excel_writer = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 
 	return SUCCESS;
 }
@@ -40,7 +40,7 @@ PHP_MINIT_FUNCTION(vtiful)
 
 /* {{{ PHP_MSHUTDOWN_FUNCTION
  */
-PHP_MSHUTDOWN_FUNCTION(vtiful)
+PHP_MSHUTDOWN_FUNCTION(excel_writer)
 {
 	return SUCCESS;
 }
@@ -48,7 +48,7 @@ PHP_MSHUTDOWN_FUNCTION(vtiful)
 
 /* {{{ PHP_RINIT_FUNCTION
  */
-PHP_RINIT_FUNCTION(vtiful)
+PHP_RINIT_FUNCTION(excel_writer)
 {
 #if defined(COMPILE_DL_VTIFUL) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
@@ -59,7 +59,7 @@ PHP_RINIT_FUNCTION(vtiful)
 
 /* {{{ PHP_RSHUTDOWN_FUNCTION
  */
-PHP_RSHUTDOWN_FUNCTION(vtiful)
+PHP_RSHUTDOWN_FUNCTION(excel_writer)
 {
 	return SUCCESS;
 }
@@ -68,10 +68,10 @@ PHP_RSHUTDOWN_FUNCTION(vtiful)
 
 /* {{{ PHP_MINFO_FUNCTION
  */
-PHP_MINFO_FUNCTION(vtiful)
+PHP_MINFO_FUNCTION(excel_writer)
 {
 	php_info_print_table_start();
-	php_info_print_table_header(2, "vtiful support", "enabled");
+	php_info_print_table_header(2, "excel_writer support", "enabled");
 #if defined(PHP_VTIFUL_VERSION)
     php_info_print_table_row(2, "Version", PHP_VTIFUL_VERSION);
 #endif
@@ -83,32 +83,32 @@ PHP_MINFO_FUNCTION(vtiful)
  *
  * Every user visible function must have an entry in vtiful_functions[].
  */
-const zend_function_entry vtiful_functions[] = {
+const zend_function_entry excel_writer_functions[] = {
 	PHP_FE_END
 };
 /* }}} */
 
 /* {{{ vtiful_module_entry
  */
-zend_module_entry vtiful_module_entry = {
+zend_module_entry excel_writer_module_entry = {
 	STANDARD_MODULE_HEADER,
-	"vtiful",
-	vtiful_functions,
-	PHP_MINIT(vtiful),
-	PHP_MSHUTDOWN(vtiful),
-	PHP_RINIT(vtiful),		/* Replace with NULL if there's nothing to do at request start */
-	PHP_RSHUTDOWN(vtiful),	/* Replace with NULL if there's nothing to do at request end */
-	PHP_MINFO(vtiful),
-	PHP_VTIFUL_VERSION,
+	"excel_writer",
+    excel_writer_functions,
+	PHP_MINIT(excel_writer),
+	PHP_MSHUTDOWN(excel_writer),
+	PHP_RINIT(excel_writer),		/* Replace with NULL if there's nothing to do at request start */
+	PHP_RSHUTDOWN(excel_writer),	/* Replace with NULL if there's nothing to do at request end */
+	PHP_MINFO(excel_writer),
+    PHP_EXCEL_WRITER_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
 
-#ifdef COMPILE_DL_VTIFUL
+#ifdef COMPILE_DL_EXCEL_WRITER
 #ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE();
 #endif
-ZEND_GET_MODULE(vtiful)
+ZEND_GET_MODULE(excel_writer)
 #endif
 
 /*

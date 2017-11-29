@@ -13,7 +13,7 @@
 #ifndef VTIFUL_EXCEL_H
 #define VTIFUL_EXCEL_H
 
-#include "php_vtiful.h"
+#include "php_excel_writer.h"
 #include "xlsxwriter.h"
 
 typedef struct {

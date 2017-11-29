@@ -72,7 +72,7 @@ excel_resource_t * zval_get_resource(zval *handle)
 {
     excel_resource_t *res;
 
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_vtiful)) == NULL) {
+    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_excel_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
     }
 
@@ -137,7 +137,7 @@ PHP_METHOD(vtiful_excel, fileName)
     res->worksheet = workbook_add_worksheet(res->workbook, NULL);
     zval_ptr_dtor(&file_path);
 
-    ZVAL_RES(&handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&handle, zend_register_resource(res, le_excel_writer));
 
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_FIL), &file_path);
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
@@ -167,7 +167,7 @@ PHP_METHOD(vtiful_excel, header)
          zval_ptr_dtor(header_value);
     } ZEND_HASH_FOREACH_END();
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */
@@ -198,7 +198,7 @@ PHP_METHOD(vtiful_excel, data)
         }
     } ZEND_HASH_FOREACH_END();
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */
@@ -257,7 +257,7 @@ PHP_METHOD(vtiful_excel, insertText)
 
     type_writer(data, row, column, res);
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */
@@ -284,7 +284,7 @@ PHP_METHOD(vtiful_excel, insertImage)
 
     image_writer(image, row, column, res);
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */
@@ -311,7 +311,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
 
     formula_writer(formula, row, column, res);
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */
@@ -336,7 +336,7 @@ PHP_METHOD(vtiful_excel, autoFilter)
 
     auto_filter(range, res);
 
-    ZVAL_RES(&res_handle, zend_register_resource(res, le_vtiful));
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
 }
 /* }}} */

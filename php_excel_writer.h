@@ -13,10 +13,10 @@
 #ifndef PHP_VTIFUL_H
 #define PHP_VTIFUL_H
 
-extern zend_module_entry vtiful_module_entry;
-#define phpext_vtiful_ptr &vtiful_module_entry
+extern zend_module_entry excel_writer_module_entry;
+#define phpext_excel_writer_ptr &excel_writer_module_entry
 
-#define PHP_VTIFUL_VERSION "1.0.0"
+#define PHP_EXCEL_WRITER_VERSION "1.0.0"
 
 #ifdef PHP_WIN32
 #	define PHP_VTIFUL_API __declspec(dllexport)
@@ -32,10 +32,10 @@ extern zend_module_entry vtiful_module_entry;
 
 #define VTIFUL_RESOURCE_NAME "vtiful"
 
-extern int le_vtiful;
+extern int le_excel_writer;
 
-#define VTIFUL_STARTUP_MODULE(module) ZEND_MODULE_STARTUP_N(vtiful_##module)(INIT_FUNC_ARGS_PASSTHRU)
-#define VTIFUL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(vtiful_##module)
+#define VTIFUL_STARTUP_MODULE(module) ZEND_MODULE_STARTUP_N(excel_writer_##module)(INIT_FUNC_ARGS_PASSTHRU)
+#define VTIFUL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(excel_writer_##module)
 #define VTIFUL_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(vtiful, v)
 
 void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
@@ -44,11 +44,11 @@ void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
 ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 
-PHP_MINIT_FUNCTION(vtiful);
-PHP_MSHUTDOWN_FUNCTION(vtiful);
-PHP_RINIT_FUNCTION(vtiful);
-PHP_RSHUTDOWN_FUNCTION(vtiful);
-PHP_MINFO_FUNCTION(vtiful);
+PHP_MINIT_FUNCTION(excel_writer);
+PHP_MSHUTDOWN_FUNCTION(excel_writer);
+PHP_RINIT_FUNCTION(excel_writer);
+PHP_RSHUTDOWN_FUNCTION(excel_writer);
+PHP_MINFO_FUNCTION(excel_writer);
 
 #endif
 

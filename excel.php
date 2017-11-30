@@ -1,7 +1,6 @@
 <?php
 $config = ['path' => './tests/'];
 $excel = new \Vtiful\Kernel\Excel($config);
-var_dump($excel);
 $fileFd = $excel->fileName('tutorial01.xlsx');
 var_dump($fileFd);
 $setHeader = $fileFd->header(['Item', 'Cost']);

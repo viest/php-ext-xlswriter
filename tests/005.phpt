@@ -4,7 +4,7 @@ Check for vtiful presence
 <?php if (!extension_loaded("excel_writer")) print "skip"; ?>
 --FILE--
 <?php 
-echo "vtiful extension is available";
+echo "output path";
 ?>
 --EXPECT--
-vtiful extension is available
+output path

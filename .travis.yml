@@ -24,6 +24,5 @@ branches:
   only:
     - master
     - dev
-
 script:
-  - exit 0
+    - ./travis/run-test.sh

@@ -4,7 +4,7 @@ Check for vtiful presence
 <?php if (!extension_loaded("excel_writer")) print "skip"; ?>
 --FILE--
 <?php 
-$config = ['path' => './tests/'];
+$config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 var_dump($excel);
 ?>
@@ -13,7 +13,7 @@ object(Vtiful\Kernel\Excel)#1 (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
-    string(8) "./tests/"
+    string(8) "./tests"
   }
   ["fileName":"Vtiful\Kernel\Excel":private]=>
   NULL

@@ -13,8 +13,8 @@
 #include "php.h"
 #include "excel.h"
 #include "write.h"
-#include "third_party/libxls/xlsxwriter.h"
-#include "third_party/xlsxwriter/packager.h"
+#include "xlsxwriter.h"
+#include "xlsxwriter/packager.h"
 
 /*
  * According to the zval type written to the file

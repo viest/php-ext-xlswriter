@@ -66,6 +66,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(excel_auto_filter_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, range)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(excel_merge_cells_arginfo, 0, 0, 2)
+                ZEND_ARG_INFO(0, range)
+                ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /* {{{ */
@@ -354,6 +359,33 @@ PHP_METHOD(vtiful_excel, autoFilter)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::mergeCells(string $range, string $data)
+ */
+PHP_METHOD(vtiful_excel, mergeCells)
+{
+    zval rv, res_handle;
+    zval *attr_handle;
+    zend_string *range, *data;
+    excel_resource_t *res;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+            Z_PARAM_STR(range)
+            Z_PARAM_STR(data)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
+    res = zval_get_resource(attr_handle);
+
+    merge_cells(range, data, res);
+
+    ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
+
 /** {{{ excel_methods
 */
 zend_function_entry excel_methods[] = {
@@ -367,6 +399,7 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, insertText,    excel_insert_text_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertImage,   excel_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, mergeCells,    excel_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

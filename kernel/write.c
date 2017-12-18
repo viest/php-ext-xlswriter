@@ -73,6 +73,14 @@ void auto_filter(zend_string *range, excel_resource_t *res)
 }
 
 /*
+ * Merge cells.
+ */
+void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res)
+{
+    worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), NULL);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

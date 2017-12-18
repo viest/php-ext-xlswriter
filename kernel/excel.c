@@ -44,10 +44,11 @@ ZEND_BEGIN_ARG_INFO_EX(excel_data_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(excel_insert_text_arginfo, 0, 0, 3)
+ZEND_BEGIN_ARG_INFO_EX(excel_insert_text_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, data)
+                ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(excel_insert_image_arginfo, 0, 0, 3)
@@ -169,7 +170,7 @@ PHP_METHOD(vtiful_excel, header)
     res = zval_get_resource(attr_handle);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value) {
-         type_writer(header_value, 0, header_l_key, res);
+         type_writer(header_value, 0, header_l_key, res, NULL);
          zval_ptr_dtor(header_value);
     } ZEND_HASH_FOREACH_END();
 
@@ -198,7 +199,7 @@ PHP_METHOD(vtiful_excel, data)
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data), data_r_key, data_r_value) {
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
             ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data_r_value), data_l_key, data_l_value) {
-                type_writer(data_l_value, data_r_key+1, data_l_key, res);
+                type_writer(data_l_value, data_r_key+1, data_l_key, res, NULL);
                 zval_ptr_dtor(data_l_value);
             } ZEND_HASH_FOREACH_END();
         }
@@ -251,12 +252,15 @@ PHP_METHOD(vtiful_excel, insertText)
     zval rv, res_handle;
     zval *attr_handle, *data;
     zend_long row, column;
+    zend_string *format = NULL;
     excel_resource_t *res;
 
-    ZEND_PARSE_PARAMETERS_START(3, 3)
+    ZEND_PARSE_PARAMETERS_START(3, 4)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(data)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(format)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -264,7 +268,7 @@ PHP_METHOD(vtiful_excel, insertText)
     attr_handle = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
     res = zval_get_resource(attr_handle);
 
-    type_writer(data, row, column, res);
+    type_writer(data, row, column, res, format);
 
     ZVAL_RES(&res_handle, zend_register_resource(res, le_excel_writer));
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);

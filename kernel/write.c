@@ -19,17 +19,31 @@
 /*
  * According to the zval type written to the file
  */
-void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res)
+void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res, zend_string *format)
 {
+    lxw_format *value_format = NULL;
+
     switch (Z_TYPE_P(value)) {
         case IS_STRING:
             worksheet_write_string(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
             break;
         case IS_LONG:
-            worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), NULL);
+            if(format) {
+                value_format = workbook_add_format(res->workbook);
+                format_set_num_format(value_format, ZSTR_VAL(format));
+                worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), value_format);
+            } else {
+                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+            }
             break;
         case IS_DOUBLE:
-            worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+            if(format) {
+                value_format = workbook_add_format(res->workbook);
+                format_set_num_format(value_format, ZSTR_VAL(format));
+                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), value_format);
+            } else {
+                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+            }
             break;
     }
 }

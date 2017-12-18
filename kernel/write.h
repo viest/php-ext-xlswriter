@@ -26,6 +26,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t
 void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
 void formula_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
 void auto_filter(zend_string *range, excel_resource_t *res);
+void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res);
 lxw_error workbook_file(excel_resource_t *self, zval *handle);
 
 #endif

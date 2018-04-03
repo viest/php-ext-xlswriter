@@ -1,17 +1,27 @@
-/*
-  +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
-  +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
-  +----------------------------------------------------------------------+
-  | http://www.viest.me                                                  |
-  +----------------------------------------------------------------------+
-  | Author: viest <dev@service.viest.me>                                 |
-  +----------------------------------------------------------------------+
-*/
+#ifndef PHP_EXT_EXCEL_EXPORT_INCLUDE_H
+#define PHP_EXT_EXCEL_EXPORT_INCLUDE_H
 
-#ifndef VTIFUL_EXCEL_WRITE_H
-#define VTIFUL_EXCEL_WRITE_H
+#include <php.h>
+
+#include "zend_exceptions.h"
+#include "zend.h"
+#include "zend_API.h"
+#include "php.h"
+
+#include "xlsxwriter.h"
+#include "xlsxwriter/packager.h"
+
+#include "php_excel_writer.h"
+#include "excel.h"
+#include "exception.h"
+#include "format.h"
+
+typedef struct {
+    lxw_workbook *workbook;
+    lxw_worksheet *worksheet;
+} excel_resource_t;
+
+excel_resource_t * zval_get_resource(zval *handle);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 

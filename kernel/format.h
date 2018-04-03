@@ -10,31 +10,14 @@
   +----------------------------------------------------------------------+
 */
 
-#include "include.h"
+#ifndef PHP_EXT_EXCEL_EXPORT_FORMAT_H
+#define PHP_EXT_EXCEL_EXPORT_FORMAT_H
 
-//#include <php.h>
-//#include "zend_exceptions.h"
-//#include "php_excel_writer.h"
-//#include "exception.h"
+#include "php_excel_writer.h"
+#include "xlsxwriter.h"
 
-zend_class_entry *vtiful_exception_ce;
+extern zend_class_entry *vtiful_format_ce;
 
-/** {{{ exception_methods
-*/
-zend_function_entry exception_methods[] = {
-        PHP_FE_END
-};
-/* }}} */
+VTIFUL_STARTUP_FUNCTION(format);
 
-/** {{{ VTIFUL_STARTUP_FUNCTION
-*/
-VTIFUL_STARTUP_FUNCTION(exception) {
-    zend_class_entry ce;
-
-    INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Exception", exception_methods);
-
-    vtiful_exception_ce = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    return SUCCESS;
-}
-/* }}} */
+#endif

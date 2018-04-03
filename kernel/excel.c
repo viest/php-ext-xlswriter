@@ -14,15 +14,7 @@
 #include "config.h"
 #endif
 
-#include "zend.h"
-#include "zend_API.h"
-#include "zend_exceptions.h"
-
-#include "php.h"
-
-#include "excel.h"
-#include "exception.h"
-#include "write.h"
+#include "include.h"
 
 zend_class_entry *vtiful_excel_ce;
 
@@ -71,19 +63,6 @@ ZEND_BEGIN_ARG_INFO_EX(excel_merge_cells_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, range)
                 ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
-/* }}} */
-
-/* {{{ */
-excel_resource_t * zval_get_resource(zval *handle)
-{
-    excel_resource_t *res;
-
-    if((res = (excel_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_excel_writer)) == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Excel resources resolution fail", 210);
-    }
-
-    return res;
-}
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)

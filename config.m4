@@ -4,6 +4,7 @@ PHP_ARG_ENABLE(excel_writer, whether to enable excel_writer support,
 if test "$PHP_EXCEL_WRITER" != "no"; then
     excel_writer_sources="excel_writer.c \
     kernel/exception.c \
+    kernel/common/resource.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter support])
@@ -16,7 +17,10 @@ if test "$PHP_EXCEL_WRITER" != "no"; then
             PHP_CHECK_LIBRARY(xlsxwriter, worksheet_write_string,
             [
                 PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, EXCEL_WRITER_SHARED_LIBADD)
-                excel_writer_sources="$excel_writer_sources kernel/excel.c kernel/write.c"
+                excel_writer_sources="$excel_writer_sources \
+                kernel/excel.c \
+                kernel/write.c \
+                kernel/format.c"
             ],[
                 AC_MSG_ERROR([Wrong libxlsxwriter version or library not found])
             ],[

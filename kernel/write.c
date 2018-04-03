@@ -10,11 +10,7 @@
   +----------------------------------------------------------------------+
 */
 
-#include "php.h"
-#include "excel.h"
-#include "write.h"
-#include "xlsxwriter.h"
-#include "xlsxwriter/packager.h"
+#include "include.h"
 
 /*
  * According to the zval type written to the file

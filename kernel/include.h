@@ -10,6 +10,7 @@
 
 #include "xlsxwriter.h"
 #include "xlsxwriter/packager.h"
+#include "xlsxwriter/format.h"
 
 #include "php_excel_writer.h"
 #include "excel.h"
@@ -20,6 +21,9 @@ typedef struct {
     lxw_workbook *workbook;
     lxw_worksheet *worksheet;
 } excel_resource_t;
+
+extern excel_resource_t *excel_res;
+
 
 excel_resource_t * zval_get_resource(zval *handle);
 

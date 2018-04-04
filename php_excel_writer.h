@@ -13,6 +13,8 @@
 #ifndef PHP_VTIFUL_H
 #define PHP_VTIFUL_H
 
+#include "kernel/include.h"
+
 extern zend_module_entry excel_writer_module_entry;
 #define phpext_excel_writer_ptr &excel_writer_module_entry
 

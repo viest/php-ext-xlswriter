@@ -1,6 +1,6 @@
 ![php-excel](https://github.com/viest/php-excel-writer/blob/master/resource/logo.png)
 
-[![Build Status](https://travis-ci.org/viest/php-excel-writer.svg?branch=master)](https://travis-ci.org/viest/php-excel-writer)
+[![Build Status](https://travis-ci.org/viest/php-ext-excel-export.svg?branch=master)](https://travis-ci.org/viest/php-ext-excel-export)
 
 #### 1、Install the dependencies
 

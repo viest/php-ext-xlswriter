@@ -98,7 +98,7 @@ PHP_METHOD(vtiful_format, underline)
 
 /** {{{ excel_methods
 */
-zend_function_entry formac_methods[] = {
+zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, bold,      format_style_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_format, italic,    format_style_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_format, underline, format_style_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
@@ -111,9 +111,9 @@ zend_function_entry formac_methods[] = {
 VTIFUL_STARTUP_FUNCTION(format) {
     zend_class_entry ce;
 
-    INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", formac_methods);
+    INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", format_methods);
 
-    zend_declare_class_constant_long(&ce, "UNDERLINE_SINGLE", sizeof("UNDERLINE_SINGLE")-1, (zend_long)LXW_UNDERLINE_SINGLE);
+//    zend_declare_class_constant_long(&ce, "UNDERLINE_SINGLE", sizeof("UNDERLINE_SINGLE")-1, (zend_long)LXW_UNDERLINE_SINGLE);
 
     vtiful_format_ce = zend_register_internal_class(&ce);
 

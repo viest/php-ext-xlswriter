@@ -15,13 +15,10 @@
 #endif
 
 #include "php.h"
-#include "php_ini.h"
-#include "php_excel_writer.h"
 #include "ext/standard/info.h"
+#include "kernel/include.h"
 
-#include "kernel/excel.h"
-#include "kernel/format.h"
-#include "kernel/exception.h"
+excel_resource_t *excel_res;
 
 int le_excel_writer;
 
@@ -32,6 +29,8 @@ PHP_MINIT_FUNCTION(excel_writer)
     VTIFUL_STARTUP_MODULE(exception);
 	VTIFUL_STARTUP_MODULE(excel);
 	VTIFUL_STARTUP_MODULE(format);
+
+	excel_res = emalloc(sizeof(excel_resource_t));
 
     le_excel_writer = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 

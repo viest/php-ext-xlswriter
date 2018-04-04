@@ -22,6 +22,9 @@ typedef struct {
     lxw_worksheet *worksheet;
 } excel_resource_t;
 
+extern excel_resource_t *excel_res;
+
+
 excel_resource_t * zval_get_resource(zval *handle);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);

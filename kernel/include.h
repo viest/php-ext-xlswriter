@@ -20,6 +20,9 @@
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
+#define ROW(range) \
+    lxw_name_to_row(range)
+
 typedef struct {
     lxw_workbook *workbook;
     lxw_worksheet *worksheet;
@@ -46,6 +49,7 @@ void formula_writer(zval *value, zend_long row, zend_long columns, excel_resourc
 void auto_filter(zend_string *range, excel_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res);
 void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format);
+void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format);
 lxw_error workbook_file(excel_resource_t *self, zval *handle);
 
 #endif

@@ -76,9 +76,20 @@ void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res)
     worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), NULL);
 }
 
+/*
+ * Set column format
+ */
 void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format)
 {
-    worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), (double)width, format);
+    worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
+}
+
+/*
+ * Set row format
+ */
+void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format)
+{
+    worksheet_set_row(res->worksheet, ROW(ZSTR_VAL(range)), height, format);
 }
 
 /*

@@ -94,7 +94,7 @@ PHP_METHOD(vtiful_excel, __construct)
 PHP_METHOD(vtiful_excel, fileName)
 {
     zval rv, file_path, handle, *config, *tmp_path;
-    zend_string *file_name, *key, *full_path;
+    zend_string *file_name, *key, *full_path, *zstr_path;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_STR(file_name)
@@ -113,15 +113,20 @@ PHP_METHOD(vtiful_excel, fileName)
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a string type", 120);
     }
 
-    char *tmp_dir = emalloc(Z_STRLEN_P(tmp_path)+ZSTR_LEN(file_name)+2);
-    strcpy(tmp_dir, Z_STRVAL_P(tmp_path));
-    strcat(tmp_dir, "/");
-    strcat(tmp_dir, ZSTR_VAL(file_name));
+    zstr_path = zval_get_string(tmp_path);
 
-    full_path = zend_string_init(tmp_dir, strlen(tmp_dir), 0);
+    if (Z_STRVAL_P(tmp_path)[Z_STRLEN_P(tmp_path)-1] == '/') {
+        full_path = zend_string_extend(zstr_path, ZSTR_LEN(zstr_path) + ZSTR_LEN(file_name), 0);
+        memcpy(ZSTR_VAL(full_path)+ZSTR_LEN(zstr_path), ZSTR_VAL(file_name), ZSTR_LEN(file_name)+1);
+    } else {
+        full_path = zend_string_extend(zstr_path, ZSTR_LEN(zstr_path) + ZSTR_LEN(file_name) + 1, 0);
+        ZSTR_VAL(full_path)[ZSTR_LEN(zstr_path)] ='/';
+        memcpy(ZSTR_VAL(full_path)+ZSTR_LEN(zstr_path)+1, ZSTR_VAL(file_name), ZSTR_LEN(file_name)+1);
+    }
+
     ZVAL_STR(&file_path, full_path);
 
-    excel_res->workbook  = workbook_new(tmp_dir);
+    excel_res->workbook  = workbook_new(Z_STRVAL(file_path));
     excel_res->worksheet = workbook_add_worksheet(excel_res->workbook, NULL);
 
     ZVAL_RES(&handle, zend_register_resource(excel_res, le_excel_writer));
@@ -130,7 +135,6 @@ PHP_METHOD(vtiful_excel, fileName)
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
 
     zval_ptr_dtor(&file_path);
-    efree(tmp_dir);
 }
 /* }}} */
 

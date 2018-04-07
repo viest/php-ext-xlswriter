@@ -69,6 +69,12 @@ ZEND_BEGIN_ARG_INFO_EX(excel_set_column_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, range)
                 ZEND_ARG_INFO(0, width)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(excel_set_row_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, format_handle)
+                ZEND_ARG_INFO(0, range)
+                ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -370,6 +376,36 @@ PHP_METHOD(vtiful_excel, setColumn)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setRow(resource $format, string $range [, int $heitght])
+ */
+PHP_METHOD(vtiful_excel, setRow)
+{
+    zval *format_handle, res_handle;
+    zend_string *range;
+
+    double height = 0;
+    int    argc  = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_STR(range)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_DOUBLE(height)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    if (argc == 2) {
+        height = 18;
+    }
+
+    set_row(range, height, excel_res, zval_get_format(format_handle));
+
+    ZVAL_RES(&res_handle, zend_register_resource(excel_res, le_excel_writer));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
+
 /** {{{ excel_methods
 */
 zend_function_entry excel_methods[] = {
@@ -385,6 +421,7 @@ zend_function_entry excel_methods[] = {
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, mergeCells,    excel_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, setColumn,     excel_set_column_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, setRow,        excel_set_row_arginfo,        ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

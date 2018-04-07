@@ -17,6 +17,9 @@
 #include "exception.h"
 #include "format.h"
 
+#define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
+    zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
+
 typedef struct {
     lxw_workbook *workbook;
     lxw_worksheet *worksheet;
@@ -26,6 +29,7 @@ extern excel_resource_t *excel_res;
 
 
 excel_resource_t * zval_get_resource(zval *handle);
+lxw_format       * zval_get_format(zval *handle);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 
@@ -41,6 +45,7 @@ void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_
 void formula_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
 void auto_filter(zend_string *range, excel_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res);
+void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format);
 lxw_error workbook_file(excel_resource_t *self, zval *handle);
 
 #endif

@@ -113,9 +113,12 @@ VTIFUL_STARTUP_FUNCTION(format) {
 
     INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", format_methods);
 
-//    zend_declare_class_constant_long(&ce, "UNDERLINE_SINGLE", sizeof("UNDERLINE_SINGLE")-1, (zend_long)LXW_UNDERLINE_SINGLE);
-
     vtiful_format_ce = zend_register_internal_class(&ce);
+
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE", LXW_UNDERLINE_SINGLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE ", LXW_UNDERLINE_DOUBLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE_ACCOUNTING", LXW_UNDERLINE_SINGLE_ACCOUNTING)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE_ACCOUNTING", LXW_UNDERLINE_DOUBLE_ACCOUNTING)
 
     return SUCCESS;
 }

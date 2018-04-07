@@ -63,6 +63,12 @@ ZEND_BEGIN_ARG_INFO_EX(excel_merge_cells_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, range)
                 ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(excel_set_column_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, format_handle)
+                ZEND_ARG_INFO(0, range)
+                ZEND_ARG_INFO(0, width)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -94,7 +100,7 @@ PHP_METHOD(vtiful_excel, __construct)
 PHP_METHOD(vtiful_excel, fileName)
 {
     zval rv, file_path, handle, *config, *tmp_path;
-    zend_string *file_name, *key, *full_path;
+    zend_string *file_name, *key, *full_path, *zstr_path;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_STR(file_name)
@@ -113,15 +119,20 @@ PHP_METHOD(vtiful_excel, fileName)
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a string type", 120);
     }
 
-    char *tmp_dir = emalloc(Z_STRLEN_P(tmp_path)+ZSTR_LEN(file_name)+2);
-    strcpy(tmp_dir, Z_STRVAL_P(tmp_path));
-    strcat(tmp_dir, "/");
-    strcat(tmp_dir, ZSTR_VAL(file_name));
+    zstr_path = zval_get_string(tmp_path);
 
-    full_path = zend_string_init(tmp_dir, strlen(tmp_dir), 0);
+    if (Z_STRVAL_P(tmp_path)[Z_STRLEN_P(tmp_path)-1] == '/') {
+        full_path = zend_string_extend(zstr_path, ZSTR_LEN(zstr_path) + ZSTR_LEN(file_name), 0);
+        memcpy(ZSTR_VAL(full_path)+ZSTR_LEN(zstr_path), ZSTR_VAL(file_name), ZSTR_LEN(file_name)+1);
+    } else {
+        full_path = zend_string_extend(zstr_path, ZSTR_LEN(zstr_path) + ZSTR_LEN(file_name) + 1, 0);
+        ZSTR_VAL(full_path)[ZSTR_LEN(zstr_path)] ='/';
+        memcpy(ZSTR_VAL(full_path)+ZSTR_LEN(zstr_path)+1, ZSTR_VAL(file_name), ZSTR_LEN(file_name)+1);
+    }
+
     ZVAL_STR(&file_path, full_path);
 
-    excel_res->workbook  = workbook_new(tmp_dir);
+    excel_res->workbook  = workbook_new(Z_STRVAL(file_path));
     excel_res->worksheet = workbook_add_worksheet(excel_res->workbook, NULL);
 
     ZVAL_RES(&handle, zend_register_resource(excel_res, le_excel_writer));
@@ -130,7 +141,6 @@ PHP_METHOD(vtiful_excel, fileName)
     zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
 
     zval_ptr_dtor(&file_path);
-    efree(tmp_dir);
 }
 /* }}} */
 
@@ -330,21 +340,51 @@ PHP_METHOD(vtiful_excel, mergeCells)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setColumn(resource $format, string $range [, int $width])
+ */
+PHP_METHOD(vtiful_excel, setColumn)
+{
+    zval *format_handle, res_handle;
+    zend_string *range;
+
+    double width = 0;
+    int    argc  = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_STR(range)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_DOUBLE(width)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    if (argc == 2) {
+        width = 10;
+    }
+
+    set_column(range, width, excel_res, zval_get_format(format_handle));
+
+    ZVAL_RES(&res_handle, zend_register_resource(excel_res, le_excel_writer));
+    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+}
+/* }}} */
 
 /** {{{ excel_methods
 */
 zend_function_entry excel_methods[] = {
-        PHP_ME(vtiful_excel, __construct, excel_construct_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
-        PHP_ME(vtiful_excel, fileName,    excel_file_name_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, header,      excel_header_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, data,        excel_data_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, output,      NULL,                    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_excel, getHandle,   NULL,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, __construct,   excel_construct_arginfo,      ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+        PHP_ME(vtiful_excel, fileName,      excel_file_name_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, header,        excel_header_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, data,          excel_data_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, output,        NULL,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, getHandle,     NULL,                         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, autoFilter,    excel_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertText,    excel_insert_text_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertImage,   excel_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, insertFormula, excel_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_excel, mergeCells,    excel_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_excel, setColumn,     excel_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

@@ -4,31 +4,35 @@
 
 #### 1、Install the dependencies
 
+##### Ubuntu
+
 ```bash
 sudo apt-get install -y zlib1g-dev
 
-git clone https://github.com/jmcnamara/libxlsxwriter.git
+git clone https://github.com/jmcnamara/libxlsxwriter.git && cd libxlsxwriter && make && sudo make install
+```
 
-cd libxlsxwriter
+##### Mac
 
-make && sudo make install
+```bash
+brew install libxlsxwriter
 ```
 
 #### 2、Get the source code via Git
 
+##### Unix
+
 ```bash
-git clone https://github.com/viest/php-excel-writer.git
-
-cd php-excel-writer
-
-phpize 
-
-./configure
-
+git clone https://github.com/viest/php-ext-excel-export.git
+cd php-ext-excel-export
+phpize && ./configure
 make && make install
 ```
-
 add the `extension=excel_writer.so` to `php.ini` file.
+
+##### Windows
+
+>Please look forward to the next update.
 
 #### 3、Documents
 

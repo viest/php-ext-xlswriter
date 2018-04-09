@@ -1,0 +1,18 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_ENABLE("excel_writer", "enable excel_writer support", "no");
+
+if (PHP_EXCEL_WRITER != "no") {
+
+    if (CHECK_LIB("LibXlsxWriter.lib", "excel_writer", PHP_EXCEL_WRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_EXCEL_WRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include;" + PHP_EXCEL_WRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_EXCEL_WRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include\\xlsxwriter;" + PHP_EXCEL_WRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("format.h", "CFLAGS_EXCEL_WRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include\\xlsxwriter;" + PHP_EXCEL_WRITER)) {
+        EXTENSION("excel_writer", "excel_writer.c")
+        ADD_SOURCES(configure_module_dirname + "\\kernel", "resource.c exception.c excel.c write.c format.c", "excel_writer");
+    } else {
+        ERROR(PHP_PHP_BUILD);
+    }
+
+}

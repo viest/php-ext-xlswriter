@@ -1,5 +1,5 @@
-PHP_ARG_ENABLE(excel_writer, whether to enable excel_writer support,
-[  --enable-excel_writer           Enable excel_writer support])
+PHP_ARG_WITH(excel_writer, excel_writer support,
+[  --with-excel_writer           Include excel_writer support])
 
 if test "$PHP_EXCEL_WRITER" != "no"; then
     excel_writer_sources="excel_writer.c \

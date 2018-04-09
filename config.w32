@@ -12,7 +12,7 @@ if (PHP_EXCEL_WRITER != "no") {
         EXTENSION("excel_writer", "excel_writer.c")
         ADD_SOURCES(configure_module_dirname + "\\kernel", "resource.c exception.c excel.c write.c format.c", "excel_writer");
     } else {
-        ERROR(PHP_PHP_BUILD);
+        WARNING("excel_writer not enabled, LibXlsxWriter.lib or headers not found");
     }
 
 }

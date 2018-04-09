@@ -12,7 +12,7 @@
 #include "xlsxwriter/packager.h"
 #include "xlsxwriter/format.h"
 
-#include "php_excel_writer.h"
+#include "../php_excel_writer.h"
 #include "excel.h"
 #include "exception.h"
 #include "format.h"

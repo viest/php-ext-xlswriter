@@ -4,7 +4,7 @@ PHP_ARG_ENABLE(excel_writer, whether to enable excel_writer support,
 if test "$PHP_EXCEL_WRITER" != "no"; then
     excel_writer_sources="excel_writer.c \
     kernel/exception.c \
-    kernel/common/resource.c \
+    kernel/resource.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter support])

@@ -61,7 +61,7 @@ Clone the project to the ext directory in PHP, `configure` add `--with-excel_wri
 
 #### 3、Documents
 
-[Wiki](https://github.com/viest/php-excel-writer/wiki)
+[Wiki](https://github.com/viest/php-ext-excel-export/wiki)
 
 #### License
 

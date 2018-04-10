@@ -30,7 +30,7 @@ PHP_MINIT_FUNCTION(excel_writer)
 	VTIFUL_STARTUP_MODULE(excel);
 	VTIFUL_STARTUP_MODULE(format);
 
-	excel_res = emalloc(sizeof(excel_resource_t));
+	excel_res = malloc(sizeof(excel_resource_t));
 
     le_excel_writer = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 

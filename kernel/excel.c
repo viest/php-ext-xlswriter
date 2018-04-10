@@ -211,7 +211,7 @@ PHP_METHOD(vtiful_excel, output)
 
     workbook_file(excel_res, handle);
 
-    efree(excel_res);
+    free(excel_res);
 
     ZVAL_NULL(&null_handle);
     zend_update_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), &null_handle);

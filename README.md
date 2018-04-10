@@ -55,13 +55,13 @@ add the `extension=excel_writer.so` to `php.ini` file.
 
 ##### Windows
 
-Clone the project to the ext directory in PHP, `configure` add `--enable-excel_writer` parameter.
+Clone the project to the ext directory in PHP, `configure` add `--with-excel_writer` parameter.
 
 [PHP compilation tutorial](https://wiki.php.net/internals/windows/stepbystepbuild)
 
 #### 3、Documents
 
-[Wiki](https://github.com/viest/php-excel-writer/wiki)
+[Wiki](https://github.com/viest/php-ext-excel-export/wiki)
 
 #### License
 

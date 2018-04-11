@@ -71,4 +71,4 @@ Clone the project to the ext directory in PHP, `configure` add `--with-excel_wri
 
 #### License
 
-Apache License 2.0
+PHP License 3.01

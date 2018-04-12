@@ -81,23 +81,25 @@ ZEND_END_ARG_INFO()
  */
 PHP_METHOD(vtiful_excel, __construct)
 {
-    zval *config;
-    zend_string *key;
+    zval *config, *c_path;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ARRAY(config)
     ZEND_PARSE_PARAMETERS_END();
 
-    key = zend_string_init(V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1, 0);
-
-    if(zend_hash_find(Z_ARRVAL_P(config), key) == NULL)
+    if((c_path = zend_hash_str_find(Z_ARRVAL_P(config), V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1)) == NULL)
     {
         zend_throw_exception(vtiful_exception_ce, "Lack of 'path' configuration", 110);
+        return;
+    }
+
+    if(Z_TYPE_P(c_path) != IS_STRING)
+    {
+        zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a string type", 120);
+        return;
     }
 
     zend_update_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_COF), config);
-
-    zend_string_release(key);
 }
 /* }}} */
 
@@ -106,7 +108,7 @@ PHP_METHOD(vtiful_excel, __construct)
 PHP_METHOD(vtiful_excel, fileName)
 {
     zval rv, file_path, handle, *config, *tmp_path;
-    zend_string *file_name, *key, *full_path, *zstr_path;
+    zend_string *file_name, *full_path, *zstr_path;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_STR(file_name)
@@ -114,16 +116,8 @@ PHP_METHOD(vtiful_excel, fileName)
 
     ZVAL_COPY(return_value, getThis());
 
-    key      = zend_string_init(V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1, 0);
     config   = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_COF), 0, &rv TSRMLS_DC);
-    tmp_path = zend_hash_find(Z_ARRVAL_P(config), key);
-
-    zend_string_release(key);
-
-    if(!tmp_path && Z_TYPE_P(tmp_path) != IS_STRING)
-    {
-        zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a string type", 120);
-    }
+    tmp_path = zend_hash_str_find(Z_ARRVAL_P(config), V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1);
 
     zstr_path = zval_get_string(tmp_path);
 

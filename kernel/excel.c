@@ -15,7 +15,6 @@
 #endif
 
 #include "include.h"
-#include "ext/standard/php_var.h"
 
 zend_class_entry *vtiful_excel_ce;
 

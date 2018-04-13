@@ -52,4 +52,6 @@ void set_column(zend_string *range, double width, excel_resource_t *res, lxw_for
 void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format);
 lxw_error workbook_file(excel_resource_t *self, zval *handle);
 
+void excel_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
+
 #endif

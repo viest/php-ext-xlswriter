@@ -5,6 +5,7 @@ if test "$PHP_EXCEL_WRITER" != "no"; then
     excel_writer_sources="excel_writer.c \
     kernel/exception.c \
     kernel/resource.c \
+    kernel/common.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter support])

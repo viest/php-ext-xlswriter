@@ -20,6 +20,9 @@
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
+#define REGISTER_CLASS_PROPERTY_NULL(class_name, property_name, acc) \
+    zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
+
 #define ROW(range) \
     lxw_name_to_row(range)
 
@@ -29,7 +32,6 @@ typedef struct {
 } excel_resource_t;
 
 extern excel_resource_t *excel_res;
-
 
 excel_resource_t * zval_get_resource(zval *handle);
 lxw_format       * zval_get_format(zval *handle);

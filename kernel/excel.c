@@ -148,7 +148,7 @@ PHP_METHOD(vtiful_excel, fileName)
  */
 PHP_METHOD(vtiful_excel, header)
 {
-    zval rv, res_handle, *header, *header_value;
+    zval res_handle, *header, *header_value;
     zend_long header_l_key;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -171,7 +171,7 @@ PHP_METHOD(vtiful_excel, header)
  */
 PHP_METHOD(vtiful_excel, data)
 {
-    zval rv, *data, res_handle, *data_r_value, *data_l_value;
+    zval *data, res_handle, *data_r_value, *data_l_value;
     zend_long data_r_key, data_l_key;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -231,7 +231,7 @@ PHP_METHOD(vtiful_excel, getHandle)
  */
 PHP_METHOD(vtiful_excel, insertText)
 {
-    zval rv, res_handle;
+    zval res_handle;
     zval *data;
     zend_long row, column;
     zend_string *format = NULL;
@@ -257,7 +257,7 @@ PHP_METHOD(vtiful_excel, insertText)
  */
 PHP_METHOD(vtiful_excel, insertImage)
 {
-    zval rv, res_handle;
+    zval res_handle;
     zval *image;
     zend_long row, column;
 
@@ -280,7 +280,7 @@ PHP_METHOD(vtiful_excel, insertImage)
  */
 PHP_METHOD(vtiful_excel, insertFormula)
 {
-    zval rv, res_handle;
+    zval res_handle;
     zval *formula;
     zend_long row, column;
 
@@ -303,7 +303,7 @@ PHP_METHOD(vtiful_excel, insertFormula)
  */
 PHP_METHOD(vtiful_excel, autoFilter)
 {
-    zval rv, res_handle;
+    zval res_handle;
     zend_string *range;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -323,7 +323,7 @@ PHP_METHOD(vtiful_excel, autoFilter)
  */
 PHP_METHOD(vtiful_excel, mergeCells)
 {
-    zval rv, res_handle;
+    zval res_handle;
     zend_string *range, *data;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
@@ -429,9 +429,9 @@ VTIFUL_STARTUP_FUNCTION(excel) {
 
     vtiful_excel_ce = zend_register_internal_class(&ce);
 
-    zend_declare_property_null(vtiful_excel_ce, ZEND_STRL(V_EXCEL_COF), ZEND_ACC_PRIVATE);
-    zend_declare_property_null(vtiful_excel_ce, ZEND_STRL(V_EXCEL_FIL), ZEND_ACC_PRIVATE);
-    zend_declare_property_null(vtiful_excel_ce, ZEND_STRL(V_EXCEL_HANDLE), ZEND_ACC_PRIVATE);
+    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_COF,    ZEND_ACC_PRIVATE);
+    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_FIL,    ZEND_ACC_PRIVATE);
+    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_HANDLE, ZEND_ACC_PRIVATE);
 
     return SUCCESS;
 }

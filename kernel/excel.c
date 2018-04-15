@@ -87,7 +87,7 @@ PHP_METHOD(vtiful_excel, __construct)
             Z_PARAM_ARRAY(config)
     ZEND_PARSE_PARAMETERS_END();
 
-    if((c_path = zend_hash_str_find(Z_ARRVAL_P(config), V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1)) == NULL)
+    if((c_path = zend_hash_str_find(Z_ARRVAL_P(config), ZEND_STRL(V_EXCEL_PAT))) == NULL)
     {
         zend_throw_exception(vtiful_exception_ce, "Lack of 'path' configuration", 110);
         return;
@@ -107,7 +107,7 @@ PHP_METHOD(vtiful_excel, __construct)
  */
 PHP_METHOD(vtiful_excel, fileName)
 {
-    zval rv, file_path, handle, *config, *tmp_path;
+    zval rv, file_path, handle, *dir_path;
     zend_string *file_name;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -116,10 +116,9 @@ PHP_METHOD(vtiful_excel, fileName)
 
     ZVAL_COPY(return_value, getThis());
 
-    config   = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_COF), 0, &rv TSRMLS_DC);
-    tmp_path = zend_hash_str_find(Z_ARRVAL_P(config), V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1);
+    GET_CONFIG_PATH(dir_path, vtiful_excel_ce, return_value);
 
-    excel_file_path(file_name, tmp_path, &file_path);
+    excel_file_path(file_name, dir_path, &file_path);
 
     excel_res->workbook  = workbook_new(Z_STRVAL(file_path));
     excel_res->worksheet = workbook_add_worksheet(excel_res->workbook, NULL);
@@ -137,7 +136,7 @@ PHP_METHOD(vtiful_excel, fileName)
  */
 PHP_METHOD(vtiful_excel, constMemory)
 {
-    zval rv, file_path, handle, *config, *tmp_path;
+    zval file_path, handle, *dir_path;
     zend_string *file_name;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -146,10 +145,9 @@ PHP_METHOD(vtiful_excel, constMemory)
 
     ZVAL_COPY(return_value, getThis());
 
-    config   = zend_read_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_COF), 0, &rv TSRMLS_DC);
-    tmp_path = zend_hash_str_find(Z_ARRVAL_P(config), V_EXCEL_PAT, sizeof(V_EXCEL_PAT)-1);
+    GET_CONFIG_PATH(dir_path, vtiful_excel_ce, return_value);
 
-    excel_file_path(file_name, tmp_path, &file_path);
+    excel_file_path(file_name, dir_path, &file_path);
 
     lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
 

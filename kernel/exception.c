@@ -12,11 +12,6 @@
 
 #include "include.h"
 
-//#include <php.h>
-//#include "zend_exceptions.h"
-//#include "php_excel_writer.h"
-//#include "exception.h"
-
 zend_class_entry *vtiful_exception_ce;
 
 /** {{{ exception_methods

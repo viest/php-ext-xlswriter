@@ -18,6 +18,12 @@
 #define V_EXCEL_COF "config"
 #define V_EXCEL_PAT "path"
 
+#define GET_CONFIG_PATH(dir_path_res, class_name, object)                                             \
+    do {                                                                                              \
+        zval *_config  = zend_read_property(class_name, object, ZEND_STRL(V_EXCEL_COF), 0, NULL);     \
+        (dir_path_res) = zend_hash_str_find(Z_ARRVAL_P(_config), ZEND_STRL(V_EXCEL_PAT));             \
+    } while(0)
+
 extern zend_class_entry *vtiful_excel_ce;
 
 VTIFUL_STARTUP_FUNCTION(excel);

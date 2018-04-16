@@ -63,6 +63,8 @@ add the `extension=excel_writer.so` to `php.ini` file.
 
 Clone the project to the ext directory in PHP, `configure` add `--with-excel_writer` parameter.
 
+If you need `.dll` files, you should use the `--with-excel_writer=shared` parameter.
+
 [PHP compilation tutorial](https://wiki.php.net/internals/windows/stepbystepbuild)
 
 #### 3、Documents

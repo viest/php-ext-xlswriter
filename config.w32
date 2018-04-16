@@ -1,7 +1,7 @@
 // $Id$
 // vim:ft=javascript
 
-ARG_ENABLE("excel_writer", "enable excel_writer support", "no");
+ARG_WITH("excel_writer", "excel_writer support", "no");
 
 if (PHP_EXCEL_WRITER != "no") {
 

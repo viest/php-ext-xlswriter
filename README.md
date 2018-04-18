@@ -8,9 +8,9 @@ Please refer to the image below. PHPExcel has been unable to work properly for m
 
 ![php-excel](https://github.com/viest/php-excel-writer/blob/master/resource/performance_comparison.png)
 
-#### 1、Install the dependencies
+### 1、Install the dependencies
 
-##### Ubuntu
+#### Ubuntu
 
 ```bash
 sudo apt-get install -y zlib1g-dev
@@ -18,13 +18,13 @@ sudo apt-get install -y zlib1g-dev
 git clone https://github.com/jmcnamara/libxlsxwriter.git && cd libxlsxwriter && make && sudo make install
 ```
 
-##### Mac
+#### Mac
 
 ```bash
 brew install libxlsxwriter
 ```
 
-##### Windows
+#### Windows
 
 > Build the basic PHP build environment.
 
@@ -39,17 +39,22 @@ To build the DLL of the library open the LibXlsxWriterProj/LibXlsxWriter.sln pro
 In the default configuration this will build an x64 debug LibXlsxWriter .lib and .dll in:
 
 ```bash
-PHP_BUILD_PATH\deps\MSVCLibXlsxWriter\LibXlsxWriterProj\x64\Debug
+PHP_BUILD_PATH\deps\MSVCLibXlsxWriter\LibXlsxWriterProj\[x64|x86]\Debug
+
+# or
+
+PHP_BUILD_PATH\deps\MSVCLibXlsxWriter\LibXlsxWriterProj\[x64|x86]\Release
 ```
 
 32Bit: Copy .dll files to c:\Windows\System32
+
 64Bit: Same thing
 
 Add the lib path to the `LIB` environment variable.
 
-#### 2、Get the source code via Git
+### 2、Get the source code via Git
 
-##### Unix
+#### Unix
 
 ```bash
 git clone https://github.com/viest/php-ext-excel-export.git
@@ -59,7 +64,7 @@ make && make install
 ```
 add the `extension=excel_writer.so` to `php.ini` file.
 
-##### Windows
+#### Windows
 
 Clone the project to the ext directory in PHP, `configure` add `--with-excel_writer` parameter.
 
@@ -67,10 +72,10 @@ If you need `.dll` files, you should use the `--with-excel_writer=shared` parame
 
 [PHP compilation tutorial](https://wiki.php.net/internals/windows/stepbystepbuild)
 
-#### 3、Documents
+### 3、Documents
 
 [Wiki](https://github.com/viest/php-ext-excel-export/wiki)
 
-#### License
+### License
 
 PHP License 3.01

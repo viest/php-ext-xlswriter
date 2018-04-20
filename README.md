@@ -8,6 +8,9 @@ Please refer to the image below. PHPExcel has been unable to work properly for m
 
 ![php-excel](https://github.com/viest/php-excel-writer/blob/master/resource/performance_comparison.png)
 
+[中文文档](https://github.com/viest/php-excel-writer/README_zh.md)
+[Documents](https://github.com/viest/php-ext-excel-export/wiki)
+
 #### 1、Install the dependencies
 
 ##### Ubuntu
@@ -66,10 +69,6 @@ Clone the project to the ext directory in PHP, `configure` add `--with-excel_wri
 If you need `.dll` files, you should use the `--with-excel_writer=shared` parameter.
 
 [PHP compilation tutorial](https://wiki.php.net/internals/windows/stepbystepbuild)
-
-#### 3、Documents
-
-[Wiki](https://github.com/viest/php-ext-excel-export/wiki)
 
 #### License
 

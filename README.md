@@ -12,4 +12,4 @@ Please refer to the image below. PHPExcel has been unable to work properly for m
 
 #### License
 
-PHP License 3.01
+BSD license

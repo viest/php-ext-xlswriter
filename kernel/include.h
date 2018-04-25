@@ -17,19 +17,30 @@
 #include "exception.h"
 #include "format.h"
 
+typedef struct {
+    lxw_workbook  *workbook;
+    lxw_worksheet *worksheet;
+} excel_resource_t;
+
+typedef struct _vtiful_excel_object {
+    excel_resource_t ptr;
+    zend_object      zo;
+} excel_object;
+
+static inline excel_object *php_vtiful_excel_fetch_object(zend_object *obj) {
+    return (excel_object *)((char *)(obj) - XtOffsetOf(excel_object, zo));
+}
+
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
 #define REGISTER_CLASS_PROPERTY_NULL(class_name, property_name, acc) \
     zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
 
+#define Z_EXCEL_P(zv) php_vtiful_excel_fetch_object(Z_OBJ_P(zv));
+
 #define ROW(range) \
     lxw_name_to_row(range)
-
-typedef struct {
-    lxw_workbook *workbook;
-    lxw_worksheet *worksheet;
-} excel_resource_t;
 
 excel_resource_t * zval_get_resource(zval *handle);
 lxw_format       * zval_get_format(zval *handle);
@@ -50,7 +61,7 @@ void auto_filter(zend_string *range, excel_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res);
 void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format);
 void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format);
-lxw_error workbook_file(excel_resource_t *self, zval *handle);
+lxw_error workbook_file(excel_resource_t *self);
 
 void excel_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 

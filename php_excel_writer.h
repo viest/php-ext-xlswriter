@@ -32,7 +32,7 @@ extern zend_module_entry excel_writer_module_entry;
 #include "TSRM.h"
 #endif
 
-#define VTIFUL_RESOURCE_NAME "vtiful"
+#define VTIFUL_RESOURCE_NAME "excel"
 
 extern int le_excel_writer;
 

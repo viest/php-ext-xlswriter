@@ -12,4 +12,4 @@ $italicStyle = \Vtiful\Kernel\Format::italic($handle);
 var_dump($italicStyle);
 ?>
 --EXPECT--
-resource(5) of type (vtiful)
+resource(5) of type (excel)

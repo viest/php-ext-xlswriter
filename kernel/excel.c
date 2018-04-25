@@ -18,6 +18,8 @@
 
 zend_class_entry *vtiful_excel_ce;
 
+static excel_resource_t *excel_res;
+
 /* {{{ ARG_INFO
  */
 ZEND_BEGIN_ARG_INFO_EX(excel_construct_arginfo, 0, 0, 1)
@@ -99,7 +101,7 @@ PHP_METHOD(vtiful_excel, __construct)
         return;
     }
 
-    zend_update_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_COF), config);
+    add_property_zval(getThis(), V_EXCEL_COF, config);
 }
 /* }}} */
 
@@ -107,7 +109,7 @@ PHP_METHOD(vtiful_excel, __construct)
  */
 PHP_METHOD(vtiful_excel, fileName)
 {
-    zval rv, file_path, handle, *dir_path;
+    zval file_path, *dir_path;
     zend_string *file_name;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -120,13 +122,13 @@ PHP_METHOD(vtiful_excel, fileName)
 
     excel_file_path(file_name, dir_path, &file_path);
 
+    excel_res = malloc(sizeof(excel_resource_t));
+
     excel_res->workbook  = workbook_new(Z_STRVAL(file_path));
     excel_res->worksheet = workbook_add_worksheet(excel_res->workbook, NULL);
 
-    ZVAL_RES(&handle, zend_register_resource(excel_res, le_excel_writer));
-
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_FIL), &file_path);
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
+    add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+    add_property_resource(return_value, V_EXCEL_HANDLE, zend_register_resource(excel_res, le_excel_writer));
 
     zval_ptr_dtor(&file_path);
 }
@@ -136,7 +138,7 @@ PHP_METHOD(vtiful_excel, fileName)
  */
 PHP_METHOD(vtiful_excel, constMemory)
 {
-    zval file_path, handle, *dir_path;
+    zval file_path, *dir_path;
     zend_string *file_name;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -151,13 +153,13 @@ PHP_METHOD(vtiful_excel, constMemory)
 
     lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
 
+    excel_res = malloc(sizeof(excel_resource_t));
+
     excel_res->workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
     excel_res->worksheet = workbook_add_worksheet(excel_res->workbook, NULL);
 
-    ZVAL_RES(&handle, zend_register_resource(excel_res, le_excel_writer));
-
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_FIL), &file_path);
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &handle);
+    add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+    add_property_resource(return_value, V_EXCEL_HANDLE, zend_register_resource(excel_res, le_excel_writer));
 
     zval_ptr_dtor(&file_path);
 }
@@ -168,7 +170,7 @@ PHP_METHOD(vtiful_excel, constMemory)
  */
 PHP_METHOD(vtiful_excel, header)
 {
-    zval res_handle, *header, *header_value;
+    zval *header, *header_value;
     zend_long header_l_key;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -182,8 +184,7 @@ PHP_METHOD(vtiful_excel, header)
          zval_ptr_dtor(header_value);
     } ZEND_HASH_FOREACH_END();
 
-    ZVAL_RES(&res_handle, zend_register_resource(excel_res, le_excel_writer));
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+    add_property_resource(return_value, V_EXCEL_HANDLE, zend_register_resource(excel_res, le_excel_writer));
 }
 /* }}} */
 
@@ -191,7 +192,7 @@ PHP_METHOD(vtiful_excel, header)
  */
 PHP_METHOD(vtiful_excel, data)
 {
-    zval *data, res_handle, *data_r_value, *data_l_value;
+    zval *data, *data_r_value, *data_l_value;
     zend_long data_r_key, data_l_key;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -209,8 +210,7 @@ PHP_METHOD(vtiful_excel, data)
         }
     } ZEND_HASH_FOREACH_END();
 
-    ZVAL_RES(&res_handle, zend_register_resource(excel_res, le_excel_writer));
-    zend_update_property(vtiful_excel_ce, return_value, ZEND_STRL(V_EXCEL_HANDLE), &res_handle);
+    add_property_resource(return_value, V_EXCEL_HANDLE, zend_register_resource(excel_res, le_excel_writer));
 }
 /* }}} */
 
@@ -218,7 +218,7 @@ PHP_METHOD(vtiful_excel, data)
  */
 PHP_METHOD(vtiful_excel, output)
 {
-    zval rv, null_handle, *handle, *file_path;
+    zval rv, *handle, *file_path;
 
     handle    = zend_read_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), 0, &rv TSRMLS_DC);
     file_path = zend_read_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_FIL), 0, &rv TSRMLS_DC);
@@ -227,8 +227,8 @@ PHP_METHOD(vtiful_excel, output)
 
     free(excel_res);
 
-    ZVAL_NULL(&null_handle);
-    zend_update_property(vtiful_excel_ce, getThis(), ZEND_STRL(V_EXCEL_HANDLE), &null_handle);
+    add_property_null(getThis(), V_EXCEL_HANDLE);
+    add_property_null(getThis(), V_EXCEL_PAT);
 
     ZVAL_COPY(return_value, file_path);
 }
@@ -449,10 +449,6 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Excel", excel_methods);
 
     vtiful_excel_ce = zend_register_internal_class(&ce);
-
-    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_COF,    ZEND_ACC_PRIVATE);
-    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_FIL,    ZEND_ACC_PRIVATE);
-    REGISTER_CLASS_PROPERTY_NULL(vtiful_excel_ce, V_EXCEL_HANDLE, ZEND_ACC_PRIVATE);
 
     return SUCCESS;
 }

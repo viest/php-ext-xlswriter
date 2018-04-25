@@ -12,4 +12,4 @@ $underlineStyle = \Vtiful\Kernel\Format::underline($handle, \Vtiful\Kernel\Forma
 var_dump($underlineStyle);
 ?>
 --EXPECT--
-resource(5) of type (vtiful)
+resource(5) of type (excel)

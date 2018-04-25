@@ -12,4 +12,4 @@ $boldStyle = \Vtiful\Kernel\Format::bold($handle);
 var_dump($boldStyle);
 ?>
 --EXPECT--
-resource(5) of type (vtiful)
+resource(5) of type (excel)

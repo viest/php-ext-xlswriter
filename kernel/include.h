@@ -31,8 +31,6 @@ typedef struct {
     lxw_worksheet *worksheet;
 } excel_resource_t;
 
-extern excel_resource_t *excel_res;
-
 excel_resource_t * zval_get_resource(zval *handle);
 lxw_format       * zval_get_format(zval *handle);
 

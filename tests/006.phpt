@@ -11,4 +11,4 @@ $handle = $excel->fileName('tutorial01.xlsx')
 var_dump($handle);
 ?>
 --EXPECT--
-resource(4) of type (vtiful)
+resource(4) of type (excel)

@@ -96,7 +96,7 @@ void set_row(zend_string *range, double height, excel_resource_t *res, lxw_forma
  * Call finalization code and close file.
  */
 lxw_error
-workbook_file(excel_resource_t *self, zval *handle)
+workbook_file(excel_resource_t *self)
 {
     lxw_worksheet *worksheet = NULL;
     lxw_packager *packager = NULL;
@@ -174,11 +174,9 @@ workbook_file(excel_resource_t *self, zval *handle)
     }
 
     mem_error:
-    if (handle) {
-        zend_list_close(Z_RES_P(handle));
         lxw_packager_free(packager);
-        lxw_workbook_free(self->workbook);
-    }
+//        lxw_workbook_free(self->workbook);
+//        self->worksheet->index
 
     return error;
 }

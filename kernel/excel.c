@@ -153,16 +153,18 @@ PHP_METHOD(vtiful_excel, fileName)
 
     GET_CONFIG_PATH(dir_path, vtiful_excel_ce, return_value);
 
-    excel_file_path(file_name, dir_path, &file_path);
-
     excel_object *obj = Z_EXCEL_P(getThis());
 
-    obj->ptr.workbook  = workbook_new(Z_STRVAL(file_path));
-    obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
+    if(obj->ptr.workbook == NULL) {
+        excel_file_path(file_name, dir_path, &file_path);
 
-    add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+        obj->ptr.workbook  = workbook_new(Z_STRVAL(file_path));
+        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
 
-    zval_ptr_dtor(&file_path);
+        add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+
+        zval_ptr_dtor(&file_path);
+    }
 }
 /* }}} */
 
@@ -181,18 +183,20 @@ PHP_METHOD(vtiful_excel, constMemory)
 
     GET_CONFIG_PATH(dir_path, vtiful_excel_ce, return_value);
 
-    excel_file_path(file_name, dir_path, &file_path);
-
-    lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
-
     excel_object *obj = Z_EXCEL_P(getThis());
 
-    obj->ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
-    obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
+    if(obj->ptr.workbook == NULL) {
+        excel_file_path(file_name, dir_path, &file_path);
 
-    add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+        lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
 
-    zval_ptr_dtor(&file_path);
+        obj->ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
+        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
+
+        add_property_zval(return_value, V_EXCEL_FIL, &file_path);
+
+        zval_ptr_dtor(&file_path);
+    }
 }
 /* }}} */
 

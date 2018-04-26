@@ -5,14 +5,15 @@ Check for vtiful presence
 --FILE--
 <?php 
 $config = ['path' => './tests'];
-$excel  = new \Vtiful\Kernel\Excel($config);
-$fileOne = $excel->fileName('tutorial01.xlsx')
+$excel_one  = new \Vtiful\Kernel\Excel($config);
+$fileOne = $excel_one->fileName('tutorial01.xlsx')
     ->header(['test1'])
     ->data([
-      ['data1'],
+        ['data1'],
     ])
     ->output();
-$fileTwo = $excel->fileName('tutorial02.xlsx')
+$excel_two  = new \Vtiful\Kernel\Excel($config);
+$fileTwo = $excel_two->fileName('tutorial02.xlsx')
     ->header(['test2'])
     ->data([
         ['data2'],

@@ -44,7 +44,7 @@ phpize && ./configure --with-php-config=/path/to/php-config
 
 make && make install
 
-# 添加 extension = excel_writer.so 到 ini 配置
+# 添加 extension = xlswriter.so 到 ini 配置
 ```
 
 ##### Mac
@@ -64,7 +64,7 @@ phpize && ./configure --with-php-config=/path/to/php-config
 
 make && make install
 
-# 添加 extension = excel_writer.so 到 ini 配置
+# 添加 extension = xlswriter.so 到 ini 配置
 ```
 
 #### Windows
@@ -106,7 +106,7 @@ cd PHP_PATH
 
 buildconf.bat
 
-configure.bat --disable-all --enable-cli --with-excel_writer
+configure.bat --disable-all --enable-cli --with-xlswriter
 
 nmake
 ```

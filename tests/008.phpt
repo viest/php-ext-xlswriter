@@ -1,7 +1,7 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("excel_writer")) print "skip"; ?>
+<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
 <?php 
 $config = ['path' => './tests'];
@@ -12,4 +12,4 @@ $italicStyle = \Vtiful\Kernel\Format::italic($handle);
 var_dump($italicStyle);
 ?>
 --EXPECT--
-resource(5) of type (excel)
+resource(5) of type (xlsx)

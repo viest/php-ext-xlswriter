@@ -1,7 +1,7 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("excel_writer")) print "skip"; ?>
+<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
 <?php 
 $config = ['path' => './tests'];
@@ -11,4 +11,4 @@ $handle = $excel->fileName('tutorial01.xlsx')
 var_dump($handle);
 ?>
 --EXPECT--
-resource(4) of type (excel)
+resource(4) of type (xlsx)

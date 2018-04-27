@@ -1,10 +1,10 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("excel_writer")) print "skip"; ?>
+<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
 <?php 
-echo "vtiful extension is available";
+echo "xlswriter extension is available";
 ?>
 --EXPECT--
-vtiful extension is available
+xlswriter extension is available

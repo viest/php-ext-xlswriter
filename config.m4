@@ -1,8 +1,8 @@
-PHP_ARG_WITH(excel_writer, excel_writer support,
-[  --with-excel_writer           Include excel_writer support])
+PHP_ARG_WITH(xlsxwriter, xlswriter support,
+[  --with-xlswriter           Include xlswriter support])
 
-if test "$PHP_EXCEL_WRITER" != "no"; then
-    excel_writer_sources="excel_writer.c \
+if test "$PHP_XLSWRITER" != "no"; then
+    xls_writer_sources="xls_writer.c \
     kernel/exception.c \
     kernel/resource.c \
     kernel/common.c \
@@ -17,8 +17,8 @@ if test "$PHP_EXCEL_WRITER" != "no"; then
             PHP_ADD_INCLUDE($i/include)
             PHP_CHECK_LIBRARY(xlsxwriter, worksheet_write_string,
             [
-                PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, EXCEL_WRITER_SHARED_LIBADD)
-                excel_writer_sources="$excel_writer_sources \
+                PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, XLSWRITER_SHARED_LIBADD)
+                xls_writer_sources="$xls_writer_sources \
                 kernel/excel.c \
                 kernel/write.c \
                 kernel/format.c"
@@ -42,9 +42,9 @@ if test "$PHP_EXCEL_WRITER" != "no"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])
     fi
 
-    PHP_SUBST(EXCEL_WRITER_SHARED_LIBADD)
+    PHP_SUBST(XLSWRITER_SHARED_LIBADD)
 
-    PHP_NEW_EXTENSION(excel_writer, $excel_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+    PHP_NEW_EXTENSION(xlswriter, $xls_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 
     PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
 fi

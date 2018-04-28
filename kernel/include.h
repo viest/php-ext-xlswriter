@@ -1,5 +1,17 @@
-#ifndef PHP_EXT_EXCEL_EXPORT_INCLUDE_H
-#define PHP_EXT_EXCEL_EXPORT_INCLUDE_H
+/*
+  +----------------------------------------------------------------------+
+  | XlsWriter Extension                                                  |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 2017-2018 The Viest                                    |
+  +----------------------------------------------------------------------+
+  | http://www.viest.me                                                  |
+  +----------------------------------------------------------------------+
+  | Author: viest <dev@service.viest.me>                                 |
+  +----------------------------------------------------------------------+
+*/
+
+#ifndef PHP_XLS_WRITER_INCLUDE_H
+#define PHP_XLS_WRITER_INCLUDE_H
 
 #include <php.h>
 
@@ -20,15 +32,15 @@
 typedef struct {
     lxw_workbook  *workbook;
     lxw_worksheet *worksheet;
-} excel_resource_t;
+} xls_resource_t;
 
-typedef struct _vtiful_excel_object {
-    excel_resource_t ptr;
+typedef struct _vtiful_xls_object {
+    xls_resource_t ptr;
     zend_object      zo;
-} excel_object;
+} xls_object;
 
-static inline excel_object *php_vtiful_excel_fetch_object(zend_object *obj) {
-    return (excel_object *)((char *)(obj) - XtOffsetOf(excel_object, zo));
+static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
+    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
 }
 
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
@@ -37,12 +49,12 @@ static inline excel_object *php_vtiful_excel_fetch_object(zend_object *obj) {
 #define REGISTER_CLASS_PROPERTY_NULL(class_name, property_name, acc) \
     zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
 
-#define Z_EXCEL_P(zv) php_vtiful_excel_fetch_object(Z_OBJ_P(zv));
+#define Z_XLS_P(zv) php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
 
 #define ROW(range) \
     lxw_name_to_row(range)
 
-excel_resource_t * zval_get_resource(zval *handle);
+xls_resource_t * zval_get_resource(zval *handle);
 lxw_format       * zval_get_format(zval *handle);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
@@ -54,15 +66,15 @@ STATIC int  _compare_defined_names(lxw_defined_name *a, lxw_defined_name *b);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
-void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res, zend_string *format);
-void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
-void formula_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res);
-void auto_filter(zend_string *range, excel_resource_t *res);
-void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res);
-void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format);
-void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format);
-lxw_error workbook_file(excel_resource_t *self);
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format);
+void image_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
+void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
+void auto_filter(zend_string *range, xls_resource_t *res);
+void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res);
+void set_column(zend_string *range, double width, xls_resource_t *res, lxw_format *format);
+void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format);
+lxw_error workbook_file(xls_resource_t *self);
 
-void excel_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
+void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 
 #endif

@@ -1,6 +1,18 @@
+/*
+  +----------------------------------------------------------------------+
+  | XlsWriter Extension                                                  |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 2017-2018 The Viest                                    |
+  +----------------------------------------------------------------------+
+  | http://www.viest.me                                                  |
+  +----------------------------------------------------------------------+
+  | Author: viest <dev@service.viest.me>                                 |
+  +----------------------------------------------------------------------+
+*/
+
 #include "include.h"
 
-void excel_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
+void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
 {
     zend_string *full_path, *zstr_path;
 

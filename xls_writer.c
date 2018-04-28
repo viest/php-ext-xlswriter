@@ -1,10 +1,10 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
-  | http://www.vtiful.com                                                |
+  | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
   | Author: viest <dev@service.viest.me>                                 |
   +----------------------------------------------------------------------+
@@ -18,7 +18,7 @@
 #include "ext/standard/info.h"
 #include "kernel/include.h"
 
-int le_excel_writer;
+int le_xls_writer;
 
 /* {{{ PHP_MINIT_FUNCTION
  */
@@ -28,7 +28,7 @@ PHP_MINIT_FUNCTION(xlswriter)
 	VTIFUL_STARTUP_MODULE(excel);
 	VTIFUL_STARTUP_MODULE(format);
 
-    le_excel_writer = zend_register_list_destructors_ex(_php_vtiful_excel_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
+	le_xls_writer = zend_register_list_destructors_ex(_php_vtiful_xls_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 
 	return SUCCESS;
 }

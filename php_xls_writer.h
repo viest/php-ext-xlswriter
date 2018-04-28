@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
@@ -34,12 +34,12 @@ extern zend_module_entry xlswriter_module_entry;
 
 #define VTIFUL_RESOURCE_NAME "xlsx"
 
-extern int le_excel_writer;
+extern int le_xls_writer;
 
 #define VTIFUL_STARTUP_MODULE(module) ZEND_MODULE_STARTUP_N(xlsxwriter_##module)(INIT_FUNC_ARGS_PASSTHRU)
 #define VTIFUL_STARTUP_FUNCTION(module) ZEND_MINIT_FUNCTION(xlsxwriter_##module)
 
-void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC);
+void _php_vtiful_xls_close(zend_resource *rsrc TSRMLS_DC);
 
 #if defined(ZTS) && defined(COMPILE_DL_VTIFUL)
 ZEND_TSRMLS_CACHE_EXTERN();

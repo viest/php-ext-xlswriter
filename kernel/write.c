@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
@@ -15,7 +15,7 @@
 /*
  * According to the zval type written to the file
  */
-void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res, zend_string *format)
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format)
 {
     lxw_format *value_format = NULL;
 
@@ -47,7 +47,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, excel_resource_t
 /*
  * Write the image to the file
  */
-void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res)
+void image_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res)
 {
     worksheet_insert_image(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)));
 }
@@ -55,7 +55,7 @@ void image_writer(zval *value, zend_long row, zend_long columns, excel_resource_
 /*
  * Write the image to the file
  */
-void formula_writer(zval *value, zend_long row, zend_long columns, excel_resource_t *res)
+void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res)
 {
     worksheet_write_formula(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
 }
@@ -63,7 +63,7 @@ void formula_writer(zval *value, zend_long row, zend_long columns, excel_resourc
 /*
  * Add the autofilter.
  */
-void auto_filter(zend_string *range, excel_resource_t *res)
+void auto_filter(zend_string *range, xls_resource_t *res)
 {
     worksheet_autofilter(res->worksheet, RANGE(ZSTR_VAL(range)));
 }
@@ -71,7 +71,7 @@ void auto_filter(zend_string *range, excel_resource_t *res)
 /*
  * Merge cells.
  */
-void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res)
+void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res)
 {
     worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), NULL);
 }
@@ -79,7 +79,7 @@ void merge_cells(zend_string *range, zend_string *value, excel_resource_t *res)
 /*
  * Set column format
  */
-void set_column(zend_string *range, double width, excel_resource_t *res, lxw_format *format)
+void set_column(zend_string *range, double width, xls_resource_t *res, lxw_format *format)
 {
     worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
 }
@@ -87,7 +87,7 @@ void set_column(zend_string *range, double width, excel_resource_t *res, lxw_for
 /*
  * Set row format
  */
-void set_row(zend_string *range, double height, excel_resource_t *res, lxw_format *format)
+void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format)
 {
     worksheet_set_row(res->worksheet, ROW(ZSTR_VAL(range)), height, format);
 }
@@ -96,7 +96,7 @@ void set_row(zend_string *range, double height, excel_resource_t *res, lxw_forma
  * Call finalization code and close file.
  */
 lxw_error
-workbook_file(excel_resource_t *self)
+workbook_file(xls_resource_t *self)
 {
     lxw_worksheet *worksheet = NULL;
     lxw_packager *packager = NULL;
@@ -175,15 +175,13 @@ workbook_file(excel_resource_t *self)
 
     mem_error:
         lxw_packager_free(packager);
-//        lxw_workbook_free(self->workbook);
-//        self->worksheet->index
 
     return error;
 }
 
-void _php_vtiful_excel_close(zend_resource *rsrc TSRMLS_DC)
+void _php_vtiful_xls_close(zend_resource *rsrc TSRMLS_DC)
 {
-    //Here to PHP for gc
+
 }
 
 /*

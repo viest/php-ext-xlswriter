@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
@@ -10,8 +10,8 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef VTIFUL_EXCEL_EXCEPTION_H
-#define VTIFUL_EXCEL_EXCEPTION_H
+#ifndef VTIFUL_XLS_EXCEPTION_H
+#define VTIFUL_XLS_EXCEPTION_H
 
 extern zend_class_entry *vtiful_exception_ce;
 

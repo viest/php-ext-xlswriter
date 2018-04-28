@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
@@ -36,18 +36,18 @@ PHP_METHOD(vtiful_format, bold)
 {
     zval *handle;
     lxw_format *bold_format;
-    excel_resource_t *excel_res;
+    xls_resource_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_RESOURCE(handle)
     ZEND_PARSE_PARAMETERS_END();
 
-    excel_res   = zval_get_resource(handle);
-    bold_format = workbook_add_format(excel_res->workbook);
+    xls_res   = zval_get_resource(handle);
+    bold_format = workbook_add_format(xls_res->workbook);
 
     format_set_bold(bold_format);
 
-    RETURN_RES(zend_register_resource(bold_format, le_excel_writer));
+    RETURN_RES(zend_register_resource(bold_format, le_xls_writer));
 }
 /* }}} */
 
@@ -57,18 +57,18 @@ PHP_METHOD(vtiful_format, italic)
 {
     zval *handle;
     lxw_format *italic_format;
-    excel_resource_t *excel_res;
+    xls_resource_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_RESOURCE(handle)
     ZEND_PARSE_PARAMETERS_END();
 
-    excel_res   = zval_get_resource(handle);
-    italic_format = workbook_add_format(excel_res->workbook);
+    xls_res   = zval_get_resource(handle);
+    italic_format = workbook_add_format(xls_res->workbook);
 
     format_set_italic(italic_format);
 
-    RETURN_RES(zend_register_resource(italic_format, le_excel_writer));
+    RETURN_RES(zend_register_resource(italic_format, le_xls_writer));
 }
 /* }}} */
 
@@ -79,24 +79,24 @@ PHP_METHOD(vtiful_format, underline)
     zval *handle;
     zend_long style;
     lxw_format *underline_format;
-    excel_resource_t *excel_res;
+    xls_resource_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
             Z_PARAM_RESOURCE(handle)
             Z_PARAM_LONG(style)
     ZEND_PARSE_PARAMETERS_END();
 
-    excel_res = zval_get_resource(handle);
-    underline_format = workbook_add_format(excel_res->workbook);
+    xls_res = zval_get_resource(handle);
+    underline_format = workbook_add_format(xls_res->workbook);
 
     format_set_underline(underline_format, style);
 
-    RETURN_RES(zend_register_resource(underline_format, le_excel_writer));
+    RETURN_RES(zend_register_resource(underline_format, le_xls_writer));
 }
 /* }}} */
 
 
-/** {{{ excel_methods
+/** {{{ xls_methods
 */
 zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, bold,      format_style_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)

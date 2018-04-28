@@ -1,8 +1,8 @@
 /*
   +----------------------------------------------------------------------+
-  | Vtiful Extension                                                     |
+  | XlsWriter Extension                                                  |
   +----------------------------------------------------------------------+
-  | Copyright (c) 2017-2017 The Viest                                    |
+  | Copyright (c) 2017-2018 The Viest                                    |
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
@@ -10,8 +10,8 @@
   +----------------------------------------------------------------------+
 */
 
-#ifndef PHP_EXT_EXCEL_EXPORT_FORMAT_H
-#define PHP_EXT_EXCEL_EXPORT_FORMAT_H
+#ifndef PHP_EXT_XLS_EXPORT_FORMAT_H
+#define PHP_EXT_XLS_EXPORT_FORMAT_H
 
 extern zend_class_entry *vtiful_format_ce;
 

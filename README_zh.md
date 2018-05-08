@@ -291,7 +291,7 @@ $excel->fileName("test.xlsx")
 #### 语法
 
 ```php
-setColumn(string $range, double $width [, resourch $format]);
+setColumn(string $range, double $width [, resource $format]);
 ```
 
 ##### string $range
@@ -328,7 +328,7 @@ $fileObject->header(['name', 'age'])
 #### 语法
 
 ```php
-setRow(string $range, double $height [, resourch $format]);
+setRow(string $range, double $height [, resource $format]);
 ```
 
 ##### string $range

@@ -14,7 +14,7 @@ $boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
-    ->setRow($boldStyle, 'A1')
+    ->setRow('A1', 200, $boldStyle)
     ->output();
 
 var_dump($filePath);

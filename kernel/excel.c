@@ -392,21 +392,23 @@ PHP_METHOD(vtiful_xls, setColumn)
     int    argc  = ZEND_NUM_ARGS();
 
     ZEND_PARSE_PARAMETERS_START(2, 3)
-            Z_PARAM_RESOURCE(format_handle)
             Z_PARAM_STR(range)
-            Z_PARAM_OPTIONAL
             Z_PARAM_DOUBLE(width)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
 
-    if (argc == 2) {
-        width = 10;
-    }
-
     xls_object *obj = Z_XLS_P(getThis());
 
-    set_column(range, width, &obj->ptr, zval_get_format(format_handle));
+    if (argc == 3) {
+        set_column(range, width, &obj->ptr, zval_get_format(format_handle));
+    }
+
+    if (argc == 2) {
+        set_column(range, width, &obj->ptr, NULL);
+    }
 }
 /* }}} */
 
@@ -421,21 +423,23 @@ PHP_METHOD(vtiful_xls, setRow)
     int    argc  = ZEND_NUM_ARGS();
 
     ZEND_PARSE_PARAMETERS_START(2, 3)
-            Z_PARAM_RESOURCE(format_handle)
             Z_PARAM_STR(range)
-            Z_PARAM_OPTIONAL
             Z_PARAM_DOUBLE(height)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
 
-    if (argc == 2) {
-        height = 18;
-    }
-
     xls_object *obj = Z_XLS_P(getThis());
 
-    set_row(range, height, &obj->ptr, zval_get_format(format_handle));
+    if (argc == 3) {
+        set_row(range, height, &obj->ptr, zval_get_format(format_handle));
+    }
+
+    if (argc == 2) {
+        set_row(range, height, &obj->ptr, NULL);
+    }
 }
 /* }}} */
 

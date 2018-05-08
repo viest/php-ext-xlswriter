@@ -291,12 +291,8 @@ $excel->fileName("test.xlsx")
 #### 语法
 
 ```php
-setColumn(resourch $format, string $range[, double $width]);
+setColumn(string $range, double $width [, resourch $format]);
 ```
-
-##### string $format
-
-> 单元格样式
 
 ##### string $range
 
@@ -306,6 +302,10 @@ setColumn(resourch $format, string $range[, double $width]);
 
 > 单元格宽度
 
+##### string $format
+
+> 单元格样式
+
 ##### 实例
 
 ```php
@@ -319,7 +319,7 @@ $boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
-    ->setColumn($boldStyle, 'A:A', 200)
+    ->setColumn('A:A', 200, $boldStyle)
     ->output();
 ```
 
@@ -328,12 +328,8 @@ $fileObject->header(['name', 'age'])
 #### 语法
 
 ```php
-setRow(resourch $format, string $range[, double $height]);
+setRow(string $range, double $height [, resourch $format]);
 ```
-
-##### string $format
-
-> 单元格样式
 
 ##### string $range
 
@@ -343,6 +339,10 @@ setRow(resourch $format, string $range[, double $height]);
 
 > 单元格高度
 
+##### string $format
+
+> 单元格样式
+
 ##### 实例
 
 ```php
@@ -356,7 +356,7 @@ $boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
-    ->setRow($boldStyle, 'A1')
+    ->setRow('A1', 20, $boldStyle,)
     ->output();
 ```
 

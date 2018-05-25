@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.9.4" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+    <name>xlswriter</name>
+    <channel>pecl.php.net</channel>
+    <summary>An efficient and fast xlsx file export extension.</summary>
+    <description>
+        An efficient and fast xlsx file export extension for PHP.
+        - Quickly export xlsx files in php projects.
+        - Export xlsx files under fixed memory.
+        - Insert a calculation formula in an xlsx file.
+        - Insert a local picture in an xlsx file.
+        - Merging cells and cell styles.
+    </description>
+    <lead>
+        <name>Wang Jiexin</name>
+        <user>wjx</user>
+        <email>dev@service.viest.me</email>
+        <active>yes</active>
+    </lead>
+    <date>2018-05-25</date>
+    <time>12:00:00</time>
+    <version>
+        <release>1.0.0</release>
+        <api>1.0.0</api>
+    </version>
+    <stability>
+        <release>stable</release>
+        <api>stable</api>
+    </stability>
+    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+    <notes>
+        - PECL project init.
+    </notes>
+    <contents>
+        <dir name="/">
+            <file role="doc" name="CREDITS" />
+            <file role="doc" name="README.md" />
+            <file role="doc" name="README_zh.md" />
+            <file role="doc" name="LICENSE" />
+            <file role="src" name="config.m4" />
+            <file role="src" name="config.w32" />
+            <file role="src" name="EXPERIMENTAL" />
+            <file role="src" name="excel.php" />
+            <file role="src" name="php_xls_writer.h" />
+            <file role="src" name="xls_writer.c" />
+            <dir name="kernel">
+                <file role="src" name="common.c" />
+                <file role="src" name="excel.c" />
+                <file role="src" name="excel.h" />
+                <file role="src" name="exception.c" />
+                <file role="src" name="exception.h" />
+                <file role="src" name="format.c" />
+                <file role="src" name="format.h" />
+                <file role="src" name="include.h" />
+                <file role="src" name="resource.c" />
+                <file role="src" name="resource.c" />
+                <file role="src" name="write.c" />
+            </dir>
+            <dir name="tests">
+                <file role="src" name="001.phpt" />
+                <file role="src" name="002.phpt" />
+                <file role="src" name="003.phpt" />
+                <file role="src" name="004.phpt" />
+                <file role="src" name="005.phpt" />
+                <file role="src" name="006.phpt" />
+                <file role="src" name="007.phpt" />
+                <file role="src" name="008.phpt" />
+                <file role="src" name="009.phpt" />
+                <file role="src" name="010.phpt" />
+                <file role="src" name="011.phpt" />
+                <file role="src" name="012.phpt" />
+                <file role="src" name="013.phpt" />
+                <file role="src" name="014.phpt" />
+                <file role="src" name="015.phpt" />
+                <file role="src" name="016.phpt" />
+            </dir>
+        </dir>
+    </contents>
+    <dependencies>
+        <required>
+            <php>
+                <min>7.0.0</min>
+            </php>
+            <pearinstaller>
+                <min>1.10.1</min>
+            </pearinstaller>
+        </required>
+    </dependencies>
+    <providesextension>xlswriter</providesextension>
+    <extsrcrelease />
+    <changelog>
+
+    </changelog>
+</package>

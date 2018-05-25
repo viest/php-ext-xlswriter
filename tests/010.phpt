@@ -21,6 +21,11 @@ $fileTwo = $excel_two->fileName('tutorial02.xlsx')
     ->output();
 var_dump($fileOne,$fileTwo);
 ?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . '/tutorial01.xlsx');
+@unlink(__DIR__ . '/tutorial02.xlsx');
+?>
 --EXPECT--
 string(23) "./tests/tutorial01.xlsx"
 string(23) "./tests/tutorial02.xlsx"

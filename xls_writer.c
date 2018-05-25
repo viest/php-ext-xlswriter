@@ -69,8 +69,8 @@ PHP_MINFO_FUNCTION(xlswriter)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "xlswriter support", "enabled");
-#if defined(PHP_XLS_WRITER_VERSION)
-    php_info_print_table_row(2, "Version", PHP_XLS_WRITER_VERSION);
+#if defined(PHP_XLSWRITER_VERSION)
+    php_info_print_table_row(2, "Version", PHP_XLSWRITER_VERSION);
 #endif
 	php_info_print_table_end();
 }
@@ -96,7 +96,7 @@ zend_module_entry xlswriter_module_entry = {
 	PHP_RINIT(xlswriter),		/* Replace with NULL if there's nothing to do at request start */
 	PHP_RSHUTDOWN(xlswriter),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(xlswriter),
-	PHP_XLS_WRITER_VERSION,
+	PHP_XLSWRITER_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */

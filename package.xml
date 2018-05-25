@@ -18,10 +18,10 @@
         <active>yes</active>
     </lead>
     <date>2018-05-25</date>
-    <time>12:00:00</time>
+    <time>17:00:00</time>
     <version>
-        <release>1.0.0</release>
-        <api>1.0.0</api>
+        <release>1.0.1</release>
+        <api>1.0.1</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,7 +29,9 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - PECL project init.
+        - Rename #55. PHP_XLS_WRITER_VERSION to PHP_XLSWRITER_VERSION.
+        - Test #56. clean sections to tests.
+        - Drop #57. drop expertimental as extension released as stable.
     </notes>
     <contents>
         <dir name="/">
@@ -39,7 +41,6 @@
             <file role="doc" name="LICENSE" />
             <file role="src" name="config.m4" />
             <file role="src" name="config.w32" />
-            <file role="src" name="EXPERIMENTAL" />
             <file role="src" name="excel.php" />
             <file role="src" name="php_xls_writer.h" />
             <file role="src" name="xls_writer.c" />
@@ -89,6 +90,21 @@
     <providesextension>xlswriter</providesextension>
     <extsrcrelease />
     <changelog>
-
+        <release>
+            <date>2018-05-25</date>
+            <time>12:00:00</time>
+            <version>
+                <release>1.0.0</release>
+                <api>1.0.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                - PECL project init.
+            </notes>
+        </release>
     </changelog>
 </package>

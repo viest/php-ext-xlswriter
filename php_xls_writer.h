@@ -18,7 +18,7 @@
 extern zend_module_entry xlswriter_module_entry;
 #define phpext_xlswriter_ptr &xlswriter_module_entry
 
-#define PHP_XLSWRITER_VERSION "1.0.0"
+#define PHP_XLSWRITER_VERSION "1.0.1"
 
 #ifdef PHP_WIN32
 #	define PHP_VTIFUL_API __declspec(dllexport)

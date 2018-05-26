@@ -5,14 +5,14 @@ ARG_WITH("xlswriter", "xlswriter support", "no");
 
 if (PHP_XLSWRITER != "no") {
 
-    if (CHECK_LIB("LibXlsxWriter.lib", "xlswriter", PHP_XLSWRITER) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include;" + PHP_XLSWRITER) &&
-        CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include\\xlsxwriter;" + PHP_XLSWRITER) &&
-        CHECK_HEADER_ADD_INCLUDE("format.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\MSVCLibXlsxWriter\\libxlsxwriter\\include\\xlsxwriter;" + PHP_XLSWRITER)) {
+    if (CHECK_LIB("xlsxwriter.lib;xlsxwriter_a.lib", "xlswriter", PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter/packager.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter/format.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER)) {
         EXTENSION("xlswriter", "xls_writer.c")
         ADD_SOURCES(configure_module_dirname + "\\kernel", "common.c resource.c exception.c excel.c write.c format.c", "xlswriter");
     } else {
-        WARNING("xlswriter not enabled, LibXlsxWriter.lib or headers not found");
+        WARNING("xlswriter not enabled, xlsxwriter.lib or headers not found");
     }
 
 }

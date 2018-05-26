@@ -16,6 +16,7 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
     - **[6、设置列单元格格式](#设置列单元格格式)**
     - **[7、设置行单元格格式](#设置行单元格格式)**
     - **[8、固定内存导出](#固定内存导出)**
+    - **[9、向文件追加表格](#追加表格)**
 
 --------
 
@@ -386,5 +387,38 @@ $boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
     ->setRow($boldStyle, 'A1')
-    ->output();```
+    ->output();
+```
+
+### 追加表格
+
+#### 语法
+
+```php
+addSheet([string $sheetName]);
+```
+
+##### 实例
+
+```php
+$config = [
+    'path' => './filePath'
+];
+
+$excel = new \Vtiful\Kernel\Excel($config);
+
+// 此处会自动创建一个表格
+$fileObject = $excel->fileName("tutorial01.xlsx");
+
+$fileObject->header(['name', 'age'])
+    ->data([['viest', 21]]);
+
+// 向文件中追加一个表格
+$fileObject->addSheet()
+    ->header(['name', 'age'])
+    ->data([['wjx', 22]]);
+
+// 最后的最后，输出文件
+$filePath = $fileObject->output();
+```
 

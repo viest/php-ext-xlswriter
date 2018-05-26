@@ -63,6 +63,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)
+                ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_header_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, header)
 ZEND_END_ARG_INFO()
@@ -165,6 +169,35 @@ PHP_METHOD(vtiful_xls, fileName)
 
         zval_ptr_dtor(&file_path);
     }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::addSheet(string $sheetName)
+ */
+PHP_METHOD(vtiful_xls, addSheet)
+{
+    zend_string *zs_sheet_name = NULL;
+    char *sheet_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(zs_sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if(obj->ptr.workbook == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
+        return;
+    }
+
+    if(zs_sheet_name != NULL) {
+        sheet_name = ZSTR_VAL(zs_sheet_name);
+    }
+
+    obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
 }
 /* }}} */
 
@@ -448,6 +481,7 @@ PHP_METHOD(vtiful_xls, setRow)
 zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, constMemory,   xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)

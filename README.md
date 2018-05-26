@@ -10,6 +10,8 @@ Please refer to the image below. PHPExcel has been unable to work properly for m
 
 [中文文档](https://github.com/viest/php-ext-excel-export/blob/master/README_zh.md) | [Documents](https://github.com/viest/php-ext-excel-export/wiki)
 
+![pecl](https://github.com/viest/php-excel-writer/blob/master/resource/pecl.png)
+
 #### License
 
 BSD license

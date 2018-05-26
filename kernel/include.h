@@ -36,7 +36,7 @@ typedef struct {
 
 typedef struct _vtiful_xls_object {
     xls_resource_t ptr;
-    zend_object      zo;
+    zend_object    zo;
 } xls_object;
 
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {

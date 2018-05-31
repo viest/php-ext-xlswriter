@@ -36,6 +36,7 @@ typedef struct {
 
 typedef struct _vtiful_xls_object {
     xls_resource_t ptr;
+    zend_long      line;
     zend_object    zo;
 } xls_object;
 
@@ -53,6 +54,14 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
 
 #define ROW(range) \
     lxw_name_to_row(range)
+
+#define SHEET_LINE_INIT(obj_p) \
+    obj_p->line = 0;
+
+#define SHEET_LINE_ADD(obj_p) \
+    ++obj_p->line;
+
+#define SHEET_CURRENT_LINE(obj_p) obj_p->line
 
 xls_resource_t * zval_get_resource(zval *handle);
 lxw_format       * zval_get_format(zval *handle);

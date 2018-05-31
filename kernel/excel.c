@@ -32,6 +32,8 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 {
     xls_object *intern = vtiful_object_alloc(sizeof(xls_object), ce);
 
+    SHEET_LINE_INIT(intern)
+
     zend_object_std_init(&intern->zo, ce);
     object_properties_init(&intern->zo, ce);
 
@@ -146,11 +148,13 @@ PHP_METHOD(vtiful_xls, __construct)
  */
 PHP_METHOD(vtiful_xls, fileName)
 {
-    zval file_path, *dir_path;
-    zend_string *file_name;
+    zval file_path, *dir_path = NULL;
+    zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
+    char *sheet_name = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-            Z_PARAM_STR(file_name)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_STR(zs_file_name)
+            Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -160,10 +164,14 @@ PHP_METHOD(vtiful_xls, fileName)
     xls_object *obj = Z_XLS_P(getThis());
 
     if(obj->ptr.workbook == NULL) {
-        xls_file_path(file_name, dir_path, &file_path);
+        xls_file_path(zs_file_name, dir_path, &file_path);
+
+        if(zs_sheet_name != NULL) {
+            sheet_name = ZSTR_VAL(zs_sheet_name);
+        }
 
         obj->ptr.workbook  = workbook_new(Z_STRVAL(file_path));
-        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
+        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 
@@ -187,6 +195,8 @@ PHP_METHOD(vtiful_xls, addSheet)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    SHEET_LINE_INIT(obj)
 
     if(obj->ptr.workbook == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
@@ -249,10 +259,10 @@ PHP_METHOD(vtiful_xls, header)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value) {
+    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
          type_writer(header_value, 0, header_l_key, &obj->ptr, NULL);
          zval_ptr_dtor(header_value);
-    } ZEND_HASH_FOREACH_END();
+    ZEND_HASH_FOREACH_END();
 }
 /* }}} */
 
@@ -260,8 +270,8 @@ PHP_METHOD(vtiful_xls, header)
  */
 PHP_METHOD(vtiful_xls, data)
 {
-    zval *data, *data_r_value, *data_l_value;
-    zend_long data_r_key, data_l_key;
+    zval *data = NULL, *data_r_value = NULL, *data_l_value = NULL;
+    zend_long data_l_key;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ARRAY(data)
@@ -271,14 +281,16 @@ PHP_METHOD(vtiful_xls, data)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data), data_r_key, data_r_value) {
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(data), data_r_value)
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
-            ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data_r_value), data_l_key, data_l_value) {
-                type_writer(data_l_value, data_r_key+1, data_l_key, &obj->ptr, NULL);
+            SHEET_LINE_ADD(obj)
+
+            ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(data_r_value), data_l_key, data_l_value)
+                type_writer(data_l_value, SHEET_CURRENT_LINE(obj), data_l_key, &obj->ptr, NULL);
                 zval_ptr_dtor(data_l_value);
-            } ZEND_HASH_FOREACH_END();
+            ZEND_HASH_FOREACH_END();
         }
-    } ZEND_HASH_FOREACH_END();
+    ZEND_HASH_FOREACH_END();
 }
 /* }}} */
 

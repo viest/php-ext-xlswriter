@@ -17,11 +17,11 @@
         <email>dev@service.viest.me</email>
         <active>yes</active>
     </lead>
-    <date>2018-05-26</date>
-    <time>11:00:00</time>
+    <date>2018-05-31</date>
+    <time>10:00:00</time>
     <version>
-        <release>1.0.2</release>
-        <api>1.0.2</api>
+        <release>1.1.0</release>
+        <api>1.1.0</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,7 +29,7 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - Windows #60. Change config.w32.
+        - FEAT #63. Add more than one sheet to a file.
     </notes>
     <contents>
         <dir name="/">
@@ -88,6 +88,22 @@
     <providesextension>xlswriter</providesextension>
     <extsrcrelease />
     <changelog>
+        <release>
+            <date>2018-05-26</date>
+            <time>11:00:00</time>
+            <version>
+                <release>1.0.2</release>
+                <api>1.0.2</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                - Windows #60. Change config.w32.
+            </notes>
+        </release>
         <release>
             <date>2018-05-25</date>
             <time>17:00:00</time>

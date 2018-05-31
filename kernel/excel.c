@@ -61,8 +61,9 @@ ZEND_BEGIN_ARG_INFO_EX(xls_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, file_name)
+                ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)

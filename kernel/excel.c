@@ -155,6 +155,7 @@ PHP_METHOD(vtiful_xls, fileName)
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(zs_file_name)
+            Z_PARAM_OPTIONAL
             Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 

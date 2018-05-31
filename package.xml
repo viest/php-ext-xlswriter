@@ -18,10 +18,10 @@
         <active>yes</active>
     </lead>
     <date>2018-05-31</date>
-    <time>10:00:00</time>
+    <time>22:30:00</time>
     <version>
-        <release>1.1.0</release>
-        <api>1.1.0</api>
+        <release>1.2.0</release>
+        <api>1.2.0</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,7 +29,8 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - FEAT #63. Add more than one sheet to a file.
+        - FEAT #70. Data Bulk Insert automatic maintenance line number.
+        - FEAT #70. Customizing the default sheet name.
     </notes>
     <contents>
         <dir name="/">
@@ -88,6 +89,22 @@
     <providesextension>xlswriter</providesextension>
     <extsrcrelease />
     <changelog>
+        <release>
+            <date>2018-05-31</date>
+            <time>10:00:00</time>
+            <version>
+                <release>1.1.0</release>
+                <api>1.1.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                - FEAT #63. Add more than one sheet to a file.
+            </notes>
+        </release>
         <release>
             <date>2018-05-26</date>
             <time>11:00:00</time>

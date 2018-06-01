@@ -61,9 +61,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, config)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
                 ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_const_memory_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, file_name)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)
@@ -496,7 +500,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, constMemory,   xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, output,        NULL,                       ZEND_ACC_PUBLIC)

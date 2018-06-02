@@ -17,11 +17,11 @@
         <email>dev@service.viest.me</email>
         <active>yes</active>
     </lead>
-    <date>2018-05-31</date>
-    <time>22:30:00</time>
+    <date>2018-06-02</date>
+    <time>12:00:00</time>
     <version>
-        <release>1.2.0</release>
-        <api>1.2.0</api>
+        <release>1.2.1</release>
+        <api>1.2.1</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,8 +29,7 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - FEAT #70. Data Bulk Insert automatic maintenance line number.
-        - FEAT #70. Customizing the default sheet name.
+        - FEAT #72. Compatible string key value
     </notes>
     <contents>
         <dir name="/">
@@ -91,6 +90,23 @@
     <providesextension>xlswriter</providesextension>
     <extsrcrelease />
     <changelog>
+        <release>
+            <date>2018-05-31</date>
+            <time>22:30:00</time>
+            <version>
+                <release>1.2.0</release>
+                <api>1.2.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                - FEAT #70. Data Bulk Insert automatic maintenance line number.
+                - FEAT #70. Customizing the default sheet name.
+            </notes>
+        </release>
         <release>
             <date>2018-05-31</date>
             <time>10:00:00</time>

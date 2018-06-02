@@ -68,6 +68,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_const_memory_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
+                ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)
@@ -149,7 +150,7 @@ PHP_METHOD(vtiful_xls, __construct)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::filename(string $fileName)
+/** {{{ \Vtiful\Kernel\xls::filename(string $fileName [, string $sheetName])
  */
 PHP_METHOD(vtiful_xls, fileName)
 {
@@ -217,15 +218,18 @@ PHP_METHOD(vtiful_xls, addSheet)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::constMemory(string $fileName)
+/** {{{ \Vtiful\Kernel\xls::constMemory(string $fileName [, string $sheetName])
  */
 PHP_METHOD(vtiful_xls, constMemory)
 {
-    zval file_path, *dir_path;
-    zend_string *file_name;
+    zval file_path, *dir_path = NULL;
+    zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
+    char *sheet_name = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-            Z_PARAM_STR(file_name)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_STR(zs_file_name)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -235,12 +239,16 @@ PHP_METHOD(vtiful_xls, constMemory)
     xls_object *obj = Z_XLS_P(getThis());
 
     if(obj->ptr.workbook == NULL) {
-        xls_file_path(file_name, dir_path, &file_path);
+        xls_file_path(zs_file_name, dir_path, &file_path);
 
         lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
 
+        if(zs_sheet_name != NULL) {
+            sheet_name = ZSTR_VAL(zs_sheet_name);
+        }
+
         obj->ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
-        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, NULL);
+        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 

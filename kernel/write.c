@@ -29,7 +29,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *
                 format_set_num_format(value_format, ZSTR_VAL(format));
                 worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), value_format);
             } else {
-                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+                worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), NULL);
             }
             break;
         case IS_DOUBLE:

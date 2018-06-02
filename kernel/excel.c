@@ -292,6 +292,7 @@ PHP_METHOD(vtiful_xls, data)
 
             ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
                 type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->ptr, NULL);
+                zval_ptr_dtor(&bucket->val);
             ZEND_HASH_FOREACH_END();
         }
     ZEND_HASH_FOREACH_END();

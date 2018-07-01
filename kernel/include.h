@@ -55,6 +55,9 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
 #define ROW(range) \
     lxw_name_to_row(range)
 
+#define ROWS(range) \
+    lxw_name_to_row(range), lxw_name_to_row_2(range)
+
 #define SHEET_LINE_INIT(obj_p) \
     obj_p->line = 0;
 
@@ -82,6 +85,7 @@ void auto_filter(zend_string *range, xls_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res);
 void set_column(zend_string *range, double width, xls_resource_t *res, lxw_format *format);
 void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format);
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_t *res, lxw_format *format);
 lxw_error workbook_file(xls_resource_t *self);
 
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);

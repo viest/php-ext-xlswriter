@@ -89,7 +89,26 @@ void set_column(zend_string *range, double width, xls_resource_t *res, lxw_forma
  */
 void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format)
 {
-    worksheet_set_row(res->worksheet, ROW(ZSTR_VAL(range)), height, format);
+    char *rows = ZSTR_VAL(range);
+
+    if (strchr(rows, ':')) {
+        worksheet_set_rows(ROWS(rows), height, res, format);
+    } else {
+        worksheet_set_row(res->worksheet, ROW(rows), height, format);
+    }
+}
+
+/*
+ * Set rows format
+ */
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_t *res, lxw_format *format)
+{
+    while (1) {
+        worksheet_set_row(res->worksheet, end, height, format);
+        if (end == start)
+            break;
+        end--;
+    }
 }
 
 /*

@@ -13,8 +13,12 @@ $fileHandle = $fileObject->getHandle();
 $boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
 
 $filePath = $fileObject->header(['name', 'age'])
-    ->data([['viest', 21]])
+    ->data([
+        ['viest', 21],
+        ['wjx',   21]
+    ])
     ->setRow('A1', 200, $boldStyle)
+    ->setRow('A2:A3', 200, $boldStyle)
     ->output();
 
 var_dump($filePath);

@@ -6,7 +6,9 @@ if (PHP_XLSWRITER != "no") {
 
     MESSAGE("Include Path:" + configure_module_dirname + "\\include");
 
-    if (CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include")) {
+    if (CHECK_LIB("zlib_a.lib;zlib.lib", "zlib", PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS_XLSWRITER", "..\\zlib;" + php_usual_include_suspects)
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include")) {
         ADD_FLAG("CFLAGS_XLSWRITER", ' /I "' + configure_module_dirname + '" ');
 
         ADD_SOURCES(configure_module_dirname + "\\library\\third_party\\minizip", "ioapi.c iowin32.c miniunz.c minizip.c mztools.c unzip.c zip.c", "xlswriter");

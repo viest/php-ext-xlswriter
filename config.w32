@@ -7,7 +7,7 @@ if (PHP_XLSWRITER != "no") {
     //if (CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\..\\..\\include")) {
         EXTENSION("xlswriter", "xls_writer.c")
 
-        ADD_FLAG("CFLAGS_XLSWRITER", "/I " + configure_module_dirname + "\\include");
+        ADD_FLAG("CFLAGS_XLSWRITER", ' /I "' + configure_module_dirname + '\\include" ');
 
         WARNING("INCLUDE:" + configure_module_dirname + "\\include");
 

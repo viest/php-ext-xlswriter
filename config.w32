@@ -4,17 +4,17 @@ ARG_WITH("xlswriter", "xlswriter support", "no");
 
 if (PHP_XLSWRITER != "no") {
 
-    if (CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER)) {
+    if (CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\..\\include;" + PHP_XLSWRITER)) {
         EXTENSION("xlswriter", "xls_writer.c")
 
-        ADD_FLAG("CFLAGS_XLSWRITER", "/I " + configure_module_dirname);
+        // ADD_FLAG("CFLAGS_XLSWRITER", "/I " + configure_module_dirname);
 
         ADD_SOURCES(configure_module_dirname + "\\library\\third_party\\minizip", "ioapi.c iowin32.c miniunz.c minizip.c mztools.c unzip.c zip.c", "xlswriter");
         ADD_SOURCES(configure_module_dirname + "\\library\\third_party\\tmpfileplus", "tmpfileplus.c", "xlswriter");
         ADD_SOURCES(configure_module_dirname + "\\library\\src", "app.c chart.c content_types.c core.c custom.c drawing.c format.c hash_table.c packager.c relationships.c shared_strings.c styles.c theme.c utility.c workbook.c worksheet.c xmlwriter.c", "xlswriter");
         ADD_SOURCES(configure_module_dirname + "\\kernel", "common.c resource.c exception.c excel.c write.c format.c", "xlswriter");
     } else {
-        WARNING(PHP_PHP_BUILD+"-"+PHP_XLSWRITER);
+        WARNING("path:"PHP_PHP_BUILD+"---"+PHP_XLSWRITER);
     }
 
 }

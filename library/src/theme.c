@@ -69,7 +69,7 @@ const char *theme_strs[] = {
     "<a:latin typeface=\"Calibri\"/>",
     "<a:ea typeface=\"\"/>",
     "<a:cs typeface=\"\"/>",
-    "<a:font script=\"Jpan\" typeface=\"ＭＳ Ｐゴシック\"/>",
+    //"<a:font script=\"Jpan\" typeface=\"ＭＳ Ｐゴシック\"/>",
     "<a:font script=\"Hang\" typeface=\"맑은 고딕\"/>",
     "<a:font script=\"Hans\" typeface=\"宋体\"/>",
     "<a:font script=\"Hant\" typeface=\"新細明體\"/>",

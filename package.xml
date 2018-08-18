@@ -14,14 +14,14 @@
     <lead>
         <name>Wang Jiexin</name>
         <user>wjx</user>
-        <email>dev@service.viest.me</email>
+        <email>wjx@php.net</email>
         <active>yes</active>
     </lead>
-    <date>2018-06-02</date>
-    <time>12:00:00</time>
+    <date>2018-07-11</date>
+    <time>22:00:00</time>
     <version>
-        <release>1.2.1</release>
-        <api>1.2.1</api>
+        <release>1.2.2</release>
+        <api>1.2.2</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,7 +29,8 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - FEAT #72. Compatible string key value
+        - FEAT #76. setRow method support multiple lines.
+        - FEAT #78. support align format.
     </notes>
     <contents>
         <dir name="/">
@@ -52,7 +53,6 @@
                 <file role="src" name="format.h" />
                 <file role="src" name="include.h" />
                 <file role="src" name="resource.c" />
-                <file role="src" name="resource.c" />
                 <file role="src" name="write.c" />
             </dir>
             <dir name="tests">
@@ -74,6 +74,7 @@
                 <file role="src" name="016.phpt" />
                 <file role="src" name="017.phpt" />
                 <file role="src" name="018.phpt" />
+                <file role="src" name="format_align.phpt" />
             </dir>
         </dir>
     </contents>
@@ -90,6 +91,22 @@
     <providesextension>xlswriter</providesextension>
     <extsrcrelease />
     <changelog>
+        <release>
+            <date>2018-06-02</date>
+            <time>12:00:00</time>
+            <version>
+                <release>1.2.1</release>
+                <api>1.2.1</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                FEAT #72. Compatible string key value
+            </notes>
+        </release>
         <release>
             <date>2018-05-31</date>
             <time>22:30:00</time>

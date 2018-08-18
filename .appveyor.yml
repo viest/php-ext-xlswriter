@@ -33,9 +33,6 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname1)) {
                         & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
                 }
-                if (-not (Test-Path c:\build-cache\COPYING_LIBXLSXWRITER)) {
-                        copy "c:\build-cache\$lname1\COPYING" "c:\build-cache\COPYING_LIBXLSXWRITER"
-                }
 
 cache:
         c:\build-cache -> .appveyor.yml

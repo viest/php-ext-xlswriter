@@ -35,7 +35,7 @@ const char *theme_strs[] = {
     "<a:fontScheme name=\"Office\"><a:majorFont>",
     "<a:latin typeface=\"Cambria\"/><a:ea typeface=\"\"/>",
     "<a:cs typeface=\"\"/>",
-    "<a:font script=\"Jpan\" typeface=\"ＭＳＰゴシック\"/>",
+    //"<a:font script=\"Jpan\" typeface=\"ＭＳＰゴシック\"/>",
     "<a:font script=\"Hang\" typeface=\"맑은 고딕\"/>",
     "<a:font script=\"Hans\" typeface=\"宋体\"/>",
     "<a:font script=\"Hant\" typeface=\"新細明體\"/>",

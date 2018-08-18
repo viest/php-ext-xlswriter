@@ -44,7 +44,7 @@ install:
                         & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname3
                 }
                 if (-not (Test-Path c:\build-cache\$lname3\Release)) {
-                       cd c:\build-cache\$lname3
+                       cd c:\build-cache\$lname3\zlib-1.2.11
                        dir .
                        $cmakegen = 'Visual Studio 15 2017'
                        if ($env:VC -Match "vc14") {

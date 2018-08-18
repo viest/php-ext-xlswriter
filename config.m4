@@ -16,7 +16,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/src/core.c \
     library/src/custom.c \
     library/src/drawing.c \
-    library/src/format.c \
+    library/src/xlsx_format.c \
     library/src/hash_table.c \
     library/src/packager.c \
     library/src/relationships.c \

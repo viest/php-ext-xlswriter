@@ -31,10 +31,6 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 
 sudo apt-get install -y zlib1g-dev
 
-git clone https://github.com/jmcnamara/libxlsxwriter.git
-
-cd libxlsxwriter && make && sudo make install
-
 # Excel-Export
 
 git clone https://github.com/viest/php-ext-excel-export.git
@@ -53,7 +49,7 @@ make && make install
 ```bash
 # 依赖
 
-brew install libxlsxwriter
+brew install zlib
 
 # Excel-Export
 
@@ -77,24 +73,13 @@ make && make install
 ```bash
 cd PHP_BUILD_PATH/deps
 
-git clone --recursive https://github.com/jmcnamara/MSVCLibXlsxWriter.git
+DownloadFile http://zlib.net/zlib-1.2.11.tar.gz
+7z x zlib-1.2.11.tar.gz > NUL
+7z x zlib-1.2.11.tar > NUL
+cd zlib-1.2.11
+cmake -G "Visual Studio 14 2015" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
+cmake --build . --config "Release"
 ```
-
-要构建依赖库的DLL，打开LibXlsxWriterProj/LibXlsxWriter。在MS Visual Studio中使用sln项目，并使用`"构建 ->构建解决方案"`菜单项构建解决方案。
-
-在默认配置中，这将构建一个`x64调试`LibXlsxWriter .lib和.dll，你也可以选择`释放`版本构建，构建完成后，你可以在一下路径中找到对应的DLL
-
-```bash
-PHP_BUILD_PATH\deps\MSVCLibXlsxWriter\LibXlsxWriterProj\[x64|x86]\Debug
-
-# or
-
-PHP_BUILD_PATH\deps\MSVCLibXlsxWriter\LibXlsxWriterProj\[x64|x86]\Release
-```
-
-32\64位: 复制 .dll 文件到 c:\Windows\System*
-
-最后添加系统环境变量LIB，指向DLL文件目录
 
 ##### 扩展
 
@@ -103,11 +88,11 @@ cd PHP_PATH/ext
 
 git clone https://github.com/viest/php-ext-excel-export.git
 
-cd PHP_PATH
+cd EXT_PATH
 
-buildconf.bat
+phpize
 
-configure.bat --disable-all --enable-cli --with-xlswriter
+configure.bat --with-xlswriter --with-extra-libs=PATH\zlib-1.2.11\Release --with-extra-includes=PATH\zlib-1.2.11
 
 nmake
 ```

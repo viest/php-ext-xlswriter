@@ -40,7 +40,8 @@ install:
                         Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname2"
                 }
                 if (-not (Test-Path c:\build-cache\$lname3)) {
-                        & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
+                        & 7z x c:\build-cache\$lname2 -oc:\build-cache
+                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname3
                 }
                 if (-not (Test-Path c:\build-cache\$lname3\Release)) {
                        cd c:\build-cache\$lname3

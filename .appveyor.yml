@@ -23,13 +23,26 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
+                $lname0 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+                $lname1 = 'libxlsxwriter'
+                if (-not (Test-Path c:\build-cache\$lname0)) {
+                        # vc14 is fine also for vc15 builds with PHP
+                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname0
+                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname0"
+                }
+                if (-not (Test-Path c:\build-cache\$lname1)) {
+                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
+                }
+                if (-not (Test-Path c:\build-cache\COPYING_LIBXLSXWRITER)) {
+                        copy "c:\build-cache\$lname1\COPYING" "c:\build-cache\COPYING_LIBXLSXWRITER"
+                }
 
 cache:
         c:\build-cache -> .appveyor.yml
 
 environment:
         BIN_SDK_VER: 2.1.2
-        LIBCMARK_VER: 0.28.3
+        LIBXLSXWRITER_VER: 0.7.7
         matrix:
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64

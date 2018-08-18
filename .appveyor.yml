@@ -44,7 +44,7 @@ install:
                 }
                 if (-not (Test-Path c:\build-cache\$lname3\Release)) {
                        cd c:\build-cache\$lname3
-                       if ($env:VC == "vc14") {
+                       if ($env:VC -Match "vc14") {
                               SET GEN="Visual Studio 14 2015"
                        } else {
                               SET GEN="Visual Studio 15 2017"

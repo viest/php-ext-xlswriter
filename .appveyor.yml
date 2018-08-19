@@ -23,16 +23,6 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
-                $lname0 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname1 = 'libxlsxwriter'
-                if (-not (Test-Path c:\build-cache\$lname0)) {
-                        # vc14 is fine also for vc15 builds with PHP
-                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname0
-                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname0"
-                }
-                if (-not (Test-Path c:\build-cache\$lname1)) {
-                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
-                }
                 $lname2 = 'zlib-1.2.11.tar.gz'
                 $lname3 = 'zlib'
                 if (-not (Test-Path c:\build-cache\$lname2)) {

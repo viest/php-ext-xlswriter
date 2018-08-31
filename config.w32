@@ -8,9 +8,9 @@ if (PHP_XLSWRITER != "no") {
 
     if (CHECK_LIB("zlib_a.lib;zlib.lib", "zlib", PHP_XLSWRITER) && 
 		CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS_XLSWRITER", "..\\zlib;" + php_usual_include_suspects) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include") &&
-		CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include\\xlsxwriter") &&
-		CHECK_HEADER_ADD_INCLUDE("zip.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include\\xlsxwriter\\third_party")) {        
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include") &&
+		CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include\\xlsxwriter") &&
+		CHECK_HEADER_ADD_INCLUDE("zip.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include\\xlsxwriter\\third_party")) {
 	
 		EXTENSION("xlswriter", "xls_writer.c");
 

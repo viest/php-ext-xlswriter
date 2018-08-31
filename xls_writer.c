@@ -72,6 +72,9 @@ PHP_MINFO_FUNCTION(xlswriter)
 #if defined(PHP_XLSWRITER_VERSION)
     php_info_print_table_row(2, "Version", PHP_XLSWRITER_VERSION);
 #endif
+#if defined(LXW_VERSION)
+    php_info_print_table_row(2, "Library version", LXW_VERSION);
+#endif
 	php_info_print_table_end();
 }
 /* }}} */

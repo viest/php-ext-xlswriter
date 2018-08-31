@@ -72,6 +72,13 @@ PHP_MINFO_FUNCTION(xlswriter)
 #if defined(PHP_XLSWRITER_VERSION)
     php_info_print_table_row(2, "Version", PHP_XLSWRITER_VERSION);
 #endif
+#ifdef LXW_VERSION
+#ifdef HAVE_LIBXLSXWRITER
+    php_info_print_table_row(2, "system libxlsxwriter version", LXW_VERSION);
+#else
+    php_info_print_table_row(2, "bundled libxlsxwriter version", LXW_VERSION);
+#endif
+#endif
 	php_info_print_table_end();
 }
 /* }}} */

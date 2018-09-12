@@ -367,8 +367,13 @@ _prepare_drawings(lxw_workbook *self)
 
         STAILQ_FOREACH(image_options, worksheet->chart_data, list_pointers) {
             chart_ref_id++;
+#ifdef HAVE_LXW_CHARTSHEET_NEW
+            lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
+                                        image_options, 0);
+#else
             lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
                                         image_options);
+#endif
             if (image_options->chart)
                 STAILQ_INSERT_TAIL(self->ordered_charts, image_options->chart,
                                    ordered_list_pointers);

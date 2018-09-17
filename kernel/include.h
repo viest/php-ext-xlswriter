@@ -13,6 +13,10 @@
 #ifndef PHP_XLS_WRITER_INCLUDE_H
 #define PHP_XLS_WRITER_INCLUDE_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <php.h>
 
 #include "zend_exceptions.h"

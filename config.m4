@@ -68,12 +68,23 @@ if test "$PHP_XLSWRITER" != "no"; then
             ],[
                 -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
             ])
+            PHP_CHECK_LIBRARY(xlsxwriter, lxw_chartsheet_new,
+            [
+                AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
+            ],[
+            ],[
+                -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
+            ])
         fi
         AC_DEFINE(HAVE_LIBXLSXWRITER, 1, [ use system libxlsxwriter ])
     else
         AC_MSG_RESULT([use the bundled library])
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
         PHP_ADD_INCLUDE([$srcdir/library/include])
+
+        dnl uncomment when bunled lib will be updated
+        dnl AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
+        dnl AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
     fi
 
     if test -z "$PHP_DEBUG"; then

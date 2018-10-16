@@ -3,7 +3,7 @@ Check for vtiful presence
 --SKIPIF--
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
-<?php 
+<?php
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 $filePath = $excel->fileName('tutorial01.xlsx')

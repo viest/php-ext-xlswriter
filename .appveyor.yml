@@ -51,8 +51,8 @@ install:
                        & cmake -G $cmakegen -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
                        & cmake --build . --config "Release"
 
-                       mov c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\$lname1\include
-                       mov c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\$lname1\lib
+                       move c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\$lname1\include
+                       move c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\$lname1\lib
                 }
 
 cache:

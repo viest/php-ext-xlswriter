@@ -51,8 +51,8 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname3)) {
                         & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
                 }
-                move c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\libxlsxwriter\lib
-                move c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\libxlsxwriter\include
+                move c:\build-cache\zlib\zlib-1.2.11\Release c:\build-cache\libxlsxwriter\lib
+                move c:\build-cache\zlib\zlib-1.2.11 c:\build-cache\libxlsxwriter\include
 
 cache:
         c:\build-cache -> .appveyor.yml

@@ -50,6 +50,9 @@ install:
                        }
                        & cmake -G $cmakegen -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
                        & cmake --build . --config "Release"
+
+                       mov c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\$lname1\include
+                       mov c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\$lname1\lib
                 }
 
 cache:
@@ -143,7 +146,7 @@ build_script:
                 #echo "" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "" | Out-File -Encoding "ASCII" task.bat
                 echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
-                $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --with-extra-includes=c:\build-cache\zlib\zlib-1.2.11 --enable-debug-pack 2>&1'
+                $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --enable-debug-pack 2>&1'
                 echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat
                 echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
@@ -182,7 +185,7 @@ test_script:
                 cd c:\projects\xlswriter
                 echo "" | Out-File -Encoding "ASCII" task.bat
                 echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
-                $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --with-extra-includes=c:\build-cache\zlib\zlib-1.2.11 --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
+                $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
                 echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
                 echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
                 echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat

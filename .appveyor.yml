@@ -23,24 +23,14 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
-                $lname0 = 'zlib-1.2.11.tar.gz'
+                $lname0 = 'zlib-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
                 $lname1 = 'zlib'
                 if (-not (Test-Path c:\build-cache\$lname0)) {
-                        $zliurl = "http://zlib.net/" + $lname0
+                        $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
                         Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
                 }
                 if (-not (Test-Path c:\build-cache\$lname1)) {
-                        & 7z x c:\build-cache\$lname0 -oc:\build-cache
-                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname1
-                }
-                if (-not (Test-Path c:\build-cache\$lname1\zlib-1.2.11\Release)) {
-                       cd c:\build-cache\$lname1\zlib-1.2.11
-                       $cmakegen = 'Visual Studio 15 2017'
-                       if ($env:VC -Match "vc14") {
-                              $cmakegen = "Visual Studio 14 2015"
-                       }
-                       cmake -G $cmakegen -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
-                       cmake --build . --config "Release"
+                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
                 }
                 $lname2 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
                 $lname3 = 'libxlsxwriter'
@@ -51,8 +41,8 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname3)) {
                         & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
                 }
-                move c:\build-cache\zlib\zlib-1.2.11\Release c:\build-cache\libxlsxwriter\lib
-                move c:\build-cache\zlib\zlib-1.2.11 c:\build-cache\libxlsxwriter\include
+                move c:\build-cache\zlib\lib     c:\build-cache\libxlsxwriter\lib
+                move c:\build-cache\zlib\include c:\build-cache\libxlsxwriter\include
 
 cache:
         c:\build-cache -> .appveyor.yml
@@ -65,61 +55,73 @@ environment:
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.0.28
+                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.0.28
+                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.0.28
+                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.0.28
+                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.1.15
+                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.1.15
+                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.1.15
+                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.1.15
+                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x64
                   VC: vc15
                   PHP_VER: 7.2.3
+                  ZLIB_VER: 1.2.11
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x64
                   VC: vc15
                   PHP_VER: 7.2.3
+                  ZLIB_VER: 1.2.11
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x86
                   VC: vc15
                   PHP_VER: 7.2.3
+                  ZLIB_VER: 1.2.11
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x86
                   VC: vc15
                   PHP_VER: 7.2.3
+                  ZLIB_VER: 1.2.11
                   TS: 1
 
 build_script:

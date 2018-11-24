@@ -5,12 +5,8 @@ ARG_WITH("xlswriter", "xlswriter support", "no");
 if (PHP_XLSWRITER != "no") {
 
     if (CHECK_LIB("xlsxwriter.lib;xlsxwriter_a.lib", "xlswriter", PHP_XLSWRITER) &&
-        (
-            ((PHP_ZLIB=="no") && (CHECK_LIB("zlib_a.lib;zlib.lib", "xlswriter", PHP_XLSWRITER))) ||
-            (PHP_ZLIB_SHARED && CHECK_LIB("zlib.lib", "xlswriter", PHP_XLSWRITER)) ||
-            (PHP_ZLIB == "yes" && (!PHP_ZLIB_SHARED))
-        ) &&
-        CHECK_LIB("xlsxwriter.lib;xlsxwriter_a.lib", "xlswriter", PHP_XLSWRITER) &&
+        CHECK_LIB("zlib.lib;zlib_a.lib", "xlswriter", PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter/packager.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter/format.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER)) {

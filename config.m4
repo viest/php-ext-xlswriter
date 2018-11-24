@@ -4,33 +4,7 @@ PHP_ARG_WITH(xlsxwriter, xlswriter support,
 PHP_ARG_WITH(libxlsxwriter, system libxlsswriter,
 [  --with-libxlsxwriter=DIR Use system library], no, no)
 
-PHP_ARG_WITH(zlib-dir,if the location of ZLIB install directory is defined,
-[  --with-zlib-dir=<DIR>   Define the location of zlib install directory], no, no)
-
-if test "$PHP_XLSWRITER" != "no" || $PHP_ZLIB_DIR != "no"; then
-
-    for i in /usr/local /usr $PHP_ZLIB_DIR; do
-        if test -f $i/include/zlib/zlib.h; then
-            ZLIB_DIR=$i
-            ZLIB_INCDIR=$i/include/zlib
-        elif test -f $i/include/zlib.h; then
-            ZLIB_DIR=$i
-            ZLIB_INCDIR=$i/include
-        fi
-    done
-
-    if test -z "$ZLIB_DIR"; then
-        AC_MSG_ERROR(Cannot find zlib)
-    fi
-
-    AC_MSG_CHECKING([for zlib version >= 1.2.8])
-
-    ZLIB_VERSION=`$EGREP "define ZLIB_VERSION" $ZLIB_INCDIR/zlib.h | $SED -e 's/[[^0-9\.]]//g'`
-
-    if test `echo $ZLIB_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*1000000 + $2*10000 + $3*100}'` -lt 1020800; then
-        AC_MSG_ERROR([zlib version greater or equal to 1.2.8 required])
-    fi
-
+if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="
     xls_writer.c \
     kernel/exception.c \

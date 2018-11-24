@@ -23,28 +23,18 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
-                $lname0 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname1 = 'libxlsxwriter'
+                $lname0 = 'zlib-1.2.11.tar.gz'
+                $lname1 = 'zlib'
                 if (-not (Test-Path c:\build-cache\$lname0)) {
-                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname0
-                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname0"
+                        $zliurl = "http://zlib.net/" + $lname0
+                        Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
                 }
                 if (-not (Test-Path c:\build-cache\$lname1)) {
-                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
+                        & 7z x c:\build-cache\$lname0 -oc:\build-cache
+                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname1
                 }
-                $lname2 = 'zlib-1.2.11.tar.gz'
-                $lname3 = 'zlib'
-                if (-not (Test-Path c:\build-cache\$lname2)) {
-                        $zliurl = "http://zlib.net/" + $lname2
-                        Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname2"
-                }
-                if (-not (Test-Path c:\build-cache\$lname3)) {
-                        & 7z x c:\build-cache\$lname2 -oc:\build-cache
-                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname3
-                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname1\include
-                }
-                if (-not (Test-Path c:\build-cache\$lname3\zlib-1.2.11\Release)) {
-                       cd c:\build-cache\$lname3\zlib-1.2.11
+                if (-not (Test-Path c:\build-cache\$lname1\zlib-1.2.11\Release)) {
+                       cd c:\build-cache\$lname1\zlib-1.2.11
                        $cmakegen = 'Visual Studio 15 2017'
                        if ($env:VC -Match "vc14") {
                               $cmakegen = "Visual Studio 14 2015"
@@ -52,8 +42,17 @@ install:
                        cmake -G $cmakegen -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
                        cmake --build . --config "Release"
                 }
-
-                move c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\$lname1\lib
+                $lname2 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+                $lname3 = 'libxlsxwriter'
+                if (-not (Test-Path c:\build-cache\$lname2)) {
+                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname2
+                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname2"
+                }
+                if (-not (Test-Path c:\build-cache\$lname3)) {
+                        & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
+                }
+                move c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\libxlsxwriter\lib
+                move c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\libxlsxwriter\include
 
 cache:
         c:\build-cache -> .appveyor.yml

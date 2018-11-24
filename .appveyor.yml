@@ -41,8 +41,8 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname3)) {
                         & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
                 }
-                move c:\build-cache\zlib\lib     c:\build-cache\libxlsxwriter\lib
-                move c:\build-cache\zlib\include c:\build-cache\libxlsxwriter\include
+                move c:\build-cache\zlib\lib\*.*     c:\build-cache\libxlsxwriter\lib
+                move c:\build-cache\zlib\include\*.* c:\build-cache\libxlsxwriter\include
 
                 dir c:\build-cache\libxlsxwriter\lib
 

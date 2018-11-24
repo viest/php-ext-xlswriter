@@ -3,7 +3,7 @@ Check for vtiful presence
 --SKIPIF--
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
-<?php 
+<?php
 echo "xlswriter extension is available";
 ?>
 --EXPECT--

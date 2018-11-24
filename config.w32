@@ -6,19 +6,19 @@ if (PHP_XLSWRITER != "no") {
 
     MESSAGE("Include Path:" + configure_module_dirname + "\\include");
 
-    if (CHECK_LIB("zlib_a.lib;zlib.lib", "zlib", PHP_XLSWRITER) && 
+    if (CHECK_LIB("zlib_a.lib;zlib.lib", "zlib", PHP_XLSWRITER) &&
 		CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS_XLSWRITER", "..\\zlib;" + php_usual_include_suspects) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include") &&
-		CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include\\xlsxwriter") &&
-		CHECK_HEADER_ADD_INCLUDE("zip.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\include\\xlsxwriter\\third_party")) {        
-	
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include") &&
+		CHECK_HEADER_ADD_INCLUDE("packager.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include\\xlsxwriter") &&
+		CHECK_HEADER_ADD_INCLUDE("zip.h", "CFLAGS_XLSWRITER", PHP_XLSWRITER + ";" + configure_module_dirname + "\\library\\include\\xlsxwriter\\third_party")) {
+
 		EXTENSION("xlswriter", "xls_writer.c");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\third_party\\minizip", "ioapi.c iowin32.c mztools.c unzip.c zip.c", "xlswriter");
         ADD_SOURCES(configure_module_dirname + "\\library\\third_party\\tmpfileplus", "tmpfileplus.c", "xlswriter");
-        ADD_SOURCES(configure_module_dirname + "\\library\\src", "app.c chart.c content_types.c core.c custom.c drawing.c xlsx_format.c hash_table.c packager.c relationships.c shared_strings.c styles.c theme.c utility.c workbook.c worksheet.c xmlwriter.c", "xlswriter");
+        ADD_SOURCES(configure_module_dirname + "\\library\\src", "app.c chart.c content_types.c core.c custom.c drawing.c format.c hash_table.c packager.c relationships.c shared_strings.c styles.c theme.c utility.c workbook.c worksheet.c xmlwriter.c", "xlswriter");
         ADD_SOURCES(configure_module_dirname + "\\kernel", "common.c resource.c exception.c excel.c write.c format.c", "xlswriter");
-        
+
 		ADD_FLAG("CFLAGS_XLSWRITER", ' /I "' + configure_module_dirname + '" ');
 
     } else {

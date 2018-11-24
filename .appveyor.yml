@@ -44,8 +44,6 @@ install:
                 move c:\build-cache\zlib\lib\*.*     c:\build-cache\libxlsxwriter\lib
                 move c:\build-cache\zlib\include\*.* c:\build-cache\libxlsxwriter\include
 
-                dir c:\build-cache\libxlsxwriter\lib
-
 cache:
         c:\build-cache -> .appveyor.yml
 

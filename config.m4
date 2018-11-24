@@ -82,17 +82,15 @@ if test "$PHP_XLSWRITER" != "no"; then
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
         PHP_ADD_INCLUDE([$srcdir/library/include])
 
-        PHP_CHECK_LIBRARY(xlsxwriter, lxw_version,
-        [
+        XLSXWRITER_VERSION=`$EGREP "define LXW_VERSION" $srcdir/library/include/xlsxwriter.h | $SED -e 's/[[^0-9\.]]//g'`
+
+        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -lt 80000; then
             AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
-        ])
-        PHP_CHECK_LIBRARY(xlsxwriter, lxw_chartsheet_new,
-        [
+        fi
+
+        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 80000; then
             AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
-        ])
-        dnl uncomment when bunled lib will be updated
-        dnl AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
-        dnl AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
+        fi
     fi
 
     if test -z "$PHP_DEBUG"; then

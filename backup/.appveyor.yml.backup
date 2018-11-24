@@ -23,26 +23,25 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
-                $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname1 = 'zlib'
-                if (-not (Test-Path c:\build-cache\$lname0)) {
-                        $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
-                        Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
-                }
-                if (-not (Test-Path c:\build-cache\$lname1)) {
-                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
-                }
-                $lname2 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname3 = 'libxlsxwriter'
+                $lname2 = 'zlib-1.2.11.tar.gz'
+                $lname3 = 'zlib'
                 if (-not (Test-Path c:\build-cache\$lname2)) {
-                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname2
-                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname2"
+                        $zliurl = "http://zlib.net/" + $lname2
+                        Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname2"
                 }
                 if (-not (Test-Path c:\build-cache\$lname3)) {
-                        & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
+                        & 7z x c:\build-cache\$lname2 -oc:\build-cache
+                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname3
                 }
-                move c:\build-cache\zlib\lib\*.*     c:\build-cache\libxlsxwriter\lib
-                move c:\build-cache\zlib\include\*.* c:\build-cache\libxlsxwriter\include
+                if (-not (Test-Path c:\build-cache\$lname3\Release)) {
+                       cd c:\build-cache\$lname3\zlib-1.2.11
+                       $cmakegen = 'Visual Studio 15 2017'
+                       if ($env:VC -Match "vc14") {
+                              $cmakegen = "Visual Studio 14 2015"
+                       }
+                       & cmake -G $cmakegen -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RELEASE="/MT"
+                       & cmake --build . --config "Release"
+                }
 
 cache:
         c:\build-cache -> .appveyor.yml
@@ -55,73 +54,61 @@ environment:
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x64
                   VC: vc14
                   PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
                   ARCH: x86
                   VC: vc14
                   PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x64
                   VC: vc15
                   PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x64
                   VC: vc15
                   PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
                   TS: 1
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x86
                   VC: vc15
                   PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
                   TS: 0
                 - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
                   ARCH: x86
                   VC: vc15
                   PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
                   TS: 1
 
 build_script:
@@ -146,8 +133,9 @@ build_script:
                 #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
                 #echo "" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "" | Out-File -Encoding "ASCII" task.bat
+                echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
-                $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --enable-debug-pack 2>&1'
+                $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\zlib-1.2.11\Release --with-extra-includes=c:\build-cache\zlib\zlib-1.2.11 --enable-debug-pack 2>&1'
                 echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat
                 echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
@@ -165,7 +153,7 @@ after_build:
                 if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
                 $dir = $dir + 'Release'
                 if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
-                & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\libxlsxwriter\lib\xlsxwriter.lib c:\build-cache\libxlsxwriter\lib\xlsxwriter.pdb
+                & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE
                 Push-AppveyorArtifact c:\$zip_bname
 
 test_script:
@@ -186,7 +174,7 @@ test_script:
                 cd c:\projects\xlswriter
                 echo "" | Out-File -Encoding "ASCII" task.bat
                 echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
-                $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
+                $cmd = 'call configure --with-xlswriter --with-xlswriter --with-extra-libs=c:\build-cache\zlib\zlib-1.2.11\Release --with-extra-includes=c:\build-cache\zlib\zlib-1.2.11 --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
                 echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
                 echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
                 echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat

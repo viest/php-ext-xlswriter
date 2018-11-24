@@ -17,8 +17,8 @@
         <email>wjx@php.net</email>
         <active>yes</active>
     </lead>
-    <date>2018-07-11</date>
-    <time>22:00:00</time>
+    <date>2018-11-25</date>
+    <time>00:30:00</time>
     <version>
         <release>1.2.3</release>
         <api>1.2.3</api>
@@ -91,7 +91,7 @@
     <extsrcrelease />
     <changelog>
         <release>
-            <date>2018-11-25</date>
+            <date>2018-07-11</date>
             <time>00:22:00</time>
             <version>
                 <release>1.2.2</release>

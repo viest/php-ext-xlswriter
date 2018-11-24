@@ -17,6 +17,7 @@ notifications:
   email: dev@service.viest.me
 
 before_script:
+  - git submodule update --init
   - sudo apt-get install zlib1g-dev -y
   - phpize && ./configure && make clean && make
 

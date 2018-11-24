@@ -17,11 +17,11 @@
         <email>wjx@php.net</email>
         <active>yes</active>
     </lead>
-    <date>2018-07-11</date>
-    <time>22:00:00</time>
+    <date>2018-11-25</date>
+    <time>00:30:00</time>
     <version>
-        <release>1.2.2</release>
-        <api>1.2.2</api>
+        <release>1.2.3</release>
+        <api>1.2.3</api>
     </version>
     <stability>
         <release>stable</release>
@@ -29,8 +29,7 @@
     </stability>
     <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
     <notes>
-        - FEAT #76. setRow method support multiple lines.
-        - FEAT #78. support align format.
+        - FIX #94. define for bunled library version.
     </notes>
     <contents>
         <dir name="/">
@@ -92,6 +91,23 @@
     <extsrcrelease />
     <changelog>
         <release>
+            <date>2018-07-11</date>
+            <time>00:22:00</time>
+            <version>
+                <release>1.2.2</release>
+                <api>1.2.2</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>stable</api>
+            </stability>
+            <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+            <notes>
+                - FEAT #76. setRow method support multiple lines.
+                - FEAT #78. support align format.
+            </notes>
+        </release>
+        <release>
             <date>2018-06-02</date>
             <time>12:00:00</time>
             <version>
@@ -104,7 +120,7 @@
             </stability>
             <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
             <notes>
-                FEAT #72. Compatible string key value
+                - FEAT #72. Compatible string key value
             </notes>
         </release>
         <release>

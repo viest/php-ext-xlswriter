@@ -23,7 +23,7 @@ install:
                         7z x c:\build-cache\$bname -oc:\build-cache
                         move c:\build-cache\$dname0 c:\build-cache\$dname1
                 }
-                $lname0 = 'zlib-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+                $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
                 $lname1 = 'zlib'
                 if (-not (Test-Path c:\build-cache\$lname0)) {
                         $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0

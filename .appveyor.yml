@@ -41,6 +41,7 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname3)) {
                         & 7z x c:\build-cache\$lname2 -oc:\build-cache
                         & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname3
+                        & 7z x c:\build-cache\zlib-1.2.11.tar -oc:\build-cache\$lname1\include
                 }
                 if (-not (Test-Path c:\build-cache\$lname3\zlib-1.2.11\Release)) {
                        cd c:\build-cache\$lname3\zlib-1.2.11
@@ -52,7 +53,6 @@ install:
                        cmake --build . --config "Release"
                 }
 
-                move c:\build-cache\$lname3\zlib-1.2.11 c:\build-cache\$lname1\include
                 move c:\build-cache\$lname3\zlib-1.2.11\Release c:\build-cache\$lname1\lib
 
 cache:

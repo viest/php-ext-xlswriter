@@ -1,0 +1,4 @@
+[submodule "library"]
+	path = library
+	url = https://github.com/jmcnamara/libxlsxwriter.git
+	branch = RELEASE_0.7.9

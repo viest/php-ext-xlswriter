@@ -32,9 +32,6 @@ install:
                 if (-not (Test-Path c:\build-cache\$lname1)) {
                         & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
                 }
-                if (-not (Test-Path c:\build-cache\COPYING_LIBCMARK)) {
-                        copy "c:\build-cache\$lname1\COPYING" "c:\build-cache\COPYING_LIBCMARK"
-                }
 
 cache:
         c:\build-cache -> .appveyor.yml
@@ -145,7 +142,7 @@ after_build:
                 if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
                 $dir = $dir + 'Release'
                 if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
-                & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE
+                & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\libxlsxwriter\lib\xlsxwriter.lib c:\build-cache\libxlsxwriter\lib\xlsxwriter.pdb
                 Push-AppveyorArtifact c:\$zip_bname
 
 test_script:

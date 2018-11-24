@@ -26,7 +26,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/src/core.c \
     library/src/custom.c \
     library/src/drawing.c \
-    library/src/xlsx_format.c \
+    library/src/format.c \
     library/src/hash_table.c \
     library/src/packager.c \
     library/src/relationships.c \
@@ -82,6 +82,14 @@ if test "$PHP_XLSWRITER" != "no"; then
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
         PHP_ADD_INCLUDE([$srcdir/library/include])
 
+        PHP_CHECK_LIBRARY(xlsxwriter, lxw_version,
+        [
+            AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
+        ])
+        PHP_CHECK_LIBRARY(xlsxwriter, lxw_chartsheet_new,
+        [
+            AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
+        ])
         dnl uncomment when bunled lib will be updated
         dnl AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
         dnl AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])

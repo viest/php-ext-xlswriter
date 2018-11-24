@@ -133,6 +133,7 @@ build_script:
                 #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
                 #echo "" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "" | Out-File -Encoding "ASCII" task.bat
+                echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
                 $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\zlib-1.2.11\Release --with-extra-includes=c:\build-cache\zlib\zlib-1.2.11 --enable-debug-pack 2>&1'
                 echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat

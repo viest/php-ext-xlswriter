@@ -102,4 +102,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_NEW_EXTENSION(xlswriter, $xls_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 
     PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/src])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/third_party/minizip])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/third_party/tmpfileplus])
 fi

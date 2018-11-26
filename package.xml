@@ -54,6 +54,76 @@
                 <file role="src" name="resource.c" />
                 <file role="src" name="write.c" />
             </dir>
+            <dir name="library">
+                <dir name="include">
+                    <file role="src" name="xlsxwriter.h"/>
+                    <dir name="xlsxwriter">
+                        <file role="src" name="app.h"/>
+                        <file role="src" name="chart.h"/>
+                        <file role="src" name="common.h"/>
+                        <file role="src" name="content_types.h"/>
+                        <file role="src" name="core.h"/>
+                        <file role="src" name="custom.h"/>
+                        <file role="src" name="drawing.h"/>
+                        <file role="src" name="format.h"/>
+                        <file role="src" name="hash_table.h"/>
+                        <file role="src" name="packager.h"/>
+                        <file role="src" name="relationships.h"/>
+                        <file role="src" name="shared_strings.h"/>
+                        <file role="src" name="styles.h"/>
+                        <file role="src" name="theme.h"/>
+                        <file role="src" name="utility.h"/>
+                        <file role="src" name="workbook.h"/>
+                        <file role="src" name="worksheet.h"/>
+                        <file role="src" name="xmlwriter.h"/>
+                        <dir name="third_party">
+                            <file role="src" name="ioapi.h"/>
+                            <file role="src" name="queue.h"/>
+                            <file role="src" name="tmpfileplus.h"/>
+                            <file role="src" name="tree.h"/>
+                            <file role="src" name="zip.h"/>
+                        </dir>
+                    </dir>
+                </dir>
+                <dir name="third_party">
+                    <dir name="minizip">
+                        <file role="src" name="crypt.h"/>
+                        <file role="src" name="ioapi.c"/>
+                        <file role="src" name="ioapi.h"/>
+                        <file role="src" name="miniunz.c"/>
+                        <file role="src" name="minizip.c"/>
+                        <file role="src" name="mztools.c"/>
+                        <file role="src" name="mztools.h"/>
+                        <file role="src" name="unzip.c"/>
+                        <file role="src" name="unzip.h"/>
+                        <file role="src" name="zip.c"/>
+                        <file role="src" name="zip.h"/>
+                    </dir>
+                    <dir name="tmpfileplus">
+                        <file role="src" name="tmpfileplus.c"/>
+                        <file role="src" name="tmpfileplus.h"/>
+                    </dir>
+                </dir>
+                <dir name="src">
+                    <file role="src" name="app.c"/>
+                    <file role="src" name="chart.c"/>
+                    <file role="src" name="content_types.c"/>
+                    <file role="src" name="core.c"/>
+                    <file role="src" name="custom.c"/>
+                    <file role="src" name="drawing.c"/>
+                    <file role="src" name="format.c"/>
+                    <file role="src" name="hash_table.c"/>
+                    <file role="src" name="packager.c"/>
+                    <file role="src" name="relationships.c"/>
+                    <file role="src" name="shared_strings.c"/>
+                    <file role="src" name="styles.c"/>
+                    <file role="src" name="theme.c"/>
+                    <file role="src" name="utility.c"/>
+                    <file role="src" name="workbook.c"/>
+                    <file role="src" name="worksheet.c"/>
+                    <file role="src" name="xmlwriter.c"/>
+                </dir>
+            </dir>
             <dir name="tests">
                 <file role="src" name="001.phpt" />
                 <file role="src" name="002.phpt" />

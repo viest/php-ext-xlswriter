@@ -55,6 +55,7 @@
                 <file role="src" name="write.c" />
             </dir>
             <dir name="library">
+                <file role="doc" name="License.txt"/>
                 <dir name="include">
                     <file role="src" name="xlsxwriter.h"/>
                     <dir name="xlsxwriter">

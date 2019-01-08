@@ -90,6 +90,8 @@ git clone https://github.com/viest/php-ext-excel-export.git
 
 cd EXT_PATH
 
+git submodule update --init
+
 phpize
 
 configure.bat --with-xlswriter --with-extra-libs=PATH\zlib-1.2.11\Release --with-extra-includes=PATH\zlib-1.2.11

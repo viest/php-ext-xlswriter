@@ -37,6 +37,8 @@ git clone https://github.com/viest/php-ext-excel-export.git
 
 cd php-ext-excel-export
 
+git submodule update --init
+
 phpize && ./configure --with-php-config=/path/to/php-config
 
 make && make install
@@ -56,6 +58,8 @@ brew install zlib
 git clone https://github.com/viest/php-ext-excel-export.git
 
 cd php-ext-excel-export
+
+git submodule update --init
 
 phpize && ./configure --with-php-config=/path/to/php-config
 

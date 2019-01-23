@@ -500,7 +500,7 @@ PHP_METHOD(vtiful_xls, setRow)
 /** {{{ xls_methods
 */
 zend_function_entry xls_methods[] = {
-        PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+        PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)

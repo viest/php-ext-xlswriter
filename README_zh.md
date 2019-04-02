@@ -319,7 +319,7 @@ $fileObject = $excel->fileName('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format    = new \Vtiful\Kernel\Format($fileHandle);
-$boldStyle = $format->bold();
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
@@ -357,7 +357,7 @@ $fileObject = $excel->fileName('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format    = new \Vtiful\Kernel\Format($fileHandle);
-$boldStyle = $format->bold();
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
@@ -387,7 +387,7 @@ $fileObject = $excel->constMemory('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format    = new \Vtiful\Kernel\Format($fileHandle);
-$boldStyle = $format->bold();
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])

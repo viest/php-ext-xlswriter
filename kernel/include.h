@@ -97,7 +97,7 @@ STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format);
-void image_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res);
 void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
 void auto_filter(zend_string *range, xls_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res);

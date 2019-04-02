@@ -13,11 +13,11 @@ $fileObject  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $fileObject->fileName('tutorial.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$alignStyle = \Vtiful\Kernel\Format::align(
-    $fileHandle,
+$format     = new \Vtiful\Kernel\Format($fileHandle);
+$alignStyle = $format->align(
     \Vtiful\Kernel\Format::FORMAT_ALIGN_CENTER,
     \Vtiful\Kernel\Format::FORMAT_ALIGN_VERTICAL_CENTER
-);
+)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([

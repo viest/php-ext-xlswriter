@@ -11,49 +11,94 @@
 */
 
 #include "include.h"
-#include "ext/standard/php_var.h"
 
 zend_class_entry *vtiful_format_ce;
 
+/* {{{ format_objects_new
+ */
+static zend_object_handlers format_handlers;
+
+static zend_always_inline void *vtiful_format_object_alloc(size_t obj_size, zend_class_entry *ce) {
+    void *obj = emalloc(obj_size);
+    memset(obj, 0, obj_size);
+    return obj;
+}
+
+PHP_VTIFUL_API zend_object *format_objects_new(zend_class_entry *ce)
+{
+    format_object *format = vtiful_format_object_alloc(sizeof(format_object), ce);
+
+    zend_object_std_init(&format->zo, ce);
+    object_properties_init(&format->zo, ce);
+
+    format->ptr.format  = NULL;
+    format->zo.handlers = &format_handlers;
+
+    return &format->zo;
+}
+/* }}} */
+
+/* {{{ format_objects_free
+ */
+static void format_objects_free(zend_object *object)
+{
+    format_object *intern = php_vtiful_format_fetch_object(object);
+
+    if (intern->ptr.format != NULL) {
+        // free by workbook
+        intern->ptr.format = NULL;
+    }
+
+    zend_object_std_dtor(&intern->zo);
+}
+/* }}} */
+
 /* {{{ ARG_INFO
  */
-ZEND_BEGIN_ARG_INFO_EX(format_bold_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(format_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, handle)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_italic_arginfo, 0, 0, 1)
-                ZEND_ARG_INFO(0, handle)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(format_underline_arginfo, 0, 0, 2)
-                ZEND_ARG_INFO(0, handle)
+ZEND_BEGIN_ARG_INFO_EX(format_underline_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_align_arginfo, 0, 0, 2)
-                ZEND_ARG_INFO(0, handle)
+ZEND_BEGIN_ARG_INFO_EX(format_align_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Format::bold()
+/** {{{ \Vtiful\Kernel\Format::__construct()
  */
-PHP_METHOD(vtiful_format, bold)
+PHP_METHOD(vtiful_format, __construct)
 {
     zval *handle;
-    lxw_format *bold_format;
+    format_object *obj;
     xls_resource_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_RESOURCE(handle)
     ZEND_PARSE_PARAMETERS_END();
 
-    xls_res   = zval_get_resource(handle);
-    bold_format = workbook_add_format(xls_res->workbook);
+    ZVAL_COPY(return_value, getThis());
 
-    format_set_bold(bold_format);
+    xls_res = zval_get_resource(handle);
+    obj     = Z_FORMAT_P(getThis());
 
-    RETURN_RES(zend_register_resource(bold_format, le_xls_writer));
+    if (obj->ptr.format == NULL) {
+        obj->ptr.format = workbook_add_format(xls_res->workbook);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::bold()
+ */
+PHP_METHOD(vtiful_format, bold)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+    format_set_bold(obj->ptr.format);
 }
 /* }}} */
 
@@ -61,20 +106,10 @@ PHP_METHOD(vtiful_format, bold)
  */
 PHP_METHOD(vtiful_format, italic)
 {
-    zval *handle;
-    lxw_format *italic_format;
-    xls_resource_t *xls_res;
+    ZVAL_COPY(return_value, getThis());
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-            Z_PARAM_RESOURCE(handle)
-    ZEND_PARSE_PARAMETERS_END();
-
-    xls_res   = zval_get_resource(handle);
-    italic_format = workbook_add_format(xls_res->workbook);
-
-    format_set_italic(italic_format);
-
-    RETURN_RES(zend_register_resource(italic_format, le_xls_writer));
+    format_object *obj = Z_FORMAT_P(getThis());
+    format_set_italic(obj->ptr.format);
 }
 /* }}} */
 
@@ -82,22 +117,16 @@ PHP_METHOD(vtiful_format, italic)
  */
 PHP_METHOD(vtiful_format, underline)
 {
-    zval *handle;
     zend_long style;
-    lxw_format *underline_format;
-    xls_resource_t *xls_res;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-            Z_PARAM_RESOURCE(handle)
+    ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(style)
     ZEND_PARSE_PARAMETERS_END();
 
-    xls_res = zval_get_resource(handle);
-    underline_format = workbook_add_format(xls_res->workbook);
+    ZVAL_COPY(return_value, getThis());
 
-    format_set_underline(underline_format, style);
-
-    RETURN_RES(zend_register_resource(underline_format, le_xls_writer));
+    format_object *obj = Z_FORMAT_P(getThis());
+    format_set_underline(obj->ptr.format, style);
 }
 /* }}} */
 
@@ -105,19 +134,16 @@ PHP_METHOD(vtiful_format, underline)
  */
 PHP_METHOD(vtiful_format, align)
 {
-    zval *handle = NULL, *args = NULL;
+    zval *args = NULL;
     int argc, i;
 
-    lxw_format *align_format;
-    xls_resource_t *xls_res;
-
-    ZEND_PARSE_PARAMETERS_START(2, -1)
-            Z_PARAM_RESOURCE(handle)
+    ZEND_PARSE_PARAMETERS_START(1, -1)
             Z_PARAM_VARIADIC('+', args, argc)
     ZEND_PARSE_PARAMETERS_END();
 
-    xls_res = zval_get_resource(handle);
-    align_format = workbook_add_format(xls_res->workbook);
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
 
     for (i = 0; i < argc; ++i) {
         zval *arg = args + i;
@@ -126,10 +152,18 @@ PHP_METHOD(vtiful_format, align)
             zend_throw_exception(vtiful_exception_ce, "Format exception, please view the manual", 150);
         }
 
-        format_set_align(align_format, Z_LVAL_P(arg));
+        format_set_align(obj->ptr.format, Z_LVAL_P(arg));
     }
+}
+/* }}} */
 
-    RETURN_RES(zend_register_resource(align_format, le_xls_writer));
+/** {{{ \Vtiful\Kernel\Format::toResource()
+ */
+PHP_METHOD(vtiful_format, toResource)
+{
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    RETURN_RES(zend_register_resource(obj->ptr.format, le_xls_writer));
 }
 /* }}} */
 
@@ -137,10 +171,12 @@ PHP_METHOD(vtiful_format, align)
 /** {{{ xls_methods
 */
 zend_function_entry format_methods[] = {
-        PHP_ME(vtiful_format, bold,      format_bold_arginfo,      ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-        PHP_ME(vtiful_format, italic,    format_italic_arginfo,    ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-        PHP_ME(vtiful_format, underline, format_underline_arginfo, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-        PHP_ME(vtiful_format, align,     format_align_arginfo,     ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_format, __construct, format_construct_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, bold,        NULL,                     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, italic,      NULL,                     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, underline,   format_underline_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, align,       format_align_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, toResource,  NULL,                     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */
@@ -151,8 +187,12 @@ VTIFUL_STARTUP_FUNCTION(format) {
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", format_methods);
-
+    ce.create_object = format_objects_new;
     vtiful_format_ce = zend_register_internal_class(&ce);
+
+    memcpy(&format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    format_handlers.offset   = XtOffsetOf(format_object, zo);
+    format_handlers.free_obj = format_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE",            LXW_UNDERLINE_SINGLE)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE ",           LXW_UNDERLINE_DOUBLE)

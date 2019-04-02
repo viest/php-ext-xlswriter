@@ -5,10 +5,13 @@ Check for vtiful presence
 --FILE--
 <?php
 $config = ['path' => './tests'];
-$excel = new \Vtiful\Kernel\Excel($config);
-$handle = $excel->fileName('tutorial01.xlsx')
-    ->getHandle();
-$underlineStyle = \Vtiful\Kernel\Format::underline($handle, \Vtiful\Kernel\Format::UNDERLINE_SINGLE);
+
+$excel  = new \Vtiful\Kernel\Excel($config);
+$handle = $excel->fileName('tutorial01.xlsx')->getHandle();
+
+$format         = new \Vtiful\Kernel\Format($handle);
+$underlineStyle = $format->underline(\Vtiful\Kernel\Format::UNDERLINE_SINGLE)->toResource();
+
 var_dump($underlineStyle);
 ?>
 --EXPECT--

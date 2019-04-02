@@ -10,7 +10,8 @@ $excel  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->fileName('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([

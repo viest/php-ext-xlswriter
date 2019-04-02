@@ -8,24 +8,15 @@ $config = [
     'path' => './tests'
 ];
 
-$fileObject  = new \Vtiful\Kernel\Excel($config);
-
+$fileObject = new \Vtiful\Kernel\Excel($config);
 $fileObject = $fileObject->fileName('tutorial.xlsx');
-$fileHandle = $fileObject->getHandle();
-
-$format     = new \Vtiful\Kernel\Format($fileHandle);
-$alignStyle = $format->align(
-    \Vtiful\Kernel\Format::FORMAT_ALIGN_CENTER,
-    \Vtiful\Kernel\Format::FORMAT_ALIGN_VERTICAL_CENTER
-)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
         ['viest', 21],
         ['wjx',   21]
     ])
-    ->setRow('A1', 50, $alignStyle)
-    ->setRow('A2:A3', 50, $alignStyle)
+    ->insertImage(3, 0, __DIR__ . '/../resource/pecl.png')
     ->output();
 
 var_dump($filePath);

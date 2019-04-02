@@ -206,7 +206,7 @@ $freeFile->output();
 #### 语法
 
 ```php
-insertImage(int $row, int $column, string $localImagePath)
+insertImage(int $row, int $column, string $localImagePath[, double $widthScale, double $heightScale])
 ```
 
 ##### int $row
@@ -220,6 +220,16 @@ insertImage(int $row, int $column, string $localImagePath)
 ##### string $localImagePath
 
 > 图片路径
+
+##### double $widthScale
+
+> 对图像X轴进行缩放处理；
+> 默认为1，保持图像原始宽度；值为0.5时，图像宽度为原图的1/2；
+
+##### double $heightScale
+
+> 对图像轴进行缩放处理；
+> 默认为1，保持图像原始高度；值为0.5时，图像高度为原图的1/2；
 
 ##### 实例
 
@@ -308,7 +318,8 @@ $excel  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->fileName('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
@@ -345,7 +356,8 @@ $excel  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->fileName('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
@@ -374,7 +386,8 @@ $excel  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->constMemory('tutorial01.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$boldStyle = \Vtiful\Kernel\Format::bold($fileHandle);
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])

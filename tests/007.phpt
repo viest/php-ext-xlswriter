@@ -5,11 +5,14 @@ Check for vtiful presence
 --FILE--
 <?php
 $config = ['path' => './tests'];
-$excel = new \Vtiful\Kernel\Excel($config);
-$handle = $excel->fileName('tutorial01.xlsx')
-    ->getHandle();
-$boldStyle = \Vtiful\Kernel\Format::bold($handle);
-var_dump($boldStyle);
+
+$excel  = new \Vtiful\Kernel\Excel($config);
+$handle = $excel->fileName('tutorial01.xlsx')->getHandle();
+
+$format     = new \Vtiful\Kernel\Format($handle);
+$boldFormat = $format->bold()->toResource();
+
+var_dump($boldFormat);
 ?>
 --EXPECT--
 resource(5) of type (xlsx)

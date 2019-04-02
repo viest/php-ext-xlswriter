@@ -38,14 +38,27 @@ typedef struct {
     lxw_worksheet *worksheet;
 } xls_resource_t;
 
+typedef struct {
+    lxw_format  *format;
+} xls_resource_format_t;
+
 typedef struct _vtiful_xls_object {
     xls_resource_t ptr;
     zend_long      line;
     zend_object    zo;
 } xls_object;
 
+typedef struct _vtiful_format_object {
+    xls_resource_format_t ptr;
+    zend_object zo;
+} format_object;
+
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
     return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
+}
+
+static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
+    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
 }
 
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
@@ -54,7 +67,8 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
 #define REGISTER_CLASS_PROPERTY_NULL(class_name, property_name, acc) \
     zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
 
-#define Z_XLS_P(zv) php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
+#define Z_XLS_P(zv)    php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
+#define Z_FORMAT_P(zv) php_vtiful_format_fetch_object(Z_OBJ_P(zv));
 
 #define ROW(range) \
     lxw_name_to_row(range)
@@ -83,7 +97,7 @@ STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format);
-void image_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res);
 void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
 void auto_filter(zend_string *range, xls_resource_t *res);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res);

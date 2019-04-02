@@ -5,10 +5,13 @@ Check for vtiful presence
 --FILE--
 <?php
 $config = ['path' => './tests'];
-$excel = new \Vtiful\Kernel\Excel($config);
-$handle = $excel->fileName('tutorial01.xlsx')
-    ->getHandle();
-$italicStyle = \Vtiful\Kernel\Format::italic($handle);
+
+$excel  = new \Vtiful\Kernel\Excel($config);
+$handle = $excel->fileName('tutorial01.xlsx')->getHandle();
+
+$format      = new \Vtiful\Kernel\Format($handle);
+$italicStyle = $format->italic()->toResource();
+
 var_dump($italicStyle);
 ?>
 --EXPECT--

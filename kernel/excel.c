@@ -90,6 +90,8 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_image_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, image)
+                ZEND_ARG_INFO(0, width)
+                ZEND_ARG_INFO(0, height)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_formula_arginfo, 0, 0, 3)
@@ -362,18 +364,22 @@ PHP_METHOD(vtiful_xls, insertImage)
 {
     zval *image;
     zend_long row, column;
+    double width = 1, height = 1;
 
-    ZEND_PARSE_PARAMETERS_START(3, 3)
+    ZEND_PARSE_PARAMETERS_START(3, 5)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(image)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_DOUBLE(width)
+            Z_PARAM_DOUBLE(height)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    image_writer(image, row, column, &obj->ptr);
+    image_writer(image, row, column, width, height,  &obj->ptr);
 }
 /* }}} */
 

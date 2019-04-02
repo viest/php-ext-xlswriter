@@ -47,9 +47,11 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *
 /*
  * Write the image to the file
  */
-void image_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res)
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res)
 {
-    worksheet_insert_image(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)));
+    lxw_image_options options = {.x_scale = width, .y_scale = height};
+
+    worksheet_insert_image_opt(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), &options);
 }
 
 /*

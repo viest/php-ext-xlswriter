@@ -83,6 +83,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_text_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, data)
+                ZEND_ARG_INFO(0, format_handle)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_url_arginfo, 0, 0, 4)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, url)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
@@ -358,6 +365,30 @@ PHP_METHOD(vtiful_xls, insertText)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\xls::insertUrl(int $row, int $column, string $url)
+ */
+PHP_METHOD(vtiful_xls, insertUrl)
+{
+    zend_long row, column;
+    zend_string *url = NULL;
+    zval *format_handle = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(3, 4)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(url)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(format_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    url_writer(row, column, &obj->ptr, url, zval_get_format(format_handle));
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\xls::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_xls, insertImage)
@@ -516,6 +547,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getHandle,     NULL,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, autoFilter,    xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertText,    xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertUrl,     xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImage,   xls_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertFormula, xls_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)

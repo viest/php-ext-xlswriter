@@ -44,6 +44,11 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *
     }
 }
 
+void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format)
+{
+    worksheet_write_url(res->worksheet, row, columns, ZSTR_VAL(url), format);
+}
+
 /*
  * Write the image to the file
  */

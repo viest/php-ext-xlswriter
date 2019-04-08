@@ -1,28 +1,39 @@
-## Excel-Export
+## xlswriter [ Excel-Export ]
 
 Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 
 -------
 
-- **安装**
-    - **[编译安装 Excel-Export](#编译安装)**
-- **使用**
-    - **[创建一个简单的xlsx文件](#创建一个简单的xlsx文件)**
-    - **[1、向单元格插入文字](#向单元格插入文字)**
-    - **[2、单元格插入公式](#单元格插入公式)**
-    - **[3、单元格插入本地图片](#单元格插入本地图片)**
-    - **[4、数据过滤](#数据过滤)**
-    - **[5、合并单元格](#合并单元格)**
-    - **[6、设置列单元格格式](#设置列单元格格式)**
-    - **[7、设置行单元格格式](#设置行单元格格式)**
-    - **[8、固定内存导出](#固定内存导出)**
-    - **[9、向文件追加表格](#追加表格)**
+## 安装
+
+- [编译安装](#编译安装)
+- [PECL](#PECL)
+    
+## 使用
+    
+- [创建一个简单的xlsx文件](#创建一个简单的xlsx文件)
+- [1、单元格插入文字](#单元格插入文字)
+- [2、单元格插入公式](#单元格插入公式)
+- [3、单元格插入本地图片](#单元格插入本地图片)
+- [4、数据过滤](#数据过滤)
+- [5、合并单元格](#合并单元格)
+- [6、设置列单元格格式](#设置列单元格格式)
+- [7、设置行单元格格式](#设置行单元格格式)
+- [8、固定内存导出](#固定内存导出)
+- [9、创建工作表](#创建工作表)
 
 --------
+## PECL
 
-### 编译安装
+```bash
+pecl install xlswriter
 
-#### Unix
+# 添加 extension = xlswriter.so 到 ini 配置
+```
+
+## 编译安装
+
+### Unix
 
 ##### Ubuntu
 
@@ -31,7 +42,7 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 
 sudo apt-get install -y zlib1g-dev
 
-# Excel-Export
+# 扩展
 
 git clone https://github.com/viest/php-ext-excel-export.git
 
@@ -53,7 +64,7 @@ make && make install
 
 brew install zlib
 
-# Excel-Export
+# 扩展
 
 git clone https://github.com/viest/php-ext-excel-export.git
 
@@ -122,7 +133,7 @@ $filePath = $excel->fileName('tutorial01.xlsx', 'sheet1')
     ->output();
 ```
 
-### 向单元格插入文字
+### 单元格插入文字
 
 #### 语法
 
@@ -395,7 +406,7 @@ $fileObject->header(['name', 'age'])
     ->output();
 ```
 
-### 追加表格
+### 创建工作表
 
 #### 语法
 

@@ -2,8 +2,6 @@
 
 Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 
--------
-
 ## 安装
 
 - [编译安装](#编译安装)
@@ -11,18 +9,20 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
     
 ## 使用
     
-- [创建一个简单的xlsx文件](#创建一个简单的xlsx文件)
-- [1、单元格插入文字](#单元格插入文字)
-- [2、单元格插入公式](#单元格插入公式)
-- [3、单元格插入本地图片](#单元格插入本地图片)
-- [4、数据过滤](#数据过滤)
-- [5、合并单元格](#合并单元格)
-- [6、设置列单元格格式](#设置列单元格格式)
-- [7、设置行单元格格式](#设置行单元格格式)
-- [8、固定内存导出](#固定内存导出)
-- [9、创建工作表](#创建工作表)
+1. [创建一个简单的xlsx文件](#创建一个简单的xlsx文件)
+2. [单元格插入文字](#单元格插入文字)
+3. [单元格插入链接](#单元格插入链接)
+4. [单元格插入公式](#单元格插入公式)
+5. [单元格插入本地图片](#单元格插入本地图片)
+6. [数据过滤](#数据过滤)
+7. [合并单元格](#合并单元格)
+8. [设置列单元格样式](#设置列单元格格式)
+9. [设置行单元格样式](#设置行单元格格式)
+10. [固定内存导出](#固定内存导出)
+11. [创建工作表](#创建工作表)
+12. [组合样式](#组合样式)
+13. [样式列表](#样式列表)
 
---------
 ## PECL
 
 ```bash
@@ -173,9 +173,53 @@ for ($index = 0; $index < 10; $index++) {
 $textFile->output();
 ```
 
+### 单元格插入链接
+
+#### 函数原型
+
+```php
+insertUrl(int $row, int $column, string $url[, resource $format])
+```
+
+##### int $row
+
+> 单元格所在行
+
+##### int $column
+
+> 单元格所在列
+
+##### string $url
+
+> 链接地址
+
+##### resource $format
+
+> 链接样式
+
+##### 实例
+
+```php
+$excel = new \Vtiful\Kernel\Excel($config);
+
+$urlFile = $excel->fileName("free.xlsx")
+    ->header(['url']);
+
+$fileHandle = $fileObject->getHandle();
+
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$urlStyle = $format->bold()
+    ->underline(Format::UNDERLINE_SINGLE)
+    ->toResource();
+
+$urlFile->insertUrl(1, 0, 'https://github.com', $urlStyle);
+
+$textFile->output();
+```
+
 ### 单元格插入公式
 
-#### 语法
+#### 函数原型
 
 ```php
 insertFormula(int $row, int $column, string $formula)
@@ -214,7 +258,7 @@ $freeFile->output();
 
 ### 单元格插入本地图片
 
-#### 语法
+#### 函数原型
 
 ```php
 insertImage(int $row, int $column, string $localImagePath[, double $widthScale, double $heightScale])
@@ -256,7 +300,7 @@ $freeFile->output();
 
 ### 数据过滤
 
-#### 语法
+#### 函数原型
 
 ```php
 autoFilter(string $scope);
@@ -278,7 +322,7 @@ $excel->fileName('test.xlsx')
 
 ### 合并单元格
 
-#### 语法
+#### 函数原型
 
 ```php
 mergeCells(string $scope, string $data);
@@ -302,7 +346,7 @@ $excel->fileName("test.xlsx")
 
 ### 设置列单元格格式
 
-#### 语法
+#### 函数原型
 
 ```php
 setColumn(string $range, double $width [, resource $format]);
@@ -340,7 +384,7 @@ $fileObject->header(['name', 'age'])
 
 ### 设置行单元格格式
 
-#### 语法
+#### 函数原型
 
 ```php
 setRow(string $range, double $height [, resource $format]);
@@ -382,7 +426,7 @@ $fileObject->header(['name', 'age'])
 
 最大内存使用量 = 最大一行的数据占用量
 
-#### 语法
+#### 函数原型
 
 ```php
 constMemory(string $fileName);
@@ -408,7 +452,7 @@ $fileObject->header(['name', 'age'])
 
 ### 创建工作表
 
-#### 语法
+#### 函数原型
 
 ```php
 addSheet([string $sheetName]);
@@ -436,5 +480,85 @@ $fileObject->addSheet()
 
 // 最后的最后，输出文件
 $filePath = $fileObject->output();
+```
+
+### 组合样式
+
+将多个样式合并为一个新样式应用在单元格上
+
+```php
+// 将粗体与斜体合并为一个样式
+$format          = new \Vtiful\Kernel\Format($fileHandle);
+$boldItalicStyle = $format->bold()->italic()->toResource();
+```
+
+### 样式列表
+
+##### 粗体
+
+```php
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
+```
+##### 斜体
+
+```php
+$format      = new \Vtiful\Kernel\Format($fileHandle);
+$italicStyle = $format->italic()->toResource();
+```
+##### 下划线
+
+###### 函数原型
+
+```php
+underline(resource $resourchHandle, Format::const $style): \Vtiful\Kernel\Format
+```
+
+###### 实例
+
+```php
+$format         = new \Vtiful\Kernel\Format($fileHandle);
+$underlineStyle = $format->underline(Format::UNDERLINE_SINGLE)->toResource();
+```
+###### Style 
+
+```php
+Format::UNDERLINE_SINGLE;            // 单下划线
+Format::UNDERLINE_DOUBLE;            // 双下划线
+Format::UNDERLINE_SINGLE_ACCOUNTING; // 会计用单下划线
+Format::UNDERLINE_DOUBLE_ACCOUNTING; // 会计用双下划线
+```
+
+##### 对齐
+
+###### 函数原型
+
+```php
+align(resource $resourchHandle, Format::const ...$style): \Vtiful\Kernel\Format
+```
+
+###### 实例
+
+```php
+$format     = new \Vtiful\Kernel\Format($fileHandle);
+$alignStyle = $format
+    ->align(Format::FORMAT_ALIGN_CENTER, Format::FORMAT_ALIGN_VERTICAL_CENTER)
+    ->toResource();
+```
+###### Style 
+
+```php
+Format::FORMAT_ALIGN_LEFT;                 // 水平左对齐
+Format::FORMAT_ALIGN_CENTER;               // 水平剧中对齐
+Format::FORMAT_ALIGN_RIGHT;                // 水平右对齐
+Format::FORMAT_ALIGN_FILL;                 // 水平填充对齐
+Format::FORMAT_ALIGN_JUSTIFY;              // 水平两端对齐
+Format::FORMAT_ALIGN_CENTER_ACROSS;        // 横向中心对齐
+Format::FORMAT_ALIGN_DISTRIBUTED;          // 分散对齐
+Format::FORMAT_ALIGN_VERTICAL_TOP;         // 顶部垂直对齐
+Format::FORMAT_ALIGN_VERTICAL_BOTTOM;      // 底部垂直对齐
+Format::FORMAT_ALIGN_VERTICAL_CENTER;      // 垂直剧中对齐
+Format::FORMAT_ALIGN_VERTICAL_JUSTIFY;     // 垂直两端对齐
+Format::FORMAT_ALIGN_VERTICAL_DISTRIBUTED; // 垂直分散对齐
 ```
 

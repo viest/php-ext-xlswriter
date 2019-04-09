@@ -86,6 +86,12 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_text_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_chart_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, chart_resource)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_image_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
@@ -358,6 +364,27 @@ PHP_METHOD(vtiful_xls, insertText)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\xls::insertChart(int $row, int $column, resource $chartResource)
+ */
+PHP_METHOD(vtiful_xls, insertChart)
+{
+    zval *chart_resource;
+    zend_long row, column;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(chart_resource)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    chart_writer(row, column, zval_get_chart(chart_resource), &obj->ptr);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\xls::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_xls, insertImage)
@@ -516,6 +543,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getHandle,     NULL,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, autoFilter,    xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertText,    xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertChart,   xls_insert_chart_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImage,   xls_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertFormula, xls_insert_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)

@@ -13,6 +13,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/excel.c \
     kernel/write.c \
     kernel/format.c \
+    kernel/chart.c \
     "
     libxlsxwriter_sources="
     library/third_party/minizip/ioapi.c \

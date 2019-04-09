@@ -62,6 +62,11 @@ void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_
     worksheet_write_formula(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
 }
 
+void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_t *res)
+{
+    worksheet_insert_chart(res->worksheet, row, columns, chart_resource->chart);
+}
+
 /*
  * Add the autofilter.
  */

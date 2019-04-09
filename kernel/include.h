@@ -32,6 +32,7 @@
 #include "excel.h"
 #include "exception.h"
 #include "format.h"
+#include "chart.h"
 
 typedef struct {
     lxw_workbook  *workbook;
@@ -41,6 +42,11 @@ typedef struct {
 typedef struct {
     lxw_format  *format;
 } xls_resource_format_t;
+
+typedef struct {
+    lxw_chart *chart;
+    lxw_chart_series *series;
+} xls_resource_chart_t;
 
 typedef struct _vtiful_xls_object {
     xls_resource_t ptr;
@@ -53,12 +59,21 @@ typedef struct _vtiful_format_object {
     zend_object zo;
 } format_object;
 
+typedef struct _vtiful_chart_object {
+    xls_resource_chart_t ptr;
+    zend_object zo;
+} chart_object;
+
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
     return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
 }
 
 static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
     return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
+}
+
+static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
+    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
 }
 
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
@@ -68,6 +83,7 @@ static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
     zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
 
 #define Z_XLS_P(zv)    php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
+#define Z_CHART_P(zv)  php_vtiful_chart_fetch_object(Z_OBJ_P(zv));
 #define Z_FORMAT_P(zv) php_vtiful_format_fetch_object(Z_OBJ_P(zv));
 
 #define ROW(range) \
@@ -84,8 +100,9 @@ static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
 
 #define SHEET_CURRENT_LINE(obj_p) obj_p->line
 
-xls_resource_t * zval_get_resource(zval *handle);
-lxw_format       * zval_get_format(zval *handle);
+lxw_format           * zval_get_format(zval *handle);
+xls_resource_t       * zval_get_resource(zval *handle);
+xls_resource_chart_t *zval_get_chart(zval *resource);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 
@@ -97,6 +114,7 @@ STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format);
+void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_t *res);
 void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res);
 void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);

@@ -66,6 +66,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(format_align_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_color_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, color)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Format::__construct()
@@ -157,6 +161,24 @@ PHP_METHOD(vtiful_format, align)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::color(int $color)
+ */
+PHP_METHOD(vtiful_format, color)
+{
+    zend_long color;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(color)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    format_set_font_color(obj->ptr.format, color);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -168,7 +190,7 @@ PHP_METHOD(vtiful_format, toResource)
 /* }}} */
 
 
-/** {{{ xls_methods
+/** {{{ format_methods
 */
 zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, __construct, format_construct_arginfo, ZEND_ACC_PUBLIC)
@@ -176,6 +198,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, italic,      NULL,                     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, underline,   format_underline_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, align,       format_align_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, color,       format_color_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, toResource,  NULL,                     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
@@ -211,6 +234,23 @@ VTIFUL_STARTUP_FUNCTION(format) {
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_CENTER",      LXW_ALIGN_VERTICAL_CENTER)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_JUSTIFY",     LXW_ALIGN_VERTICAL_JUSTIFY)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_DISTRIBUTED", LXW_ALIGN_VERTICAL_DISTRIBUTED)
+
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLACK",   LXW_COLOR_BLACK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLUE",    LXW_COLOR_BLUE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BROWN",   LXW_COLOR_BROWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_CYAN",    LXW_COLOR_CYAN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GRAY",    LXW_COLOR_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GREEN",   LXW_COLOR_GREEN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_LIME",    LXW_COLOR_LIME)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_MAGENTA", LXW_COLOR_MAGENTA)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_NAVY",    LXW_COLOR_NAVY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_ORANGE",  LXW_COLOR_ORANGE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PINK",    LXW_COLOR_PINK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PURPLE",  LXW_COLOR_PURPLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_RED",     LXW_COLOR_RED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_SILVER",  LXW_COLOR_SILVER)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_WHITE",   LXW_COLOR_WHITE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_YELLOW",  LXW_COLOR_YELLOW)
 
     return SUCCESS;
 }

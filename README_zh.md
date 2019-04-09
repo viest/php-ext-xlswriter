@@ -6,9 +6,9 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 
 - [编译安装](#编译安装)
 - [PECL](#PECL)
-    
+  
 ## 使用
-    
+
 1. [创建一个简单的xlsx文件](#创建一个简单的xlsx文件)
 2. [单元格插入文字](#单元格插入文字)
 3. [单元格插入链接](#单元格插入链接)
@@ -18,10 +18,12 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 7. [合并单元格](#合并单元格)
 8. [设置列单元格样式](#设置列单元格格式)
 9. [设置行单元格样式](#设置行单元格格式)
-10. [固定内存导出](#固定内存导出)
-11. [创建工作表](#创建工作表)
-12. [组合样式](#组合样式)
-13. [样式列表](#样式列表)
+10. [设置文字颜色](#设置文字颜色)
+11. [固定内存导出](#固定内存导出)
+12. [创建工作表](#创建工作表)
+13. [组合样式](#组合样式)
+14. [样式列表](#样式列表)
+15. [颜色常量](#颜色常量)
 
 ## PECL
 
@@ -135,7 +137,7 @@ $filePath = $excel->fileName('tutorial01.xlsx', 'sheet1')
 
 ### 单元格插入文字
 
-#### 语法
+#### 函数原型
 
 ```php
 insertText(int $row, int $column, string|int|double $data[, string $format])
@@ -424,7 +426,37 @@ $fileObject->header(['name', 'age'])
 
 #### 函数原型
 
+```php
+color(int $color)
+```
 
+##### int $color
+
+> RGB 十六进制值
+
+##### 实例
+
+```php
+$config     = ['path' => './tests'];
+$fileObject = new \Vtiful\Kernel\Excel($config);
+
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileHandle = $fileObject->getHandle();
+
+$format     = new \Vtiful\Kernel\Format($fileHandle);
+$colorStyle = $format->color(0xFF0000)->toResource();
+//或 $colorStyle = $format->color(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
+
+$filePath = $fileObject->header(['name', 'age'])
+    ->data([
+        ['viest', 21],
+        ['wjx',   21]
+    ])
+    ->setRow('A1', 50, $colorStyle)
+    ->output();
+
+var_dump($filePath);
+```
 
 ### 固定内存导出
 
@@ -566,5 +598,26 @@ Format::FORMAT_ALIGN_VERTICAL_BOTTOM;      // 底部垂直对齐
 Format::FORMAT_ALIGN_VERTICAL_CENTER;      // 垂直剧中对齐
 Format::FORMAT_ALIGN_VERTICAL_JUSTIFY;     // 垂直两端对齐
 Format::FORMAT_ALIGN_VERTICAL_DISTRIBUTED; // 垂直分散对齐
+```
+
+### 颜色常量
+
+```php
+Format::COLOR_BLACK
+Format::COLOR_BLUE
+Format::COLOR_BROWN
+Format::COLOR_CYAN
+Format::COLOR_GRAY
+Format::COLOR_GREEN
+Format::COLOR_LIME
+Format::COLOR_MAGENTA
+Format::COLOR_NAVY
+Format::COLOR_ORANGE
+Format::COLOR_PINK
+Format::COLOR_PURPLE
+Format::COLOR_RED
+Format::COLOR_SILVER
+Format::COLOR_WHITE
+Format::COLOR_YELLOW
 ```
 

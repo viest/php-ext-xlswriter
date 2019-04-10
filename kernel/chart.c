@@ -69,6 +69,23 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(chart_series_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, value)
+                ZEND_ARG_INFO(0, categories)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_series_name_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_style_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, style)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_axis_name_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_title_name_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, title)
 ZEND_END_ARG_INFO()
 /* }}} */
 
@@ -92,27 +109,130 @@ PHP_METHOD(vtiful_chart, __construct)
     obj     = Z_CHART_P(getThis());
 
     if (obj->ptr.chart == NULL) {
-        obj->ptr.chart = workbook_add_chart(xls_res->workbook, LXW_CHART_LINE);
+        obj->ptr.chart = workbook_add_chart(xls_res->workbook, type);
     }
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Chart::series()
+/** {{{ \Vtiful\Kernel\Chart::series(string $value, string $categories)
  */
 PHP_METHOD(vtiful_chart, series)
 {
     chart_object *obj;
-    zend_string *value;
+    zend_string *values, *categories = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-            Z_PARAM_STR(value)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_STR(values)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(categories)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
 
     obj = Z_CHART_P(getThis());
 
-    chart_add_series(obj->ptr.chart, NULL, ZSTR_VAL(value));
+    if (ZEND_NUM_ARGS() == 2) {
+        obj->ptr.series = chart_add_series(obj->ptr.chart, ZSTR_VAL(categories), ZSTR_VAL(values));
+    }
+
+    if (ZEND_NUM_ARGS() == 1) {
+        obj->ptr.series = chart_add_series(obj->ptr.chart, NULL, ZSTR_VAL(values));
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Chart::seriesName(string $value)
+ */
+PHP_METHOD(vtiful_chart, seriesName)
+{
+    chart_object *obj;
+    zend_string *values;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(values)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_series_set_name(obj->ptr.series, ZSTR_VAL(values));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Chart::seriesName(string $value)
+ */
+PHP_METHOD(vtiful_chart, style)
+{
+    chart_object *obj;
+    zend_long style;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(style)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_set_style(obj->ptr.chart, style);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Chart::axisNameX(string $name)
+ */
+PHP_METHOD(vtiful_chart, axisNameX)
+{
+    chart_object *obj;
+    zend_string *name;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_axis_set_name(obj->ptr.chart->x_axis, ZSTR_VAL(name));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Chart::axisNameY(string $name)
+ */
+PHP_METHOD(vtiful_chart, axisNameY)
+{
+    chart_object *obj;
+    zend_string *name;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_axis_set_name(obj->ptr.chart->y_axis, ZSTR_VAL(name));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Chart::title(string $title)
+ */
+PHP_METHOD(vtiful_chart, title)
+{
+    chart_object *obj;
+    zend_string *title;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(title)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_title_set_name(obj->ptr.chart, ZSTR_VAL(title));
 }
 /* }}} */
 
@@ -129,9 +249,14 @@ PHP_METHOD(vtiful_chart, toResource)
 /** {{{ chart_methods
 */
 zend_function_entry chart_methods[] = {
-        PHP_ME(vtiful_chart, __construct, chart_construct_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, series,      chart_series_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, toResource,  NULL,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, __construct, chart_construct_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, series,      chart_series_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, seriesName,  chart_series_name_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, style,       chart_style_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, axisNameY,   chart_axis_name_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, axisNameX,   chart_axis_name_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, title,       chart_title_name_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, toResource,  NULL,                      ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */
@@ -148,7 +273,9 @@ VTIFUL_STARTUP_FUNCTION(chart)
     chart_handlers.offset   = XtOffsetOf(chart_object, zo);
     chart_handlers.free_obj = chart_objects_free;
 
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LINE", LXW_CHART_LINE)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LINE",   LXW_CHART_LINE)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_COLUMN", LXW_CHART_COLUMN)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_AREA",  LXW_CHART_AREA)
 
     return SUCCESS;
 }

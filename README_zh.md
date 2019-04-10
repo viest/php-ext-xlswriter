@@ -10,20 +10,24 @@ Authon: viest [dev@service.viest.me](mailto:dev@service.viest.me)
 ## 使用
 
 1. [创建一个简单的xlsx文件](#创建一个简单的xlsx文件)
-2. [单元格插入文字](#单元格插入文字)
-3. [单元格插入链接](#单元格插入链接)
-4. [单元格插入公式](#单元格插入公式)
-5. [单元格插入本地图片](#单元格插入本地图片)
-6. [数据过滤](#数据过滤)
-7. [合并单元格](#合并单元格)
-8. [设置列单元格样式](#设置列单元格格式)
-9. [设置行单元格样式](#设置行单元格格式)
-10. [设置文字颜色](#设置文字颜色)
-11. [固定内存导出](#固定内存导出)
-12. [创建工作表](#创建工作表)
-13. [组合样式](#组合样式)
-14. [样式列表](#样式列表)
-15. [颜色常量](#颜色常量)
+2. 图表
+   1. [图表添加数据](#图表添加数据)
+   2. [直方图](#直方图)
+   3. [面积图](#面积图)
+3. [单元格插入文字](#单元格插入文字)
+4. [单元格插入链接](#单元格插入链接)
+5. [单元格插入公式](#单元格插入公式)
+6. [单元格插入本地图片](#单元格插入本地图片)
+7. [数据过滤](#数据过滤)
+8. [合并单元格](#合并单元格)
+9. [设置列单元格样式](#设置列单元格格式)
+10. [设置行单元格样式](#设置行单元格格式)
+11. [设置文字颜色](#设置文字颜色)
+12. [固定内存导出](#固定内存导出)
+13. [创建工作表](#创建工作表)
+14. [组合样式](#组合样式)
+15. [样式列表](#样式列表)
+16. [颜色常量](#颜色常量)
 
 ## PECL
 
@@ -133,6 +137,112 @@ $filePath = $excel->fileName('tutorial01.xlsx', 'sheet1')
         ['Gym',  50],
     ])
     ->output();
+```
+
+### 图表添加数据
+
+##### 函数原型
+
+```php
+series(string $value,[ string $categories])
+```
+
+##### string $value
+
+> 图表单个类别数据所在的工作表及单元格跨度
+>
+> `Sheet1 !   $A$1   : $A$5`
+>
+> `工作表  ! 开始单元格 : 结束单元格`
+
+##### string $categories
+
+> 类别名称
+
+### 直方图
+
+##### 类型
+
+```php
+\Vtiful\Kernel\Chart::CHART_COLUMN
+```
+
+##### 图表
+
+![php-excel](https://github.com/viest/php-ext-excel-export/blob/master/resource/chart_simple.png)
+
+##### 实例
+
+```php
+$config = ['path' => './tests'];
+
+$fileObject = new \Vtiful\Kernel\Excel($config);
+
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileHandle = $fileObject->getHandle();
+
+$chart = new \Vtiful\Kernel\Chart($fileHandle, \Vtiful\Kernel\Chart::CHART_COLUMN);
+
+$chartResource = $chart->series('Sheet1!$A$1:$A$5')
+    ->series('Sheet1!$B$1:$B$5')
+    ->series('Sheet1!$C$1:$C$5')
+    ->toResource();
+
+$filePath = $fileObject->data([
+    [1, 2, 3],
+    [2, 4, 6],
+    [3, 6, 9],
+    [4, 8, 12],
+    [5, 10, 15],
+])->insertChart(0, 3, $chartResource)->output();
+```
+
+### 面积图
+
+##### 类型
+
+```php
+\Vtiful\Kernel\Chart::CHART_AREA
+```
+
+##### 图标
+
+![php-excel](https://github.com/viest/php-ext-excel-export/blob/master/resource/chart_area1.png)
+
+##### 实例
+
+```php
+<?php
+
+$config = ['path' => './tests'];
+
+$fileObject = new \Vtiful\Kernel\Excel($config);
+
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileHandle = $fileObject->getHandle();
+
+$chart = new \Vtiful\Kernel\Chart($fileHandle, \Vtiful\Kernel\Chart::CHART_AREA);
+
+$chartResource = $chart
+    ->series('=Sheet1!$B$2:$B$7', '=Sheet1!$A$2:$A$7')
+    ->seriesName('=Sheet1!$B$1')
+    ->series('=Sheet1!$C$2:$C$7', '=Sheet1!$A$2:$A$7')
+    ->seriesName('=Sheet1!$C$1')
+    ->style(11)// 值为 1 - 48，可参考 Excel 2007 "设计" 选项卡中的 48 种样式
+    ->axisNameX('Test number') // 设置 X 轴名称
+    ->axisNameY('Sample length (mm)') // 设置 Y 轴名称
+    ->title('Results of sample analysis') // 设置图表 Title
+    ->toResource();
+
+$filePath = $fileObject->header(['Number', 'Batch 1', 'Batch 2'])
+    ->data([
+        [2, 40, 30],
+        [3, 40, 25],
+        [4, 50, 30],
+        [5, 30, 10],
+        [6, 25, 5],
+        [7, 50, 10],
+    ])->insertChart(0, 3, $chartResource)->output();
 ```
 
 ### 单元格插入文字

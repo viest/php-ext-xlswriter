@@ -169,7 +169,7 @@ series(string $value,[ string $categories])
 
 ##### 图表
 
-![php-excel](https://github.com/viest/php-ext-excel-export/blob/master/resource/chart_simple.png)
+![php-excel](resource/chart_simple.png)
 
 ##### 实例
 
@@ -207,7 +207,7 @@ $filePath = $fileObject->data([
 
 ##### 图标
 
-![php-excel](https://github.com/viest/php-ext-excel-export/blob/master/resource/chart_area1.png)
+![php-excel](resource/chart_area1.png)
 
 ##### 实例
 

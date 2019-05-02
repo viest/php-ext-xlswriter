@@ -70,6 +70,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(format_color_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_number_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, format)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Format::__construct()
@@ -179,6 +183,24 @@ PHP_METHOD(vtiful_format, color)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::number(string $format)
+ */
+PHP_METHOD(vtiful_format, number)
+{
+    zend_string *format;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(format)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    format_set_num_format(obj->ptr.format, ZSTR_VAL(format));
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -199,6 +221,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, underline,   format_underline_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, align,       format_align_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, color,       format_color_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, number,      format_number_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, toResource,  NULL,                     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };

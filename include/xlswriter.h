@@ -28,7 +28,7 @@
 #include "xlsxwriter/packager.h"
 #include "xlsxwriter/format.h"
 
-#include "../php_xls_writer.h"
+#include "php_xlswriter.h"
 #include "excel.h"
 #include "exception.h"
 #include "format.h"

@@ -13,7 +13,7 @@
 #ifndef PHP_VTIFUL_H
 #define PHP_VTIFUL_H
 
-#include "kernel/include.h"
+#include "xlswriter.h"
 
 extern zend_module_entry xlswriter_module_entry;
 #define phpext_xlswriter_ptr &xlswriter_module_entry

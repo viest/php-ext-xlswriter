@@ -16,7 +16,7 @@
 
 #include "php.h"
 #include "ext/standard/info.h"
-#include "kernel/include.h"
+#include "xlswriter.h"
 
 int le_xls_writer;
 

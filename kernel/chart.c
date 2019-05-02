@@ -10,8 +10,7 @@
   +----------------------------------------------------------------------+
 */
 
-#include "include.h"
-#include "chart.h"
+#include "xlswriter.h"
 
 zend_class_entry *vtiful_chart_ce;
 

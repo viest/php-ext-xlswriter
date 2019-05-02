@@ -6,10 +6,16 @@ if (PHP_XLSWRITER != "no") {
 
     if (CHECK_LIB("xlsxwriter.lib;xlsxwriter_a.lib", "xlswriter", PHP_XLSWRITER) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter/format.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter/packager.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxwriter/format.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER)) {
-        EXTENSION("xlswriter", "xls_writer.c")
+        CHECK_HEADER_ADD_INCLUDE("xlswriter.h", "CFLAGS_XLSWRITER", configure_module_dirname + "\\include;" + PHP_EXTRA_INCLUDES)) {
+
+        EXTENSION("xlswriter", "xlswriter.c")
+
+        ADD_FLAG("CFLAGS_XLSWRITER", ' /I "' + configure_module_dirname + '" ');
+
         AC_DEFINE("HAVE_LXW_VERSION", 1, "lxw_version available in 0.7.7");
+
         ADD_SOURCES(configure_module_dirname + "\\kernel", "common.c resource.c exception.c excel.c write.c format.c chart.c", "xlswriter");
     } else {
         WARNING("xlswriter not enabled, xlsxwriter.lib or headers not found");

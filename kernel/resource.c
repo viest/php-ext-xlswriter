@@ -10,7 +10,7 @@
   +----------------------------------------------------------------------+
 */
 
-#include "include.h"
+#include "xlswriter.h"
 
 /* {{{ */
 xls_resource_t * zval_get_resource(zval *handle)

@@ -71,6 +71,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_file_checkout_sheet, 0, 0, 1)
+                ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_header_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, header)
 ZEND_END_ARG_INFO()
@@ -226,6 +230,40 @@ PHP_METHOD(vtiful_xls, addSheet)
     }
 
     obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::checkoutSheet(string $sheetName)
+ */
+PHP_METHOD(vtiful_xls, checkoutSheet)
+{
+    int line = 0;
+    lxw_worksheet *sheet_t = NULL;
+    zend_string *zs_sheet_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(zs_sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if(obj->ptr.workbook == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
+        return;
+    }
+
+    if ((sheet_t = workbook_get_worksheet_by_name(obj->ptr.workbook, ZSTR_VAL(zs_sheet_name))) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Sheet not fund", 140);
+        return;
+    }
+
+    line = sheet_t->table->cached_row_num;
+
+    SHEET_LINE_SET(obj, line);
+
+    obj->ptr.worksheet = sheet_t;
 }
 /* }}} */
 
@@ -575,6 +613,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, checkoutSheet, xls_file_checkout_sheet,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)

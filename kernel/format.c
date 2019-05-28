@@ -243,6 +243,20 @@ PHP_METHOD(vtiful_format, background)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::wrap()
+ */
+PHP_METHOD(vtiful_format, wrap)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_text_wrap(obj->ptr.format);
+    }
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -258,6 +272,7 @@ PHP_METHOD(vtiful_format, toResource)
 */
 zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, __construct, format_construct_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, wrap,        NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, bold,        NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, italic,      NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, align,       format_align_arginfo,      ZEND_ACC_PUBLIC)

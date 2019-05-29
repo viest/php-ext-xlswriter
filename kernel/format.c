@@ -74,6 +74,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(format_number_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 2)
+                ZEND_ARG_INFO(0, pattern)
+                ZEND_ARG_INFO(0, color)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Format::__construct()
@@ -106,7 +111,10 @@ PHP_METHOD(vtiful_format, bold)
     ZVAL_COPY(return_value, getThis());
 
     format_object *obj = Z_FORMAT_P(getThis());
-    format_set_bold(obj->ptr.format);
+
+    if (obj->ptr.format) {
+        format_set_bold(obj->ptr.format);
+    }
 }
 /* }}} */
 
@@ -117,7 +125,10 @@ PHP_METHOD(vtiful_format, italic)
     ZVAL_COPY(return_value, getThis());
 
     format_object *obj = Z_FORMAT_P(getThis());
-    format_set_italic(obj->ptr.format);
+
+    if (obj->ptr.format) {
+        format_set_italic(obj->ptr.format);
+    }
 }
 /* }}} */
 
@@ -134,7 +145,10 @@ PHP_METHOD(vtiful_format, underline)
     ZVAL_COPY(return_value, getThis());
 
     format_object *obj = Z_FORMAT_P(getThis());
-    format_set_underline(obj->ptr.format, style);
+
+    if (obj->ptr.format) {
+        format_set_underline(obj->ptr.format, style);
+    }
 }
 /* }}} */
 
@@ -160,7 +174,9 @@ PHP_METHOD(vtiful_format, align)
             zend_throw_exception(vtiful_exception_ce, "Format exception, please view the manual", 150);
         }
 
-        format_set_align(obj->ptr.format, Z_LVAL_P(arg));
+        if (obj->ptr.format) {
+            format_set_align(obj->ptr.format, Z_LVAL_P(arg));
+        }
     }
 }
 /* }}} */
@@ -179,7 +195,9 @@ PHP_METHOD(vtiful_format, color)
 
     format_object *obj = Z_FORMAT_P(getThis());
 
-    format_set_font_color(obj->ptr.format, color);
+    if (obj->ptr.format) {
+        format_set_font_color(obj->ptr.format, color);
+    }
 }
 /* }}} */
 
@@ -197,7 +215,45 @@ PHP_METHOD(vtiful_format, number)
 
     format_object *obj = Z_FORMAT_P(getThis());
 
-    format_set_num_format(obj->ptr.format, ZSTR_VAL(format));
+    if (obj->ptr.format) {
+        format_set_num_format(obj->ptr.format, ZSTR_VAL(format));
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::background(int $pattern, int $color)
+ */
+PHP_METHOD(vtiful_format, background)
+{
+    zend_long pattern, color;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+            Z_PARAM_LONG(pattern)
+            Z_PARAM_LONG(color)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_pattern(obj->ptr.format, pattern);
+        format_set_bg_color(obj->ptr.format, color);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::wrap()
+ */
+PHP_METHOD(vtiful_format, wrap)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_text_wrap(obj->ptr.format);
+    }
 }
 /* }}} */
 
@@ -215,14 +271,16 @@ PHP_METHOD(vtiful_format, toResource)
 /** {{{ format_methods
 */
 zend_function_entry format_methods[] = {
-        PHP_ME(vtiful_format, __construct, format_construct_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, bold,        NULL,                     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, italic,      NULL,                     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, underline,   format_underline_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, align,       format_align_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, color,       format_color_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, number,      format_number_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, toResource,  NULL,                     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, __construct, format_construct_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, wrap,        NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, bold,        NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, italic,      NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, align,       format_align_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, color,       format_color_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, number,      format_number_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, underline,   format_underline_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, toResource,  NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, background,  format_background_arginfo, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */
@@ -274,6 +332,26 @@ VTIFUL_STARTUP_FUNCTION(format) {
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_SILVER",  LXW_COLOR_SILVER)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_WHITE",   LXW_COLOR_WHITE)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_YELLOW",  LXW_COLOR_YELLOW)
+
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_NONE",             LXW_PATTERN_NONE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_SOLID",            LXW_PATTERN_SOLID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_MEDIUM_GRAY",      LXW_PATTERN_MEDIUM_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRAY",        LXW_PATTERN_DARK_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRAY",       LXW_PATTERN_LIGHT_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_HORIZONTAL",  LXW_PATTERN_DARK_HORIZONTAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_VERTICAL",    LXW_PATTERN_DARK_VERTICAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_DOWN",        LXW_PATTERN_DARK_DOWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_UP",          LXW_PATTERN_DARK_UP)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRID",        LXW_PATTERN_DARK_GRID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_TRELLIS",     LXW_PATTERN_DARK_TRELLIS)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_HORIZONTAL", LXW_PATTERN_LIGHT_HORIZONTAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_VERTICAL",   LXW_PATTERN_LIGHT_VERTICAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_DOWN",       LXW_PATTERN_LIGHT_DOWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_UP",         LXW_PATTERN_LIGHT_UP)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRID",       LXW_PATTERN_LIGHT_GRID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_TRELLIS",    LXW_PATTERN_LIGHT_TRELLIS)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_125",         LXW_PATTERN_GRAY_125)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_0625",        LXW_PATTERN_GRAY_0625)
 
     return SUCCESS;
 }

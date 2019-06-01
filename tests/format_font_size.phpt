@@ -13,15 +13,16 @@ $fileObject  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $fileObject->fileName('tutorial.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$format     = new \Vtiful\Kernel\Format($fileHandle);
-$colorStyle = $format->color(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
+$format = new \Vtiful\Kernel\Format($fileHandle);
+$style  = $format->fontSize(30)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
         ['viest', 21],
         ['wjx',   21]
     ])
-    ->setRow('A1', 50, $colorStyle)
+    ->setRow('A1', 50, $style)
+    ->setRow('A2:A3', 50, $style)
     ->output();
 
 var_dump($filePath);

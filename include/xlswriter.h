@@ -98,8 +98,8 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 #define SHEET_LINE_ADD(obj_p) \
     ++obj_p->line;
 
-#define SHEET_LINE_SET(obj_p, line) \
-    obj_p->line = line;
+#define SHEET_LINE_SET(obj_p, current_line) \
+    obj_p->line = current_line;
 
 #define SHEET_CURRENT_LINE(obj_p) obj_p->line
 

@@ -405,6 +405,8 @@ PHP_METHOD(vtiful_xls, insertText)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    SHEET_LINE_SET(obj, row);
+
     type_writer(data, row, column, &obj->ptr, format);
 }
 /* }}} */

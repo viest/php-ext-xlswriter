@@ -87,6 +87,7 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_text_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, data)
+                ZEND_ARG_INFO(0, format)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 

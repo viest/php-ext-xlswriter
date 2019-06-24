@@ -159,8 +159,13 @@ workbook_file(xls_resource_t *self)
     /* Add cached data to charts. */
     _add_chart_cache_data(self->workbook);
 
+/* ugly test, new param (use_zip_64) was added in 0.8.7 with workbook_add_vba_project */
+#ifdef HAVE_WORKBOOK_ADD_VBA_PROJECT
     /* Create a packager object to assemble sub-elements into a zip file. */
+    packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir, 0);
+#else
     packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir);
+#endif
 
     /* If the packager fails it is generally due to a zip permission error. */
     if (packager == NULL) {

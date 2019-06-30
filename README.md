@@ -29,6 +29,7 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * Works on Linux, FreeBSD, OpenBSD, OS X, Windows.
 * Compiles for 32 and 64 bit.
 * FreeBSD License.
+* The only dependency is on zlib.
 
 [文档](https://github.com/viest/php-ext-excel-export/blob/master/README_zh.md) | [Documents](https://github.com/viest/php-ext-excel-export/wiki)
 

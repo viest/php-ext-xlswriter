@@ -29,6 +29,7 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * Works on Linux, FreeBSD, OpenBSD, OS X, Windows.
 * Compiles for 32 and 64 bit.
 * FreeBSD License.
+* The only dependency is on zlib.
 
 ## 安装
 
@@ -278,7 +279,7 @@ $filePath = $fileObject->header(['Number', 'Batch 1', 'Batch 2'])
 #### 函数原型
 
 ```php
-insertText(int $row, int $column, string|int|double $data[, string $format])
+insertText(int $row, int $column, string|int|double $data[, string $format, resource $style])
 ```
 
 ##### int $row
@@ -296,6 +297,10 @@ insertText(int $row, int $column, string|int|double $data[, string $format])
 ##### string $format
 
 > 内容格式
+
+##### resource $style
+
+> 单元格样式
 
 ##### 实例
 
@@ -565,7 +570,7 @@ $fileObject->header(['name', 'age'])
 #### 函数原型
 
 ```php
-color(int $color)
+fontColor(int $color)
 ```
 
 ##### int $color
@@ -582,8 +587,8 @@ $fileObject = $fileObject->fileName('tutorial.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format     = new \Vtiful\Kernel\Format($fileHandle);
-$colorStyle = $format->color(0xFF0000)->toResource();
-//或 $colorStyle = $format->color(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
+$colorStyle = $format->fontColor(0xFF0000)->toResource();
+//或 $colorStyle = $format->fontColor(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
@@ -591,6 +596,44 @@ $filePath = $fileObject->header(['name', 'age'])
         ['wjx',   21]
     ])
     ->setRow('A1', 50, $colorStyle)
+    ->output();
+
+var_dump($filePath);
+```
+
+### 设置文字大小
+
+#### 函数原型
+
+```php
+fontSize(double $size);
+```
+
+##### double $size
+
+> 单元格字体大小
+
+##### 实例
+
+```php
+$config = [
+    'path' => './tests'
+];
+
+$fileObject = new \Vtiful\Kernel\Excel($config);
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileHandle = $fileObject->getHandle();
+
+$format = new \Vtiful\Kernel\Format($fileHandle);
+$style  = $format->fontSize(30)->toResource();
+
+$filePath = $fileObject->header(['name', 'age'])
+    ->data([
+        ['viest', 21],
+        ['wjx',   21]
+    ])
+    ->setRow('A1', 50, $style)
+    ->setRow('A2:A3', 50, $style)
     ->output();
 
 var_dump($filePath);
@@ -658,6 +701,43 @@ $fileObject->addSheet()
 $filePath = $fileObject->output();
 ```
 
+### 切换工作表
+
+#### 函数原型
+
+```php
+checkoutSheet(string $sheetName);
+```
+
+#### 实例
+
+```php
+$config = [
+  'path' => './tests'
+];
+
+$excel      = new \Vtiful\Kernel\Excel($config);
+$fileObject = $excel->fileName("tutorial01.xlsx");
+
+$fileObject->header(['name', 'age'])
+    ->data([
+    ['viest', 21],
+    ['viest', 22],
+    ['viest', 23],
+    ]);
+
+// 添加工作表，并插入数据
+$fileObject->addSheet('twoSheet')
+    ->header(['name', 'age'])
+    ->data([['vikin', 22]]);
+
+// 切换回默认工作表，并追加数据
+$fileObject->checkoutSheet('Sheet1')
+    ->data([['sheet1']]);
+
+$filePath = $fileObject->output();
+```
+
 ### 组合样式
 
 将多个样式合并为一个新样式应用在单元格上
@@ -669,6 +749,32 @@ $boldItalicStyle = $format->bold()->italic()->toResource();
 ```
 
 ### 样式列表
+
+##### 背景颜色
+
+ ```php
+$format           = new \Vtiful\Kernel\Format($fileHandle);
+$backgroundStyle  = $format->background(
+	\Vtiful\Kernel\Format::PATTERN_LIGHT_UP,
+	\Vtiful\Kernel\Format::COLOR_RED
+)->toResource();
+ ```
+
+##### 文本换行
+
+单元格内文本需包含`\n`
+
+```php
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$wrapStyle = $format->wrap()->toResource();
+```
+
+##### 文本删除 (文字中间划线)
+
+```php
+$format = new \Vtiful\Kernel\Format($fileHandle);
+$style  = $format->strikeout()->toResource();
+```
 
 ##### 粗体
 

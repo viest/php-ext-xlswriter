@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-05-03</date>
- <time>05:44:12</time>
+ <date>2019-07-01</date>
+ <time>11:50:00</time>
  <version>
-  <release>1.2.4</release>
-  <api>1.2.4</api>
+  <release>1.2.5</release>
+  <api>1.2.5</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,10 +27,11 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT format multiple style overlays.
-- FEAT format text color.
-- FEAT image scale.
-- FEAT chart.
+- FEAT cells background color.
+- FEAT checkout sheet.
+- FEAT format new font size.
+- FEAT format new strikeout.
+- FEAT insertText support resource format.
  </notes>
  <contents>
   <dir name="/">
@@ -122,7 +123,6 @@
    <file md5sum="ced86dfe5dba665d57d5075e03de4963" name="tests/014.phpt" role="src" />
    <file md5sum="723ed81ef341086cf06a1f2dade63f1a" name="tests/015.phpt" role="src" />
    <file md5sum="74d4d945e51fb79ffc7954e863a20712" name="tests/016.phpt" role="src" />
-   <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/017.phpt" role="src" />
    <file md5sum="1f0d501c89c47d7140376ce386eb1cd3" name="tests/018.phpt" role="src" />
    <file md5sum="e6c41873fb59cf65b9e0359ccc2cbd05" name="tests/chart_axis_name_x.phpt" role="src" />
    <file md5sum="d07e7f60e961a1cc30f901cb98e3530b" name="tests/chart_axis_name_y.phpt" role="src" />
@@ -133,12 +133,19 @@
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="src" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="src" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="src" />
-   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_color.phpt" role="src" />
+   <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_background.phpt" role="src" />
+   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_color.phpt" role="src" />
+   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_size.phpt" role="src" />
+   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_strikeout.phpt" role="src" />
    <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="src" />
+   <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_wrap.phpt" role="src" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="src" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="src" />
+   <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/insert_text_resource_format.phpt" role="src" />
    <file md5sum="47de23f6eee379673bfae11d32f3e983" name="tests/insert_url_format.phpt" role="src" />
    <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/insert_url_no_format.phpt" role="src" />
+   <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/sheet_add.phpt" role="src" />
+   <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/sheet_checkout.phpt" role="src" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
    <file md5sum="5e8941dbd2f503d7c845fb07579830ab" name="README.md" role="doc" />
    <file md5sum="2f88d9bdcceca419cbbf16276f12d306" name="README_zh.md" role="doc" />
@@ -163,6 +170,25 @@
  <providesextension>xlswriter</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2019-05-03</date>
+   <time>05:44:12</time>
+   <version>
+    <release>1.2.4</release>
+    <api>1.2.4</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FEAT format multiple style overlays.
+    - FEAT format text color.
+    - FEAT image scale.
+    - FEAT chart.
+   </notes>
+  </release>
   <release>
    <date>2018-11-25</date>
    <time>00:30:00</time>

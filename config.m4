@@ -103,6 +103,8 @@ if test "$PHP_XLSWRITER" != "no"; then
         if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 807; then
             AC_DEFINE(HAVE_WORKBOOK_ADD_VBA_PROJECT, 1, [ workbook_add_vba_project available in 0.8.7 ])
         fi
+        dnl see library/CMakeLists.txt
+        LIBOPT="-DNOCRYPT -DNOUNCRYPT"
     fi
 
     if test -z "$PHP_DEBUG"; then
@@ -111,7 +113,7 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     PHP_SUBST(XLSWRITER_SHARED_LIBADD)
 
-    PHP_NEW_EXTENSION(xlswriter, $xls_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+    PHP_NEW_EXTENSION(xlswriter, $xls_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 $LIBOPT)
 
     PHP_ADD_INCLUDE([$srcdir])
     PHP_ADD_INCLUDE([$srcdir/include])

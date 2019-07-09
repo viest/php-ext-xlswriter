@@ -324,7 +324,7 @@ PHP_METHOD(vtiful_xls, header)
     xls_object *obj = Z_XLS_P(getThis());
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
-         type_writer(header_value, 0, header_l_key, &obj->ptr, NULL);
+         type_writer(header_value, 0, header_l_key, &obj->ptr, NULL, NULL);
          zval_ptr_dtor(header_value);
     ZEND_HASH_FOREACH_END();
 }
@@ -349,7 +349,7 @@ PHP_METHOD(vtiful_xls, data)
             SHEET_LINE_ADD(obj)
 
             ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
-                type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->ptr, NULL);
+                type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->ptr, NULL, NULL);
                 zval_ptr_dtor(&bucket->val);
             ZEND_HASH_FOREACH_END();
         }
@@ -386,20 +386,21 @@ PHP_METHOD(vtiful_xls, getHandle)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertText(int $row, int $column, string|int|double $data)
+/** {{{ \Vtiful\Kernel\xls::insertText(int $row, int $column, string|int|double $data[, string $format, resource $formatHandle])
  */
 PHP_METHOD(vtiful_xls, insertText)
 {
-    zval *data;
+    zval *data, *format_handle = NULL;
     zend_long row, column;
     zend_string *format = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(3, 4)
+    ZEND_PARSE_PARAMETERS_START(3, 5)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(data)
             Z_PARAM_OPTIONAL
             Z_PARAM_STR(format)
+            Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -408,7 +409,12 @@ PHP_METHOD(vtiful_xls, insertText)
 
     SHEET_LINE_SET(obj, row);
 
-    type_writer(data, row, column, &obj->ptr, format);
+    if (format_handle) {
+        type_writer(data, row, column, &obj->ptr, format, zval_get_format(format_handle));
+    } else {
+        type_writer(data, row, column, &obj->ptr, format, NULL);
+    }
+
 }
 /* }}} */
 

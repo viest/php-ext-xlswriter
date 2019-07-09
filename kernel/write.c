@@ -15,33 +15,147 @@
 /*
  * According to the zval type written to the file
  */
-void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format)
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format, lxw_format *format_handle)
 {
     lxw_format *value_format = NULL;
 
-    switch (Z_TYPE_P(value)) {
-        case IS_STRING:
-            worksheet_write_string(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
-            break;
-        case IS_LONG:
-            if(format) {
-                value_format = workbook_add_format(res->workbook);
-                format_set_num_format(value_format, ZSTR_VAL(format));
-                worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), value_format);
-            } else {
-                worksheet_write_number(res->worksheet, row, columns, zval_get_long(value), NULL);
-            }
-            break;
-        case IS_DOUBLE:
-            if(format) {
-                value_format = workbook_add_format(res->workbook);
-                format_set_num_format(value_format, ZSTR_VAL(format));
-                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), value_format);
-            } else {
-                worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
-            }
-            break;
+    lxw_col_t lxw_col = (lxw_col_t)columns;
+    lxw_row_t lxw_row = (lxw_row_t)row;
+
+    zend_uchar value_type = Z_TYPE_P(value);
+
+    if (value_type == IS_STRING) {
+        worksheet_write_string(res->worksheet, lxw_row, lxw_col, ZSTR_VAL(zval_get_string(value)), format_handle);
+        return;
     }
+
+    if (value_type == IS_LONG) {
+        if (format != NULL && format_handle == NULL) {
+            value_format = workbook_add_format(res->workbook);
+
+            format_set_num_format(value_format, ZSTR_VAL(format));
+
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), value_format);
+            return;
+        }
+
+        if (format == NULL && format_handle != NULL) {
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), format_handle);
+            return;
+        }
+
+        if(format != NULL && format_handle != NULL) {
+            value_format = workbook_add_format(res->workbook);
+
+            format_copy(value_format, format_handle);
+            format_set_num_format(value_format, ZSTR_VAL(format));
+
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), value_format);
+            return;
+        }
+
+        worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), NULL);
+    }
+
+    if (value_type == IS_DOUBLE) {
+        if (format != NULL && format_handle == NULL) {
+            value_format = workbook_add_format(res->workbook);
+
+            format_set_num_format(value_format, ZSTR_VAL(format));
+
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), value_format);
+            return;
+        }
+
+        if (format == NULL && format_handle != NULL) {
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), format_handle);
+            return;
+        }
+
+        if(format != NULL && format_handle != NULL) {
+            value_format = workbook_add_format(res->workbook);
+
+            format_copy(value_format, format_handle);
+            format_set_num_format(value_format, ZSTR_VAL(format));
+
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), value_format);
+            return;
+        }
+
+        worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+        return;
+    }
+}
+
+void format_copy(lxw_format *new_format, lxw_format *other_format)
+{
+    new_format->bold = other_format->bold;
+    new_format->bg_color = other_format->bg_color;
+    new_format->border_count = other_format->border_count;
+    new_format->border_index = other_format->border_index;
+    new_format->bottom = other_format->bottom;
+    new_format->bottom_color = other_format->bottom_color;
+    new_format->color_indexed = other_format->color_indexed;
+    new_format->diag_border = other_format->diag_border;
+    new_format->diag_color = other_format->diag_color;
+
+    new_format->font_size = other_format->font_size;
+    new_format->bold = other_format->bold;
+    new_format->italic = other_format->italic;
+    new_format->font_color = other_format->font_color;
+    new_format->underline = other_format->underline;
+    new_format->font_strikeout = other_format->font_strikeout;
+    new_format->font_outline = other_format->font_outline;
+    new_format->font_shadow = other_format->font_shadow;
+    new_format->font_script = other_format->font_script;
+    new_format->font_family = other_format->font_family;
+    new_format->font_charset = other_format->font_charset;
+    new_format->font_condense = other_format->font_condense;
+    new_format->font_extend = other_format->font_extend;
+    new_format->theme = other_format->theme;
+    new_format->hyperlink = other_format->hyperlink;
+
+    new_format->hidden = other_format->hidden;
+    new_format->locked = other_format->locked;
+
+    new_format->text_h_align = other_format->text_h_align;
+    new_format->text_wrap = other_format->text_wrap;
+    new_format->text_v_align = other_format->text_v_align;
+    new_format->text_justlast = other_format->text_justlast;
+    new_format->rotation = other_format->rotation;
+
+    new_format->fg_color = other_format->fg_color;
+    new_format->bg_color = other_format->bg_color;
+    new_format->pattern = other_format->pattern;
+    new_format->has_fill = other_format->has_fill;
+    new_format->has_dxf_fill = other_format->has_dxf_fill;
+    new_format->fill_index = other_format->fill_index;
+    new_format->fill_count = other_format->fill_count;
+
+    new_format->border_index = other_format->border_index;
+    new_format->has_border = other_format->has_border;
+    new_format->has_dxf_border = other_format->has_dxf_border;
+    new_format->border_count = other_format->border_count;
+
+    new_format->bottom = other_format->bottom;
+    new_format->diag_border = other_format->diag_border;
+    new_format->diag_type = other_format->diag_type;
+    new_format->left = other_format->left;
+    new_format->right = other_format->right;
+    new_format->top = other_format->top;
+    new_format->bottom_color = other_format->bottom_color;
+    new_format->diag_color = other_format->diag_color;
+    new_format->left_color = other_format->left_color;
+    new_format->right_color = other_format->right_color;
+    new_format->top_color = other_format->top_color;
+
+    new_format->indent = other_format->indent;
+    new_format->shrink = other_format->shrink;
+    new_format->merge_range = other_format->merge_range;
+    new_format->reading_order = other_format->reading_order;
+    new_format->just_distrib = other_format->just_distrib;
+    new_format->color_indexed = other_format->color_indexed;
+    new_format->font_only = other_format->font_only;
 }
 
 void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format)

@@ -116,7 +116,8 @@ STATIC int  _compare_defined_names(lxw_defined_name *a, lxw_defined_name *b);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
-void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format);
+void format_copy(lxw_format *new_format, lxw_format *other_format);
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format, lxw_format *format_handle);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_t *res);
 void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res);

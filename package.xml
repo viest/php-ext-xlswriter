@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-07-01</date>
+ <date>2019-07-10</date>
  <time>11:50:00</time>
  <version>
-  <release>1.2.5</release>
-  <api>1.2.5</api>
+  <release>1.2.6</release>
+  <api>1.2.6</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,11 +27,8 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT cells background color.
-- FEAT checkout sheet.
-- FEAT format new font size.
-- FEAT format new strikeout.
-- FEAT insertText support resource format.
+  - FIX CentOS6 Build.
+  - FIX InsertText memory leaks.
  </notes>
  <contents>
   <dir name="/">
@@ -170,6 +167,26 @@
  <providesextension>xlswriter</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2019-07-01</date>
+   <time>11:50:00</time>
+   <version>
+    <release>1.2.5</release>
+    <api>1.2.5</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FEAT cells background color.
+    - FEAT checkout sheet.
+    - FEAT format new font size.
+    - FEAT format new strikeout.
+    - FEAT insertText support resource format.
+   </notes>
+  </release>
   <release>
    <date>2019-05-03</date>
    <time>05:44:12</time>

@@ -1,4 +1,4 @@
-[submodule "library"]
-	path = library
+[submodule "library/libxlsxwriter"]
+	path = library/libxlsxwriter
 	url = https://github.com/jmcnamara/libxlsxwriter.git
 	branch = RELEASE_0.7.9

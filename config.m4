@@ -16,28 +16,28 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/chart.c \
     "
     libxlsxwriter_sources="
-    library/third_party/minizip/ioapi.c \
-    library/third_party/minizip/mztools.c \
-    library/third_party/minizip/unzip.c \
-    library/third_party/minizip/zip.c \
-    library/third_party/tmpfileplus/tmpfileplus.c \
-    library/src/app.c \
-    library/src/chart.c \
-    library/src/content_types.c \
-    library/src/core.c \
-    library/src/custom.c \
-    library/src/drawing.c \
-    library/src/format.c \
-    library/src/hash_table.c \
-    library/src/packager.c \
-    library/src/relationships.c \
-    library/src/shared_strings.c \
-    library/src/styles.c \
-    library/src/theme.c \
-    library/src/utility.c \
-    library/src/workbook.c \
-    library/src/worksheet.c \
-    library/src/xmlwriter.c \
+    library/libxlsxwriter/third_party/minizip/ioapi.c \
+    library/libxlsxwriter/third_party/minizip/mztools.c \
+    library/libxlsxwriter/third_party/minizip/unzip.c \
+    library/libxlsxwriter/third_party/minizip/zip.c \
+    library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c \
+    library/libxlsxwriter/src/app.c \
+    library/libxlsxwriter/src/chart.c \
+    library/libxlsxwriter/src/content_types.c \
+    library/libxlsxwriter/src/core.c \
+    library/libxlsxwriter/src/custom.c \
+    library/libxlsxwriter/src/drawing.c \
+    library/libxlsxwriter/src/format.c \
+    library/libxlsxwriter/src/hash_table.c \
+    library/libxlsxwriter/src/packager.c \
+    library/libxlsxwriter/src/relationships.c \
+    library/libxlsxwriter/src/shared_strings.c \
+    library/libxlsxwriter/src/styles.c \
+    library/libxlsxwriter/src/theme.c \
+    library/libxlsxwriter/src/utility.c \
+    library/libxlsxwriter/src/workbook.c \
+    library/libxlsxwriter/src/worksheet.c \
+    library/libxlsxwriter/src/xmlwriter.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
@@ -88,9 +88,9 @@ if test "$PHP_XLSWRITER" != "no"; then
     else
         AC_MSG_RESULT([use the bundled library])
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
-        PHP_ADD_INCLUDE([$srcdir/library/include])
+        PHP_ADD_INCLUDE([$srcdir/library/libxlsxwriter/include])
 
-        XLSXWRITER_VERSION=`$EGREP "define LXW_VERSION" $srcdir/library/include/xlsxwriter.h | $SED -e 's/[[^0-9\.]]//g'`
+        XLSXWRITER_VERSION=`$EGREP "define LXW_VERSION" $srcdir/library/include/libxlsxwriter/xlsxwriter.h | $SED -e 's/[[^0-9\.]]//g'`
 
         if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 709; then
             AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
@@ -119,7 +119,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_INCLUDE([$srcdir/include])
 
     PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/src])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/third_party/minizip])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/third_party/tmpfileplus])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/src])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/minizip])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/tmpfileplus])
 fi

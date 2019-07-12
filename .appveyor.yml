@@ -5,6 +5,7 @@ branches:
         only:
                 - master
                 - dev
+                - dev-read
 
 clone_folder:  c:\projects\xlswriter
 

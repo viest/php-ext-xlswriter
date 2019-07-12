@@ -2,3 +2,7 @@
 	path = library/libxlsxwriter
 	url = https://github.com/jmcnamara/libxlsxwriter.git
 	branch = RELEASE_0.7.9
+[submodule "library/libexpat"]
+	path = library/libexpat
+	url = https://github.com/libexpat/libexpat.git
+	branch = R_2_2_7

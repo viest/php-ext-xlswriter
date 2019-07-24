@@ -50,6 +50,9 @@ static void vtiful_xls_objects_free(zend_object *object)
 
     lxw_workbook_free(intern->write_ptr.workbook);
 
+    xlsxioread_sheet_close(intern->read_ptr.sheet_t);
+    xlsxioread_close(intern->read_ptr.file_t);
+
     zend_object_std_dtor(&intern->zo);
 }
 /* }}} */

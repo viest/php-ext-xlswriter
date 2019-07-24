@@ -130,7 +130,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="$xls_writer_sources $libxlsxio"
     PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
     PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
-    LIBOP="$LIBOPT -DUSE_MINIZIP"
+    LIBOPT="$LIBOPT -DUSE_MINIZIP"
 
     if test -z "$PHP_DEBUG"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])

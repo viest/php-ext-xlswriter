@@ -14,6 +14,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/write.c \
     kernel/format.c \
     kernel/chart.c \
+    kernel/read.c \
     "
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/minizip/ioapi.c \
@@ -38,6 +39,20 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/src/workbook.c \
     library/libxlsxwriter/src/worksheet.c \
     library/libxlsxwriter/src/xmlwriter.c \
+    "
+
+    libexpat="
+    library/libexpat/expat/lib/loadlibrary.c \
+    library/libexpat/expat/lib/xmlparse.c \
+    library/libexpat/expat/lib/xmlrole.c \
+    library/libexpat/expat/lib/xmltok.c \
+    library/libexpat/expat/lib/xmltok_impl.c \
+    library/libexpat/expat/lib/xmltok_ns.c \
+    "
+
+    libxlsxio="
+    library/libxlsxio/lib/xlsxio_read.c \
+    library/libxlsxio/lib/xlsxio_read_sharedstrings.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
@@ -106,6 +121,15 @@ if test "$PHP_XLSWRITER" != "no"; then
         dnl see library/CMakeLists.txt
         LIBOPT="-DNOCRYPT -DNOUNCRYPT"
     fi
+
+    xls_writer_sources="$xls_writer_sources $libexpat"
+    PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
+    LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
+
+    xls_writer_sources="$xls_writer_sources $libxlsxio"
+    PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
 
     if test -z "$PHP_DEBUG"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])

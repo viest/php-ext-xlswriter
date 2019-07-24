@@ -35,6 +35,9 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 
     intern->zo.handlers = &vtiful_xls_handlers;
 
+    intern->read_ptr.file_t = NULL;
+    intern->read_ptr.sheet_t = NULL;
+
     return &intern->zo;
 }
 /* }}} */
@@ -45,7 +48,7 @@ static void vtiful_xls_objects_free(zend_object *object)
 {
     xls_object *intern = php_vtiful_xls_fetch_object(object);
 
-    lxw_workbook_free(intern->ptr.workbook);
+    lxw_workbook_free(intern->write_ptr.workbook);
 
     zend_object_std_dtor(&intern->zo);
 }
@@ -186,15 +189,15 @@ PHP_METHOD(vtiful_xls, fileName)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    if(obj->ptr.workbook == NULL) {
+    if(obj->write_ptr.workbook == NULL) {
         xls_file_path(zs_file_name, dir_path, &file_path);
 
         if(zs_sheet_name != NULL) {
             sheet_name = ZSTR_VAL(zs_sheet_name);
         }
 
-        obj->ptr.workbook  = workbook_new(Z_STRVAL(file_path));
-        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
+        obj->write_ptr.workbook  = workbook_new(Z_STRVAL(file_path));
+        obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 
@@ -221,7 +224,7 @@ PHP_METHOD(vtiful_xls, addSheet)
 
     SHEET_LINE_INIT(obj)
 
-    if(obj->ptr.workbook == NULL) {
+    if(obj->write_ptr.workbook == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
         return;
     }
@@ -230,7 +233,7 @@ PHP_METHOD(vtiful_xls, addSheet)
         sheet_name = ZSTR_VAL(zs_sheet_name);
     }
 
-    obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
+    obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
 }
 /* }}} */
 
@@ -250,12 +253,12 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    if(obj->ptr.workbook == NULL) {
+    if(obj->write_ptr.workbook == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
         return;
     }
 
-    if ((sheet_t = workbook_get_worksheet_by_name(obj->ptr.workbook, ZSTR_VAL(zs_sheet_name))) == NULL) {
+    if ((sheet_t = workbook_get_worksheet_by_name(obj->write_ptr.workbook, ZSTR_VAL(zs_sheet_name))) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Sheet not fund", 140);
         return;
     }
@@ -264,7 +267,7 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 
     SHEET_LINE_SET(obj, line);
 
-    obj->ptr.worksheet = sheet_t;
+    obj->write_ptr.worksheet = sheet_t;
 }
 /* }}} */
 
@@ -288,7 +291,7 @@ PHP_METHOD(vtiful_xls, constMemory)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    if(obj->ptr.workbook == NULL) {
+    if(obj->write_ptr.workbook == NULL) {
         xls_file_path(zs_file_name, dir_path, &file_path);
 
         lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
@@ -297,8 +300,8 @@ PHP_METHOD(vtiful_xls, constMemory)
             sheet_name = ZSTR_VAL(zs_sheet_name);
         }
 
-        obj->ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
-        obj->ptr.worksheet = workbook_add_worksheet(obj->ptr.workbook, sheet_name);
+        obj->write_ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
+        obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 
@@ -324,7 +327,7 @@ PHP_METHOD(vtiful_xls, header)
     xls_object *obj = Z_XLS_P(getThis());
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
-         type_writer(header_value, 0, header_l_key, &obj->ptr, NULL, NULL);
+         type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, NULL);
          zval_ptr_dtor(header_value);
     ZEND_HASH_FOREACH_END();
 }
@@ -349,7 +352,7 @@ PHP_METHOD(vtiful_xls, data)
             SHEET_LINE_ADD(obj)
 
             ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
-                type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->ptr, NULL, NULL);
+                type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->write_ptr, NULL, NULL);
                 zval_ptr_dtor(&bucket->val);
             ZEND_HASH_FOREACH_END();
         }
@@ -367,7 +370,7 @@ PHP_METHOD(vtiful_xls, output)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    workbook_file(&obj->ptr);
+    workbook_file(&obj->write_ptr);
 
     add_property_null(getThis(), V_XLS_HANDLE);
     add_property_null(getThis(), V_XLS_PAT);
@@ -382,7 +385,7 @@ PHP_METHOD(vtiful_xls, getHandle)
 {
     xls_object *obj = Z_XLS_P(getThis());
 
-    RETURN_RES(zend_register_resource(&obj->ptr, le_xls_writer));
+    RETURN_RES(zend_register_resource(&obj->write_ptr, le_xls_writer));
 }
 /* }}} */
 
@@ -410,9 +413,9 @@ PHP_METHOD(vtiful_xls, insertText)
     SHEET_LINE_SET(obj, row);
 
     if (format_handle) {
-        type_writer(data, row, column, &obj->ptr, format, zval_get_format(format_handle));
+        type_writer(data, row, column, &obj->write_ptr, format, zval_get_format(format_handle));
     } else {
-        type_writer(data, row, column, &obj->ptr, format, NULL);
+        type_writer(data, row, column, &obj->write_ptr, format, NULL);
     }
 
 }
@@ -435,7 +438,7 @@ PHP_METHOD(vtiful_xls, insertChart)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    chart_writer(row, column, zval_get_chart(chart_resource), &obj->ptr);
+    chart_writer(row, column, zval_get_chart(chart_resource), &obj->write_ptr);
 }
 /* }}} */
 
@@ -462,11 +465,11 @@ PHP_METHOD(vtiful_xls, insertUrl)
     xls_object *obj = Z_XLS_P(getThis());
 
     if (argc == 4) {
-        url_writer(row, column, &obj->ptr, url, zval_get_format(format_handle));
+        url_writer(row, column, &obj->write_ptr, url, zval_get_format(format_handle));
     }
 
     if (argc == 3) {
-        url_writer(row, column, &obj->ptr, url, NULL);
+        url_writer(row, column, &obj->write_ptr, url, NULL);
     }
 }
 /* }}} */
@@ -492,7 +495,7 @@ PHP_METHOD(vtiful_xls, insertImage)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    image_writer(image, row, column, width, height,  &obj->ptr);
+    image_writer(image, row, column, width, height,  &obj->write_ptr);
 }
 /* }}} */
 
@@ -513,7 +516,7 @@ PHP_METHOD(vtiful_xls, insertFormula)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    formula_writer(formula, row, column, &obj->ptr);
+    formula_writer(formula, row, column, &obj->write_ptr);
 }
 /* }}} */
 
@@ -531,7 +534,7 @@ PHP_METHOD(vtiful_xls, autoFilter)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    auto_filter(range, &obj->ptr);
+    auto_filter(range, &obj->write_ptr);
 }
 /* }}} */
 
@@ -550,7 +553,7 @@ PHP_METHOD(vtiful_xls, mergeCells)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    merge_cells(range, data, &obj->ptr);
+    merge_cells(range, data, &obj->write_ptr);
 }
 /* }}} */
 
@@ -576,11 +579,11 @@ PHP_METHOD(vtiful_xls, setColumn)
     xls_object *obj = Z_XLS_P(getThis());
 
     if (argc == 3) {
-        set_column(range, width, &obj->ptr, zval_get_format(format_handle));
+        set_column(range, width, &obj->write_ptr, zval_get_format(format_handle));
     }
 
     if (argc == 2) {
-        set_column(range, width, &obj->ptr, NULL);
+        set_column(range, width, &obj->write_ptr, NULL);
     }
 }
 /* }}} */
@@ -607,12 +610,84 @@ PHP_METHOD(vtiful_xls, setRow)
     xls_object *obj = Z_XLS_P(getThis());
 
     if (argc == 3) {
-        set_row(range, height, &obj->ptr, zval_get_format(format_handle));
+        set_row(range, height, &obj->write_ptr, zval_get_format(format_handle));
     }
 
     if (argc == 2) {
-        set_row(range, height, &obj->ptr, NULL);
+        set_row(range, height, &obj->write_ptr, NULL);
     }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::openFile()
+ */
+PHP_METHOD(vtiful_xls, openFile)
+{
+    zval *zv_config_path = NULL;
+    zend_string *zs_file_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(zs_file_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    GET_CONFIG_PATH(zv_config_path, vtiful_xls_ce, return_value);
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    obj->read_ptr.file_t = file_open(Z_STRVAL_P(zv_config_path), ZSTR_VAL(zs_file_name));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::openSheet()
+ */
+PHP_METHOD(vtiful_xls, openSheet)
+{
+    zend_string *sheet_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    if (obj->read_ptr.file_t == NULL) {
+        RETURN_NULL();
+    }
+
+    obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, sheet_name);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::getSheetData()
+ */
+PHP_METHOD(vtiful_xls, getSheetData)
+{
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.sheet_t) {
+        RETURN_FALSE;
+    }
+
+    load_sheet_all_data(obj->read_ptr.sheet_t, return_value);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::nextRow()
+ */
+PHP_METHOD(vtiful_xls, nextRow)
+{
+    xls_object *obj  = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.sheet_t) {
+        RETURN_FALSE;
+    }
+
+    load_sheet_current_row_data(obj->read_ptr.sheet_t, return_value, READ_ROW);
 }
 /* }}} */
 
@@ -637,6 +712,10 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openFile,      NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openSheet,     NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getSheetData,  NULL,                       ZEND_ACC_PUBLIC)
+        //PHP_ME(vtiful_xls, nextRow,       NULL, ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

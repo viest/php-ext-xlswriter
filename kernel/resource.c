@@ -13,11 +13,11 @@
 #include "xlswriter.h"
 
 /* {{{ */
-xls_resource_t * zval_get_resource(zval *handle)
+xls_resource_write_t * zval_get_resource(zval *handle)
 {
-    xls_resource_t *res;
+    xls_resource_write_t *res;
 
-    if((res = (xls_resource_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+    if((res = (xls_resource_write_t *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "XLS resources resolution fail", 210);
     }
 

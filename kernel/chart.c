@@ -95,7 +95,7 @@ PHP_METHOD(vtiful_chart, __construct)
     zval *handle;
     zend_long type;
     chart_object *obj;
-    xls_resource_t *xls_res;
+    xls_resource_write_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
             Z_PARAM_RESOURCE(handle)
@@ -260,6 +260,7 @@ zend_function_entry chart_methods[] = {
 };
 /* }}} */
 
+/* {{{ */
 VTIFUL_STARTUP_FUNCTION(chart)
 {
     zend_class_entry ce;
@@ -278,3 +279,4 @@ VTIFUL_STARTUP_FUNCTION(chart)
 
     return SUCCESS;
 }
+/* }}} */

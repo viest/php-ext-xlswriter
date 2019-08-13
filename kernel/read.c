@@ -87,6 +87,8 @@ void load_sheet_all_data(xlsxioreadersheet sheet_t, zval *zv_result_t)
     while (sheet_read_row(sheet_t))
     {
         zval _zv_tmp_row;
+        ZVAL_NULL(&_zv_tmp_row);
+
         load_sheet_current_row_data(sheet_t, &_zv_tmp_row, READ_SKIP_ROW);
         add_next_index_zval(zv_result_t, &_zv_tmp_row);
     }

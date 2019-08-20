@@ -50,8 +50,10 @@ static void vtiful_xls_objects_free(zend_object *object)
 
     lxw_workbook_free(intern->write_ptr.workbook);
 
+#ifdef ENABLE_READER
     xlsxioread_sheet_close(intern->read_ptr.sheet_t);
     xlsxioread_close(intern->read_ptr.file_t);
+#endif
 
     zend_object_std_dtor(&intern->zo);
 }
@@ -622,6 +624,8 @@ PHP_METHOD(vtiful_xls, setRow)
 }
 /* }}} */
 
+#ifdef ENABLE_READER
+
 /** {{{ \Vtiful\Kernel\xls::openFile()
  */
 PHP_METHOD(vtiful_xls, openFile)
@@ -694,6 +698,8 @@ PHP_METHOD(vtiful_xls, nextRow)
 }
 /* }}} */
 
+#endif
+
 /** {{{ xls_methods
 */
 zend_function_entry xls_methods[] = {
@@ -715,10 +721,13 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
+
+#ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,      NULL,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, openSheet,     NULL,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,  NULL,                       ZEND_ACC_PUBLIC)
-        //PHP_ME(vtiful_xls, nextRow,       NULL, ZEND_ACC_PUBLIC)
+#endif
+
         PHP_FE_END
 };
 /* }}} */

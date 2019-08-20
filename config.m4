@@ -4,6 +4,9 @@ PHP_ARG_WITH(xlsxwriter, xlswriter support,
 PHP_ARG_WITH(libxlsxwriter, system libxlsswriter,
 [  --with-libxlsxwriter=DIR Use system library], no, no)
 
+PHP_ARG_ENABLE(reader, enable xlsx reader support,
+[  --enable-reader          Enable xlsx reader?], no, no)
+
 if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="
     xlswriter.c \
@@ -14,7 +17,6 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/write.c \
     kernel/format.c \
     kernel/chart.c \
-    kernel/read.c \
     "
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/minizip/ioapi.c \
@@ -65,6 +67,7 @@ if test "$PHP_XLSWRITER" != "no"; then
                 break
             fi
         done
+
         if test -z "$XLSXWRITER_DIR"; then
             AC_MSG_ERROR([libxlsxwriter library not found])
         else
@@ -99,6 +102,7 @@ if test "$PHP_XLSWRITER" != "no"; then
                 -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
             ])
         fi
+
         AC_DEFINE(HAVE_LIBXLSXWRITER, 1, [ use system libxlsxwriter ])
     else
         AC_MSG_RESULT([use the bundled library])
@@ -122,15 +126,25 @@ if test "$PHP_XLSWRITER" != "no"; then
         LIBOPT="-DNOCRYPT -DNOUNCRYPT"
     fi
 
-    xls_writer_sources="$xls_writer_sources $libexpat"
-    PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
-    LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
+    if test "$PHP_READER" = "yes"; then
+        xls_read_sources = "
+        kernel/read.c \
+        "
 
-    xls_writer_sources="$xls_writer_sources $libxlsxio"
-    PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
-    LIBOPT="$LIBOPT -DUSE_MINIZIP"
+        xls_writer_sources="$xls_writer_sources $xls_read_sources"
+
+        AC_DEFINE(ENABLE_READER, 1, [enable reader])
+
+        xls_writer_sources="$xls_writer_sources $libexpat $xls_read_sources"
+        PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
+        PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
+        LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
+
+        xls_writer_sources="$xls_writer_sources $libxlsxio"
+        PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
+        PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
+        LIBOPT="$LIBOPT -DUSE_MINIZIP"
+    fi
 
     if test -z "$PHP_DEBUG"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])

@@ -28,14 +28,28 @@
 #include "xlsxwriter/packager.h"
 #include "xlsxwriter/format.h"
 
-#include "xlsxio_read.h"
-
 #include "php_xlswriter.h"
 #include "excel.h"
 #include "exception.h"
 #include "format.h"
 #include "chart.h"
+
+#ifdef ENABLE_READER
+#include "xlsxio_read.h"
 #include "read.h"
+
+typedef struct {
+    xlsxioreader      file_t;
+    xlsxioreadersheet sheet_t;
+} xls_resource_read_t;
+#endif
+
+#ifndef ENABLE_READER
+typedef struct {
+    void * file_t;
+    void * sheet_t;
+} xls_resource_read_t;
+#endif
 
 enum xlswriter_boolean {
     XLSWRITER_FALSE,
@@ -55,11 +69,6 @@ typedef struct {
     lxw_chart *chart;
     lxw_chart_series *series;
 } xls_resource_chart_t;
-
-typedef struct {
-    xlsxioreader      file_t;
-    xlsxioreadersheet sheet_t;
-} xls_resource_read_t;
 
 typedef struct _vtiful_xls_object {
     xls_resource_read_t  read_ptr;
@@ -124,8 +133,8 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 #endif
 
 lxw_format           * zval_get_format(zval *handle);
-xls_resource_write_t       * zval_get_resource(zval *handle);
-xls_resource_chart_t *zval_get_chart(zval *resource);
+xls_resource_write_t * zval_get_resource(zval *handle);
+xls_resource_chart_t * zval_get_chart(zval *resource);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 

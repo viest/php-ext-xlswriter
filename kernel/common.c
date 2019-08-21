@@ -12,6 +12,7 @@
 
 #include "xlswriter.h"
 
+/* {{{ */
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
 {
     zend_string *full_path, *zstr_path;
@@ -29,3 +30,4 @@ void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
 
     ZVAL_STR(file_path, full_path);
 }
+/* }}} */

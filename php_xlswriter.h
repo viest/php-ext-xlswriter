@@ -32,6 +32,13 @@ extern zend_module_entry xlswriter_module_entry;
 #include "TSRM.h"
 #endif
 
+#if PHP_VERSION_ID >= 80000
+#define TSRMLS_D	void
+#define TSRMLS_DC
+#define TSRMLS_C
+#define TSRMLS_CC
+#endif
+
 #define VTIFUL_RESOURCE_NAME "xlsx"
 
 extern int le_xls_writer;

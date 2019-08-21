@@ -12,6 +12,8 @@ php:
   - 7.1
   - 7.2
   - 7.3
+  - 7.4snapshot
+  - nightly
 
 notifications:
   email: dev@service.viest.me
@@ -25,5 +27,6 @@ branches:
   only:
     - master
     - dev
+    - dev-read
 script:
     - ./travis/run-test.sh

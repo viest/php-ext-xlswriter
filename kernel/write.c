@@ -15,7 +15,7 @@
 /*
  * According to the zval type written to the file
  */
-void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format, lxw_format *format_handle)
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle)
 {
     lxw_format *value_format = NULL;
 
@@ -160,7 +160,7 @@ void format_copy(lxw_format *new_format, lxw_format *other_format)
     new_format->font_only = other_format->font_only;
 }
 
-void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format)
+void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format)
 {
     worksheet_write_url(res->worksheet, row, columns, ZSTR_VAL(url), format);
 }
@@ -168,7 +168,7 @@ void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_stri
 /*
  * Write the image to the file
  */
-void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res)
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res)
 {
     lxw_image_options options = {.x_scale = width, .y_scale = height};
 
@@ -178,12 +178,12 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 /*
  * Write the image to the file
  */
-void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res)
+void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res)
 {
     worksheet_write_formula(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
 }
 
-void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_t *res)
+void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res)
 {
     worksheet_insert_chart(res->worksheet, row, columns, chart_resource->chart);
 }
@@ -191,7 +191,7 @@ void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_
 /*
  * Add the autofilter.
  */
-void auto_filter(zend_string *range, xls_resource_t *res)
+void auto_filter(zend_string *range, xls_resource_write_t *res)
 {
     worksheet_autofilter(res->worksheet, RANGE(ZSTR_VAL(range)));
 }
@@ -199,7 +199,7 @@ void auto_filter(zend_string *range, xls_resource_t *res)
 /*
  * Merge cells.
  */
-void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res)
+void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res)
 {
     worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), NULL);
 }
@@ -207,7 +207,7 @@ void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res)
 /*
  * Set column format
  */
-void set_column(zend_string *range, double width, xls_resource_t *res, lxw_format *format)
+void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format)
 {
     worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
 }
@@ -215,7 +215,7 @@ void set_column(zend_string *range, double width, xls_resource_t *res, lxw_forma
 /*
  * Set row format
  */
-void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format)
+void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format)
 {
     char *rows = ZSTR_VAL(range);
 
@@ -229,7 +229,7 @@ void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format 
 /*
  * Set rows format
  */
-void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_t *res, lxw_format *format)
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format)
 {
     while (1) {
         worksheet_set_row(res->worksheet, end, height, format);
@@ -243,7 +243,7 @@ void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resou
  * Call finalization code and close file.
  */
 lxw_error
-workbook_file(xls_resource_t *self)
+workbook_file(xls_resource_write_t *self)
 {
     lxw_worksheet *worksheet = NULL;
     lxw_packager *packager = NULL;

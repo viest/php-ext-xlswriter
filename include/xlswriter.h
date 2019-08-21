@@ -34,10 +34,32 @@
 #include "format.h"
 #include "chart.h"
 
+#ifdef ENABLE_READER
+#include "xlsxio_read.h"
+#include "read.h"
+
+typedef struct {
+    xlsxioreader      file_t;
+    xlsxioreadersheet sheet_t;
+} xls_resource_read_t;
+#endif
+
+#ifndef ENABLE_READER
+typedef struct {
+    void * file_t;
+    void * sheet_t;
+} xls_resource_read_t;
+#endif
+
+enum xlswriter_boolean {
+    XLSWRITER_FALSE,
+    XLSWRITER_TRUE
+};
+
 typedef struct {
     lxw_workbook  *workbook;
     lxw_worksheet *worksheet;
-} xls_resource_t;
+} xls_resource_write_t;
 
 typedef struct {
     lxw_format  *format;
@@ -49,9 +71,10 @@ typedef struct {
 } xls_resource_chart_t;
 
 typedef struct _vtiful_xls_object {
-    xls_resource_t ptr;
-    zend_long      line;
-    zend_object    zo;
+    xls_resource_read_t  read_ptr;
+    xls_resource_write_t write_ptr;
+    zend_long            write_line;
+    zend_object          zo;
 } xls_object;
 
 typedef struct _vtiful_format_object {
@@ -93,19 +116,25 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
     lxw_name_to_row(range), lxw_name_to_row_2(range)
 
 #define SHEET_LINE_INIT(obj_p) \
-    obj_p->line = 0;
+    obj_p->write_line = 0;
 
 #define SHEET_LINE_ADD(obj_p) \
-    ++obj_p->line;
+    ++obj_p->write_line;
 
 #define SHEET_LINE_SET(obj_p, current_line) \
-    obj_p->line = current_line;
+    obj_p->write_line = current_line;
 
-#define SHEET_CURRENT_LINE(obj_p) obj_p->line
+#define SHEET_CURRENT_LINE(obj_p) obj_p->write_line
+
+#ifdef LXW_HAS_SNPRINTF
+#define lxw_snprintf snprintf
+#else
+#define lxw_snprintf __builtin_snprintf
+#endif
 
 lxw_format           * zval_get_format(zval *handle);
-xls_resource_t       * zval_get_resource(zval *handle);
-xls_resource_chart_t *zval_get_chart(zval *resource);
+xls_resource_write_t * zval_get_resource(zval *handle);
+xls_resource_chart_t * zval_get_chart(zval *resource);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 
@@ -117,17 +146,17 @@ STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
 void format_copy(lxw_format *new_format, lxw_format *other_format);
-void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res, zend_string *format, lxw_format *format_handle);
-void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_t *res);
-void url_writer(zend_long row, zend_long columns, xls_resource_t *res, zend_string *url, lxw_format *format);
-void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_t *res);
-void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_t *res);
-void auto_filter(zend_string *range, xls_resource_t *res);
-void merge_cells(zend_string *range, zend_string *value, xls_resource_t *res);
-void set_column(zend_string *range, double width, xls_resource_t *res, lxw_format *format);
-void set_row(zend_string *range, double height, xls_resource_t *res, lxw_format *format);
-void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_t *res, lxw_format *format);
-lxw_error workbook_file(xls_resource_t *self);
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
+void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
+void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
+void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res);
+void auto_filter(zend_string *range, xls_resource_write_t *res);
+void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res);
+void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
+void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format);
+lxw_error workbook_file(xls_resource_write_t *self);
 
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 

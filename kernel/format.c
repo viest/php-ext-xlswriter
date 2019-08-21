@@ -91,7 +91,7 @@ PHP_METHOD(vtiful_format, __construct)
 {
     zval *handle;
     format_object *obj;
-    xls_resource_t *xls_res;
+    xls_resource_write_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_RESOURCE(handle)

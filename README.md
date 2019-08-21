@@ -31,7 +31,7 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * FreeBSD License.
 * The only dependency is on zlib.
 
-[文档](https://github.com/viest/php-ext-excel-export/blob/master/README_zh.md) | [Documents](https://github.com/viest/php-ext-excel-export/wiki)
+[文档|Documents](https://xlswriter-docs.viest.me/)
 
 [![pecl](https://github.com/viest/php-excel-writer/blob/master/resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 

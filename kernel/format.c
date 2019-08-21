@@ -83,6 +83,10 @@ ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, pattern)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_border_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, style)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Format::__construct()
@@ -297,6 +301,26 @@ PHP_METHOD(vtiful_format, wrap)
 
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
+PHP_METHOD(vtiful_format, border)
+{
+    zend_long style;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(style)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_border(obj->ptr.format, style);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::toResource()
+ */
 PHP_METHOD(vtiful_format, toResource)
 {
     format_object *obj = Z_FORMAT_P(getThis());
@@ -313,6 +337,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, wrap,          NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, bold,          NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, italic,        NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, border,        format_border_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, align,         format_align_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, number,        format_number_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, fontColor,     format_color_arginfo,      ZEND_ACC_PUBLIC)
@@ -392,6 +417,20 @@ VTIFUL_STARTUP_FUNCTION(format) {
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_TRELLIS",    LXW_PATTERN_LIGHT_TRELLIS)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_125",         LXW_PATTERN_GRAY_125)
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_0625",        LXW_PATTERN_GRAY_0625)
+
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THIN",                 LXW_BORDER_THIN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM",               LXW_BORDER_MEDIUM)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASHED",               LXW_BORDER_DASHED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOTTED",               LXW_BORDER_DOTTED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THICK",                LXW_BORDER_THICK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOUBLE",               LXW_BORDER_DOUBLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_HAIR",                 LXW_BORDER_HAIR)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASHED",        LXW_BORDER_MEDIUM_DASHED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT",             LXW_BORDER_DASH_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT",      LXW_BORDER_MEDIUM_DASH_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT_DOT",         LXW_BORDER_DASH_DOT_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT_DOT",  LXW_BORDER_MEDIUM_DASH_DOT_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_SLANT_DASH_DOT",       LXW_BORDER_SLANT_DASH_DOT)
 
     return SUCCESS;
 }

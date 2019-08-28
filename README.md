@@ -35,11 +35,13 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 
 [文档|Documents](https://xlswriter-docs.viest.me/)
 
+#### PECL Repository
+
 [![pecl](https://github.com/viest/php-excel-writer/blob/master/resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 
 #### Exchange group
 
-<img width="80" src="https://github.com/viest/php-ext-excel-export/blob/dev/resource/qq.jpg"/>
+<img width="160" src="https://github.com/viest/php-ext-excel-export/blob/dev/resource/qq.jpg"/>
 
 #### License
 

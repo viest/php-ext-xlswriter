@@ -18,6 +18,11 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/format.c \
     kernel/chart.c \
     "
+
+    xls_read_sources="
+    kernel/read.c \
+    "
+
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/minizip/ioapi.c \
     library/libxlsxwriter/third_party/minizip/mztools.c \
@@ -127,15 +132,11 @@ if test "$PHP_XLSWRITER" != "no"; then
     fi
 
     if test "$PHP_READER" = "yes"; then
-        xls_read_sources = "
-        kernel/read.c \
-        "
-
         xls_writer_sources="$xls_writer_sources $xls_read_sources"
 
         AC_DEFINE(ENABLE_READER, 1, [enable reader])
 
-        xls_writer_sources="$xls_writer_sources $libexpat $xls_read_sources"
+        xls_writer_sources="$xls_writer_sources $libexpat"
         PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
         PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
         LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
@@ -161,4 +162,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/src])
     PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/minizip])
     PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/tmpfileplus])
+
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
+    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
 fi

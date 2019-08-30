@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-07-10</date>
+ <date>2019-09-01</date>
  <time>11:50:00</time>
  <version>
-  <release>1.2.6</release>
-  <api>1.2.6</api>
+  <release>1.2.7</release>
+  <api>1.2.7</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,8 +27,7 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-  - FIX CentOS6 Build.
-  - FIX InsertText memory leaks.
+  - FEAT read xlsx file.
  </notes>
  <contents>
   <dir name="/">
@@ -37,6 +36,9 @@
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
    <file md5sum="ddea7d7c654d43fa3b021f098082f613" name="include/xlswriter.h" role="src" />
+   <file md5sum="ddea7d7c654d43fa3b021f098082f613" name="include/read.h" role="src" />
+   <file name="include/minizip/ioapi.h" role="src"/>
+   <file name="include/minizip/unzip.h" role="src"/>
    <file md5sum="dc2d1df0e63fb0e63eb92e2ad610d700" name="kernel/chart.c" role="src" />
    <file md5sum="470ddfa8caa640ebe0aceb8f70ee04eb" name="kernel/common.c" role="src" />
    <file md5sum="ac596a0c9079eac24270d60b45d45dcf" name="kernel/excel.c" role="src" />
@@ -44,61 +46,93 @@
    <file md5sum="be032cec74b126ed0fd3f70bc320d5be" name="kernel/format.c" role="src" />
    <file md5sum="15a760f71b021ab1d0e0022a7718fc2f" name="kernel/resource.c" role="src" />
    <file md5sum="a344db34bc38791f9813ed6cdfa40428" name="kernel/write.c" role="src" />
-   <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/include/xlsxwriter/third_party/ioapi.h" role="src" />
-   <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/include/xlsxwriter/third_party/queue.h" role="src" />
-   <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
-   <file md5sum="de224c89e67700652f117cab66f4acbb" name="library/include/xlsxwriter/third_party/tree.h" role="src" />
-   <file md5sum="f6e837ae4769d683fa51d651a232ece0" name="library/include/xlsxwriter/third_party/zip.h" role="src" />
-   <file md5sum="aaa6b5b1ba06013d2b68a2c649c3257d" name="library/include/xlsxwriter/app.h" role="src" />
-   <file md5sum="89a063be914570d356eac4aa916df2db" name="library/include/xlsxwriter/chart.h" role="src" />
-   <file md5sum="ed70a34a0204a3be53fd87b047c20a36" name="library/include/xlsxwriter/common.h" role="src" />
-   <file md5sum="53766d426ed1d6f1499ae33428dfd4fc" name="library/include/xlsxwriter/content_types.h" role="src" />
-   <file md5sum="71f10c280a9be159cdb02b81f49da14c" name="library/include/xlsxwriter/core.h" role="src" />
-   <file md5sum="682335c459e82bd1128e2c63236eebb4" name="library/include/xlsxwriter/custom.h" role="src" />
-   <file md5sum="a2601afc1913c3fddc8bbd6f7c10189d" name="library/include/xlsxwriter/drawing.h" role="src" />
-   <file md5sum="6acdcc1ff312634832dc263d1ce0dec8" name="library/include/xlsxwriter/format.h" role="src" />
-   <file md5sum="ef0fc908bf579b5fa5aba3ef3da161c0" name="library/include/xlsxwriter/hash_table.h" role="src" />
-   <file md5sum="eef584c9a0dad8219bec2a5185be783c" name="library/include/xlsxwriter/packager.h" role="src" />
-   <file md5sum="c6700ea55cd80bfebcb1fdee027c5be2" name="library/include/xlsxwriter/relationships.h" role="src" />
-   <file md5sum="8ad3c3390a918a444b95181ec8c59be3" name="library/include/xlsxwriter/shared_strings.h" role="src" />
-   <file md5sum="3c4dac223ac2100b7f50dbc17767bb1d" name="library/include/xlsxwriter/styles.h" role="src" />
-   <file md5sum="a03ad615140aa131a9f902b762c5c6ce" name="library/include/xlsxwriter/theme.h" role="src" />
-   <file md5sum="e1ce21616840e3ba3ef473757101dab0" name="library/include/xlsxwriter/utility.h" role="src" />
-   <file md5sum="6d2c62f6f5e2c42a8fc44f7a5370316a" name="library/include/xlsxwriter/workbook.h" role="src" />
-   <file md5sum="b46812d9c56ab38db57fa36ef2edfff9" name="library/include/xlsxwriter/worksheet.h" role="src" />
-   <file md5sum="c69d2226065e8a860b942fea63652479" name="library/include/xlsxwriter/xmlwriter.h" role="src" />
-   <file md5sum="3e0445f278838a9887d8549dc45a4576" name="library/include/xlsxwriter.h" role="src" />
-   <file md5sum="6e72c46776f0db175ec8f15144a3c250" name="library/third_party/minizip/crypt.h" role="src" />
-   <file md5sum="5960f0b3f3933d8a5f466e9ca36bb756" name="library/third_party/minizip/ioapi.c" role="src" />
-   <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="library/third_party/minizip/ioapi.h" role="src" />
-   <file md5sum="254fe0695464d4cbbaa1fdc0c83c6a3c" name="library/third_party/minizip/miniunz.c" role="src" />
-   <file md5sum="e2a4a0c1cad4ceb1f77fb3b7e813bb35" name="library/third_party/minizip/minizip.c" role="src" />
-   <file md5sum="174c6f2a32dad5023616fc45855d8c59" name="library/third_party/minizip/mztools.c" role="src" />
-   <file md5sum="7caac7503f8f002d61e0f0e5b7f33bc6" name="library/third_party/minizip/mztools.h" role="src" />
-   <file md5sum="32c11ae2aa5ff05cd4c871c856450a42" name="library/third_party/minizip/unzip.c" role="src" />
-   <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="library/third_party/minizip/unzip.h" role="src" />
-   <file md5sum="1f80823cd07573d68a9c7470a790a7fc" name="library/third_party/minizip/zip.c" role="src" />
-   <file md5sum="0f47c3f660e61edefb8d63b61d283e7f" name="library/third_party/minizip/zip.h" role="src" />
-   <file md5sum="636907d331156d62e8e750411db3a87b" name="library/third_party/tmpfileplus/tmpfileplus.c" role="src" />
-   <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/third_party/tmpfileplus/tmpfileplus.h" role="src" />
-   <file md5sum="49d9e8e0f214867c1fca97ece81511a1" name="library/src/app.c" role="src" />
-   <file md5sum="7a80ff6b0213f4451b9bec86bc5c54b4" name="library/src/chart.c" role="src" />
-   <file md5sum="f42b254fdd260491d557f99da4d8c305" name="library/src/content_types.c" role="src" />
-   <file md5sum="8538c3af725d7fcb91be4fe1f54dfa12" name="library/src/core.c" role="src" />
-   <file md5sum="bdd6b48704a1633063260fce17483c8b" name="library/src/custom.c" role="src" />
-   <file md5sum="1f3ff5c75bf1d7cf39f505a568ca6446" name="library/src/drawing.c" role="src" />
-   <file md5sum="60885cee15e200922cc7a7d175b65ea6" name="library/src/format.c" role="src" />
-   <file md5sum="d4e1adfac5dab3aa8102b21ecdbf30be" name="library/src/hash_table.c" role="src" />
-   <file md5sum="47c6e5d1893d134d2b3cbdd2a75e684a" name="library/src/packager.c" role="src" />
-   <file md5sum="f4c9c8425a751a9f5f1a42cfc3741c40" name="library/src/relationships.c" role="src" />
-   <file md5sum="89a035c1f3072e74910e30e36a469973" name="library/src/shared_strings.c" role="src" />
-   <file md5sum="038707651c25a34b754df6362a2aeb47" name="library/src/styles.c" role="src" />
-   <file md5sum="457d7eb76cb36db5f231fd791509d3d4" name="library/src/theme.c" role="src" />
-   <file md5sum="f46cfef6c27ed008487c16f0926474db" name="library/src/utility.c" role="src" />
-   <file md5sum="eb92a82695b8110ae65f172fac88954d" name="library/src/workbook.c" role="src" />
-   <file md5sum="4ac64b6ef121ebc3dfdcdba1c85f1e9e" name="library/src/worksheet.c" role="src" />
-   <file md5sum="83b249971f5a91b01a5f2eb312759eb2" name="library/src/xmlwriter.c" role="src" />
-   <file md5sum="c8cf0160bed33791929c766edf11a192" name="library/License.txt" role="doc" />
+   <file md5sum="a344db34bc38791f9813ed6cdfa40428" name="kernel/read.c" role="src" />
+   <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
+   <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
+   <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
+   <file md5sum="de224c89e67700652f117cab66f4acbb" name="library/libxlsxwriter/include/xlsxwriter/third_party/tree.h" role="src" />
+   <file md5sum="f6e837ae4769d683fa51d651a232ece0" name="library/libxlsxwriter/include/xlsxwriter/third_party/zip.h" role="src" />
+   <file md5sum="aaa6b5b1ba06013d2b68a2c649c3257d" name="library/libxlsxwriter/include/xlsxwriter/app.h" role="src" />
+   <file md5sum="89a063be914570d356eac4aa916df2db" name="library/libxlsxwriter/include/xlsxwriter/chart.h" role="src" />
+   <file md5sum="ed70a34a0204a3be53fd87b047c20a36" name="library/libxlsxwriter/include/xlsxwriter/common.h" role="src" />
+   <file md5sum="53766d426ed1d6f1499ae33428dfd4fc" name="library/libxlsxwriter/include/xlsxwriter/content_types.h" role="src" />
+   <file md5sum="71f10c280a9be159cdb02b81f49da14c" name="library/libxlsxwriter/include/xlsxwriter/core.h" role="src" />
+   <file md5sum="682335c459e82bd1128e2c63236eebb4" name="library/libxlsxwriter/include/xlsxwriter/custom.h" role="src" />
+   <file md5sum="a2601afc1913c3fddc8bbd6f7c10189d" name="library/libxlsxwriter/include/xlsxwriter/drawing.h" role="src" />
+   <file md5sum="6acdcc1ff312634832dc263d1ce0dec8" name="library/libxlsxwriter/include/xlsxwriter/format.h" role="src" />
+   <file md5sum="ef0fc908bf579b5fa5aba3ef3da161c0" name="library/libxlsxwriter/include/xlsxwriter/hash_table.h" role="src" />
+   <file md5sum="eef584c9a0dad8219bec2a5185be783c" name="library/libxlsxwriter/include/xlsxwriter/packager.h" role="src" />
+   <file md5sum="c6700ea55cd80bfebcb1fdee027c5be2" name="library/libxlsxwriter/include/xlsxwriter/relationships.h" role="src" />
+   <file md5sum="8ad3c3390a918a444b95181ec8c59be3" name="library/libxlsxwriter/include/xlsxwriter/shared_strings.h" role="src" />
+   <file md5sum="3c4dac223ac2100b7f50dbc17767bb1d" name="library/libxlsxwriter/include/xlsxwriter/styles.h" role="src" />
+   <file md5sum="a03ad615140aa131a9f902b762c5c6ce" name="library/libxlsxwriter/include/xlsxwriter/theme.h" role="src" />
+   <file md5sum="e1ce21616840e3ba3ef473757101dab0" name="library/libxlsxwriter/include/xlsxwriter/utility.h" role="src" />
+   <file md5sum="6d2c62f6f5e2c42a8fc44f7a5370316a" name="library/libxlsxwriter/include/xlsxwriter/workbook.h" role="src" />
+   <file md5sum="b46812d9c56ab38db57fa36ef2edfff9" name="library/libxlsxwriter/include/xlsxwriter/worksheet.h" role="src" />
+   <file md5sum="c69d2226065e8a860b942fea63652479" name="library/libxlsxwriter/include/xlsxwriter/xmlwriter.h" role="src" />
+   <file md5sum="3e0445f278838a9887d8549dc45a4576" name="library/libxlsxwriter/include/xlsxwriter.h" role="src" />
+   <file md5sum="6e72c46776f0db175ec8f15144a3c250" name="library/libxlsxwriter/third_party/minizip/crypt.h" role="src" />
+   <file md5sum="5960f0b3f3933d8a5f466e9ca36bb756" name="library/libxlsxwriter/third_party/minizip/ioapi.c" role="src" />
+   <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="library/libxlsxwriter/third_party/minizip/ioapi.h" role="src" />
+   <file md5sum="254fe0695464d4cbbaa1fdc0c83c6a3c" name="library/libxlsxwriter/third_party/minizip/miniunz.c" role="src" />
+   <file md5sum="e2a4a0c1cad4ceb1f77fb3b7e813bb35" name="library/libxlsxwriter/third_party/minizip/minizip.c" role="src" />
+   <file md5sum="174c6f2a32dad5023616fc45855d8c59" name="library/libxlsxwriter/third_party/minizip/mztools.c" role="src" />
+   <file md5sum="7caac7503f8f002d61e0f0e5b7f33bc6" name="library/libxlsxwriter/third_party/minizip/mztools.h" role="src" />
+   <file md5sum="32c11ae2aa5ff05cd4c871c856450a42" name="library/libxlsxwriter/third_party/minizip/unzip.c" role="src" />
+   <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="library/libxlsxwriter/third_party/minizip/unzip.h" role="src" />
+   <file md5sum="1f80823cd07573d68a9c7470a790a7fc" name="library/libxlsxwriter/third_party/minizip/zip.c" role="src" />
+   <file md5sum="0f47c3f660e61edefb8d63b61d283e7f" name="library/libxlsxwriter/third_party/minizip/zip.h" role="src" />
+   <file md5sum="636907d331156d62e8e750411db3a87b" name="library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c" role="src" />
+   <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.h" role="src" />
+   <file md5sum="49d9e8e0f214867c1fca97ece81511a1" name="library/libxlsxwriter/src/app.c" role="src" />
+   <file md5sum="7a80ff6b0213f4451b9bec86bc5c54b4" name="library/libxlsxwriter/src/chart.c" role="src" />
+   <file md5sum="f42b254fdd260491d557f99da4d8c305" name="library/libxlsxwriter/src/content_types.c" role="src" />
+   <file md5sum="8538c3af725d7fcb91be4fe1f54dfa12" name="library/libxlsxwriter/src/core.c" role="src" />
+   <file md5sum="bdd6b48704a1633063260fce17483c8b" name="library/libxlsxwriter/src/custom.c" role="src" />
+   <file md5sum="1f3ff5c75bf1d7cf39f505a568ca6446" name="library/libxlsxwriter/src/drawing.c" role="src" />
+   <file md5sum="60885cee15e200922cc7a7d175b65ea6" name="library/libxlsxwriter/src/format.c" role="src" />
+   <file md5sum="d4e1adfac5dab3aa8102b21ecdbf30be" name="library/libxlsxwriter/src/hash_table.c" role="src" />
+   <file md5sum="47c6e5d1893d134d2b3cbdd2a75e684a" name="library/libxlsxwriter/src/packager.c" role="src" />
+   <file md5sum="f4c9c8425a751a9f5f1a42cfc3741c40" name="library/libxlsxwriter/src/relationships.c" role="src" />
+   <file md5sum="89a035c1f3072e74910e30e36a469973" name="library/libxlsxwriter/src/shared_strings.c" role="src" />
+   <file md5sum="038707651c25a34b754df6362a2aeb47" name="library/libxlsxwriter/src/styles.c" role="src" />
+   <file md5sum="457d7eb76cb36db5f231fd791509d3d4" name="library/libxlsxwriter/src/theme.c" role="src" />
+   <file md5sum="f46cfef6c27ed008487c16f0926474db" name="library/libxlsxwriter/src/utility.c" role="src" />
+   <file md5sum="eb92a82695b8110ae65f172fac88954d" name="library/libxlsxwriter/src/workbook.c" role="src" />
+   <file md5sum="4ac64b6ef121ebc3dfdcdba1c85f1e9e" name="library/libxlsxwriter/src/worksheet.c" role="src" />
+   <file md5sum="83b249971f5a91b01a5f2eb312759eb2" name="library/libxlsxwriter/src/xmlwriter.c" role="src" />
+   <file md5sum="c8cf0160bed33791929c766edf11a192" name="library/libxlsxwriter/License.txt" role="doc" />
+
+   <file name="library/libexpat/expat/lib/ascii.h" role="src" />
+   <file name="library/libexpat/expat/lib/asciitab.h" role="src" />
+   <file name="library/libexpat/expat/lib/expat.h" role="src" />
+   <file name="library/libexpat/expat/lib/expat_external.h" role="src" />
+   <file name="library/libexpat/expat/lib/iasciitab.h" role="src" />
+   <file name="library/libexpat/expat/lib/internal.h" role="src" />
+   <file name="library/libexpat/expat/lib/latin1tab.h" role="src" />
+   <file name="library/libexpat/expat/lib/nametab.h" role="src" />
+   <file name="library/libexpat/expat/lib/siphash.h" role="src" />
+   <file name="library/libexpat/expat/lib/utf8tab.h" role="src" />
+   <file name="library/libexpat/expat/lib/winconfig.h" role="src" />
+   <file name="library/libexpat/expat/lib/xmlrole.h" role="src" />
+   <file name="library/libexpat/expat/lib/xmltok.h" role="src" />
+   <file name="library/libexpat/expat/lib/xmltok_impl.h" role="src" />
+   <file name="library/libexpat/expat/lib/loadlibrary.c" role="src" />
+   <file name="library/libexpat/expat/lib/xmlparse.c" role="src" />
+   <file name="library/libexpat/expat/lib/xmlrole.c" role="src" />
+   <file name="library/libexpat/expat/lib/xmltok.c" role="src" />
+   <file name="library/libexpat/expat/lib/xmltok_impl.c" role="src" />
+   <file name="library/libexpat/expat/lib/xmltok_ns.c" role="src" />
+   <file name="library/libexpat/expat/COPYING" role="doc" />
+
+   <file name="library/libxlsxio/include/xlsxio_read.h" role="src" />
+   <file name="library/libxlsxio/include/xlsxio_version.h" role="src" />
+   <file name="library/libxlsxio/lib/xlsxio_private.h" role="src" />
+   <file name="library/libxlsxio/lib/xlsxio_read_sharedstrings.h" role="src" />
+   <file name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
+   <file name="library/libxlsxio/lib/xlsxio_read_sharedstrings.c" role="src" />
+   <file name="library/libxlsxio/LICENSE.txt" role="doc" />
+
    <file md5sum="57a70a14faab4cc6f169ff95eb20c65f" name="resource/chart_area1.png" role="src" />
    <file md5sum="242b1dcf124660314a3cbf5dc892669b" name="resource/chart_simple.png" role="src" />
    <file md5sum="f27a98466d7df8685391e3b152b729e2" name="resource/logo.png" role="src" />
@@ -165,8 +199,27 @@
   </required>
  </dependencies>
  <providesextension>xlswriter</providesextension>
- <extsrcrelease />
+ <extsrcrelease>
+  <configureoption default="no" name="enable-reader" prompt="enable reader supports?" />
+ </extsrcrelease>
  <changelog>
+  <release>
+   <date>2018-07-10</date>
+   <time>11:50:00</time>
+   <version>
+    <release>1.2.6</release>
+    <api>1.2.6</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FIX CentOS6 Build.
+    - FIX InsertText memory leaks.
+   </notes>
+  </release>
   <release>
    <date>2019-07-01</date>
    <time>11:50:00</time>

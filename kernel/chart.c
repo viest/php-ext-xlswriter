@@ -86,6 +86,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(chart_title_name_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, title)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_legend_set_position_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, type)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Chart::__construct(resource $handle, int $type)
@@ -235,6 +239,25 @@ PHP_METHOD(vtiful_chart, title)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Chart::legendSetPosition(int $type)
+ */
+PHP_METHOD(vtiful_chart, legendSetPosition)
+{
+    zend_long type;
+    chart_object *obj;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(type)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_CHART_P(getThis());
+
+    chart_legend_set_position(obj->ptr.chart, type);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Chart::toResource()
  */
 PHP_METHOD(vtiful_chart, toResource)
@@ -248,14 +271,15 @@ PHP_METHOD(vtiful_chart, toResource)
 /** {{{ chart_methods
 */
 zend_function_entry chart_methods[] = {
-        PHP_ME(vtiful_chart, __construct, chart_construct_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, series,      chart_series_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, seriesName,  chart_series_name_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, style,       chart_style_arginfo,       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, axisNameY,   chart_axis_name_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, axisNameX,   chart_axis_name_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, title,       chart_title_name_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, toResource,  NULL,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, __construct,       chart_construct_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, series,            chart_series_arginfo,              ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, seriesName,        chart_series_name_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, style,             chart_style_arginfo,               ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, axisNameY,         chart_axis_name_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, axisNameX,         chart_axis_name_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, title,             chart_title_name_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, legendSetPosition, chart_legend_set_position_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, toResource,        NULL,                              ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */
@@ -273,9 +297,36 @@ VTIFUL_STARTUP_FUNCTION(chart)
     chart_handlers.offset   = XtOffsetOf(chart_object, zo);
     chart_handlers.free_obj = chart_objects_free;
 
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LINE",   LXW_CHART_LINE)
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_COLUMN", LXW_CHART_COLUMN)
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_AREA",  LXW_CHART_AREA)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_BAR",                           LXW_CHART_BAR)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_BAR_STACKED",                   LXW_CHART_BAR_STACKED)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_BAR_STACKED_PERCENT",           LXW_CHART_BAR_STACKED_PERCENT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_AREA",                          LXW_CHART_AREA)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_AREA_STACKED",                  LXW_CHART_AREA_STACKED)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_AREA_STACKED_PERCENT",          LXW_CHART_AREA_STACKED_PERCENT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LINE",                          LXW_CHART_LINE)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_COLUMN",                        LXW_CHART_COLUMN)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_COLUMN_STACKED",                LXW_CHART_COLUMN_STACKED)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_COLUMN_STACKED_PERCENT",        LXW_CHART_COLUMN_STACKED_PERCENT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_DOUGHNUT",                      LXW_CHART_DOUGHNUT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_PIE",                           LXW_CHART_PIE)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_SCATTER",                       LXW_CHART_SCATTER)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_SCATTER_STRAIGHT",              LXW_CHART_SCATTER_STRAIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_SCATTER_STRAIGHT_WITH_MARKERS", LXW_CHART_SCATTER_STRAIGHT_WITH_MARKERS)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_SCATTER_SMOOTH",                LXW_CHART_SCATTER_SMOOTH)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_SCATTER_SMOOTH_WITH_MARKERS",   LXW_CHART_SCATTER_SMOOTH_WITH_MARKERS)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_RADAR",                         LXW_CHART_RADAR)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_RADAR_WITH_MARKERS",            LXW_CHART_RADAR_WITH_MARKERS)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_RADAR_FILLED",                  LXW_CHART_RADAR_FILLED)
+
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_NONE",                   LXW_CHART_LEGEND_NONE)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_RIGHT",                  LXW_CHART_LEGEND_RIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_LEFT",                   LXW_CHART_LEGEND_LEFT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_TOP",                    LXW_CHART_LEGEND_TOP)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_BOTTOM",                 LXW_CHART_LEGEND_BOTTOM)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_TOP_RIGHT",              LXW_CHART_LEGEND_TOP_RIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_RIGHT",          LXW_CHART_LEGEND_OVERLAY_RIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_LEFT",           LXW_CHART_LEGEND_OVERLAY_LEFT)
+    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_TOP_RIGHT",      LXW_CHART_LEGEND_OVERLAY_TOP_RIGHT)
 
     return SUCCESS;
 }

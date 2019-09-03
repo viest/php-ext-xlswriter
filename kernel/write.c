@@ -37,12 +37,12 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
 
             format_set_num_format(value_format, ZSTR_VAL(format));
 
-            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), value_format);
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), value_format);
             return;
         }
 
         if (format == NULL && format_handle != NULL) {
-            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), format_handle);
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), format_handle);
             return;
         }
 
@@ -52,11 +52,11 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
             format_copy(value_format, format_handle);
             format_set_num_format(value_format, ZSTR_VAL(format));
 
-            worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), value_format);
+            worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), value_format);
             return;
         }
 
-        worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_long(value), NULL);
+        worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), NULL);
     }
 
     if (value_type == IS_DOUBLE) {
@@ -84,7 +84,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
             return;
         }
 
-        worksheet_write_number(res->worksheet, row, columns, zval_get_double(value), NULL);
+        worksheet_write_number(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, zval_get_double(value), NULL);
         return;
     }
 }
@@ -162,7 +162,7 @@ void format_copy(lxw_format *new_format, lxw_format *other_format)
 
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format)
 {
-    worksheet_write_url(res->worksheet, row, columns, ZSTR_VAL(url), format);
+    worksheet_write_url(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format);
 }
 
 /*
@@ -172,7 +172,7 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 {
     lxw_image_options options = {.x_scale = width, .y_scale = height};
 
-    worksheet_insert_image_opt(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), &options);
+    worksheet_insert_image_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(zval_get_string(value)), &options);
 }
 
 /*
@@ -180,12 +180,12 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
  */
 void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res)
 {
-    worksheet_write_formula(res->worksheet, row, columns, ZSTR_VAL(zval_get_string(value)), NULL);
+    worksheet_write_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(zval_get_string(value)), NULL);
 }
 
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res)
 {
-    worksheet_insert_chart(res->worksheet, row, columns, chart_resource->chart);
+    worksheet_insert_chart(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, chart_resource->chart);
 }
 
 /*

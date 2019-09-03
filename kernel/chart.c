@@ -97,8 +97,8 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(vtiful_chart, __construct)
 {
     zval *handle;
-    zend_long type;
     chart_object *obj;
+    zend_long type = 0;
     xls_resource_write_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
@@ -112,7 +112,7 @@ PHP_METHOD(vtiful_chart, __construct)
     obj     = Z_CHART_P(getThis());
 
     if (obj->ptr.chart == NULL) {
-        obj->ptr.chart = workbook_add_chart(xls_res->workbook, type);
+        obj->ptr.chart = workbook_add_chart(xls_res->workbook, (uint8_t)type);
     }
 }
 /* }}} */
@@ -168,7 +168,7 @@ PHP_METHOD(vtiful_chart, seriesName)
 PHP_METHOD(vtiful_chart, style)
 {
     chart_object *obj;
-    zend_long style;
+    zend_long style = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(style)
@@ -178,7 +178,7 @@ PHP_METHOD(vtiful_chart, style)
 
     obj = Z_CHART_P(getThis());
 
-    chart_set_style(obj->ptr.chart, style);
+    chart_set_style(obj->ptr.chart, (uint8_t)style);
 }
 /* }}} */
 
@@ -243,7 +243,7 @@ PHP_METHOD(vtiful_chart, title)
  */
 PHP_METHOD(vtiful_chart, legendSetPosition)
 {
-    zend_long type;
+    zend_long type = 0;
     chart_object *obj;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -254,7 +254,7 @@ PHP_METHOD(vtiful_chart, legendSetPosition)
 
     obj = Z_CHART_P(getThis());
 
-    chart_legend_set_position(obj->ptr.chart, type);
+    chart_legend_set_position(obj->ptr.chart, (uint8_t)type);
 }
 /* }}} */
 
@@ -323,10 +323,12 @@ VTIFUL_STARTUP_FUNCTION(chart)
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_LEFT",                   LXW_CHART_LEGEND_LEFT)
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_TOP",                    LXW_CHART_LEGEND_TOP)
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_BOTTOM",                 LXW_CHART_LEGEND_BOTTOM)
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_TOP_RIGHT",              LXW_CHART_LEGEND_TOP_RIGHT)
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_RIGHT",          LXW_CHART_LEGEND_OVERLAY_RIGHT)
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_LEFT",           LXW_CHART_LEGEND_OVERLAY_LEFT)
-    REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_TOP_RIGHT",      LXW_CHART_LEGEND_OVERLAY_TOP_RIGHT)
+
+    // PECL Windows version is 0.7.7, but define in 0.7.8
+    //REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_TOP_RIGHT",              LXW_CHART_LEGEND_TOP_RIGHT)
+    //REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_LEGEND_OVERLAY_TOP_RIGHT",      LXW_CHART_LEGEND_OVERLAY_TOP_RIGHT)
 
     return SUCCESS;
 }

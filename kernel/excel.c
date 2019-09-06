@@ -146,6 +146,14 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_row_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, range)
                 ZEND_ARG_INFO(0, height)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_open_file_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, zs_file_name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_open_sheet_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, zs_sheet_name)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\xls::__construct(array $config)
@@ -648,11 +656,11 @@ PHP_METHOD(vtiful_xls, openFile)
  */
 PHP_METHOD(vtiful_xls, openSheet)
 {
-    zend_string *sheet_name = NULL;
+    zend_string *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(sheet_name)
+            Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -663,7 +671,7 @@ PHP_METHOD(vtiful_xls, openSheet)
         RETURN_NULL();
     }
 
-    obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, sheet_name);
+    obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name);
 }
 /* }}} */
 
@@ -720,9 +728,10 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
 
 #ifdef ENABLE_READER
-        PHP_ME(vtiful_xls, openFile,      NULL,                       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, openSheet,     NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openFile,      xls_open_file_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openSheet,     xls_open_sheet_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,  NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextRow,       NULL,                       ZEND_ACC_PUBLIC)
 #endif
 
         PHP_FE_END

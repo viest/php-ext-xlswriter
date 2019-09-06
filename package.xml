@@ -15,8 +15,8 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-09-01</date>
- <time>11:50:00</time>
+ <date>2019-09-06</date>
+ <time>22:10:00</time>
  <version>
   <release>1.2.7</release>
   <api>1.2.7</api>
@@ -28,6 +28,7 @@
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
   - FEAT read xlsx file.
+  - FIX  multiple file segmentation fault.
  </notes>
  <contents>
   <dir name="/">

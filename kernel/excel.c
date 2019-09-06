@@ -170,7 +170,7 @@ PHP_METHOD(vtiful_xls, __construct)
         return;
     }
 
-    add_property_zval(getThis(), V_XLS_COF, config);
+    add_property_zval_ex(getThis(), ZEND_STRL(V_XLS_COF), config);
 }
 /* }}} */
 
@@ -376,9 +376,6 @@ PHP_METHOD(vtiful_xls, output)
     xls_object *obj = Z_XLS_P(getThis());
 
     workbook_file(&obj->write_ptr);
-
-    add_property_null(getThis(), V_XLS_HANDLE);
-    add_property_null(getThis(), V_XLS_PAT);
 
     ZVAL_COPY(return_value, file_path);
 }

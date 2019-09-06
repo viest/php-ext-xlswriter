@@ -144,7 +144,7 @@ PHP_METHOD(vtiful_format, italic)
  */
 PHP_METHOD(vtiful_format, underline)
 {
-    zend_long style;
+    zend_long style = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(style)
@@ -155,7 +155,7 @@ PHP_METHOD(vtiful_format, underline)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_underline(obj->ptr.format, style);
+        format_set_underline(obj->ptr.format, (uint8_t)style);
     }
 }
 /* }}} */
@@ -183,7 +183,7 @@ PHP_METHOD(vtiful_format, align)
         }
 
         if (obj->ptr.format) {
-            format_set_align(obj->ptr.format, Z_LVAL_P(arg));
+            format_set_align(obj->ptr.format, (uint8_t)Z_LVAL_P(arg));
         }
     }
 }
@@ -193,7 +193,7 @@ PHP_METHOD(vtiful_format, align)
  */
 PHP_METHOD(vtiful_format, fontColor)
 {
-    zend_long color;
+    zend_long color = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(color)
@@ -204,7 +204,7 @@ PHP_METHOD(vtiful_format, fontColor)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_color(obj->ptr.format, color);
+        format_set_font_color(obj->ptr.format, (uint8_t)color);
     }
 }
 /* }}} */
@@ -233,7 +233,7 @@ PHP_METHOD(vtiful_format, number)
  */
 PHP_METHOD(vtiful_format, background)
 {
-    zend_long pattern, color;
+    zend_long pattern = 0, color = 0;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
             Z_PARAM_LONG(pattern)
@@ -245,8 +245,8 @@ PHP_METHOD(vtiful_format, background)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_pattern(obj->ptr.format, pattern);
-        format_set_bg_color(obj->ptr.format, color);
+        format_set_pattern(obj->ptr.format, (uint8_t)pattern);
+        format_set_bg_color(obj->ptr.format, (uint8_t)color);
     }
 }
 /* }}} */
@@ -303,7 +303,7 @@ PHP_METHOD(vtiful_format, wrap)
  */
 PHP_METHOD(vtiful_format, border)
 {
-    zend_long style;
+    zend_long style = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(style)
@@ -314,7 +314,7 @@ PHP_METHOD(vtiful_format, border)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_border(obj->ptr.format, style);
+        format_set_border(obj->ptr.format, (uint8_t)style);
     }
 }
 /* }}} */

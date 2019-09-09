@@ -1,17 +1,17 @@
-# 读取文件（游标）
+# Read file (cursor)
 
-* 读取文件暂不支持 `windows` 系统；
-* 扩展版本大于等于 `1.2.7`；
+* The file is not supported for the `windows` system.
+* Extended version is greater than or equal to `1.2.7`;
 
-## 编译
+## Compiling
 
-编译时需添加 `--enable-reader`
+add `--enable-reader` when compiling
 
 ```bash
 ./configure --enable-reader
 ```
 
-## 示例
+## Example
 
 ```bash
 $config   = ['path' => './tests'];
@@ -27,4 +27,3 @@ $excel->openFile('tutorial.xlsx')
 var_dump($excel->nextRow()); // ['Item', 'Cost']
 var_dump($excel->nextRow()); // NULL
 ```
-

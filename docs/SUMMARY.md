@@ -4,8 +4,8 @@
 
 * [English](en/README.md)
   * [Install](en/an-zhuang/README.md)
-    * [Env requirements](en/an-zhuang/huan-jing-yao-qiu.md)
-    * [PECL (recommend)](en/an-zhuang/pecl-tui-jian.md)
+    * [Env requirements](en/an-zhuang/env-requirements.md)
+    * [PECL (recommend)](en/an-zhuang/pecl.md)
     * [Mac](en/an-zhuang/mac.md)
     * [Ubuntu](en/an-zhuang/ubuntu.md)
     * [Windows](en/an-zhuang/windows.md)

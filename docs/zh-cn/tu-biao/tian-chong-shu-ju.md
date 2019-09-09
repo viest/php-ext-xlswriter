@@ -1,12 +1,12 @@
 # 填充数据
 
-### **函数原型**
+## **函数原型**
 
 ```php
 series(string $value,[ string $categories])
 ```
 
-#### **string $value**
+### **string $value**
 
 > 图表单个类别数据所在的工作表及单元格跨度
 
@@ -15,11 +15,11 @@ Sheet1 ! $A$1 : $A$5
 工作表 ! 开始单元格 : 结束单元格
 ```
 
-#### **string $categories**
+### **string $categories**
 
 > 类别名称
 
-### 示例
+## 示例
 
 ```php
 $config = ['path' => './tests'];

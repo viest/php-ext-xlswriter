@@ -1,10 +1,10 @@
 # Windows
 
-#### 搭建PHP编译环境
+## 搭建PHP编译环境
 
 详见 [php.net](https://wiki.php.net/internals/windows/stepbystepbuild)
 
-#### 安装依赖
+## 安装依赖
 
 ```bash
 cd PHP_BUILD_PATH/deps
@@ -20,7 +20,7 @@ cmake -G "Visual Studio 14 2015" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_C_FLAGS_RE
 cmake --build . --config "Release"
 ```
 
-#### 编译扩展
+## 编译扩展
 
 ```bash
 cd PHP_PATH/ext

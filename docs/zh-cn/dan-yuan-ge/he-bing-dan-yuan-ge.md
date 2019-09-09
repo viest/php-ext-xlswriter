@@ -1,20 +1,20 @@
 # 合并单元格
 
-### **函数原型**
+## **函数原型**
 
 ```text
 mergeCells(string $scope, string $data);
 ```
 
-#### **string $scope**
+### **string $scope**
 
 > 单元格范围
 
-#### **string $data**
+### **string $data**
 
 > 数据
 
-### 示例
+## 示例
 
 ```php
 $excel->fileName("test.xlsx")

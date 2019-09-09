@@ -1,12 +1,12 @@
 # 切换工作表
 
-### **函数原型**
+## **函数原型**
 
 ```php
 checkoutSheet(string $sheetName);
 ```
 
-### **实例**
+## **实例**
 
 ```php
 $config = [
@@ -34,6 +34,4 @@ $fileObject->checkoutSheet('Sheet1')
 
 $filePath = $fileObject->output();
 ```
-
-#### 
 

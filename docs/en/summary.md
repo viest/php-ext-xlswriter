@@ -1,6 +1,6 @@
 # Table of contents
 
-* [为什么使用 xlswriter](../README.md)
+* [为什么使用 xlswriter](../)
 
 ## 安装
 

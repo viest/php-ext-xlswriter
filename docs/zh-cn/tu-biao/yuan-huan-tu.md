@@ -1,6 +1,6 @@
 # 圆环图
 
-### 二维圆环图
+## 二维圆环图
 
 ![](../../.gitbook/assets/chart_doughnut1.png)
 

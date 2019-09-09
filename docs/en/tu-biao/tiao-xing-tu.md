@@ -1,6 +1,6 @@
 # 条形图
 
-### 默认条形图
+## 默认条形图
 
 ![](../../.gitbook/assets/chart_bar1.png)
 
@@ -50,7 +50,7 @@ $filePath = $fileObject
     ->output();
 ```
 
-### 堆积条形图
+## 堆积条形图
 
 ![](../../.gitbook/assets/chart_bar2.png)
 
@@ -100,7 +100,7 @@ $filePath = $fileObject
     ->output();
 ```
 
-### 百分比条形图
+## 百分比条形图
 
 ![](../../.gitbook/assets/chart_bar3.png)
 

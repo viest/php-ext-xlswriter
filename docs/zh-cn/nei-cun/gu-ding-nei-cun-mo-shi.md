@@ -1,16 +1,16 @@
 # 固定内存模式
 
-### **内存**
+## **内存**
 
 最大内存使用量 = 最大一行的数据占用量
 
-### **函数原型**
+## **函数原型**
 
 ```php
 constMemory(string $fileName);
 ```
 
-### 示例
+## 示例
 
 ```php
 $config = ['path' => './tests'];
@@ -27,6 +27,4 @@ $fileObject->header(['name', 'age'])
     ->setRow($boldStyle, 'A1')
     ->output();
 ```
-
-#### 
 

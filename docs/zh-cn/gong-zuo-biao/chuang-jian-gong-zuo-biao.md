@@ -1,12 +1,12 @@
 # 创建工作表
 
-### **函数原型**
+## **函数原型**
 
 ```php
 addSheet([string $sheetName]);
 ```
 
-### 示例
+## 示例
 
 ```php
 $config = [
@@ -29,6 +29,4 @@ $fileObject->addSheet()
 // 最后的最后，输出文件
 $filePath = $fileObject->output();
 ```
-
-#### 
 

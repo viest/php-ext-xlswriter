@@ -1,32 +1,32 @@
 # 插入文字
 
-### **函数原型**
+## **函数原型**
 
 ```php
 insertText(int $row, int $column, string|int|double $data[, string $format, resource $style])
 ```
 
-#### **int $row**
+### **int $row**
 
 > 单元格所在行
 
-#### **int $column**
+### **int $column**
 
 > 单元格所在列
 
-#### **string \| int \| double $data**
+### **string \| int \| double $data**
 
 > 需要写入的内容
 
-#### **string $format**
+### **string $format**
 
 > 内容格式
 
-#### **resource $style**
+### **resource $style**
 
 > 单元格样式
 
-### 示例
+## 示例
 
 ```php
 $excel = new \Vtiful\Kernel\Excel($config);
@@ -42,9 +42,9 @@ for ($index = 0; $index < 10; $index++) {
 $textFile->output();
 ```
 
-### 数字样式示例
+## 数字样式示例
 
-更多样式请参考 Excel  微软文档
+更多样式请参考 Excel 微软文档
 
 ```php
 "0.000"

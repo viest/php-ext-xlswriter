@@ -1,12 +1,12 @@
 # 单元格边框
 
-### **函数原型**
+## **函数原型**
 
 ```php
 border(int $borderStyle): \Vtiful\Kernel\Format
 ```
 
-### 示例
+## 示例
 
 ```php
 $config = [

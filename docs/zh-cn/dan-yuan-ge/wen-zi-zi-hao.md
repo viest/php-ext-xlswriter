@@ -1,16 +1,16 @@
 # 文字字号
 
-### **函数原型**
+## **函数原型**
 
 ```php
 fontSize(double $size);
 ```
 
-#### **double $size**
+### **double $size**
 
 > 单元格字体大小
 
-### 示例
+## 示例
 
 ```php
 $config = [

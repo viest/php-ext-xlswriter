@@ -7,5 +7,3 @@ $format    = new \Vtiful\Kernel\Format($fileHandle);
 $wrapStyle = $format->wrap()->toResource();
 ```
 
-
-

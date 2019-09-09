@@ -1,24 +1,24 @@
 # 单元格样式
 
-### **函数原型**
+## **函数原型**
 
 ```php
 setColumn(string $range, double $width [, resource $format]);
 ```
 
-#### **string $range**
+### **string $range**
 
 > 单元格范围
 
-#### **double $width**
+### **double $width**
 
 > 单元格宽度
 
-#### **string $format**
+### **string $format**
 
 > 单元格样式
 
-### 示例
+## 示例
 
 ```php
 $config = ['path' => './tests'];

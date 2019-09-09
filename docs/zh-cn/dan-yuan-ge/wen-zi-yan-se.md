@@ -1,16 +1,16 @@
 # 文字颜色
 
-### **函数原型**
+## **函数原型**
 
 ```php
 fontColor(int $color)
 ```
 
-#### **int $color**
+### **int $color**
 
 > RGB 十六进制值
 
-### 示例
+## 示例
 
 ```php
 $config     = ['path' => './tests'];

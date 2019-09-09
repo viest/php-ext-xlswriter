@@ -1,24 +1,24 @@
 # 插入公式
 
-### **函数原型**
+## **函数原型**
 
 ```php
 insertFormula(int $row, int $column, string $formula)
 ```
 
-#### **int $row**
+### **int $row**
 
 > 单元格所在行
 
-#### **int $column**
+### **int $column**
 
 > 单元格所在列
 
-#### **string $formula**
+### **string $formula**
 
 > 公式
 
-### 示例
+## 示例
 
 ```php
 $excel = new \Vtiful\Kernel\Excel($config);

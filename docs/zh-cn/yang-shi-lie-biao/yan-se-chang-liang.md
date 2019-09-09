@@ -19,5 +19,3 @@ Format::COLOR_WHITE
 Format::COLOR_YELLOW
 ```
 
-
-

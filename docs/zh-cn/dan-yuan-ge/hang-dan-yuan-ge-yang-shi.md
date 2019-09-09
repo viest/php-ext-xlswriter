@@ -1,24 +1,24 @@
 # 行单元格样式
 
-### **函数原型**
+## **函数原型**
 
 ```php
 setRow(string $range, double $height [, resource $format]);
 ```
 
-#### **string $range**
+### **string $range**
 
 > 单元格范围
 
-#### **double $height**
+### **double $height**
 
 > 单元格高度
 
-#### **string $format**
+### **string $format**
 
 > 单元格样式
 
-### 示例
+## 示例
 
 ```php
 $config = ['path' => './tests'];

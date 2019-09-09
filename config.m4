@@ -1,4 +1,4 @@
-PHP_ARG_WITH(xlsxwriter, xlswriter support,
+PHP_ARG_WITH(xlswriter, xlswriter support,
 [  --with-xlswriter           Include xlswriter support], yes)
 
 PHP_ARG_WITH(libxlsxwriter, system libxlsswriter,
@@ -23,11 +23,14 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/read.c \
     "
 
-    libxlsxwriter_sources="
+    minizip_sources="
     library/libxlsxwriter/third_party/minizip/ioapi.c \
     library/libxlsxwriter/third_party/minizip/mztools.c \
     library/libxlsxwriter/third_party/minizip/unzip.c \
     library/libxlsxwriter/third_party/minizip/zip.c \
+    "
+
+    libxlsxwriter_sources="
     library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c \
     library/libxlsxwriter/src/app.c \
     library/libxlsxwriter/src/chart.c \
@@ -111,7 +114,7 @@ if test "$PHP_XLSWRITER" != "no"; then
         AC_DEFINE(HAVE_LIBXLSXWRITER, 1, [ use system libxlsxwriter ])
     else
         AC_MSG_RESULT([use the bundled library])
-        xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
+        xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources $minizip_sources"
         PHP_ADD_INCLUDE([$srcdir/library/libxlsxwriter/include])
 
         XLSXWRITER_VERSION=`$EGREP "define LXW_VERSION" $srcdir/library/include/libxlsxwriter/xlsxwriter.h | $SED -e 's/[[^0-9\.]]//g'`
@@ -132,18 +135,18 @@ if test "$PHP_XLSWRITER" != "no"; then
     fi
 
     if test "$PHP_READER" = "yes"; then
-        xls_writer_sources="$xls_writer_sources $xls_read_sources"
+        xls_writer_sources="$xls_writer_sources $xls_read_sources $minizip_sources"
 
         AC_DEFINE(ENABLE_READER, 1, [enable reader])
 
         xls_writer_sources="$xls_writer_sources $libexpat"
         PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
-        PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
+        PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
         LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
 
         xls_writer_sources="$xls_writer_sources $libxlsxio"
         PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
-        PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
+        PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
         LIBOPT="$LIBOPT -DUSE_MINIZIP"
     fi
 
@@ -158,11 +161,11 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_INCLUDE([$srcdir])
     PHP_ADD_INCLUDE([$srcdir/include])
 
-    PHP_ADD_BUILD_DIR([$ext_builddir/kernel])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/src])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/minizip])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxwriter/third_party/tmpfileplus])
+    PHP_ADD_BUILD_DIR([$abs_builddir/kernel])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/src])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/minizip])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/tmpfileplus])
 
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libexpat/expat/lib])
-    PHP_ADD_BUILD_DIR([$ext_builddir/library/libxlsxio/lib])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
 fi

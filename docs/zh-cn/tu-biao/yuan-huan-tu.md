@@ -2,7 +2,7 @@
 
 ### 二维圆环图
 
-![](../.gitbook/assets/chart_doughnut1.png)
+![](../../.gitbook/assets/chart_doughnut1.png)
 
 ```php
 <?php declare(strict_types = 1);

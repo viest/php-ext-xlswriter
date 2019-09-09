@@ -2,7 +2,7 @@
 
 ### 默认条形图
 
-![](../.gitbook/assets/chart_bar1.png)
+![](../../.gitbook/assets/chart_bar1.png)
 
 ```php
 <?php declare(strict_types = 1);
@@ -52,7 +52,7 @@ $filePath = $fileObject
 
 ### 堆积条形图
 
-![](../.gitbook/assets/chart_bar2.png)
+![](../../.gitbook/assets/chart_bar2.png)
 
 ```php
 <?php declare(strict_types = 1);
@@ -102,7 +102,7 @@ $filePath = $fileObject
 
 ### 百分比条形图
 
-![](../.gitbook/assets/chart_bar3.png)
+![](../../.gitbook/assets/chart_bar3.png)
 
 ```php
 <?php declare(strict_types = 1);

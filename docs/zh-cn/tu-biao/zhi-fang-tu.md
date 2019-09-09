@@ -1,6 +1,6 @@
 # 直方图
 
-![](../.gitbook/assets/chart_simple.png)
+![](../../.gitbook/assets/chart_simple.png)
 
 ```php
 $config = ['path' => './tests'];

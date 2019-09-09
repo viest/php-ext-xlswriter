@@ -1,6 +1,6 @@
-# 文字字号
+# Text size
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 fontSize(double $size);
@@ -8,13 +8,13 @@ fontSize(double $size);
 
 #### **double $size**
 
-> 单元格字体大小
+> cell font size
 
-### 示例
+###example
 
 ```php
 $config = [
-    'path' => './tests'
+     'path' => './tests'
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
@@ -25,14 +25,13 @@ $format = new \Vtiful\Kernel\Format($fileHandle);
 $style  = $format->fontSize(30)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
-    ->data([
-        ['viest', 21],
-        ['wjx',   21]
-    ])
-    ->setRow('A1', 50, $style)
-    ->setRow('A2:A3', 50, $style)
-    ->output();
+     ->data([
+         ['viest', 21],
+         ['wjx', 21]
+     ])
+     ->setRow('A1', 50, $style)
+     ->setRow('A2:A3', 50, $style)
+     ->output();
 
 var_dump($filePath);
 ```
-

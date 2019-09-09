@@ -1,6 +1,6 @@
-# 合并单元格
+# Merge Cells
 
-### **函数原型**
+### **Function Prototype**
 
 ```text
 mergeCells(string $scope, string $data);
@@ -8,17 +8,16 @@ mergeCells(string $scope, string $data);
 
 #### **string $scope**
 
-> 单元格范围
+> Cell range
 
 #### **string $data**
 
-> 数据
+> Data
 
-### 示例
+###example
 
 ```php
 $excel->fileName("test.xlsx")
-  ->mergeCells('A1:C1', 'Merge cells')
-  ->output();
+   ->mergeCells('A1:C1', 'Merge cells')
+   ->output();
 ```
-

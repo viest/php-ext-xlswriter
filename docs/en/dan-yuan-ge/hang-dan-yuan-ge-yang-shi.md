@@ -1,6 +1,6 @@
-# 行单元格样式
+# Row cell style
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 setRow(string $range, double $height [, resource $format]);
@@ -8,17 +8,17 @@ setRow(string $range, double $height [, resource $format]);
 
 #### **string $range**
 
-> 单元格范围
+> Cell range
 
 #### **double $height**
 
-> 单元格高度
+> cell height
 
 #### **string $format**
 
-> 单元格样式
+> cell style
 
-### 示例
+###example
 
 ```php
 $config = ['path' => './tests'];
@@ -31,8 +31,7 @@ $format    = new \Vtiful\Kernel\Format($fileHandle);
 $boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
-    ->data([['viest', 21]])
-    ->setRow('A1', 20, $boldStyle,)
-    ->output();
+     ->data([['viest', 21]])
+     ->setRow('A1', 20, $boldStyle,)
+     ->output();
 ```
-

@@ -1,17 +1,17 @@
-# 读取文件（全量）
+# Read file (full amount)
 
-* 读取文件暂不支持 `windows` 系统；
-* 扩展版本大于等于 `1.2.7`；
+* The file is not supported for the `windows` system.
+* Extended version is greater than or equal to `1.2.7`;
 
-### 编译
+### Compile
 
-编译时需添加 `--enable-reader` 
+Add `--enable-reader` when configure
 
 ```bash
 ./configure --enable-reader
 ```
 
-### 示例
+### Example
 
 ```bash
 $config   = ['path' => './tests'];

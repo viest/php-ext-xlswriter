@@ -1,6 +1,6 @@
-# 文字颜色
+# Text color
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 fontColor(int $color)
@@ -8,9 +8,9 @@ fontColor(int $color)
 
 #### **int $color**
 
-> RGB 十六进制值
+> RGB hexadecimal value
 
-### 示例
+###example
 
 ```php
 $config     = ['path' => './tests'];
@@ -21,17 +21,16 @@ $fileHandle = $fileObject->getHandle();
 
 $format     = new \Vtiful\Kernel\Format($fileHandle);
 $colorStyle = $format->fontColor(0xFF0000)->toResource();
-// 或 
+// or
 // $colorStyle = $format->fontColor(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
-    ->data([
-        ['viest', 21],
-        ['wjx',   21]
-    ])
-    ->setRow('A1', 50, $colorStyle)
-    ->output();
+     ->data([
+         ['viest', 21],
+         ['wjx', 21]
+     ])
+     ->setRow('A1', 50, $colorStyle)
+     ->output();
 
 var_dump($filePath);
 ```
-

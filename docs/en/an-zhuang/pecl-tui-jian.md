@@ -1,11 +1,11 @@
-# PECL（推荐）
+# PECL（recommended）
 
-> 最新特性请编译安装 Github Master 仓库
+> Please download and install the latest features of Github Master Warehouse
 
 ```bash
 pecl install xlswriter
 
-# 添加 extension = xlswriter.so 到 ini 配置
+# Add extension = xlswriter.so to ini configuration
 ```
 
 

@@ -1,4 +1,3 @@
-# 环境要求
+# Environmental requirements
 
-* 保证 **PHP** 版本大于等于 **7.0**
-
+* Guaranteed **PHP** version is greater than or equal to **7.0**

@@ -1,6 +1,6 @@
-# 插入文字
+# Insert text
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 insertText(int $row, int $column, string|int|double $data[, string $format, resource $style])
@@ -8,43 +8,43 @@ insertText(int $row, int $column, string|int|double $data[, string $format, reso
 
 #### **int $row**
 
-> 单元格所在行
+> cell row
 
 #### **int $column**
 
-> 单元格所在列
+> cell column
 
 #### **string \| int \| double $data**
 
-> 需要写入的内容
+> What needs to be written
 
 #### **string $format**
 
-> 内容格式
+> Content format
 
 #### **resource $style**
 
-> 单元格样式
+> cell style
 
-### 示例
+###example
 
 ```php
 $excel = new \Vtiful\Kernel\Excel($config);
 
 $textFile = $excel->fileName("free.xlsx")
-    ->header(['name', 'money']);
+     ->header(['name', 'money']);
 
 for ($index = 0; $index < 10; $index++) {
-    $textFile->insertText($index+1, 0, 'viest');
-    $textFile->insertText($index+1, 1, 10000, '#,##0'); // #,##0 为单元格数据样式
+     $textFile->insertText($index+1, 0, 'viest');
+     $textFile->insertText($index+1, 1, 10000, '#,##0'); // #,##0 is the cell data style
 }
 
 $textFile->output();
 ```
 
-### 数字样式示例
+### Digital Style Example
 
-更多样式请参考 Excel  微软文档
+For more styles, please refer to the Excel Microsoft documentation.
 
 ```php
 "0.000"
@@ -57,4 +57,3 @@ $textFile->output();
 "dd/mm/yyyy hh:mm AM/PM"
 "0 \"dollar and\" .00 \"cents\""
 ```
-

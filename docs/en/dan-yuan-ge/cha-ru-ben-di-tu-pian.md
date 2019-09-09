@@ -1,6 +1,6 @@
-# 插入本地图片
+# Insert local image
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 insertImage(int $row, int $column, string $localImagePath[, double $widthScale, double $heightScale])
@@ -8,25 +8,25 @@ insertImage(int $row, int $column, string $localImagePath[, double $widthScale, 
 
 #### **int $row**
 
-> 单元格所在行
+> cell row
 
 #### **int $column**
 
-> 单元格所在列
+> cell column
 
 #### **string $localImagePath**
 
-> 图片路径
+> picture path
 
 #### **double $widthScale**
 
-> 对图像X轴进行缩放处理； 默认为1，保持图像原始宽度；值为0.5时，图像宽度为原图的1/2；
+> Scale the image X axis; the default is 1, maintaining the original width of the image; when the value is 0.5, the image width is 1/2 of the original image;
 
 #### **double $heightScale**
 
-> 对图像轴进行缩放处理； 默认为1，保持图像原始高度；值为0.5时，图像高度为原图的1/2；
+> Scale the image axis; the default is 1, keeping the original height of the image; when the value is 0.5, the image height is 1/2 of the original image;
 
-### 示例
+###example
 
 ```php
 $excel = new \Vtiful\Kernel\Excel($config);
@@ -37,4 +37,3 @@ $freeFile->insertImage(5, 0, '/vagrant/ASW-G-66.jpg');
 
 $freeFile->output();
 ```
-

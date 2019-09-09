@@ -1,12 +1,12 @@
 # Ubuntu
 
-#### 安装依赖
+#### Installation dependencies
 
 ```bash
 apt-get install -y zlib1g-dev
 ```
 
-#### 编译扩展
+#### Compiling extensions
 
 ```bash
 git clone https://github.com/viest/php-ext-excel-export
@@ -20,13 +20,13 @@ phpize && ./configure --with-php-config=/path/to/php-config --enable-reader
 make && make install
 ```
 
-#### 功能测试
+#### Function test
 
 ```bash
 make && make test
 ```
 
-#### 修改 php.ini
+#### Modify php.ini
 
 ```text
 extension = xlswriter.so

@@ -1,5 +1,7 @@
 # Table of contents
 
+* [Why use xlswriter](README.md)
+
 * [English](en/README.md)
   * [yang-shi-lie-biao](en/yang-shi-lie-biao/README.md)
     * [斜体](en/yang-shi-lie-biao/xie-ti.md)
@@ -49,7 +51,6 @@
   * [yang-shi](en/yang-shi/README.md)
     * [组合样式](en/yang-shi/zu-he-yang-shi.md)
 * [中文简体](zh-cn/README.md)
-  * [为什么使用 xlswriter](../README.md)
   * [安装](zh-cn/an-zhuang/README.md)
     * [环境要求](zh-cn/an-zhuang/huan-jing-yao-qiu.md)
     * [PECL（推荐）](zh-cn/an-zhuang/pecl-tui-jian.md)

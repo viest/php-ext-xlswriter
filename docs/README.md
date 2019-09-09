@@ -22,3 +22,23 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * FreeBSD License.
 * The only dependency is on zlib.
 
+## Benchmark
+
+Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory, 128GB SSD Storage.
+
+#### Export
+
+> Two memory modes export 1 million rows of data (27 columns, data is string):
+
+* Normal mode: only 29S is needed, and the memory only needs 2083MB;
+* Fixed memory mode: only need 52S, memory only needs <1MB;
+
+
+#### Import
+
+> 1 million rows of data (1 columns, data is inter):
+
+* Full mode: Just 3S, the memory is only 558MB;
+* Cursor mode: Just 2.8S, memory is only <1MB;
+
+

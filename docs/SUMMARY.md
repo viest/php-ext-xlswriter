@@ -19,7 +19,7 @@
     * [Doughnut chart](en/tu-biao/doughnut.md)
     * [Area chart](en/tu-biao/area-map.md)
     * [Histogram chart](en/tu-biao/histogram.md)
-    * [Bar chart](en/tu-biao/bar-chat.md)
+    * [Bar chart](en/tu-biao/bar-chart.md)
   * [Cell](en/dan-yuan-ge/README.md)
     * [Insert text](en/dan-yuan-ge/cha-ru-wen-zi.md)
     * [Insert link](en/dan-yuan-ge/cha-ru-lian-jie.md)

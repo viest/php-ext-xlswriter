@@ -1,11 +1,8 @@
-# 文本换行
+# Text wrap
 
-如果单元格内文本包含 `\n` ，将处理换行样式。
+If the text inside the cell contains `\n` , the newline style will be processed.
 
 ```php
 $format    = new \Vtiful\Kernel\Format($fileHandle);
 $wrapStyle = $format->wrap()->toResource();
 ```
-
-
-

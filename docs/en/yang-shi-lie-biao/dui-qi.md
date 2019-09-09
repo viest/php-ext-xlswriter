@@ -31,6 +31,3 @@ Format::FORMAT_ALIGN_VERTICAL_CENTER;      // 垂直剧中对齐
 Format::FORMAT_ALIGN_VERTICAL_JUSTIFY;     // 垂直两端对齐
 Format::FORMAT_ALIGN_VERTICAL_DISTRIBUTED; // 垂直分散对齐
 ```
-
-#### 
-

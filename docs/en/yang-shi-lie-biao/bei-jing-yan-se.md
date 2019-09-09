@@ -1,4 +1,4 @@
-# 背景颜色
+# Background color
 
 ```php
 $format = new \Vtiful\Kernel\Format($fileHandle);

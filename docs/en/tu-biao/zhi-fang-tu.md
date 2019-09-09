@@ -1,4 +1,4 @@
-# 直方图
+# Histogram
 
 ![](../../.gitbook/assets/chart_simple.png)
 

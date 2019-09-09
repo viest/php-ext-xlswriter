@@ -1,6 +1,6 @@
-# 圆环图
+# Doughnut
 
-## 二维圆环图
+ ## 2D ring chart
 
 ![](../../.gitbook/assets/chart_doughnut1.png)
 

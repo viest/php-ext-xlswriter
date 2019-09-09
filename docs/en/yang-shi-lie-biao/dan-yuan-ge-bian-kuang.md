@@ -1,12 +1,12 @@
-# 单元格边框
+# Cell border
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
-border(int $borderStyle): \Vtiful\Kernel\Format
+Border(int $borderStyle): \Vtiful\Kernel\Format
 ```
 
-### 示例
+###example
 
 ```php
 $config = [
@@ -26,7 +26,7 @@ $data = [
 
 $format = new \Vtiful\Kernel\Format($fileHandle);
 
-// 创建边框样式
+// Create a border style
 $borderStyle = $format
     ->border(\Vtiful\Kernel\Format::BORDER_THIN)
     ->toResource();
@@ -36,4 +36,3 @@ $fileObject->header(['name', 'age', 'score', 'level'])
     ->setRow('A1', 20, $borderStyle)
     ->output();
 ```
-

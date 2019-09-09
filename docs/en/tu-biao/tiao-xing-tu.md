@@ -1,6 +1,6 @@
-# 条形图
+# Bar chart
 
-## 默认条形图
+## Default Bar Chart
 
 ![](../../.gitbook/assets/chart_bar1.png)
 
@@ -50,7 +50,7 @@ $filePath = $fileObject
     ->output();
 ```
 
-## 堆积条形图
+## stacked bar chart
 
 ![](../../.gitbook/assets/chart_bar2.png)
 
@@ -100,7 +100,7 @@ $filePath = $fileObject
     ->output();
 ```
 
-## 百分比条形图
+## percentage bar chart
 
 ![](../../.gitbook/assets/chart_bar3.png)
 

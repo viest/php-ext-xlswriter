@@ -1,18 +1,18 @@
-# 边框样式常量
+# Border style constant
 
 ```php
-BORDER_THIN                // 薄边框风格
-BORDER_MEDIUM              // 中等边框风格
-BORDER_DASHED              // 虚线边框风格
-BORDER_DOTTED              // 虚线边框样式
-BORDER_THICK               // 厚边框风格
-BORDER_DOUBLE              // 双边风格
-BORDER_HAIR                // 头发边框样式
-BORDER_MEDIUM_DASHED       // 中等虚线边框样式
-BORDER_DASH_DOT            // 短划线边框样式
-BORDER_MEDIUM_DASH_DOT     // 中等点划线边框样式
-BORDER_DASH_DOT_DOT        // Dash-dot-dot边框样式
-BORDER_MEDIUM_DASH_DOT_DOT // 中等点划线边框样式
-BORDER_SLANT_DASH_DOT      // 倾斜的点划线边框风格
+BORDER_THIN                // thin border style
+BORDER_MEDIUM              // Medium border style
+BORDER_DASHED              // dashed border style
+BORDER_DOTTED              // dashed border style
+BORDER_THICK               // thick border style
+BORDER_DOUBLE              // bilateral style
+BORDER_HAIR                // hair border style
+BORDER_MEDIUM_DASHED       // medium dashed border style
+BORDER_DASH_DOT            // dash border style
+BORDER_MEDIUM_DASH_DOT     // medium dotted line border style
+BORDER_DASH_DOT_DOT        // Dash-dot-dot border style
+BORDER_MEDIUM_DASH_DOT_DOT // medium dotted line border style
+BORDER_SLANT_DASH_DOT      // slanted dotted line border style
 ```
 

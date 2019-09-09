@@ -1,4 +1,4 @@
-# 图表类型常量
+# Chart type constant
 
 ### Namespace
 
@@ -8,29 +8,26 @@
 
 ### Class Const
 
-| 常量 | 图表类型 |
+| Constant | Chart Type |
 | :--- | :--- |
-| CHART\_NONE  | 无 |
-| CHART\_AREA  | 面积图 |
-| CHART\_AREA\_STACKED  | 面积图 - 堆积 |
-| CHART\_AREA\_STACKED\_PERCENT  | 面积图 - 堆积百分比 |
-| CHART\_BAR  | 条形图 |
-| CHART\_BAR\_STACKED  | 条形图 - 堆积 |
-| CHART\_BAR\_STACKED\_PERCENT  | 条形图 - 堆积百分比 |
-| CHART\_COLUMN  | 直方图 |
-| CHART\_COLUMN\_STACKED  | 直方图 - 堆积 |
-| CHART\_COLUMN\_STACKED\_PERCENT  | 直方图 - 堆积百分比 |
-| CHART\_DOUGHNUT  | 圆环图 |
-| CHART\_LINE  | 折线图 |
-| CHART\_PIE  | 饼图 |
-| CHART\_SCATTER  | 散点图 |
-| CHART\_SCATTER\_STRAIGHT  | 散点图 - 直线 |
-| CHART\_SCATTER\_STRAIGHT\_WITH\_MARKERS  | 散点图 - 直线链接标记 |
-| CHART\_SCATTER\_SMOOTH  | 散点图 - 平滑线 |
-| CHART\_SCATTER\_SMOOTH\_WITH\_MARKERS  | 散点图 - 平滑线链接标记 |
-| CHART\_RADAR  | 雷达图 |
-| CHART\_RADAR\_WITH\_MARKERS  | 雷达图 - 带标记 |
-| CHART\_RADAR\_FILLED  | 雷达图 - 填充 |
-
-
-
+| CHART\_NONE | None |
+| CHART\_AREA | Area Chart |
+CHART\_AREA\_STACKED | Area Chart - Stacking |
+| CHART\_AREA\_STACKED\_PERCENT | Area Chart - Percentage of Stacking |
+| CHART\_BAR | Bar Chart |
+CHART\_BAR\_STACKED | Bar Chart - Stacking |
+CHART\_BAR\_STACKED\_PERCENT | Bar Chart - Percentage of Stacking |
+| CHART\_COLUMN | Histogram |
+| CHART\_COLUMN\_STACKED | Histogram - Stacking |
+| CHART\_COLUMN\_STACKED\_PERCENT | Histogram - Percentage of Stacking |
+| CHART\_DOUGHNUT | Doughnut |
+| CHART\_LINE | Line Chart |
+| CHART\_PIE | Pie Chart |
+| CHART\_SCATTER | Scatter Plot |
+CHART\_SCATTER\_STRAIGHT | Scatter Plot - Straight Line |
+CHART\_SCATTER\_STRAIGHT\_WITH\_MARKERS | Scatter Plot - Straight Link Mark |
+CHART\_SCATTER\_SMOOTH | Scatter Plot - Smooth Line |
+CHART\_SCATTER\_SMOOTH\_WITH\_MARKERS | Scatter Plot - Smooth Line Link Mark |
+| CHART\_RADAR | Radar Chart |
+| CHART\_RADAR\_WITH\_MARKERS | Radar Chart - with marker |
+| CHART\_RADAR\_FILLED | Radar Chart - Fill |

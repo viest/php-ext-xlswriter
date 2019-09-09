@@ -1,4 +1,4 @@
-# 粗体
+# Bold
 
 ```php
 $format    = new \Vtiful\Kernel\Format($fileHandle);

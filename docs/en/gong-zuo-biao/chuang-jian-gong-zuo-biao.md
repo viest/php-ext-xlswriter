@@ -1,34 +1,31 @@
-# 创建工作表
+# Create a worksheet
 
-### **函数原型**
+### **Function Prototype**
 
 ```php
 addSheet([string $sheetName]);
 ```
 
-### 示例
+### Example
 
 ```php
 $config = [
-    'path' => './filePath'
+     'path' => './filePath'
 ];
 
 $excel = new \Vtiful\Kernel\Excel($config);
 
-// 此处会自动创建一个工作表
+// A worksheet is automatically created here
 $fileObject = $excel->fileName("tutorial01.xlsx");
 
 $fileObject->header(['name', 'age'])
-    ->data([['viest', 21]]);
+     ->data([['viest', 21]]);
 
-// 向文件中追加一个工作表
+// append a worksheet to the file
 $fileObject->addSheet()
-    ->header(['name', 'age'])
-    ->data([['wjx', 22]]);
+     ->header(['name', 'age'])
+     ->data([['wjx', 22]]);
 
-// 最后的最后，输出文件
+// Finally, the output file
 $filePath = $fileObject->output();
 ```
-
-#### 
-

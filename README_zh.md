@@ -9,55 +9,57 @@
 [![](https://img.shields.io/badge/license-BSD-green.svg)](https://github.com/viest/php-ext-excel-export)
 [![](https://img.shields.io/github/issues/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-excel-export)
 
-#### Why use xlswriter
+#### 为什么使用xlswriter
 
-Please refer to the image below. PHPExcel has been unable to work properly for memory reasons at 40,000 and 100000 points, but it can be resolved by modifying the ini configuration, but the time may take longer to complete the work;
+请参考下方对比图；由于内存原因，PHPExcel数据量`相对较大`的情况下无法正常工作，虽然可以通过`修改memory_limit`配置来解决内存问题，但完成工作的时间可能会更长;
 
 ![php-excel](resource/performance_comparison.png)
 
-xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file. It supports features such as:
+xlswriter是一个 PHP C 扩展，可用于在 Excel 2007+ XLSX 文件中读取数据，插入多个工作表，写入文本、数字、公式、日期、图表、图片和超链接。
 
-* 100% compatible Excel XLSX files.
-* Full Excel formatting.
-* Merged cells.
-* Defined names.
-* Autofilters.
-* Charts.
-* Data validation and drop down lists.
-* Worksheet PNG/JPEG images.
-* Memory optimization mode for writing large files.
-* Works on Linux, FreeBSD, OpenBSD, OS X, Windows.
-* Compiles for 32 and 64 bit.
-* FreeBSD License.
-* The only dependency is on zlib.
+它具备以下特性：
 
-#### Benchmark
+* 100％兼容的Excel XLSX文件
+* 完整的Excel格式
+* 合并单元格
+* 定义工作表名称
+* 过滤器
+* 图表
+* 数据验证和下拉列表
+* 工作表PNG/JPEG图像
+* 用于写入大文件的内存优化模式
+* 适用于Linux，FreeBSD，OpenBSD，OS X，Windows
+* 编译为32位和64位
+* FreeBSD许可证
+* 唯一的依赖是zlib
 
-Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory, 128GB SSD Storage.
+#### 基准测试
 
-##### Export
+测试环境: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory, 128GB SSD Storage.
 
-> Two memory modes export 1 million rows of data (27 columns, data is string)
+##### 导出
 
-* Normal mode: only 29S is needed, and the memory only needs 2083MB;
-* Fixed memory mode: only need 52S, memory only needs <1MB;
+> 两种内存模式导出100万行数据（单行27列，数据类型均为字符串，单个字符串长度为19）
 
-##### Import
+* 普通模式：耗时 `29S`，内存只需 `2083MB`；
+* 固定内存模式：仅需 `52S`，内存仅需 `<1MB`；
 
-> 1 million rows of data (1 columns, data is inter)
+##### 导入
 
-* Full mode: Just 3S, the memory is only 558MB;
-* Cursor mode: Just 2.8S, memory is only <1MB;
+> 100万行数据（单行1列，数据类型为INT）
 
-#### Documents
+* 全量模式：耗时 `3S`，内存仅 `558MB`；
+* 游标模式：耗时 `2.8S`，内存仅 `<1MB`；
+
+#### 从这里开始
 
 [文档|Documents](https://xlswriter-docs.viest.me/)
 
-#### PECL Repository
+#### PECL 仓库
 
 [![pecl](resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 
-#### Exchange group
+#### 交流群
 
 <img width="160" src="resource/qq.jpg"/>
 

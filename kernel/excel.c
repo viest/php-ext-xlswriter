@@ -462,7 +462,8 @@ PHP_METHOD(vtiful_xls, insertDate)
     SHEET_LINE_SET(obj, row);
 
     if (Z_TYPE_P(data) != IS_LONG) {
-        // throw
+        zend_throw_exception(vtiful_exception_ce, "timestamp is long", 160);
+        return;
     }
 
     // Default datetime format
@@ -471,7 +472,7 @@ PHP_METHOD(vtiful_xls, insertDate)
     }
 
     zval _zv_double_time;
-    ZVAL_DOUBLE(&_zv_double_time, ((double)data->value.lval / 86400 + 25569))
+    ZVAL_DOUBLE(&_zv_double_time, ((double)data->value.lval / 86400 + 25569));
 
     if (format_handle) {
         type_writer(&_zv_double_time, row, column, &obj->write_ptr, format, zval_get_format(format_handle));

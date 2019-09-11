@@ -1,4 +1,6 @@
-# 创建文件
+# Create file
+
+> If there is a file with the same name under the path, the new file will overwrite the old file.
 
 ```php
 $config = ['path' => '/home/viest'];

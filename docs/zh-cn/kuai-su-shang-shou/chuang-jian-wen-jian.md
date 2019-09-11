@@ -1,5 +1,7 @@
 # 创建文件
 
+> 如果路径下有相同命名的文件，新文件会覆盖老文件
+
 ```php
 $config = ['path' => '/home/viest'];
 $excel  = new \Vtiful\Kernel\Excel($config);

@@ -1,7 +1,5 @@
 # Create file
 
-> If there is a file with the same name under the path, the new file will overwrite the old file.
-
 ```php
 $config = ['path' => '/home/viest'];
 $excel  = new \Vtiful\Kernel\Excel($config);

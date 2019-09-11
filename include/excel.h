@@ -18,6 +18,17 @@
 #define V_XLS_COF    "config"
 #define V_XLS_PAT    "path"
 
+#define V_XLS_CONST_READ_TYPE_INT      "TYPE_INT"
+#define V_XLS_CONST_READ_TYPE_DOUBLE   "TYPE_DOUBLE"
+#define V_XLS_CONST_READ_TYPE_STRING   "TYPE_STRING"
+#define V_XLS_CONST_READ_TYPE_DATETIME "TYPE_TIMESTAMP"
+
+#define READ_TYPE_EMPTY    0x00
+#define READ_TYPE_STRING   0x01
+#define READ_TYPE_INT      0x02
+#define READ_TYPE_DOUBLE   0x04
+#define READ_TYPE_DATETIME 0x08
+
 #define GET_CONFIG_PATH(dir_path_res, class_name, object)                                          \
     do {                                                                                           \
         zval rv;                                                                                   \

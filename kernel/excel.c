@@ -480,6 +480,7 @@ PHP_METHOD(vtiful_xls, insertDate)
         type_writer(&_zv_double_time, row, column, &obj->write_ptr, format, NULL);
     }
 
+    zend_string_release(format);
     zval_ptr_dtor(&_zv_double_time);
 }
 /* }}} */

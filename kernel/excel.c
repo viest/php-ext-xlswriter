@@ -243,12 +243,8 @@ PHP_METHOD(vtiful_xls, addSheet)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
     SHEET_LINE_INIT(obj)
-
-    if(obj->write_ptr.workbook == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
-        return;
-    }
 
     if(zs_sheet_name != NULL) {
         sheet_name = ZSTR_VAL(zs_sheet_name);
@@ -274,10 +270,7 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    if(obj->write_ptr.workbook == NULL) {
-        zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);
-        return;
-    }
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     if ((sheet_t = workbook_get_worksheet_by_name(obj->write_ptr.workbook, ZSTR_VAL(zs_sheet_name))) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "Sheet not fund", 140);
@@ -347,6 +340,8 @@ PHP_METHOD(vtiful_xls, header)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
          type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, NULL);
          zval_ptr_dtor(header_value);
@@ -367,6 +362,8 @@ PHP_METHOD(vtiful_xls, data)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(data), data_r_value)
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
@@ -390,6 +387,8 @@ PHP_METHOD(vtiful_xls, output)
     file_path = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_FIL), 0, &rv TSRMLS_DC);
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     workbook_file(&obj->write_ptr);
 
@@ -428,6 +427,8 @@ PHP_METHOD(vtiful_xls, insertText)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     SHEET_LINE_SET(obj, row);
 
     if (format_handle) {
@@ -459,6 +460,7 @@ PHP_METHOD(vtiful_xls, insertDate)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
     SHEET_LINE_SET(obj, row);
 
     if (Z_TYPE_P(data) != IS_LONG) {
@@ -502,6 +504,8 @@ PHP_METHOD(vtiful_xls, insertChart)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     chart_writer(row, column, zval_get_chart(chart_resource), &obj->write_ptr);
 }
 /* }}} */
@@ -527,6 +531,8 @@ PHP_METHOD(vtiful_xls, insertUrl)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     if (argc == 4) {
         url_writer(row, column, &obj->write_ptr, url, zval_get_format(format_handle));
@@ -559,6 +565,8 @@ PHP_METHOD(vtiful_xls, insertImage)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     image_writer(image, row, column, width, height,  &obj->write_ptr);
 }
 /* }}} */
@@ -580,6 +588,8 @@ PHP_METHOD(vtiful_xls, insertFormula)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     formula_writer(formula, row, column, &obj->write_ptr);
 }
 /* }}} */
@@ -597,6 +607,8 @@ PHP_METHOD(vtiful_xls, autoFilter)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     auto_filter(range, &obj->write_ptr);
 }
@@ -616,6 +628,8 @@ PHP_METHOD(vtiful_xls, mergeCells)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     merge_cells(range, data, &obj->write_ptr);
 }
@@ -641,6 +655,8 @@ PHP_METHOD(vtiful_xls, setColumn)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     if (argc == 3) {
         set_column(range, width, &obj->write_ptr, zval_get_format(format_handle));
@@ -672,6 +688,8 @@ PHP_METHOD(vtiful_xls, setRow)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     if (argc == 3) {
         set_row(range, height, &obj->write_ptr, zval_get_format(format_handle));

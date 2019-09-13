@@ -109,6 +109,14 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 #define Z_CHART_P(zv)  php_vtiful_chart_fetch_object(Z_OBJ_P(zv));
 #define Z_FORMAT_P(zv) php_vtiful_format_fetch_object(Z_OBJ_P(zv));
 
+#define WORKBOOK_NOT_INITIALIZED(xls_object_t)                                                                       \
+    do {                                                                                                             \
+        if(obj->write_ptr.workbook == NULL) {                                                                        \
+            zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);   \
+            return;                                                                                                  \
+        }                                                                                                            \
+    } while(0);
+
 #define ROW(range) \
     lxw_name_to_row(range)
 

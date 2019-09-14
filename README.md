@@ -17,6 +17,8 @@ Please refer to the image below. PHPExcel has been unable to work properly for m
 
 xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file. It supports features such as:
 
+###### Writer
+
 * 100% compatible Excel XLSX files.
 * Full Excel formatting.
 * Merged cells.
@@ -30,6 +32,12 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * Compiles for 32 and 64 bit.
 * FreeBSD License.
 * The only dependency is on zlib.
+
+###### Reader
+
+* Full read data
+* Cursor read data
+* Read by data type
 
 #### Benchmark
 

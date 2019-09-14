@@ -188,6 +188,7 @@
    <file md5sum="49479cc034bfc1f6f1f7583f6fa0b849" name="tests/open_xlsx_sheet.phpt" role="src" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="src" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="src" />
+   <file name="tests/include/skipif.inc" role="src" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
    <file md5sum="452944adadb43cb4161342f31f80bef1" name="README.md" role="doc" />
    <file md5sum="223c7d5693393dbe41ad2fbabf4214e2" name="README_zh.md" role="doc" />

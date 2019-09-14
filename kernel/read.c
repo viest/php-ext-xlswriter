@@ -49,16 +49,11 @@ int sheet_read_row(xlsxioreadersheet sheet)
 /* }}} */
 
 /* {{{ */
-char* sheet_read_column(xlsxioreadersheet sheet)
+unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, zval *zv_type_arr_t, unsigned int flag)
 {
-    return xlsxioread_sheet_next_cell(sheet);
-}
-/* }}} */
-
-/* {{{ */
-unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, unsigned int flag)
-{
+    zend_long _type = READ_TYPE_EMPTY;
     char *_string_value = NULL;
+    Bucket *_start = NULL, *_end = NULL;
 
     if (flag && !sheet_read_row(sheet_t)) {
         return XLSWRITER_FALSE;
@@ -68,8 +63,47 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
         array_init(zv_result_t);
     }
 
-    while ((_string_value = sheet_read_column(sheet_t)) != NULL)
+    if (zv_type_arr_t != NULL && Z_TYPE_P(zv_type_arr_t) == IS_ARRAY) {
+        _start = zv_type_arr_t->value.arr->arData;
+        _end   = _start + zv_type_arr_t->value.arr->nNumUsed;
+    }
+
+    while ((_string_value = xlsxioread_sheet_next_cell(sheet_t)) != NULL)
     {
+        if (_start != _end) {
+            zval *_zv_type = &_start->val;
+
+            if (Z_TYPE_P(_zv_type) == IS_LONG) {
+                _type = Z_LVAL_P(_zv_type);
+            }
+
+            _start++;
+        }
+
+        if (_type & READ_TYPE_DATETIME) {
+            double value = strtod(_string_value, NULL);
+
+            if (value != 0) {
+                value = (value - 25569) * 86400;
+            }
+
+            add_next_index_double(zv_result_t, value);
+            continue;
+        }
+
+        if (_type & READ_TYPE_DOUBLE) {
+            add_next_index_double(zv_result_t, strtod(_string_value, NULL));
+            continue;
+        }
+
+        if (_type & READ_TYPE_INT) {
+            zend_long _long_value;
+
+            sscanf(_string_value, "%" PRIi64, &_long_value);
+            add_next_index_long(zv_result_t, _long_value);
+            continue;
+        }
+
         add_next_index_stringl(zv_result_t, _string_value, strlen(_string_value));
     }
 
@@ -89,7 +123,7 @@ void load_sheet_all_data(xlsxioreadersheet sheet_t, zval *zv_result_t)
         zval _zv_tmp_row;
         ZVAL_NULL(&_zv_tmp_row);
 
-        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, READ_SKIP_ROW);
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, NULL, READ_SKIP_ROW);
         add_next_index_zval(zv_result_t, &_zv_tmp_row);
     }
 }

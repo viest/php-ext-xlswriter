@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package packagerversion="1.10.5" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+<package packagerversion="1.10.9" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
  <name>xlswriter</name>
  <channel>pecl.php.net</channel>
  <summary>An efficient and fast xlsx file export extension.</summary>
@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-09-06</date>
- <time>22:10:00</time>
+ <date>2019-09-14</date>
+ <time>04:34:05</time>
  <version>
-  <release>1.2.7</release>
-  <api>1.2.7</api>
+  <release>1.2.8</release>
+  <api>1.2.8</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,27 +27,29 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-  - FEAT read xlsx file.
-  - FIX  multiple file segmentation fault.
+- FEAT insert date.
+- FEAT read data with type
+- FEAT work book is not initialized exception
+- FIX: minizip multiple definition
  </notes>
  <contents>
   <dir name="/">
    <file md5sum="1cf796971bf051dce46bb715ab550289" name="include/chart.h" role="src" />
-   <file md5sum="0a15f826908de1f15ac50156727e8d53" name="include/excel.h" role="src" />
+   <file md5sum="b87ee664c7decb2f17a877bfc9f38f35" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
-   <file md5sum="ddea7d7c654d43fa3b021f098082f613" name="include/xlswriter.h" role="src" />
-   <file md5sum="ddea7d7c654d43fa3b021f098082f613" name="include/read.h" role="src" />
-   <file name="include/minizip/ioapi.h" role="src"/>
-   <file name="include/minizip/unzip.h" role="src"/>
-   <file md5sum="dc2d1df0e63fb0e63eb92e2ad610d700" name="kernel/chart.c" role="src" />
-   <file md5sum="470ddfa8caa640ebe0aceb8f70ee04eb" name="kernel/common.c" role="src" />
-   <file md5sum="ac596a0c9079eac24270d60b45d45dcf" name="kernel/excel.c" role="src" />
+   <file md5sum="de798ec3d58c79137d0222079c9cc588" name="include/xlswriter.h" role="src" />
+   <file md5sum="6951fc3cac71d69d0cd40c5ac77dde08" name="include/read.h" role="src" />
+   <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
+   <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
+   <file md5sum="24cfe5075b5f5c6e96d15d3bcefcf191" name="kernel/chart.c" role="src" />
+   <file md5sum="fc1f22e3fe5a62ef931e67ba53d02b91" name="kernel/common.c" role="src" />
+   <file md5sum="8571a549c62281662aca2d9d5c516d80" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
-   <file md5sum="be032cec74b126ed0fd3f70bc320d5be" name="kernel/format.c" role="src" />
-   <file md5sum="15a760f71b021ab1d0e0022a7718fc2f" name="kernel/resource.c" role="src" />
-   <file md5sum="a344db34bc38791f9813ed6cdfa40428" name="kernel/write.c" role="src" />
-   <file md5sum="a344db34bc38791f9813ed6cdfa40428" name="kernel/read.c" role="src" />
+   <file md5sum="a65c55a934599a8c1d23882d9197ac2f" name="kernel/format.c" role="src" />
+   <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
+   <file md5sum="c667b1b5e0cfb71be5e213d7c80ba74f" name="kernel/write.c" role="src" />
+   <file md5sum="652c3e68a4104dc455474ec56438c657" name="kernel/read.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
    <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
@@ -103,37 +105,34 @@
    <file md5sum="4ac64b6ef121ebc3dfdcdba1c85f1e9e" name="library/libxlsxwriter/src/worksheet.c" role="src" />
    <file md5sum="83b249971f5a91b01a5f2eb312759eb2" name="library/libxlsxwriter/src/xmlwriter.c" role="src" />
    <file md5sum="c8cf0160bed33791929c766edf11a192" name="library/libxlsxwriter/License.txt" role="doc" />
-
-   <file name="library/libexpat/expat/lib/ascii.h" role="src" />
-   <file name="library/libexpat/expat/lib/asciitab.h" role="src" />
-   <file name="library/libexpat/expat/lib/expat.h" role="src" />
-   <file name="library/libexpat/expat/lib/expat_external.h" role="src" />
-   <file name="library/libexpat/expat/lib/iasciitab.h" role="src" />
-   <file name="library/libexpat/expat/lib/internal.h" role="src" />
-   <file name="library/libexpat/expat/lib/latin1tab.h" role="src" />
-   <file name="library/libexpat/expat/lib/nametab.h" role="src" />
-   <file name="library/libexpat/expat/lib/siphash.h" role="src" />
-   <file name="library/libexpat/expat/lib/utf8tab.h" role="src" />
-   <file name="library/libexpat/expat/lib/winconfig.h" role="src" />
-   <file name="library/libexpat/expat/lib/xmlrole.h" role="src" />
-   <file name="library/libexpat/expat/lib/xmltok.h" role="src" />
-   <file name="library/libexpat/expat/lib/xmltok_impl.h" role="src" />
-   <file name="library/libexpat/expat/lib/loadlibrary.c" role="src" />
-   <file name="library/libexpat/expat/lib/xmlparse.c" role="src" />
-   <file name="library/libexpat/expat/lib/xmlrole.c" role="src" />
-   <file name="library/libexpat/expat/lib/xmltok.c" role="src" />
-   <file name="library/libexpat/expat/lib/xmltok_impl.c" role="src" />
-   <file name="library/libexpat/expat/lib/xmltok_ns.c" role="src" />
-   <file name="library/libexpat/expat/COPYING" role="doc" />
-
-   <file name="library/libxlsxio/include/xlsxio_read.h" role="src" />
-   <file name="library/libxlsxio/include/xlsxio_version.h" role="src" />
-   <file name="library/libxlsxio/lib/xlsxio_private.h" role="src" />
-   <file name="library/libxlsxio/lib/xlsxio_read_sharedstrings.h" role="src" />
-   <file name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
-   <file name="library/libxlsxio/lib/xlsxio_read_sharedstrings.c" role="src" />
-   <file name="library/libxlsxio/LICENSE.txt" role="doc" />
-
+   <file md5sum="01baabba632bd8a07926ec8207b1a9a0" name="library/libexpat/expat/lib/ascii.h" role="src" />
+   <file md5sum="d96aa17605f47cd990b0b1187b6b4697" name="library/libexpat/expat/lib/asciitab.h" role="src" />
+   <file md5sum="33a717afd8876ac01c5cf44303125b26" name="library/libexpat/expat/lib/expat.h" role="src" />
+   <file md5sum="5b11a3501567f4ca71195aeee3a11fd9" name="library/libexpat/expat/lib/expat_external.h" role="src" />
+   <file md5sum="f3b278efd6b0363c9b922437728f9219" name="library/libexpat/expat/lib/iasciitab.h" role="src" />
+   <file md5sum="68cfdab8afbb6b9b2ff24497bd5b2910" name="library/libexpat/expat/lib/internal.h" role="src" />
+   <file md5sum="b948f1d121864f1ab2e861c688b3e3a7" name="library/libexpat/expat/lib/latin1tab.h" role="src" />
+   <file md5sum="f8c18485f94d1bfb70e203bd13de531a" name="library/libexpat/expat/lib/nametab.h" role="src" />
+   <file md5sum="9a8b600344102812bd71daa4b6491ae1" name="library/libexpat/expat/lib/siphash.h" role="src" />
+   <file md5sum="3a5f73250072bee9c4d97ca046deacf9" name="library/libexpat/expat/lib/utf8tab.h" role="src" />
+   <file md5sum="6892cea6c8d47d5e13a87849747fcf82" name="library/libexpat/expat/lib/winconfig.h" role="src" />
+   <file md5sum="40239ac1df1817ea3393a13f4052db2d" name="library/libexpat/expat/lib/xmlrole.h" role="src" />
+   <file md5sum="bde1041e644d2484501aa0dd8043b128" name="library/libexpat/expat/lib/xmltok.h" role="src" />
+   <file md5sum="0e4aea3678b64b3b3c37270ceb5da2cf" name="library/libexpat/expat/lib/xmltok_impl.h" role="src" />
+   <file md5sum="9e7e4bf315e1d214177a95c531b061ce" name="library/libexpat/expat/lib/loadlibrary.c" role="src" />
+   <file md5sum="caf4d8e02b283a4e97281f3791e972f5" name="library/libexpat/expat/lib/xmlparse.c" role="src" />
+   <file md5sum="be9dc687dc332c058c7ee1920c63bfbd" name="library/libexpat/expat/lib/xmlrole.c" role="src" />
+   <file md5sum="5350c930b9d47cd30672a8046b4fd0df" name="library/libexpat/expat/lib/xmltok.c" role="src" />
+   <file md5sum="8fa5658f138c3fde9c72320a82e92817" name="library/libexpat/expat/lib/xmltok_impl.c" role="src" />
+   <file md5sum="d0104fa5078dbd1d9a479699fb792e99" name="library/libexpat/expat/lib/xmltok_ns.c" role="src" />
+   <file md5sum="5b8620d98e49772d95fc1d291c26aa79" name="library/libexpat/expat/COPYING" role="doc" />
+   <file md5sum="691a1a335876e3658e802c9213036c63" name="library/libxlsxio/include/xlsxio_read.h" role="src" />
+   <file md5sum="e9ae9dc5369f5ab937d1a68bf9185f22" name="library/libxlsxio/include/xlsxio_version.h" role="src" />
+   <file md5sum="2ca0f632da8358ccf8bc85ca0961142f" name="library/libxlsxio/lib/xlsxio_private.h" role="src" />
+   <file md5sum="305da62a3c44f5a4b02bb9b0d8eef4a7" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.h" role="src" />
+   <file md5sum="7d701ce70cc43198a1126804f682098e" name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
+   <file md5sum="834dc4698adc79cf033d005c5ea67428" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.c" role="src" />
+   <file md5sum="e59b06b20921a3ca95e1473a89c1ab3c" name="library/libxlsxio/LICENSE.txt" role="doc" />
    <file md5sum="57a70a14faab4cc6f169ff95eb20c65f" name="resource/chart_area1.png" role="src" />
    <file md5sum="242b1dcf124660314a3cbf5dc892669b" name="resource/chart_simple.png" role="src" />
    <file md5sum="f27a98466d7df8685391e3b152b729e2" name="resource/logo.png" role="src" />
@@ -165,27 +164,38 @@
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="src" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="src" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="src" />
-   <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_background.phpt" role="src" />
-   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_color.phpt" role="src" />
-   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_size.phpt" role="src" />
-   <file md5sum="93b6ad08a50fa6a324862b8e385907de" name="tests/format_font_strikeout.phpt" role="src" />
+   <file md5sum="6301adafdc19bb844146f39600d3f8a8" name="tests/format_background.phpt" role="src" />
+   <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="src" />
+   <file md5sum="c4d791e16e40e172ebc516520cf35e5f" name="tests/format_font_color.phpt" role="src" />
+   <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="src" />
+   <file md5sum="4dfaa3f81e9c7138aca39da99a67f270" name="tests/format_font_strikeout.phpt" role="src" />
    <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="src" />
-   <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_wrap.phpt" role="src" />
+   <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="src" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="src" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="src" />
-   <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/insert_text_resource_format.phpt" role="src" />
+   <file md5sum="73521b6a1cb84ba3c7730470b836368f" name="tests/insert_date_custom_format.phpt" role="src" />
+   <file md5sum="6c105a032b7bdd401caeb67be75d26be" name="tests/insert_date_default_format.phpt" role="src" />
+   <file md5sum="74d93209ca5335e793267ed7048a75ad" name="tests/insert_text_resource_format.phpt" role="src" />
    <file md5sum="47de23f6eee379673bfae11d32f3e983" name="tests/insert_url_format.phpt" role="src" />
    <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/insert_url_no_format.phpt" role="src" />
-   <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/sheet_add.phpt" role="src" />
-   <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/sheet_checkout.phpt" role="src" />
+   <file md5sum="2a8630d73bc312e5b671772d6d8f2b66" name="tests/multiple_file.phpt" role="src" />
+   <file md5sum="02221e3d455d86f8c3905130d3a4fcf6" name="tests/open_xlsx_file.phpt" role="src" />
+   <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="src" />
+   <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_get_sheet_not_found_data.phpt" role="src" />
+   <file md5sum="154e924e44ba43aec9abc6d6b6d389b1" name="tests/open_xlsx_next_row.phpt" role="src" />
+   <file md5sum="d6d1160cc11604de9cb7eba7c912bd1b" name="tests/open_xlsx_next_row_with_data_type_date.phpt" role="src" />
+   <file md5sum="68628ad9158f5860917860eef232cbf3" name="tests/open_xlsx_next_row_with_data_type_string.phpt" role="src" />
+   <file md5sum="49479cc034bfc1f6f1f7583f6fa0b849" name="tests/open_xlsx_sheet.phpt" role="src" />
+   <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="src" />
+   <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="src" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="5e8941dbd2f503d7c845fb07579830ab" name="README.md" role="doc" />
-   <file md5sum="2f88d9bdcceca419cbbf16276f12d306" name="README_zh.md" role="doc" />
+   <file md5sum="452944adadb43cb4161342f31f80bef1" name="README.md" role="doc" />
+   <file md5sum="223c7d5693393dbe41ad2fbabf4214e2" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
-   <file md5sum="9767268aff43594d4d7d09fa87a6dae3" name="config.m4" role="src" />
+   <file md5sum="733aedee95d34fc342a4b3e0d062fdcf" name="config.m4" role="src" />
    <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="10de0075a997485e3bf11e891ff8fded" name="php_xlswriter.h" role="src" />
+   <file md5sum="c9bf0cfdc4f615d95e001c965e16d166" name="php_xlswriter.h" role="src" />
    <file md5sum="680f8f2abfcb57392c5e5ab23fa41761" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -205,7 +215,24 @@
  </extsrcrelease>
  <changelog>
   <release>
-   <date>2018-07-10</date>
+   <date>2019-09-06</date>
+   <time>22:10:00</time>
+   <version>
+    <release>1.2.7</release>
+    <api>1.2.7</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- FEAT read xlsx file.
+- FIX  multiple file segmentation fault.
+   </notes>
+  </release>
+  <release>
+   <date>2019-07-10</date>
    <time>11:50:00</time>
    <version>
     <release>1.2.6</release>
@@ -217,8 +244,8 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FIX CentOS6 Build.
-    - FIX InsertText memory leaks.
+- FIX CentOS6 Build.
+- FIX InsertText memory leaks.
    </notes>
   </release>
   <release>
@@ -234,11 +261,11 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT cells background color.
-    - FEAT checkout sheet.
-    - FEAT format new font size.
-    - FEAT format new strikeout.
-    - FEAT insertText support resource format.
+- FEAT cells background color.
+- FEAT checkout sheet.
+- FEAT format new font size.
+- FEAT format new strikeout.
+- FEAT insertText support resource format.
    </notes>
   </release>
   <release>
@@ -254,10 +281,10 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT format multiple style overlays.
-    - FEAT format text color.
-    - FEAT image scale.
-    - FEAT chart.
+- FEAT format multiple style overlays.
+- FEAT format text color.
+- FEAT image scale.
+- FEAT chart.
    </notes>
   </release>
   <release>

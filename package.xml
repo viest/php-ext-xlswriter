@@ -16,7 +16,7 @@
   <active>yes</active>
  </lead>
  <date>2019-09-14</date>
- <time>04:34:05</time>
+ <time>10:48:20</time>
  <version>
   <release>1.2.8</release>
   <api>1.2.8</api>
@@ -188,15 +188,15 @@
    <file md5sum="49479cc034bfc1f6f1f7583f6fa0b849" name="tests/open_xlsx_sheet.phpt" role="test" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="test" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
-   <file name="tests/include/skipif.inc" role="test" />
+   <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="452944adadb43cb4161342f31f80bef1" name="README.md" role="doc" />
-   <file md5sum="223c7d5693393dbe41ad2fbabf4214e2" name="README_zh.md" role="doc" />
+   <file md5sum="08140c79452f8016e82542834a1a2599" name="README.md" role="doc" />
+   <file md5sum="8e6f6760d26d90ef0f1c39cc731c8ef0" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
-   <file md5sum="733aedee95d34fc342a4b3e0d062fdcf" name="config.m4" role="src" />
+   <file md5sum="fb4abe111f96cb4280bb5f988aee8554" name="config.m4" role="src" />
    <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="c9bf0cfdc4f615d95e001c965e16d166" name="php_xlswriter.h" role="src" />
+   <file md5sum="6ab108820f927169c5ad0da53055e5b0" name="php_xlswriter.h" role="src" />
    <file md5sum="680f8f2abfcb57392c5e5ab23fa41761" name="xlswriter.c" role="src" />
   </dir>
  </contents>

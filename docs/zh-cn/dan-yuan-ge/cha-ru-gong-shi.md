@@ -27,12 +27,12 @@ $freeFile = $excel->fileName("free.xlsx")
     ->header(['name', 'money']);
 
 for($index = 1; $index < 10; $index++) {
-    $textFile->insertText($index, 0, 'viest');
-    $textFile->insertText($index, 1, 10);
+    $freeFile->insertText($index, 0, 'viest');
+    $freeFile->insertText($index, 1, 10);
 }
 
-$textFile->insertText(12, 0, "Total");
-$textFile->insertFormula(12, 1, '=SUM(B2:B11)');
+$freeFile->insertText(12, 0, "Total");
+$freeFile->insertFormula(12, 1, '=SUM(B2:B11)');
 
 $freeFile->output();
 ```

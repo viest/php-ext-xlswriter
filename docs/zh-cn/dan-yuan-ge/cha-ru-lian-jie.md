@@ -30,15 +30,15 @@ $excel = new \Vtiful\Kernel\Excel($config);
 $urlFile = $excel->fileName("free.xlsx")
     ->header(['url']);
 
-$fileHandle = $fileObject->getHandle();
+$fileHandle = $urlFile->getHandle();
 
 $format   = new \Vtiful\Kernel\Format($fileHandle);
 $urlStyle = $format->bold()
-    ->underline(Format::UNDERLINE_SINGLE)
+    ->underline(\Vtiful\Kernel\Format::UNDERLINE_SINGLE)
     ->toResource();
 
 $urlFile->insertUrl(1, 0, 'https://github.com', $urlStyle);
 
-$textFile->output();
+$urlFile->output();
 ```
 

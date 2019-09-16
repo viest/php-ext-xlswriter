@@ -42,6 +42,7 @@
     * [Switch worksheet](en/gong-zuo-biao/qie-huan-gong-zuo-biao.md)
   * [Style](en/yang-shi/README.md)
     * [Combination style](en/yang-shi/combination-style.md)
+  * [Download](en/download/README.md)
   * [Style list](en/yang-shi-lie-biao/README.md)
     * [Italic](en/yang-shi-lie-biao/italic.md)
     * [Align](en/yang-shi-lie-biao/align.md)

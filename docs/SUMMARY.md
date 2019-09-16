@@ -93,6 +93,7 @@
     * [切换工作表](zh-cn/gong-zuo-biao/qie-huan-gong-zuo-biao.md)
   * [样式](zh-cn/yang-shi/README.md)
     * [组合样式](zh-cn/yang-shi/zu-he-yang-shi.md)
+  * [下载](zh-cn/download/README.md)
   * [样式列表](zh-cn/yang-shi-lie-biao/README.md)
     * [斜体](zh-cn/yang-shi-lie-biao/xie-ti.md)
     * [对齐](zh-cn/yang-shi-lie-biao/dui-qi.md)

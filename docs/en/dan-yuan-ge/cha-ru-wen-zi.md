@@ -51,9 +51,5 @@ For more styles, please refer to the Excel Microsoft documentation.
 "#,##0"
 "#,##0.00"
 "0.00"
-"mm/dd/yy"
-"mmm d yyyy"
-"d mmmm yyyy"
-"dd/mm/yyyy hh:mm AM/PM"
 "0 \"dollar and\" .00 \"cents\""
 ```

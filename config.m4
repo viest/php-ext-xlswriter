@@ -1,8 +1,11 @@
 PHP_ARG_WITH(xlswriter, xlswriter support,
-[  --with-xlswriter           Include xlswriter support], yes)
+[  --with-xlswriter         Include xlswriter support], yes)
 
-PHP_ARG_WITH(libxlsxwriter, system libxlsswriter,
-[  --with-libxlsxwriter=DIR Use system library], no, no)
+PHP_ARG_WITH(libxlsxwriter, system libxlsxwriter,
+[  --with-libxlsxwriter=DIR Use system libxlsxwriter], no, no)
+
+PHP_ARG_WITH(libxlsxio, system libxlsxio,
+[  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
 
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], no, no)
@@ -135,22 +138,52 @@ if test "$PHP_XLSWRITER" != "no"; then
     fi
 
     if test "$PHP_READER" = "yes"; then
+        AC_MSG_CHECKING([Check libxlsxwriter library])
+        if test "$PHP_LIBXLSXIO" != "no"; then
+
+            for i in $PHP_LIBXLSXIO /usr/local /usr; do
+                if test -r $i/include/xlsxio_read.h; then
+                    XLSXIO_DIR=$i
+                    AC_MSG_RESULT([found in $i])
+                    break
+                fi
+            done
+
+            if test -z "$XLSXIO_DIR"; then
+                AC_MSG_ERROR([libxlsxio library not found])
+            else
+                PHP_ADD_INCLUDE($XLSXIO_DIR/include)
+                PHP_CHECK_LIBRARY(xlsxio_read, xlsxioread_sheet_open,
+                [
+                    PHP_ADD_LIBRARY_WITH_PATH(xlsxio_read, $i/$PHP_LIBDIR, XLSWRITER_SHARED_LIBADD)
+                ],[
+                    AC_MSG_ERROR([Wrong libxlsxio version or library not found])
+                ],[
+                    -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
+                ])
+            fi
+
+            AC_DEFINE(HAVE_LIBXLSXIO, 1, [ use system libxlsxwriter ])
+        else
+            AC_MSG_RESULT([use the bundled library])
+
+            xls_writer_sources="$xls_writer_sources $libexpat"
+            PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
+            PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
+            LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
+
+            xls_writer_sources="$xls_writer_sources $libxlsxio"
+            PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
+            PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
+            LIBOPT="$LIBOPT -DUSE_MINIZIP"
+
+        fi
+
         xls_writer_sources="$xls_writer_sources $xls_read_sources"
-
         AC_DEFINE(ENABLE_READER, 1, [enable reader])
-
-        xls_writer_sources="$xls_writer_sources $libexpat"
-        PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
-        PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
-        LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
-
-        xls_writer_sources="$xls_writer_sources $libxlsxio"
-        PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
-        PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
-        LIBOPT="$LIBOPT -DUSE_MINIZIP"
     fi
 
-    if test "$PHP_READER" = "yes" || test "$PHP_LIBXLSXWRITER" = "no"; then
+    if test "$PHP_LIBXLSXIO" = "no" || test "$PHP_LIBXLSXWRITER" = "no"; then
         xls_writer_sources="$xls_writer_sources $minizip_sources"
     fi
 

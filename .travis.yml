@@ -43,4 +43,4 @@ script:
     - ./travis/run-test.sh
     - make clean && phpize --clean
     - phpize && ./configure --enable-reader && make clean && make
-    - - if [ -n "$USE_VALGRIND" ]; then REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120; fi
+    - if [ -n "$USE_VALGRIND" ]; then REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120; fi

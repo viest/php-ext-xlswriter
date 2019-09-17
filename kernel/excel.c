@@ -782,6 +782,35 @@ PHP_METHOD(vtiful_xls, nextRow)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\xls::nextCellCallback()
+ */
+PHP_METHOD(vtiful_xls, nextCellCallback)
+{
+    zend_string *zs_sheet_name = NULL;
+    zend_fcall_info       fci       = empty_fcall_info;
+    zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_FUNC(fci, fci_cache)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(zs_sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.file_t) {
+        RETURN_FALSE;
+    }
+
+    xls_read_callback_data callback_data;
+
+    callback_data.fci = &fci;
+    callback_data.fci_cache = &fci_cache;
+
+    load_sheet_current_row_data_callback(zs_sheet_name, obj->read_ptr.file_t, &callback_data);
+}
+/* }}} */
+
 #endif
 
 /** {{{ xls_methods
@@ -812,6 +841,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, openSheet,     xls_open_sheet_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,  NULL,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextRow,       NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextCellCallback,  NULL,                       ZEND_ACC_PUBLIC)
 #endif
 
         PHP_FE_END

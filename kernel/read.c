@@ -31,13 +31,13 @@ xlsxioreader file_open(const char *directory, const char *file_name) {
 /* }}} */
 
 /* {{{ */
-xlsxioreadersheet sheet_open(xlsxioreader file_t, const zend_string *zs_sheet_name_t)
+xlsxioreadersheet sheet_open(xlsxioreader file_t, const zend_string *zs_sheet_name_t, const zend_long zl_flag)
 {
     if (zs_sheet_name_t == NULL) {
-        return xlsxioread_sheet_open(file_t, NULL, XLSXIOREAD_SKIP_EMPTY_ROWS);
+        return xlsxioread_sheet_open(file_t, NULL, zl_flag);
     }
 
-    return xlsxioread_sheet_open(file_t, ZSTR_VAL(zs_sheet_name_t), XLSXIOREAD_SKIP_EMPTY_ROWS);
+    return xlsxioread_sheet_open(file_t, ZSTR_VAL(zs_sheet_name_t), zl_flag);
 }
 /* }}} */
 

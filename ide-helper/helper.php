@@ -16,6 +16,10 @@ class Excel
     const TYPE_DOUBLE = 0x04;
     const TYPE_TIMESTAMP = 0x08;
 
+    const SKIP_NONE = 0x00;
+    const SKIP_EMPTY_ROW = 0x01;
+    const SKIP_EMPTY_CELLS = 0x02;
+
     /**
      * Excel constructor.
      *
@@ -328,12 +332,13 @@ class Excel
      * default open first sheet
      *
      * @param string|NULL $sheetName
+     * @param int         skipFlag
      *
      * @return Excel
      *
      * @author viest
      */
-    public function openSheet(string $sheetName = NULL): self
+    public function openSheet(string $sheetName = NULL, int $skipFlag = 0x00): self
     {
         return $this;
     }
@@ -360,6 +365,19 @@ class Excel
     public function nextRow(): array
     {
         return [];
+    }
+
+    /**
+     * Next Cell In Callback
+     *
+     * @param callable    $callback  function(int $row, int $cell, string $data)
+     * @param string|NULL $sheetName sheet name
+     *
+     * @author viest
+     */
+    public function nextCellCallback(callable $callback, string $sheetName = NULL): void
+    {
+        //
     }
 }
 

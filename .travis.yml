@@ -7,13 +7,21 @@ compiler:
 os:
   - linux
 
-php:
-  - 7.0
-  - 7.1
-  - 7.2
-  - 7.3
-  - 7.4snapshot
-  - nightly
+matrix:
+  include:
+    - php: 7.0
+      env: USE_VALGRIND=1
+    - php: 7.1
+      env: USE_VALGRIND=1
+    - php: 7.2
+      env: USE_VALGRIND=1
+    - php: 7.3
+    - php: 7.4snapshot
+    - php: nightly
+
+addons:
+  apt:
+    packages: valgrind
 
 notifications:
   email: dev@service.viest.me
@@ -21,12 +29,15 @@ notifications:
 before_script:
   - git submodule update --init
   - sudo apt-get install zlib1g-dev -y
-  - phpize && ./configure && make clean && make
+  - phpize && ./configure --enable-reader && make clean && make
 
 branches:
   only:
     - master
     - dev
-    - dev-read
+
 script:
     - ./travis/run-test.sh
+    - make clean && phpize --clean
+    - phpize && ./configure --enable-reader && make clean && make
+    - if [ -n "$USE_VALGRIND" ]; then REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120; fi

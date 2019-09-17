@@ -31,20 +31,20 @@ xlsxioreader file_open(const char *directory, const char *file_name) {
 /* }}} */
 
 /* {{{ */
-xlsxioreadersheet sheet_open(xlsxioreader file, const zend_string *zs_sheet_name_t)
+xlsxioreadersheet sheet_open(xlsxioreader file_t, const zend_string *zs_sheet_name_t, const zend_long zl_flag)
 {
     if (zs_sheet_name_t == NULL) {
-        return xlsxioread_sheet_open(file, NULL, XLSXIOREAD_SKIP_EMPTY_ROWS);
+        return xlsxioread_sheet_open(file_t, NULL, zl_flag);
     }
 
-    return xlsxioread_sheet_open(file, ZSTR_VAL(zs_sheet_name_t), XLSXIOREAD_SKIP_EMPTY_ROWS);
+    return xlsxioread_sheet_open(file_t, ZSTR_VAL(zs_sheet_name_t), zl_flag);
 }
 /* }}} */
 
 /* {{{ */
-int sheet_read_row(xlsxioreadersheet sheet)
+int sheet_read_row(xlsxioreadersheet sheet_t)
 {
-    return xlsxioread_sheet_next_row(sheet);
+    return xlsxioread_sheet_next_row(sheet_t);
 }
 /* }}} */
 
@@ -108,6 +108,77 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
     }
 
     return XLSWRITER_TRUE;
+}
+/* }}} */
+
+/* {{{ */
+int sheet_row_callback (size_t row, size_t max_col, void* callback_data)
+{
+    if (callback_data == NULL) {
+        return FAILURE;
+    }
+
+    xls_read_callback_data *_callback_data = (xls_read_callback_data *)callback_data;
+
+    zval args[3], retval;
+
+    _callback_data->fci->retval      = &retval;
+    _callback_data->fci->params      = args;
+    _callback_data->fci->param_count = 3;
+
+    ZVAL_LONG(&args[0], row);
+    ZVAL_LONG(&args[1], max_col);
+    ZVAL_STRING(&args[2], "XLSX_ROW_END");
+
+    zend_call_function(_callback_data->fci, _callback_data->fci_cache);
+
+    zval_ptr_dtor(&args[2]);
+    zval_ptr_dtor(&retval);
+
+    return SUCCESS;
+}
+/* }}} */
+
+/* {{{ */
+int sheet_cell_callback (size_t row, size_t col, const char *value, void *callback_data)
+{
+    if (callback_data == NULL) {
+        return FAILURE;
+    }
+
+    xls_read_callback_data *_callback_data = (xls_read_callback_data *)callback_data;
+
+    if (_callback_data->fci == NULL || _callback_data->fci_cache == NULL) {
+        return FAILURE;
+    }
+
+    zval args[3], retval;
+
+    _callback_data->fci->retval      = &retval;
+    _callback_data->fci->params      = args;
+    _callback_data->fci->param_count = 3;
+
+    ZVAL_LONG(&args[0], row);
+    ZVAL_LONG(&args[1], col);
+    ZVAL_STRING(&args[2], value);
+
+    zend_call_function(_callback_data->fci, _callback_data->fci_cache);
+
+    zval_ptr_dtor(&args[2]);
+    zval_ptr_dtor(&retval);
+
+    return SUCCESS;
+}
+/* }}} */
+
+/* {{{ */
+unsigned int load_sheet_current_row_data_callback(zend_string *zs_sheet_name_t, xlsxioreader file_t, void *callback_data)
+{
+    if (zs_sheet_name_t == NULL) {
+        return xlsxioread_process(file_t, NULL, XLSXIOREAD_SKIP_NONE, sheet_cell_callback, sheet_row_callback, callback_data);
+    }
+
+    return xlsxioread_process(file_t, ZSTR_VAL(zs_sheet_name_t), XLSXIOREAD_SKIP_NONE, sheet_cell_callback, sheet_row_callback, callback_data);
 }
 /* }}} */
 

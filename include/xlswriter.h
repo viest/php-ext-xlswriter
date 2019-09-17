@@ -42,6 +42,11 @@ typedef struct {
     xlsxioreader      file_t;
     xlsxioreadersheet sheet_t;
 } xls_resource_read_t;
+
+typedef struct {
+    zend_fcall_info       *fci;
+    zend_fcall_info_cache *fci_cache;
+} xls_read_callback_data;
 #endif
 
 #ifndef ENABLE_READER
@@ -116,6 +121,15 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
             return;                                                                                                  \
         }                                                                                                            \
     } while(0);
+
+#define FCALL_TWO_ARGS(bucket)                   \
+    ZVAL_COPY_VALUE(&args[0], &bucket->val); \
+        if (bucket->key) {                       \
+            ZVAL_STR(&args[1], bucket->key);     \
+        } else {                                 \
+            ZVAL_LONG(&args[1], bucket->h);      \
+        }                                        \
+        zend_call_function(&fci, &fci_cache);
 
 #define ROW(range) \
     lxw_name_to_row(range)

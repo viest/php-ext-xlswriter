@@ -162,6 +162,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_open_sheet_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, zs_sheet_name)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_next_cell_callback_arginfo, 0, 0, 2)
+                ZEND_ARG_INFO(0, fci)
+                ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\xls::__construct(array $config)
@@ -728,11 +733,13 @@ PHP_METHOD(vtiful_xls, openFile)
  */
 PHP_METHOD(vtiful_xls, openSheet)
 {
+    zend_long zl_flag = XLSXIOREAD_SKIP_NONE;
     zend_string *zs_sheet_name = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 1)
+    ZEND_PARSE_PARAMETERS_START(0, 2)
             Z_PARAM_OPTIONAL
             Z_PARAM_STR(zs_sheet_name)
+            Z_PARAM_LONG(zl_flag)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -743,7 +750,7 @@ PHP_METHOD(vtiful_xls, openSheet)
         RETURN_NULL();
     }
 
-    obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name);
+    obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
 }
 /* }}} */
 
@@ -782,6 +789,35 @@ PHP_METHOD(vtiful_xls, nextRow)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\xls::nextCellCallback()
+ */
+PHP_METHOD(vtiful_xls, nextCellCallback)
+{
+    zend_string *zs_sheet_name = NULL;
+    zend_fcall_info       fci       = empty_fcall_info;
+    zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_FUNC(fci, fci_cache)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(zs_sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.file_t) {
+        RETURN_FALSE;
+    }
+
+    xls_read_callback_data callback_data;
+
+    callback_data.fci = &fci;
+    callback_data.fci_cache = &fci_cache;
+
+    load_sheet_current_row_data_callback(zs_sheet_name, obj->read_ptr.file_t, &callback_data);
+}
+/* }}} */
+
 #endif
 
 /** {{{ xls_methods
@@ -808,10 +844,11 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
 
 #ifdef ENABLE_READER
-        PHP_ME(vtiful_xls, openFile,      xls_open_file_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, openSheet,     xls_open_sheet_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, getSheetData,  NULL,                       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, nextRow,       NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, openSheet,        xls_open_sheet_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getSheetData,     NULL,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextRow,          NULL,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextCellCallback, xls_next_cell_callback_arginfo, ZEND_ACC_PUBLIC)
 #endif
 
         PHP_FE_END
@@ -833,6 +870,12 @@ VTIFUL_STARTUP_FUNCTION(excel) {
 
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_COF, ZEND_ACC_PRIVATE);
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_FIL, ZEND_ACC_PRIVATE);
+
+#ifdef ENABLE_READER
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_NONE,        XLSXIOREAD_SKIP_NONE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_ROW,   XLSXIOREAD_SKIP_EMPTY_ROWS);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, XLSXIOREAD_SKIP_EMPTY_CELLS);
+#endif
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);

@@ -16,11 +16,8 @@ matrix:
     - php: 7.2
       env: USE_VALGRIND=1
     - php: 7.3
-      env: USE_VALGRIND=1
     - php: 7.4snapshot
-      env: USE_VALGRIND=1
     - php: nightly
-      env: USE_VALGRIND=1
 
 addons:
   apt:
@@ -43,4 +40,4 @@ script:
     - ./travis/run-test.sh
     - make clean && phpize --clean
     - phpize && ./configure --enable-reader && make clean && make
-    - if [ -n "$USE_VALGRIND" ]; then REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-all --set-timeout 120; fi
+    - if [ -n "$USE_VALGRIND" ]; then REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120; fi

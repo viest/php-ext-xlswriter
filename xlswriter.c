@@ -18,6 +18,11 @@
 #include "ext/standard/info.h"
 #include "xlswriter.h"
 
+#if ENABLE_READER
+#include <xlsxio_version.h>
+#include <xlsxio_read.h>
+#endif
+
 int le_xls_writer;
 
 /* {{{ PHP_MINIT_FUNCTION
@@ -85,6 +90,18 @@ PHP_MINFO_FUNCTION(xlswriter)
     php_info_print_table_row(2, "bundled libxlsxwriter version", LXW_VERSION);
 #endif
 #endif
+
+#if ENABLE_READER
+#if HAVE_LIBXLSXIO
+    /* Build time */
+    php_info_print_table_row(2, "libxlsxio headers version", XLSXIO_VERSION_STRING);
+    /* Run time */
+    php_info_print_table_row(2, "libxlsxio library version", xlsxioread_get_version_string());
+#else
+    php_info_print_table_row(2, "bundled libxlsxio version", XLSXIO_VERSION_STRING);
+#endif
+#endif
+
 	php_info_print_table_end();
 }
 /* }}} */

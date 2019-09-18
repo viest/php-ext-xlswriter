@@ -51,9 +51,10 @@ int sheet_read_row(xlsxioreadersheet sheet_t)
 /* {{{ */
 unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, zval *zv_type_arr_t, unsigned int flag)
 {
-    zend_long _type = READ_TYPE_EMPTY;
+    zend_ulong _type = READ_TYPE_EMPTY, _cell_index = 0;
+    zend_array *_za_type_t = NULL;
     char *_string_value = NULL;
-    Bucket *_start = NULL, *_end = NULL;
+    zval *_current_type = NULL;
 
     if (flag && !sheet_read_row(sheet_t)) {
         return XLSWRITER_FALSE;
@@ -64,20 +65,21 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
     }
 
     if (zv_type_arr_t != NULL && Z_TYPE_P(zv_type_arr_t) == IS_ARRAY) {
-        _start = zv_type_arr_t->value.arr->arData;
-        _end   = _start + zv_type_arr_t->value.arr->nNumUsed;
+        _za_type_t = Z_ARR_P(zv_type_arr_t);
     }
 
     while ((_string_value = xlsxioread_sheet_next_cell(sheet_t)) != NULL)
     {
-        if (_start != _end) {
-            zval *_zv_type = &_start->val;
+        _type = READ_TYPE_EMPTY;
 
-            if (Z_TYPE_P(_zv_type) == IS_LONG) {
-                _type = Z_LVAL_P(_zv_type);
+        if (_za_type_t != NULL) {
+            if ((_current_type = zend_hash_index_find(_za_type_t, _cell_index)) != NULL) {
+                if (Z_TYPE_P(_current_type) == IS_LONG) {
+                    _type = Z_LVAL_P(_current_type);
+                }
             }
 
-            _start++;
+            _cell_index++;
         }
 
         if (_type & READ_TYPE_DATETIME) {

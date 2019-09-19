@@ -22,7 +22,7 @@ var_dump($data);
 @unlink(__DIR__ . '/tutorial.xlsx');
 ?>
 --EXPECT--
-object(Vtiful\Kernel\Excel)#1 (2) {
+object(Vtiful\Kernel\Excel)#1 (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -30,4 +30,6 @@ object(Vtiful\Kernel\Excel)#1 (2) {
   }
   ["fileName":"Vtiful\Kernel\Excel":private]=>
   string(21) "./tests/tutorial.xlsx"
+  ["read_row_type":"Vtiful\Kernel\Excel":private]=>
+  NULL
 }

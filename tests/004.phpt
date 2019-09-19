@@ -11,7 +11,7 @@ $setHeader = $fileFd->header(['Item', 'Cost']);
 var_dump($setHeader);
 ?>
 --EXPECT--
-object(Vtiful\Kernel\Excel)#1 (2) {
+object(Vtiful\Kernel\Excel)#1 (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -19,4 +19,6 @@ object(Vtiful\Kernel\Excel)#1 (2) {
   }
   ["fileName":"Vtiful\Kernel\Excel":private]=>
   string(23) "./tests/tutorial01.xlsx"
+  ["read_row_type":"Vtiful\Kernel\Excel":private]=>
+  NULL
 }

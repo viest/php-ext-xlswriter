@@ -40,7 +40,7 @@ array(1) {
 }
 array(1) {
   [0]=>
-  float(1568389354)
+  int(1568389354)
 }
 NULL
 NULL

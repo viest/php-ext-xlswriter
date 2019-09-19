@@ -843,6 +843,8 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 
     xls_read_callback_data callback_data;
 
+    callback_data.zv_type_t = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+
     callback_data.fci = &fci;
     callback_data.fci_cache = &fci_cache;
 

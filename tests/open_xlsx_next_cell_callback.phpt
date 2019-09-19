@@ -25,9 +25,9 @@ $excel->openFile('tutorial.xlsx')->nextCellCallback(function ($row, $cell, $data
 @unlink(__DIR__ . '/tutorial.xlsx');
 ?>
 --EXPECT--
-cell:1, row:1, value:Item
-cell:2, row:1, value:Cost
-cell:2, row:1, value:XLSX_ROW_END
-cell:1, row:2, value:Item_1
-cell:2, row:2, value:Cost_1
-cell:2, row:2, value:XLSX_ROW_END
+cell:0, row:0, value:Item
+cell:1, row:0, value:Cost
+cell:1, row:0, value:XLSX_ROW_END
+cell:0, row:1, value:Item_1
+cell:1, row:1, value:Cost_1
+cell:1, row:1, value:XLSX_ROW_END

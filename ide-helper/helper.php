@@ -344,6 +344,20 @@ class Excel
     }
 
     /**
+     * Set row cell data type
+     *
+     * @param array $types
+     *
+     * @return Excel
+     *
+     * @author viest
+     */
+    public function setType(array $types): self
+    {
+        return $this;
+    }
+
+    /**
      * Read values from the sheet
      *
      * @return array

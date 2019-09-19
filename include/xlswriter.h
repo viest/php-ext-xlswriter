@@ -44,6 +44,7 @@ typedef struct {
 } xls_resource_read_t;
 
 typedef struct {
+    zval                  *zv_type_t;
     zend_fcall_info       *fci;
     zend_fcall_info_cache *fci_cache;
 } xls_read_callback_data;

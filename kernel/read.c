@@ -229,6 +229,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
             }
         }
 
+        ZVAL_NULL(&args[2]);
         data_to_custom_type(value, _type, &args[2]);
     }
 

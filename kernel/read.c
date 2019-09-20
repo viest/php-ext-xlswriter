@@ -96,7 +96,7 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
 
         zend_long _long_value;
 
-        sscanf(string_value, "%" PRIi64, &_long_value);
+        sscanf(string_value, ZEND_LONG_FMT, &_long_value);
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
             add_next_index_long(zv_result_t, _long_value);

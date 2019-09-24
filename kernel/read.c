@@ -109,9 +109,31 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
 
     STRING:
 
-    if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-        add_next_index_stringl(zv_result_t, string_value, strlen(string_value));
-    } else {
+    {
+        zend_long _long = 0; double _double = 0;
+        is_numeric_string(string_value, strlen(string_value), &_long, &_double, 0);
+
+        if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
+            if (_double > 0) {
+                add_next_index_double(zv_result_t, _double);
+                return;
+            } else if (_long > 0) {
+                add_next_index_long(zv_result_t, _long);
+                return;
+            }
+
+            add_next_index_stringl(zv_result_t, string_value, strlen(string_value));
+            return;
+        }
+
+        if (_double > 0) {
+            ZVAL_DOUBLE(zv_result_t, _double);
+            return;
+        } else if (_long > 0) {
+            ZVAL_LONG(zv_result_t, _long);
+            return;
+        }
+
         ZVAL_STRINGL(zv_result_t, string_value, strlen(string_value));
     }
 }
@@ -216,7 +238,17 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
     ZVAL_LONG(&args[1], (col - 1));
 
     if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY) {
-        ZVAL_STRING(&args[2], value);
+        zend_long _long = 0; double _double = 0;
+
+        if (is_numeric_string(value, strlen(value), &_long, &_double, 0)) {
+            if (_double > 0) {
+                ZVAL_DOUBLE(&args[2], _double);
+            } else {
+                ZVAL_LONG(&args[2], _long);
+            }
+        } else {
+            ZVAL_STRINGL(&args[2], value, strlen(value));
+        }
     }
 
     if (Z_TYPE_P(_callback_data->zv_type_t) == IS_ARRAY) {

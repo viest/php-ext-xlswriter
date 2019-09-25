@@ -171,6 +171,14 @@ ZEND_BEGIN_ARG_INFO_EX(xls_next_cell_callback_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, fci)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_index_to_string, 0, 0, 1)
+                ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_string_to_index, 0, 0, 1)
+                ZEND_ARG_INFO(0, index)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\xls::__construct(array $config)
@@ -927,8 +935,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
 
-        PHP_ME(vtiful_xls, columnIndexFromString,        NULL,        ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-        PHP_ME(vtiful_xls, stringFromColumnIndex,        NULL,        ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, columnIndexFromString,  xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, stringFromColumnIndex,  xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)

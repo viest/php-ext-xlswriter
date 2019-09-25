@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-09-20</date>
- <time>03:42:56</time>
+ <date>2019-09-25</date>
+ <time>10:51:58</time>
  <version>
-  <release>1.2.9</release>
-  <api>1.2.9</api>
+  <release>1.3.0</release>
+  <api>1.3.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,11 +27,8 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT read skip empty cell
-- FEAT read skip empty row
-- FEAT read data with type array index
-- FEAT read global cell data type
-- FEAT read new read handler, nextCallback
+- FEAT read numeric
+- FEAT column index from string and string from column index
  </notes>
  <contents>
   <dir name="/">
@@ -39,18 +36,18 @@
    <file md5sum="f489baf3d3595b98dacd7b51bc6a9125" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
-   <file md5sum="32713148935745a16a1e41bf5a356323" name="include/xlswriter.h" role="src" />
+   <file md5sum="1c2f0e25ca980187fb4da5609b80ecf7" name="include/xlswriter.h" role="src" />
    <file md5sum="a93bd84834d2a10c2af78598d90b8d7e" name="include/read.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
    <file md5sum="24cfe5075b5f5c6e96d15d3bcefcf191" name="kernel/chart.c" role="src" />
-   <file md5sum="fc1f22e3fe5a62ef931e67ba53d02b91" name="kernel/common.c" role="src" />
-   <file md5sum="bcfc7bb156369ffce6f882857214037a" name="kernel/excel.c" role="src" />
+   <file md5sum="f1f86ab07b36f4795365db15061ea9d4" name="kernel/common.c" role="src" />
+   <file md5sum="5057de822cb5ffe53e6f32f35474b5ae" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
    <file md5sum="a65c55a934599a8c1d23882d9197ac2f" name="kernel/format.c" role="src" />
    <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
    <file md5sum="c667b1b5e0cfb71be5e213d7c80ba74f" name="kernel/write.c" role="src" />
-   <file md5sum="9ef81947a80b8856b956eb8ea52dd780" name="kernel/read.c" role="src" />
+   <file md5sum="9fd7b1f77e31ef62809113b2ce7f1755" name="kernel/read.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
    <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
@@ -164,6 +161,7 @@
    <file md5sum="96b0f8886481250e02985ab78d137f1f" name="tests/chart_series_name.phpt" role="test" />
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="test" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
+   <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
    <file md5sum="6301adafdc19bb844146f39600d3f8a8" name="tests/format_background.phpt" role="test" />
    <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
@@ -183,7 +181,7 @@
    <file md5sum="f1addf56af65d4cccc0e1a2e92bd1f46" name="tests/open_xlsx_file.phpt" role="test" />
    <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="test" />
    <file md5sum="30c1a9fbb09eed1908a84c5b617d292f" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
-   <file md5sum="0300fa1cdb8bed61ee9fdd0aaf36caaa" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
+   <file md5sum="6ea988e0cc58f2bba7f2a91e133f00cc" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
    <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_get_sheet_not_found_data.phpt" role="test" />
    <file md5sum="f8a2c32aad6f4828fcac7b4c6ccf7a74" name="tests/open_xlsx_next_cell_callback.phpt" role="test" />
    <file md5sum="38a275929a200a29ca37e4c15cd083ce" name="tests/open_xlsx_next_cell_callback_with_data_type.phpt" role="test" />
@@ -197,6 +195,7 @@
    <file md5sum="90b5a90b6687d034a5cc64ae35a41fb7" name="tests/open_xlsx_sheet_flag.phpt" role="test" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="test" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
+   <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
    <file md5sum="08140c79452f8016e82542834a1a2599" name="README.md" role="doc" />
@@ -205,7 +204,7 @@
    <file md5sum="5a265f5d0dd6a3aff845cd2056f7e515" name="config.m4" role="src" />
    <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="883f9498a0f2865455a21337d669119f" name="php_xlswriter.h" role="src" />
+   <file md5sum="69d8f8bb1bf2918f32b579729b5ffc4e" name="php_xlswriter.h" role="src" />
    <file md5sum="a599c080be5456b40d04776e95670c89" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -224,6 +223,26 @@
   <configureoption default="no" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-09-20</date>
+   <time>03:42:56</time>
+   <version>
+    <release>1.2.9</release>
+    <api>1.2.9</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- FEAT read skip empty cell
+- FEAT read skip empty row
+- FEAT read data with type array index
+- FEAT read global cell data type
+- FEAT read new read handler, nextCallback
+   </notes>
+  </release>
   <release>
    <date>2019-09-14</date>
    <time>10:48:20</time>

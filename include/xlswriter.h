@@ -182,5 +182,6 @@ void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resou
 lxw_error workbook_file(xls_resource_write_t *self);
 
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
+zend_string* str_pick_up(zend_string *left, char *right);
 
 #endif

@@ -710,6 +710,56 @@ PHP_METHOD(vtiful_xls, setRow)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\xls::columnIndexFromString(string $index)
+ */
+PHP_METHOD(vtiful_xls, columnIndexFromString)
+{
+    zend_string *index = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    RETURN_LONG(lxw_name_to_col(ZSTR_VAL(index)));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\xls::stringFromColumnIndex(int $index)
+ */
+PHP_METHOD(vtiful_xls, stringFromColumnIndex)
+{
+    zend_long index = 0, current = 0;
+    zend_string *result = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(index)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (index < 26) {
+        current = index + 65;
+        result  = zend_string_init((char *)(&current), 1, 0);
+        RETURN_STR(result);
+    }
+
+    if (index < 702) {
+        current = index / 26 + 64;
+        result  = zend_string_init((char *)(&current), 1, 0);
+
+        current = index % 26 + 65;
+        RETURN_STR(str_pick_up(result, (char *)(&current)));
+    }
+
+    current = (index - 26) / 676 + 64;
+    result  = zend_string_init((char *)(&current), 1, 0);
+
+    current = ((index - 26) % 676) / 26 + 65;
+    result  = str_pick_up(result, (char *)(&current));
+
+    current = index % 26 + 65;
+    RETURN_STR(str_pick_up(result, (char *)(&current)));
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
 /** {{{ \Vtiful\Kernel\xls::openFile()
@@ -876,6 +926,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
+
+        PHP_ME(vtiful_xls, columnIndexFromString,        NULL,        ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, stringFromColumnIndex,        NULL,        ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)

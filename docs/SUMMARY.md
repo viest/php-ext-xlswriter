@@ -110,3 +110,5 @@
     * [边框样式常量](zh-cn/yang-shi-lie-biao/bian-kuang-yang-shi-chang-liang.md)
     * [背景颜色](zh-cn/yang-shi-lie-biao/bei-jing-yan-se.md)
     * [颜色常量](zh-cn/yang-shi-lie-biao/yan-se-chang-liang.md)
+  * [辅助函数](zh-cn/helper/README.md)
+    * [列标字符转化](zh-cn/helper/column-index-number-string-transform.md)

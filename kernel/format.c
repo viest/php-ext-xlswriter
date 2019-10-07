@@ -229,15 +229,16 @@ PHP_METHOD(vtiful_format, number)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Format::background(int $pattern, int $color)
+/** {{{ \Vtiful\Kernel\Format::background(int $color [, int $pattern = \Vtiful\Kernel\Format::PATTERN_SOLID])
  */
 PHP_METHOD(vtiful_format, background)
 {
-    zend_long pattern = 0, color = 0;
+    zend_long pattern = LXW_PATTERN_SOLID, color = 0;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-            Z_PARAM_LONG(pattern)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_LONG(color)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_LONG(pattern)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -245,8 +246,8 @@ PHP_METHOD(vtiful_format, background)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_pattern(obj->ptr.format, (uint8_t)pattern);
-        format_set_bg_color(obj->ptr.format, (uint8_t)color);
+        format_set_pattern(obj->ptr.format, pattern);
+        format_set_bg_color(obj->ptr.format, color);
     }
 }
 /* }}} */

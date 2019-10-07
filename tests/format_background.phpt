@@ -15,8 +15,8 @@ $fileHandle = $fileObject->getHandle();
 
 $format = new \Vtiful\Kernel\Format($fileHandle);
 $style  = $format->background(
-	\Vtiful\Kernel\Format::PATTERN_LIGHT_UP,
-	\Vtiful\Kernel\Format::COLOR_RED
+	\Vtiful\Kernel\Format::COLOR_RED,
+	\Vtiful\Kernel\Format::PATTERN_LIGHT_UP
 )->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])

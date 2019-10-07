@@ -161,27 +161,30 @@ xls_resource_chart_t * zval_get_chart(zval *resource);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 
-STATIC void _prepare_defined_names(lxw_workbook *self);
+STATIC int  _compare_defined_names(lxw_defined_name *a, lxw_defined_name *b);
+
 STATIC void _prepare_drawings(lxw_workbook *self);
 STATIC void _add_chart_cache_data(lxw_workbook *self);
-STATIC int  _compare_defined_names(lxw_defined_name *a, lxw_defined_name *b);
+STATIC void _prepare_defined_names(lxw_workbook *self);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
-void format_copy(lxw_format *new_format, lxw_format *other_format);
-void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
-void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
-void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
-void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
-void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
+void format_copy(lxw_format *new_format, lxw_format *other_format);
+void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
+void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res);
-void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
+void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
+void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
+void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
+void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
 void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format);
+void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
+void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
+
 lxw_error workbook_file(xls_resource_write_t *self);
 
-void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 zend_string* str_pick_up(zend_string *left, char *right);
 
 #endif

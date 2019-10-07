@@ -238,6 +238,14 @@ void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resou
 }
 
 /*
+ * Set freeze panes
+ */
+void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column)
+{
+    worksheet_freeze_panes(res->worksheet, row, column);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

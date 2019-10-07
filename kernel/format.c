@@ -87,6 +87,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(format_border_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_font_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, font)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Format::__construct()
@@ -229,15 +233,16 @@ PHP_METHOD(vtiful_format, number)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Format::background(int $pattern, int $color)
+/** {{{ \Vtiful\Kernel\Format::background(int $color [, int $pattern = \Vtiful\Kernel\Format::PATTERN_SOLID])
  */
 PHP_METHOD(vtiful_format, background)
 {
-    zend_long pattern = 0, color = 0;
+    zend_long pattern = LXW_PATTERN_SOLID, color = 0;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-            Z_PARAM_LONG(pattern)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_LONG(color)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_LONG(pattern)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -245,8 +250,8 @@ PHP_METHOD(vtiful_format, background)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_pattern(obj->ptr.format, (uint8_t)pattern);
-        format_set_bg_color(obj->ptr.format, (uint8_t)color);
+        format_set_pattern(obj->ptr.format, pattern);
+        format_set_bg_color(obj->ptr.format, color);
     }
 }
 /* }}} */
@@ -267,6 +272,26 @@ PHP_METHOD(vtiful_format, fontSize)
 
     if (obj->ptr.format) {
         format_set_font_size(obj->ptr.format, size);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::font(string $fontName)
+ */
+PHP_METHOD(vtiful_format, font)
+{
+    zend_string *font_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(font_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_font_name(obj->ptr.format, ZSTR_VAL(font_name));
     }
 }
 /* }}} */
@@ -341,6 +366,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, align,         format_align_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, number,        format_number_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, fontColor,     format_color_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, font,          format_font_arginfo,       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, fontSize,      format_size_arginfo,       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, strikeout,     NULL,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, underline,     format_underline_arginfo,  ZEND_ACC_PUBLIC)

@@ -8,23 +8,23 @@ $config = [
     'path' => './tests'
 ];
 
-$fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject  = new \Vtiful\Kernel\Excel($config);
 
+$fileObject = $fileObject->fileName('tutorial.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-$format = new \Vtiful\Kernel\Format($fileHandle);
-$style  = $format->background(
-	\Vtiful\Kernel\Format::COLOR_RED,
-	\Vtiful\Kernel\Format::PATTERN_LIGHT_UP
-)->toResource();
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$fontStyle = $format->font('Calibri')->toResource();
+
+// Local Test
+// $fontStyle = $format->font('华文楷体')->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
         ['viest', 21],
         ['wjx',   21]
     ])
-    ->setRow('A1', 50, $style)
+    ->setRow('A1', 50, $fontStyle)
     ->output();
 
 var_dump($filePath);

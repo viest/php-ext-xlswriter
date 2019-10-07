@@ -393,6 +393,25 @@ class Excel
     {
         //
     }
+
+    /**
+     * Freeze panes
+     *
+     * freezePanes(1, 0); // Freeze the first row.
+     * freezePanes(0, 1); // Freeze the first column.
+     * freezePanes(1, 1); // Freeze first row/column.
+     *
+     * @param int $row
+     * @param int $column
+     *
+     * @return $this
+     *
+     * @author viest
+     */
+    public function freezePanes(int $row, int $column): self
+    {
+        return $this;
+    }
 }
 
 /**
@@ -578,6 +597,20 @@ class Format
     }
 
     /**
+     * Font
+     *
+     * @param string $fontName
+     *
+     * @return Format
+     *
+     * @author viest
+     */
+    public function font(string $fontName): self
+    {
+        return $this;
+    }
+
+    /**
      * Font size
      *
      * @param float $size
@@ -620,14 +653,14 @@ class Format
     /**
      * Cell background
      *
-     * @param int $pattern const PATTERN_****
      * @param int $color   const COLOR_****
+     * @param int $pattern const PATTERN_****
      *
      * @return Format
      *
      * @author viest
      */
-    public function background(int $pattern, int $color): self
+    public function background(int $color, int $pattern = self::PATTERN_SOLID): self
     {
         return $this;
     }

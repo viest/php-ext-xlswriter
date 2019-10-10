@@ -63,6 +63,12 @@ xlswriter是一个 PHP C 扩展，可用于在 Excel 2007+ XLSX 文件中读取�
 
 [文档|Documents](https://xlswriter-docs.viest.me/)
 
+#### 贡献者
+
+<a href="https://github.com/viest/php-ext-xlswriter/graphs/contributors">
+    <img src="https://opencollective.com/php-ext-xlswriter/tiers/contributors.svg??width=890" />
+</a>
+
 #### PECL 仓库
 
 [![pecl](resource/pecl.png)](https://pecl.php.net/package/xlswriter)

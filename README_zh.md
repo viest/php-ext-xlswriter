@@ -8,6 +8,7 @@
 [![](https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg)](https://github.com/viest/php-ext-xlswriter)
 [![](https://img.shields.io/badge/license-BSD-green.svg)](https://github.com/viest/php-ext-xlswriter)
 [![](https://img.shields.io/github/issues/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield)
 
 #### 为什么使用xlswriter
 
@@ -74,3 +75,5 @@ xlswriter是一个 PHP C 扩展，可用于在 Excel 2007+ XLSX 文件中读取�
 #### License
 
 FreeBSD license
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_large)

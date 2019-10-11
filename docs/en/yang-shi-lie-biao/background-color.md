@@ -8,7 +8,7 @@ background(int $color, int $pattern = self::PATTERN_SOLID): self
 
 ### **int $color**
 
-> color const
+> color const or RGB hex
 
 ### **int $pattern**
 

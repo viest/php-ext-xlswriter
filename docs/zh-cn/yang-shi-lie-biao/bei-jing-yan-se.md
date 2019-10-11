@@ -8,7 +8,7 @@ background(int $color, int $pattern = self::PATTERN_SOLID): self
 
 ### **int $color**
 
-> 颜色常量
+> 颜色常量 或 RGB 十六进制值
 
 ### **int $pattern**
 

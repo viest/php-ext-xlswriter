@@ -15,11 +15,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-09-25</date>
- <time>10:51:58</time>
+ <date>2019-10-11</date>
+ <time>14:22:14</time>
  <version>
-  <release>1.3.0</release>
-  <api>1.3.0</api>
+  <release>1.3.1</release>
+  <api>1.3.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,8 +27,9 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT read numeric
-- FEAT column index from string and string from column index
+- FEAT freeze panes
+- FEAT set font
+- Refactor format background
  </notes>
  <contents>
   <dir name="/">
@@ -36,17 +37,17 @@
    <file md5sum="f489baf3d3595b98dacd7b51bc6a9125" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
-   <file md5sum="1c2f0e25ca980187fb4da5609b80ecf7" name="include/xlswriter.h" role="src" />
+   <file md5sum="0ac3fdfc167a12075320d299fca2e1eb" name="include/xlswriter.h" role="src" />
    <file md5sum="a93bd84834d2a10c2af78598d90b8d7e" name="include/read.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
    <file md5sum="24cfe5075b5f5c6e96d15d3bcefcf191" name="kernel/chart.c" role="src" />
    <file md5sum="f1f86ab07b36f4795365db15061ea9d4" name="kernel/common.c" role="src" />
-   <file md5sum="5057de822cb5ffe53e6f32f35474b5ae" name="kernel/excel.c" role="src" />
+   <file md5sum="5eb5038e1db6226aeae8d93221746cfa" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
-   <file md5sum="a65c55a934599a8c1d23882d9197ac2f" name="kernel/format.c" role="src" />
+   <file md5sum="b475b4d982afa5c969762143ace3977a" name="kernel/format.c" role="src" />
    <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
-   <file md5sum="c667b1b5e0cfb71be5e213d7c80ba74f" name="kernel/write.c" role="src" />
+   <file md5sum="b4208b4ef033e484211633f401e19e80" name="kernel/write.c" role="src" />
    <file md5sum="9fd7b1f77e31ef62809113b2ce7f1755" name="kernel/read.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
@@ -163,14 +164,15 @@
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
-   <file md5sum="6301adafdc19bb844146f39600d3f8a8" name="tests/format_background.phpt" role="test" />
+   <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
    <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
+   <file md5sum="666669e50723870fe7fc7ebbb3354cb4" name="tests/format_font.phpt" role="test" />
    <file md5sum="c4d791e16e40e172ebc516520cf35e5f" name="tests/format_font_color.phpt" role="test" />
    <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="test" />
    <file md5sum="4dfaa3f81e9c7138aca39da99a67f270" name="tests/format_font_strikeout.phpt" role="test" />
    <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="test" />
    <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
-   <file name="tests/freeze_panes.phpt" role="test" />
+   <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="test" />
    <file md5sum="73521b6a1cb84ba3c7730470b836368f" name="tests/insert_date_custom_format.phpt" role="test" />
@@ -199,8 +201,8 @@
    <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="08140c79452f8016e82542834a1a2599" name="README.md" role="doc" />
-   <file md5sum="8e6f6760d26d90ef0f1c39cc731c8ef0" name="README_zh.md" role="doc" />
+   <file md5sum="601a053cb6f200a24303ac8d3627361c" name="README.md" role="doc" />
+   <file md5sum="11ec16e9c9f5c6552167d258ac95f725" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
    <file md5sum="5a265f5d0dd6a3aff845cd2056f7e515" name="config.m4" role="src" />
    <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
@@ -221,9 +223,26 @@
  </dependencies>
  <providesextension>xlswriter</providesextension>
  <extsrcrelease>
-  <configureoption default="no" name="enable-reader" prompt="enable reader supports?" />
+  <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-09-25</date>
+   <time>10:51:58</time>
+   <version>
+    <release>1.3.0</release>
+    <api>1.3.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- FEAT read numeric
+- FEAT column index from string and string from column index
+   </notes>
+  </release>
   <release>
    <date>2019-09-20</date>
    <time>03:42:56</time>

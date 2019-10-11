@@ -10,7 +10,7 @@ Font(string $fontName): self
 
 > font name, font must exist in this machine
 
-##example
+## Example
 
 ```php
 $format = new \Vtiful\Kernel\Format($fileHandle);

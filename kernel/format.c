@@ -159,7 +159,7 @@ PHP_METHOD(vtiful_format, underline)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_underline(obj->ptr.format, (uint8_t)style);
+        format_set_underline(obj->ptr.format, style);
     }
 }
 /* }}} */
@@ -187,7 +187,7 @@ PHP_METHOD(vtiful_format, align)
         }
 
         if (obj->ptr.format) {
-            format_set_align(obj->ptr.format, (uint8_t)Z_LVAL_P(arg));
+            format_set_align(obj->ptr.format, Z_LVAL_P(arg));
         }
     }
 }
@@ -208,7 +208,7 @@ PHP_METHOD(vtiful_format, fontColor)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_color(obj->ptr.format, (uint8_t)color);
+        format_set_font_color(obj->ptr.format, color);
     }
 }
 /* }}} */
@@ -339,7 +339,7 @@ PHP_METHOD(vtiful_format, border)
     format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_border(obj->ptr.format, (uint8_t)style);
+        format_set_border(obj->ptr.format, style);
     }
 }
 /* }}} */

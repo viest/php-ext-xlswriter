@@ -5,12 +5,10 @@
 ```php
 function getTmpDir(): string
 {
-    if (ini_get('upload_tmp_dir') !== false) {
-        if ($temp = ini_get('upload_tmp_dir')) {
-            if (file_exists($temp)) {
-                return realpath($temp);
-            }
-        }
+    $tmp = ini_get('upload_tmp_dir');
+
+    if ($tmp !== False && file_exists($tmp)) {
+        return realpath($tmp);
     }
 
     return realpath(sys_get_temp_dir());

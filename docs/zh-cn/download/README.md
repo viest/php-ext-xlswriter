@@ -24,7 +24,7 @@ $fileName   = 'tutorial01.xlsx';
 $xlsxObject = new \Vtiful\Kernel\Excel($config);
 
 // Init File
-$fileObject = $excel->fileName($fileName);
+$fileObject = $xlsxObject->fileName($fileName);
 
 // Writing data to a file ......
 

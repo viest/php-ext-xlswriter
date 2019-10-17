@@ -28,6 +28,6 @@ $data = $excel->openFile('tutorial.xlsx')
     ->openSheet()
     ->getSheetData();
 
-var_dump($data)
+var_dump($data);
 ```
 

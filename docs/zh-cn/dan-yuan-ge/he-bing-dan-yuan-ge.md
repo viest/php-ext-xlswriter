@@ -2,8 +2,8 @@
 
 ## **函数原型**
 
-```text
-mergeCells(string $scope, string $data);
+```php
+mergeCells(string $scope, string $data): self
 ```
 
 ### **string $scope**

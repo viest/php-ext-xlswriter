@@ -18,10 +18,12 @@
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
 
+// 导出测试文件
 $filePath = $excel->fileName('tutorial.xlsx')
     ->header(['Item', 'Cost'])
     ->output();
 
+// 打开测试文件 和 第一个工作表
 $excel->openFile('tutorial.xlsx')
     ->openSheet();
 

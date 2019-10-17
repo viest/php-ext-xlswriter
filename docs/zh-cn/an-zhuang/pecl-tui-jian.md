@@ -1,7 +1,5 @@
 # PECL（推荐）
 
-> 最新特性请编译安装 Github Master 仓库
-
 ```bash
 pecl install xlswriter
 

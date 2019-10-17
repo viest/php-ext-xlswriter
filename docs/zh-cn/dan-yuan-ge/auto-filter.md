@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-autoFilter(string $range)
+autoFilter(string $range): self
 ```
 
 ### **string $range**

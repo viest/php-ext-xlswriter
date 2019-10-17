@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-insertText(int $row, int $column, int $timestamp[, string $dateFormat = 'yyyy-mm-dd hh:mm:ss', resource $style])
+insertDate(int $row, int $column, int $timestamp[, string $dateFormat = 'yyyy-mm-dd hh:mm:ss', resource $style])
 ```
 
 ### **int $row**

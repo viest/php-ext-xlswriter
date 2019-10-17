@@ -36,4 +36,3 @@ $filePath = $fileObject->header(['name', 'age'])
 
 var_dump($filePath);
 ```
-

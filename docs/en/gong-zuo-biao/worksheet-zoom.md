@@ -3,7 +3,7 @@
 ## **Function Prototype**
 
 ```php
-zoom(int $scale = 10): self
+zoom(int $scale = 100): self
 ```
 
 ### **int $scale**
@@ -12,7 +12,7 @@ zoom(int $scale = 10): self
 >
 > Range: 10 <= $scale <= 400
 >
-> Default: 10
+> Default: 100
 >
 > Scale does not affect print scale
 
@@ -25,7 +25,7 @@ $excel  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->fileName("tutorial01.xlsx");
 
 $fileObject->header(['name', 'age'])
-     ->zoom(100) // Set the worksheet zoom factor
+     ->zoom(200) // Set the worksheet zoom factor
      ->data([
      ['viest', 21],
      ['viest', 22],

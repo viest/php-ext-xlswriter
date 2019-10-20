@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-zoom(int $scale = 10): self
+zoom(int $scale = 100): self
 ```
 
 ### **int $scale**
@@ -12,7 +12,7 @@ zoom(int $scale = 10): self
 >
 > 范围：10 <= $scale <= 400
 >
-> 默认值： 10
+> 默认值： 100
 >
 > 缩放比例不影响打印比例
 
@@ -27,7 +27,7 @@ $excel = new \Vtiful\Kernel\Excel($config);
 $fileObject = $excel->fileName("tutorial01.xlsx");
 
 $fileObject->header(['name', 'age'])
-    ->zoom(100) // 设置工作表缩放系数
+    ->zoom(200) // 设置工作表缩放系数
     ->data([
     ['viest', 21],
     ['viest', 22],

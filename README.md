@@ -66,6 +66,12 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 
 [![pecl](resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 
+#### IDE Helper
+
+```bash
+composer require viest/php-ext-xlswriter-ide-helper:dev-master
+```
+
 #### Exchange group
 
 <img width="160" src="resource/qq.jpg"/>

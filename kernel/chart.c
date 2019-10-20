@@ -163,7 +163,7 @@ PHP_METHOD(vtiful_chart, seriesName)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Chart::seriesName(int $style)
+/** {{{ \Vtiful\Kernel\Chart::style(int $style)
  */
 PHP_METHOD(vtiful_chart, style)
 {

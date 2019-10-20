@@ -246,6 +246,22 @@ void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column)
 }
 
 /*
+ * Display or hide screen and print gridlines
+ */
+void gridlines(xls_resource_write_t *res, zend_long option)
+{
+    worksheet_gridlines(res->worksheet, option);
+}
+
+/*
+ * Set the worksheet zoom factor
+ */
+void zoom(xls_resource_write_t *res, zend_long zoom)
+{
+    worksheet_set_zoom(res->worksheet, zoom);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

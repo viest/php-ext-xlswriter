@@ -184,9 +184,17 @@ ZEND_BEGIN_ARG_INFO_EX(xls_freeze_panes_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_sheet_gridline_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, option)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_sheet_zoom_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, scale)
+ZEND_END_ARG_INFO()
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::__construct(array $config)
+/** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
  */
 PHP_METHOD(vtiful_xls, __construct)
 {
@@ -212,7 +220,7 @@ PHP_METHOD(vtiful_xls, __construct)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::filename(string $fileName [, string $sheetName])
+/** {{{ \Vtiful\Kernel\Excel::filename(string $fileName [, string $sheetName])
  */
 PHP_METHOD(vtiful_xls, fileName)
 {
@@ -249,7 +257,7 @@ PHP_METHOD(vtiful_xls, fileName)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::addSheet(string $sheetName)
+/** {{{ \Vtiful\Kernel\Excel::addSheet(string $sheetName)
  */
 PHP_METHOD(vtiful_xls, addSheet)
 {
@@ -276,7 +284,7 @@ PHP_METHOD(vtiful_xls, addSheet)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::checkoutSheet(string $sheetName)
+/** {{{ \Vtiful\Kernel\Excel::checkoutSheet(string $sheetName)
  */
 PHP_METHOD(vtiful_xls, checkoutSheet)
 {
@@ -307,7 +315,7 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::constMemory(string $fileName [, string $sheetName])
+/** {{{ \Vtiful\Kernel\Excel::constMemory(string $fileName [, string $sheetName])
  */
 PHP_METHOD(vtiful_xls, constMemory)
 {
@@ -347,7 +355,7 @@ PHP_METHOD(vtiful_xls, constMemory)
 /* }}} */
 
 
-/** {{{ \Vtiful\Kernel\xls::header(array $header)
+/** {{{ \Vtiful\Kernel\Excel::header(array $header)
  */
 PHP_METHOD(vtiful_xls, header)
 {
@@ -371,7 +379,7 @@ PHP_METHOD(vtiful_xls, header)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::data(array $data)
+/** {{{ \Vtiful\Kernel\Excel::data(array $data)
  */
 PHP_METHOD(vtiful_xls, data)
 {
@@ -400,7 +408,7 @@ PHP_METHOD(vtiful_xls, data)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::output()
+/** {{{ \Vtiful\Kernel\Excel::output()
  */
 PHP_METHOD(vtiful_xls, output)
 {
@@ -418,7 +426,7 @@ PHP_METHOD(vtiful_xls, output)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::getHandle()
+/** {{{ \Vtiful\Kernel\Excel::getHandle()
  */
 PHP_METHOD(vtiful_xls, getHandle)
 {
@@ -428,7 +436,7 @@ PHP_METHOD(vtiful_xls, getHandle)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertText(int $row, int $column, string|int|double $data[, string $format, resource $formatHandle])
+/** {{{ \Vtiful\Kernel\Excel::insertText(int $row, int $column, string|int|double $data[, string $format, resource $formatHandle])
  */
 PHP_METHOD(vtiful_xls, insertText)
 {
@@ -461,7 +469,7 @@ PHP_METHOD(vtiful_xls, insertText)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertDate(int $row, int $column, int $timestamp[, string $format, resource $formatHandle])
+/** {{{ \Vtiful\Kernel\Excel::insertDate(int $row, int $column, int $timestamp[, string $format, resource $formatHandle])
  */
 PHP_METHOD(vtiful_xls, insertDate)
 {
@@ -509,7 +517,7 @@ PHP_METHOD(vtiful_xls, insertDate)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertChart(int $row, int $column, resource $chartResource)
+/** {{{ \Vtiful\Kernel\Excel::insertChart(int $row, int $column, resource $chartResource)
  */
 PHP_METHOD(vtiful_xls, insertChart)
 {
@@ -532,7 +540,7 @@ PHP_METHOD(vtiful_xls, insertChart)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertUrl(int $row, int $column, string $url)
+/** {{{ \Vtiful\Kernel\Excel::insertUrl(int $row, int $column, string $url)
  */
 PHP_METHOD(vtiful_xls, insertUrl)
 {
@@ -566,7 +574,7 @@ PHP_METHOD(vtiful_xls, insertUrl)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_xls, insertImage)
 {
@@ -593,7 +601,7 @@ PHP_METHOD(vtiful_xls, insertImage)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
  */
 PHP_METHOD(vtiful_xls, insertFormula)
 {
@@ -616,7 +624,7 @@ PHP_METHOD(vtiful_xls, insertFormula)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
+/** {{{ \Vtiful\Kernel\Excel::autoFilter(int $rowStart, int $rowEnd, int $columnStart, int $columnEnd)
  */
 PHP_METHOD(vtiful_xls, autoFilter)
 {
@@ -636,7 +644,7 @@ PHP_METHOD(vtiful_xls, autoFilter)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::mergeCells(string $range, string $data)
+/** {{{ \Vtiful\Kernel\Excel::mergeCells(string $range, string $data)
  */
 PHP_METHOD(vtiful_xls, mergeCells)
 {
@@ -657,7 +665,7 @@ PHP_METHOD(vtiful_xls, mergeCells)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::setColumn(resource $format, string $range [, int $width])
+/** {{{ \Vtiful\Kernel\Excel::setColumn(resource $format, string $range [, int $width])
  */
 PHP_METHOD(vtiful_xls, setColumn)
 {
@@ -690,7 +698,7 @@ PHP_METHOD(vtiful_xls, setColumn)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::setRow(resource $format, string $range [, int $heitght])
+/** {{{ \Vtiful\Kernel\Excel::setRow(resource $format, string $range [, int $heitght])
  */
 PHP_METHOD(vtiful_xls, setRow)
 {
@@ -723,7 +731,7 @@ PHP_METHOD(vtiful_xls, setRow)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::freezePanes(int $row, int $column)
+/** {{{ \Vtiful\Kernel\Excel::freezePanes(int $row, int $column)
  */
 PHP_METHOD(vtiful_xls, freezePanes)
 {
@@ -742,7 +750,7 @@ PHP_METHOD(vtiful_xls, freezePanes)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::columnIndexFromString(string $index)
+/** {{{ \Vtiful\Kernel\Excel::columnIndexFromString(string $index)
  */
 PHP_METHOD(vtiful_xls, columnIndexFromString)
 {
@@ -756,7 +764,7 @@ PHP_METHOD(vtiful_xls, columnIndexFromString)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::stringFromColumnIndex(int $index)
+/** {{{ \Vtiful\Kernel\Excel::stringFromColumnIndex(int $index)
  */
 PHP_METHOD(vtiful_xls, stringFromColumnIndex)
 {
@@ -792,9 +800,53 @@ PHP_METHOD(vtiful_xls, stringFromColumnIndex)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::gridline(int $option = \Vtiful\Kernel\Excel::GRIDLINES_SHOW_ALL)
+ */
+PHP_METHOD(vtiful_xls, gridline)
+{
+    zend_long option = LXW_SHOW_ALL_GRIDLINES;
+    
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(option)
+    ZEND_PARSE_PARAMETERS_END();
+    
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+    
+    gridlines(&obj->write_ptr, option);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::zoom(int $scale)
+ */
+PHP_METHOD(vtiful_xls, zoom)
+{
+    zend_long scale = 10;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(scale)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    if (scale < 10) {
+        scale = 10;
+    }
+
+    if (scale > 400) {
+        scale = 400;
+    }
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    zoom(&obj->write_ptr, scale);
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
-/** {{{ \Vtiful\Kernel\xls::openFile()
+/** {{{ \Vtiful\Kernel\Excel::openFile()
  */
 PHP_METHOD(vtiful_xls, openFile)
 {
@@ -815,7 +867,7 @@ PHP_METHOD(vtiful_xls, openFile)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::openSheet()
+/** {{{ \Vtiful\Kernel\Excel::openSheet()
  */
 PHP_METHOD(vtiful_xls, openSheet)
 {
@@ -840,7 +892,7 @@ PHP_METHOD(vtiful_xls, openSheet)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::setType(array $rowType)
+/** {{{ \Vtiful\Kernel\Excel::setType(array $rowType)
  */
 PHP_METHOD(vtiful_xls, setType)
 {
@@ -856,7 +908,7 @@ PHP_METHOD(vtiful_xls, setType)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::getSheetData()
+/** {{{ \Vtiful\Kernel\Excel::getSheetData()
  */
 PHP_METHOD(vtiful_xls, getSheetData)
 {
@@ -878,7 +930,7 @@ PHP_METHOD(vtiful_xls, getSheetData)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::nextRow()
+/** {{{ \Vtiful\Kernel\Excel::nextRow()
  */
 PHP_METHOD(vtiful_xls, nextRow)
 {
@@ -903,7 +955,7 @@ PHP_METHOD(vtiful_xls, nextRow)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\xls::nextCellCallback()
+/** {{{ \Vtiful\Kernel\Excel::nextCellCallback()
  */
 PHP_METHOD(vtiful_xls, nextCellCallback)
 {
@@ -960,6 +1012,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, freezePanes,   xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
 
+        PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
+        
         PHP_ME(vtiful_xls, columnIndexFromString,  xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,  xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
@@ -999,6 +1054,11 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, XLSXIOREAD_SKIP_EMPTY_CELLS);
 #endif
 
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_HIDE_ALL",    LXW_HIDE_ALL_GRIDLINES)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_ALL",    LXW_SHOW_ALL_GRIDLINES)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_PRINT",  LXW_SHOW_PRINT_GRIDLINES)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_SCREEN", LXW_SHOW_SCREEN_GRIDLINES)
+    
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_STRING,   READ_TYPE_STRING);

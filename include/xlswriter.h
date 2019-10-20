@@ -169,6 +169,8 @@ STATIC void _prepare_defined_names(lxw_workbook *self);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
+void zoom(xls_resource_write_t *res, zend_long zoom);
+void gridlines(xls_resource_write_t *res, zend_long option);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
 void format_copy(lxw_format *new_format, lxw_format *other_format);
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);

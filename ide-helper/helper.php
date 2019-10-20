@@ -20,6 +20,11 @@ class Excel
     const SKIP_EMPTY_ROW = 0x01;
     const SKIP_EMPTY_CELLS = 0x02;
 
+    const GRIDLINES_HIDE_ALL = 0;
+    const GRIDLINES_SHOW_SCREEN = 1;
+    const GRIDLINES_SHOW_PRINT = 2;
+    const GRIDLINES_SHOW_ALL = 3;
+
     /**
      * Excel constructor.
      *
@@ -409,6 +414,45 @@ class Excel
      * @author viest
      */
     public function freezePanes(int $row, int $column): self
+    {
+        return $this;
+    }
+
+    /**
+     * Gridline
+     *
+     * Display or hide screen and print gridlines using one of the values of
+     *
+     * \Vtiful\Kernel\Excel::GRIDLINES_HIDE_ALL
+     * \Vtiful\Kernel\Excel::GRIDLINES_SHOW_ALL
+     * \Vtiful\Kernel\Excel::GRIDLINES_SHOW_PRINT
+     * \Vtiful\Kernel\Excel::GRIDLINES_SHOW_SCREEN
+     *
+     * Excel default is that the screen gridlines are on and the printed worksheet is off.
+     *
+     * @param int $option
+     *
+     * @return $this
+     *
+     * @author viest
+     */
+    public function gridline(int $option): self
+    {
+        return $this;
+    }
+
+    /**
+     * Worksheet zoom
+     *
+     * Set the worksheet zoom factor in the range 10 <= zoom <= 400:
+     *
+     * @param int $scale
+     *
+     * @return $this
+     *
+     * @author viest
+     */
+    public function zoom(int $scale): self
     {
         return $this;
     }

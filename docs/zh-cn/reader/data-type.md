@@ -12,6 +12,18 @@
 ./configure --enable-reader
 ```
 
+## 类型数组说明
+
+文档第三列是时间，你需要这样设置类型：
+
+```php
+[
+    2 => \Vtiful\Kernel\Excel::TYPE_TIMESTAMP,
+]
+```
+
+数组下标 `0` 对应文件 `第一列`；
+
 ## 示例
 
 ```bash
@@ -29,7 +41,8 @@ $excel->openFile('tutorial.xlsx')
 
 // 读取每行单元格数据时，可指定每个单元格数据类型进行读取
 var_dump($excel->nextRow([
-    \Vtiful\Kernel\Excel::TYPE_STRING, \Vtiful\Kernel\Excel::TYPE_STRING
+    \Vtiful\Kernel\Excel::TYPE_STRING,
+    \Vtiful\Kernel\Excel::TYPE_STRING
 ]));
 ```
 

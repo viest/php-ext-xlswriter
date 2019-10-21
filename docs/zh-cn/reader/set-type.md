@@ -10,6 +10,18 @@
 setType(array $type)
 ```
 
+## 类型数组说明
+
+文档第三列是时间，你需要这样设置类型：
+
+```php
+[
+    2 => \Vtiful\Kernel\Excel::TYPE_TIMESTAMP,
+]
+```
+
+数组下标 `0` 对应文件 `第一列`；
+
 ## 测试数据准备
 
 ```php

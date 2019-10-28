@@ -376,6 +376,8 @@ PHP_METHOD(vtiful_xls, header)
          type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, NULL);
          zval_ptr_dtor(header_value);
     ZEND_HASH_FOREACH_END();
+
+    SHEET_LINE_ADD(obj)
 }
 /* }}} */
 
@@ -397,8 +399,6 @@ PHP_METHOD(vtiful_xls, data)
 
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(data), data_r_value)
         if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
-            SHEET_LINE_ADD(obj)
-
             ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
                 type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->write_ptr, NULL, NULL);
                 zval_ptr_dtor(&bucket->val);

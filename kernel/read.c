@@ -53,11 +53,28 @@ int is_number(const char *value)
 /* }}} */
 
 /* {{{ */
+void data_to_null(zval *zv_result_t)
+{
+    if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
+        add_next_index_null(zv_result_t);
+    } else {
+        ZVAL_NULL(zv_result_t);
+    }
+}
+/* }}} */
+
+/* {{{ */
 void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_result_t)
 {
     if (type & READ_TYPE_DATETIME) {
         if (!is_number(string_value)) {
             goto STRING;
+        }
+
+        if (strlen(string_value) == 0) {
+            data_to_null(zv_result_t);
+
+            return;
         }
 
         double value = strtod(string_value, NULL);
@@ -80,6 +97,12 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
             goto STRING;
         }
 
+        if (strlen(string_value) == 0) {
+            data_to_null(zv_result_t);
+
+            return;
+        }
+
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
             add_next_index_double(zv_result_t, strtod(string_value, NULL));
         } else {
@@ -92,6 +115,12 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
     if (type & READ_TYPE_INT) {
         if (!is_number(string_value)) {
             goto STRING;
+        }
+
+        if (strlen(string_value) == 0) {
+            data_to_null(zv_result_t);
+
+            return;
         }
 
         zend_long _long_value;

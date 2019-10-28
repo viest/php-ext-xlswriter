@@ -35,13 +35,17 @@ var_dump($fileObject->nextRow());
 @unlink(__DIR__ . '/tutorial.xlsx');
 ?>
 --EXPECT--
-array(0) {
-}
-array(3) {
+array(2) {
   [0]=>
   int(1)
   [1]=>
   string(4) "Test"
+}
+array(3) {
+  [0]=>
+  NULL
+  [1]=>
+  string(0) ""
   [2]=>
   int(1568389354)
 }

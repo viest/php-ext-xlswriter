@@ -40,20 +40,13 @@ var_dump($data);
 @unlink(__DIR__ . '/tutorial.xlsx');
 ?>
 --EXPECT--
-array(3) {
+array(2) {
   [0]=>
   array(1) {
     [0]=>
     string(4) "Cost"
   }
   [1]=>
-  array(2) {
-    [0]=>
-    string(0) ""
-    [1]=>
-    string(0) ""
-  }
-  [2]=>
   array(1) {
     [0]=>
     string(5) "viest"

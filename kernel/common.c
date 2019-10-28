@@ -44,7 +44,7 @@ zend_string* str_pick_up(zend_string *left, char *right)
 
     memcpy(ZSTR_VAL(full) + _left_length, right, strlen(right));
 
-    zend_string_release(left);
+    ZSTR_VAL(full)[_extend_length] = '\0';
 
     return full;
 }

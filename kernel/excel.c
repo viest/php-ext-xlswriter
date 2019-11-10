@@ -892,6 +892,20 @@ PHP_METHOD(vtiful_xls, openSheet)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::sheetList()
+ */
+PHP_METHOD(vtiful_xls, sheetList)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+
+    if (obj->read_ptr.file_t == NULL) {
+        RETURN_NULL();
+    }
+
+    sheet_list(obj->read_ptr.file_t, return_value);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::setType(array $rowType)
  */
 PHP_METHOD(vtiful_xls, setType)
@@ -1021,6 +1035,7 @@ zend_function_entry xls_methods[] = {
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, openSheet,        xls_open_sheet_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, sheetList,        NULL,                           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,     NULL,                           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextRow,          NULL,                           ZEND_ACC_PUBLIC)

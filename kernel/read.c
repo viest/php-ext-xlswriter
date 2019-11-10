@@ -42,6 +42,28 @@ xlsxioreadersheet sheet_open(xlsxioreader file_t, const zend_string *zs_sheet_na
 /* }}} */
 
 /* {{{ */
+void sheet_list(xlsxioreader file_t, zval *zv_result_t)
+{
+    const char *sheet_name = NULL;
+    xlsxioreadersheetlist sheet_list = NULL;
+
+    if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
+        array_init(zv_result_t);
+    }
+
+    if ((sheet_list = xlsxioread_sheetlist_open(file_t)) == NULL) {
+        return;
+    }
+
+    while ((sheet_name = xlsxioread_sheetlist_next(sheet_list)) != NULL) {
+        add_next_index_stringl(zv_result_t, sheet_name, strlen(sheet_name));
+    }
+
+    xlsxioread_sheetlist_close(sheet_list);
+}
+/* }}} */
+
+/* {{{ */
 int is_number(const char *value)
 {
     if (strspn(value, ".0123456789") == strlen(value)) {

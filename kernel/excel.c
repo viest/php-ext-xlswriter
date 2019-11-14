@@ -403,6 +403,8 @@ PHP_METHOD(vtiful_xls, data)
                 type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->write_ptr, NULL, NULL);
                 zval_ptr_dtor(&bucket->val);
             ZEND_HASH_FOREACH_END();
+
+            SHEET_LINE_ADD(obj)
         }
     ZEND_HASH_FOREACH_END();
 }

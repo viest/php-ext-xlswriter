@@ -24,6 +24,7 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     xls_read_sources="
     kernel/read.c \
+    kernel/csv.c \
     "
 
     minizip_sources="

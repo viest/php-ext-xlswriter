@@ -1,14 +1,20 @@
 ![php-excel](resource/logo.png)
 
-[![Build Status](https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master)](https://travis-ci.org/viest/php-ext-xlswriter)
-[![Build status](https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true)](https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master)
-[![](https://img.shields.io/github/release/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
-[![](https://img.shields.io/badge/PHP-%3E%3D%207.0-brightgreen.svg)](https://github.com/viest/php-ext-xlswriter)
-[![](https://img.shields.io/github/contributors/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
-[![](https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg)](https://github.com/viest/php-ext-xlswriter)
-[![](https://img.shields.io/badge/license-BSD-green.svg)](https://github.com/viest/php-ext-xlswriter)
-[![](https://img.shields.io/github/issues/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield)
+<div align=center>
+<a href="https://travis-ci.org/viest/php-ext-xlswriter"><img src="https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master"/></a>
+<a href="https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master"><img src="https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter/releases"><img src="https://img.shields.io/github/release/viest/php-ext-excel-export.svg"/></a>
+</div>
+
+<div align=center>
+<a href="https://opencollective.com/php-ext-xlswriter"><img src="https://opencollective.com/php-ext-xlswriter/all/badge.svg?label=financial+contributors"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/PHP-%3E%3D%207.0-brightgreen.svg"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/github/contributors/viest/php-ext-excel-export.svg"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/license-BSD-green.svg"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/github/issues/viest/php-ext-excel-export.svg"/></a>
+<a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>
+</div>
 
 #### Why use xlswriter
 
@@ -66,9 +72,45 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 
 [![pecl](resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 
+#### IDE Helper
+
+```bash
+composer require viest/php-ext-xlswriter-ide-helper:dev-master
+```
+
 #### Exchange group
 
 <img width="160" src="resource/qq.jpg"/>
+
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/viest/php-ext-xlswriter/graphs/contributors"><img src="https://opencollective.com/php-ext-xlswriter/contributors.svg?width=890&button=false" /></a>
+
+### Financial Contributors
+
+Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/php-ext-xlswriter/contribute)]
+
+#### Individuals
+
+<a href="https://opencollective.com/php-ext-xlswriter"><img src="https://opencollective.com/php-ext-xlswriter/individuals.svg?width=890"></a>
+
+#### Organizations
+
+Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/php-ext-xlswriter/contribute)]
+
+<a href="https://opencollective.com/php-ext-xlswriter/organization/0/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/0/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/1/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/1/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/2/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/2/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/3/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/3/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/4/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/4/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/5/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/5/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/6/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/6/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/7/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/7/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/8/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/8/avatar.svg"></a>
+<a href="https://opencollective.com/php-ext-xlswriter/organization/9/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/9/avatar.svg"></a>
 
 #### License
 

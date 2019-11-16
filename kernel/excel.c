@@ -828,7 +828,7 @@ PHP_METHOD(vtiful_xls, gridline)
  */
 PHP_METHOD(vtiful_xls, zoom)
 {
-    zend_long scale = 10;
+    zend_long scale = 100;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(scale)

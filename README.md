@@ -1,9 +1,9 @@
 ![php-excel](resource/logo.png)
 
 <div align=center>
-[![Build Status](https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master)](https://travis-ci.org/viest/php-ext-xlswriter)
-[![Build status](https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true)](https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master)
-[![](https://img.shields.io/github/release/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
+<img src="https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master"/>
+<img src="https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true"/>
+<img src="https://img.shields.io/github/release/viest/php-ext-excel-export.svg"/>
 </div>
 
 [![Build Status](https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master)](https://travis-ci.org/viest/php-ext-xlswriter)

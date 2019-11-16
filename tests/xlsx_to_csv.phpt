@@ -1,7 +1,8 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
 --FILE--
 <?php
 $config   = ['path' => './tests'];

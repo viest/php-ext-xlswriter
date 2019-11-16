@@ -54,6 +54,12 @@ array(1) {
   [0]=>
   string(4) "Cost"
 }
+array(2) {
+  [0]=>
+  string(0) ""
+  [1]=>
+  string(0) ""
+}
 array(1) {
   [0]=>
   string(5) "viest"

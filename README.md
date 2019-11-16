@@ -16,7 +16,7 @@
 <a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>
 </div>
 
-#### Why use xlswriter
+## Why use xlswriter
 
 Please refer to the image below. PHPExcel has been unable to work properly for memory reasons at 40,000 and 100000 points, but it can be resolved by modifying the ini configuration, but the time may take longer to complete the work;
 
@@ -64,21 +64,21 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 * Full mode: Just 3S, the memory is only 558MB;
 * Cursor mode: Just 2.8S, memory is only <1MB;
 
-#### Documents
+## Documents
 
 [文档|Documents](https://xlswriter-docs.viest.me/)
 
-#### PECL Repository
+## PECL Repository
 
 [![pecl](resource/pecl.png)](https://pecl.php.net/package/xlswriter)
 
-#### IDE Helper
+## IDE Helper
 
 ```bash
 composer require viest/php-ext-xlswriter-ide-helper:dev-master
 ```
 
-#### Exchange group
+## Exchange group
 
 <img width="160" src="resource/qq.jpg"/>
 
@@ -112,9 +112,8 @@ Support this project with your organization. Your logo will show up here with a 
 <a href="https://opencollective.com/php-ext-xlswriter/organization/8/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/8/avatar.svg"></a>
 <a href="https://opencollective.com/php-ext-xlswriter/organization/9/website"><img src="https://opencollective.com/php-ext-xlswriter/organization/9/avatar.svg"></a>
 
-#### License
+## License
 
-FreeBSD license
-
+BSD License
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_large)

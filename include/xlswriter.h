@@ -37,6 +37,7 @@
 #ifdef ENABLE_READER
 #include "xlsxio_read.h"
 #include "read.h"
+#include "csv.h"
 
 typedef struct {
     xlsxioreader      file_t;

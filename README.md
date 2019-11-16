@@ -1,8 +1,14 @@
 ![php-excel](resource/logo.png)
 
+<div align=center>
 [![Build Status](https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master)](https://travis-ci.org/viest/php-ext-xlswriter)
-[![Financial Contributors on Open Collective](https://opencollective.com/php-ext-xlswriter/all/badge.svg?label=financial+contributors)](https://opencollective.com/php-ext-xlswriter) [![Build status](https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true)](https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true)](https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master)
 [![](https://img.shields.io/github/release/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
+</div>
+
+[![Build Status](https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master)](https://travis-ci.org/viest/php-ext-xlswriter)
+[![Build status](https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true)](https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master)
+[![Financial Contributors on Open Collective](https://opencollective.com/php-ext-xlswriter/all/badge.svg?label=financial+contributors)](https://opencollective.com/php-ext-xlswriter)
 [![](https://img.shields.io/badge/PHP-%3E%3D%207.0-brightgreen.svg)](https://github.com/viest/php-ext-xlswriter)
 [![](https://img.shields.io/github/contributors/viest/php-ext-excel-export.svg)](https://github.com/viest/php-ext-xlswriter)
 [![](https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg)](https://github.com/viest/php-ext-xlswriter)

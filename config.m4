@@ -113,6 +113,13 @@ if test "$PHP_XLSWRITER" != "no"; then
             ],[
                 -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
             ])
+            PHP_CHECK_LIBRARY(xlsxwriter, lxw_fopen,
+            [
+                AC_DEFINE(HAVE_LXW_OPEN, 1, [ lxw_fopen available in 0.8.8 ])
+            ],[
+            ],[
+                -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
+            ])
         fi
 
         AC_DEFINE(HAVE_LIBXLSXWRITER, 1, [ use system libxlsxwriter ])
@@ -133,6 +140,10 @@ if test "$PHP_XLSWRITER" != "no"; then
 
         if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 807; then
             AC_DEFINE(HAVE_WORKBOOK_ADD_VBA_PROJECT, 1, [ workbook_add_vba_project available in 0.8.7 ])
+        fi
+
+        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 808; then
+            AC_DEFINE(HAVE_LXW_OPEN, 1, [ lxw_fopen available in 0.8.8 ])
         fi
         dnl see library/CMakeLists.txt
         LIBOPT="-DNOCRYPT -DNOUNCRYPT"

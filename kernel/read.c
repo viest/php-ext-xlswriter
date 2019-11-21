@@ -232,6 +232,8 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
         }
 
         data_to_custom_type(_string_value, _type, zv_result_t);
+
+        free(_string_value);
     }
 
     return XLSWRITER_TRUE;

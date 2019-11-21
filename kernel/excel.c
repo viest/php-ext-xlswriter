@@ -202,7 +202,7 @@ ZEND_END_ARG_INFO()
  */
 PHP_METHOD(vtiful_xls, __construct)
 {
-    zval *config, *c_path;
+    zval *config = NULL, *c_path = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ARRAY(config)
@@ -228,9 +228,9 @@ PHP_METHOD(vtiful_xls, __construct)
  */
 PHP_METHOD(vtiful_xls, fileName)
 {
+    char *sheet_name = NULL;
     zval file_path, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
-    char *sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(zs_file_name)
@@ -265,8 +265,8 @@ PHP_METHOD(vtiful_xls, fileName)
  */
 PHP_METHOD(vtiful_xls, addSheet)
 {
-    zend_string *zs_sheet_name = NULL;
     char *sheet_name = NULL;
+    zend_string *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
@@ -323,9 +323,9 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
  */
 PHP_METHOD(vtiful_xls, constMemory)
 {
+    char *sheet_name = NULL;
     zval file_path, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
-    char *sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(zs_file_name)
@@ -363,8 +363,8 @@ PHP_METHOD(vtiful_xls, constMemory)
  */
 PHP_METHOD(vtiful_xls, header)
 {
-    zval *header, *header_value;
     zend_long header_l_key;
+    zval *header = NULL, *header_value = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_ARRAY(header)
@@ -418,7 +418,7 @@ PHP_METHOD(vtiful_xls, data)
  */
 PHP_METHOD(vtiful_xls, output)
 {
-    zval rv, *file_path;
+    zval rv, *file_path = NULL;
 
     file_path = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_FIL), 0, &rv TSRMLS_DC);
 
@@ -446,9 +446,9 @@ PHP_METHOD(vtiful_xls, getHandle)
  */
 PHP_METHOD(vtiful_xls, insertText)
 {
-    zval *data, *format_handle = NULL;
-    zend_long row, column;
+    zend_long row = 0, column = 0;
     zend_string *format = NULL;
+    zval *data = NULL, *format_handle = NULL;
 
     ZEND_PARSE_PARAMETERS_START(3, 5)
             Z_PARAM_LONG(row)
@@ -480,7 +480,7 @@ PHP_METHOD(vtiful_xls, insertText)
 PHP_METHOD(vtiful_xls, insertDate)
 {
     zval *data = NULL, *format_handle = NULL;
-    zend_long row, column;
+    zend_long row = 0, column = 0;
     zend_string *format = NULL;
 
     ZEND_PARSE_PARAMETERS_START(3, 5)
@@ -527,8 +527,8 @@ PHP_METHOD(vtiful_xls, insertDate)
  */
 PHP_METHOD(vtiful_xls, insertChart)
 {
-    zval      *chart_resource;
-    zend_long row, column;
+    zval *chart_resource = NULL;
+    zend_long row = 0, column = 0;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
             Z_PARAM_LONG(row)
@@ -550,7 +550,7 @@ PHP_METHOD(vtiful_xls, insertChart)
  */
 PHP_METHOD(vtiful_xls, insertUrl)
 {
-    zend_long row, column;
+    zend_long row = 0, column = 0;
     zend_string *url = NULL;
     zval *format_handle = NULL;
 
@@ -584,8 +584,8 @@ PHP_METHOD(vtiful_xls, insertUrl)
  */
 PHP_METHOD(vtiful_xls, insertImage)
 {
-    zval *image;
-    zend_long row, column;
+    zval *image = NULL;
+    zend_long row = 0, column = 0;
     double width = 1, height = 1;
 
     ZEND_PARSE_PARAMETERS_START(3, 5)
@@ -611,13 +611,13 @@ PHP_METHOD(vtiful_xls, insertImage)
  */
 PHP_METHOD(vtiful_xls, insertFormula)
 {
-    zval *formula;
-    zend_long row, column;
+    zend_string *formula = NULL;
+    zend_long row = 0, column = 0;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
-            Z_PARAM_ZVAL(formula)
+            Z_PARAM_STR(formula)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -634,7 +634,7 @@ PHP_METHOD(vtiful_xls, insertFormula)
  */
 PHP_METHOD(vtiful_xls, autoFilter)
 {
-    zend_string *range;
+    zend_string *range = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_STR(range)
@@ -654,7 +654,7 @@ PHP_METHOD(vtiful_xls, autoFilter)
  */
 PHP_METHOD(vtiful_xls, mergeCells)
 {
-    zend_string *range, *data;
+    zend_string *range = NULL, *data = NULL;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
             Z_PARAM_STR(range)
@@ -675,8 +675,8 @@ PHP_METHOD(vtiful_xls, mergeCells)
  */
 PHP_METHOD(vtiful_xls, setColumn)
 {
-    zval *format_handle;
-    zend_string *range;
+    zval *format_handle = NULL;
+    zend_string *range = NULL;
 
     double width = 0;
     int    argc  = ZEND_NUM_ARGS();
@@ -708,8 +708,8 @@ PHP_METHOD(vtiful_xls, setColumn)
  */
 PHP_METHOD(vtiful_xls, setRow)
 {
-    zval *format_handle;
-    zend_string *range;
+    zval *format_handle = NULL;
+    zend_string *range = NULL;
 
     double height = 0;
     int    argc  = ZEND_NUM_ARGS();

@@ -262,6 +262,14 @@ void zoom(xls_resource_write_t *res, zend_long zoom)
 }
 
 /*
+ * Add data validations to a worksheet
+ */
+void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation)
+{
+    worksheet_data_validation_cell(res->worksheet, CELL(ZSTR_VAL(range)), validation);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

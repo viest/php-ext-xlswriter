@@ -33,6 +33,7 @@
 #include "exception.h"
 #include "format.h"
 #include "chart.h"
+#include "validation.h"
 
 #ifdef ENABLE_READER
 #include "xlsxio_read.h"
@@ -77,6 +78,10 @@ typedef struct {
     lxw_chart_series *series;
 } xls_resource_chart_t;
 
+typedef struct {
+    lxw_data_validation *validation;
+} xls_resource_validation_t;
+
 typedef struct _vtiful_xls_object {
     xls_resource_read_t  read_ptr;
     xls_resource_write_t write_ptr;
@@ -94,6 +99,11 @@ typedef struct _vtiful_chart_object {
     zend_object zo;
 } chart_object;
 
+typedef struct _vtiful_validation_object {
+    xls_resource_validation_t ptr;
+    zend_object zo;
+} validation_object;
+
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
     return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
 }
@@ -106,15 +116,20 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
     return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
 }
 
+static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
+    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+}
+
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
 #define REGISTER_CLASS_PROPERTY_NULL(class_name, property_name, acc) \
     zend_declare_property_null(class_name, ZEND_STRL(property_name), acc);
 
-#define Z_XLS_P(zv)    php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
-#define Z_CHART_P(zv)  php_vtiful_chart_fetch_object(Z_OBJ_P(zv));
-#define Z_FORMAT_P(zv) php_vtiful_format_fetch_object(Z_OBJ_P(zv));
+#define Z_XLS_P(zv)        php_vtiful_xls_fetch_object(Z_OBJ_P(zv));
+#define Z_CHART_P(zv)      php_vtiful_chart_fetch_object(Z_OBJ_P(zv));
+#define Z_FORMAT_P(zv)     php_vtiful_format_fetch_object(Z_OBJ_P(zv));
+#define Z_VALIDATION_P(zv) php_vtiful_validation_fetch_object(Z_OBJ_P(zv));
 
 #define WORKBOOK_NOT_INITIALIZED(xls_object_t)                                                                       \
     do {                                                                                                             \
@@ -159,6 +174,7 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 lxw_format           * zval_get_format(zval *handle);
 xls_resource_write_t * zval_get_resource(zval *handle);
 xls_resource_chart_t * zval_get_chart(zval *resource);
+lxw_data_validation  * zval_get_validation(zval *resource);
 
 STATIC lxw_error _store_defined_name(lxw_workbook *self, const char *name, const char *app_name, const char *formula, int16_t index, uint8_t hidden);
 
@@ -179,6 +195,7 @@ void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res);
 void formula_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
+void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation);
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);

@@ -824,6 +824,28 @@ PHP_METHOD(vtiful_xls, gridline)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::validation()
+ */
+PHP_METHOD(vtiful_xls, validation)
+{
+    zend_string *range = NULL;
+    zval *validation_handle = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+            Z_PARAM_STR(range)
+            Z_PARAM_RESOURCE(validation_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    validation(&obj->write_ptr, range, zval_get_validation(validation_handle));
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::zoom(int $scale)
  */
 PHP_METHOD(vtiful_xls, zoom)
@@ -1060,7 +1082,9 @@ zend_function_entry xls_methods[] = {
 
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
-        
+
+        PHP_ME(vtiful_xls, validation,    NULL,   ZEND_ACC_PUBLIC)
+
         PHP_ME(vtiful_xls, columnIndexFromString,  xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,  xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 

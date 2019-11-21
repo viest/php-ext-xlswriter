@@ -507,14 +507,22 @@ STATIC void
 _prepare_drawings(lxw_workbook *self)
 {
     lxw_worksheet *worksheet;
+#ifdef HAVE_LXW_OPEN
+    lxw_object_properties *image_options;
+#else
     lxw_image_options *image_options;
+#endif
     uint16_t chart_ref_id = 0;
     uint16_t image_ref_id = 0;
     uint16_t drawing_id = 0;
 
     STAILQ_FOREACH(worksheet, self->worksheets, list_pointers) {
 
+#ifdef HAVE_LXW_OPEN
+        if (STAILQ_EMPTY(worksheet->image_props)
+#else
         if (STAILQ_EMPTY(worksheet->image_data)
+#endif
             && STAILQ_EMPTY(worksheet->chart_data))
             continue;
 
@@ -534,7 +542,11 @@ _prepare_drawings(lxw_workbook *self)
                                    ordered_list_pointers);
         }
 
+#ifdef HAVE_LXW_OPEN
+        STAILQ_FOREACH(image_options, worksheet->image_props, list_pointers) {
+#else
         STAILQ_FOREACH(image_options, worksheet->image_data, list_pointers) {
+#endif
 
             if (image_options->image_type == LXW_IMAGE_PNG)
                 self->has_png = LXW_TRUE;

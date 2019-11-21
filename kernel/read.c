@@ -290,6 +290,11 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
     ZVAL_LONG(&args[0], (row - 1));
     ZVAL_LONG(&args[1], (col - 1));
 
+    if (value == NULL) {
+        ZVAL_NULL(&args[2]);
+        goto CALL_USER_FUNCTION;
+    }
+
     if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY) {
         zend_long _long = 0; double _double = 0;
 
@@ -317,6 +322,8 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
         ZVAL_NULL(&args[2]);
         data_to_custom_type(value, _type, &args[2]);
     }
+
+    CALL_USER_FUNCTION:
 
     zend_call_function(_callback_data->fci, _callback_data->fci_cache);
 

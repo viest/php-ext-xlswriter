@@ -289,9 +289,9 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
 
     ZVAL_LONG(&args[0], (row - 1));
     ZVAL_LONG(&args[1], (col - 1));
+    ZVAL_NULL(&args[2]);
 
     if (value == NULL) {
-        ZVAL_NULL(&args[2]);
         goto CALL_USER_FUNCTION;
     }
 
@@ -319,7 +319,6 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
             }
         }
 
-        ZVAL_NULL(&args[2]);
         data_to_custom_type(value, _type, &args[2]);
     }
 

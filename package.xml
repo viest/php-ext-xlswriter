@@ -3,8 +3,7 @@
  <name>xlswriter</name>
  <channel>pecl.php.net</channel>
  <summary>Efficient and fast xlsx file extension.</summary>
- <description>
-  xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file.
+ <description>xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file.
 
   Writer
 
@@ -27,8 +26,7 @@
   - Full read data
   - Cursor read data
   - Read by data type
-  - Xlsx to csv
- </description>
+  - Xlsx to csv</description>
  <lead>
   <name>Wang Jiexin</name>
   <user>wjx</user>
@@ -36,7 +34,7 @@
   <active>yes</active>
  </lead>
  <date>2019-11-21</date>
- <time>22:30:00</time>
+ <time>14:40:48</time>
  <version>
   <release>1.3.2</release>
   <api>1.3.2</api>
@@ -57,23 +55,23 @@
  <contents>
   <dir name="/">
    <file md5sum="1cf796971bf051dce46bb715ab550289" name="include/chart.h" role="src" />
-   <file name="include/csv.h" role="src" />
+   <file md5sum="582011354c5fedc670cd320ff56bf14d" name="include/csv.h" role="src" />
    <file md5sum="f489baf3d3595b98dacd7b51bc6a9125" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
-   <file md5sum="0ac3fdfc167a12075320d299fca2e1eb" name="include/xlswriter.h" role="src" />
-   <file md5sum="a93bd84834d2a10c2af78598d90b8d7e" name="include/read.h" role="src" />
+   <file md5sum="e89c9bd840f3840d051a45c8d9cc21d9" name="include/xlswriter.h" role="src" />
+   <file md5sum="70e5423951513770ffbef5fa2092a046" name="include/read.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
-   <file md5sum="24cfe5075b5f5c6e96d15d3bcefcf191" name="kernel/chart.c" role="src" />
-   <file md5sum="f1f86ab07b36f4795365db15061ea9d4" name="kernel/common.c" role="src" />
-   <file name="kernel/csv.c" role="src" />
-   <file md5sum="5eb5038e1db6226aeae8d93221746cfa" name="kernel/excel.c" role="src" />
+   <file md5sum="8072d43e466085a552f06b34f4fe1352" name="kernel/chart.c" role="src" />
+   <file md5sum="734d6d2748d67100ef4befea5fd1089d" name="kernel/common.c" role="src" />
+   <file md5sum="e26b9880a012607f0917bfbe496066c2" name="kernel/csv.c" role="src" />
+   <file md5sum="3b70020aaa219cf2a9bded9357e0d269" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
-   <file md5sum="b475b4d982afa5c969762143ace3977a" name="kernel/format.c" role="src" />
+   <file md5sum="84049ca59eca54a3aed97233b16295bd" name="kernel/format.c" role="src" />
    <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
-   <file md5sum="b4208b4ef033e484211633f401e19e80" name="kernel/write.c" role="src" />
-   <file md5sum="9fd7b1f77e31ef62809113b2ce7f1755" name="kernel/read.c" role="src" />
+   <file md5sum="853dd3f2920ceb3a009d3a4297e164d4" name="kernel/write.c" role="src" />
+   <file md5sum="4f6aaed2b5ec6e0d443643b44c4cffa2" name="kernel/read.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
    <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
@@ -218,24 +216,24 @@
    <file md5sum="95fca9449059d583fc0b54cf7c571c8f" name="tests/open_xlsx_next_row_with_data_type_date.phpt" role="test" />
    <file md5sum="d39c67c041982264d563450737396e00" name="tests/open_xlsx_next_row_with_data_type_date_array_index.phpt" role="test" />
    <file md5sum="68628ad9158f5860917860eef232cbf3" name="tests/open_xlsx_next_row_with_data_type_string.phpt" role="test" />
-   <file md5sum="d8b2431b0ad8bcb63bafbbac6f4373e7" name="tests/open_xlsx_next_row_with_set_type.phpt" role="test" />
+   <file md5sum="0a138cc18a114defaf4f6bc36173d8fb" name="tests/open_xlsx_next_row_with_set_type.phpt" role="test" />
    <file md5sum="1f75d70aa9fb4590f4982fbe4070da36" name="tests/open_xlsx_sheet.phpt" role="test" />
    <file md5sum="90b5a90b6687d034a5cc64ae35a41fb7" name="tests/open_xlsx_sheet_flag.phpt" role="test" />
-   <file name="tests/open_xlsx_sheet_list.phpt" role="test" />
+   <file md5sum="7311707c0af586c68424e05e956e3d79" name="tests/open_xlsx_sheet_list.phpt" role="test" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="test" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
    <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
-   <file name="tests/xlsx_to_csv.phpt" role="test" />
-   <file name="tests/zoom.phpt" role="test" />
+   <file md5sum="42b26f050d9291509d6f583ef43ebde9" name="tests/xlsx_to_csv.phpt" role="test" />
+   <file md5sum="a9af7f4ca385ba41b008b50ac67f8e96" name="tests/zoom.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="601a053cb6f200a24303ac8d3627361c" name="README.md" role="doc" />
-   <file md5sum="11ec16e9c9f5c6552167d258ac95f725" name="README_zh.md" role="doc" />
+   <file md5sum="eaeb6282f03795ecd5b977d9e2c3f99b" name="README.md" role="doc" />
+   <file md5sum="2be47018557008ea135ec70e47c43621" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
-   <file md5sum="5a265f5d0dd6a3aff845cd2056f7e515" name="config.m4" role="src" />
+   <file md5sum="363c74b51a652a02684b47d708a4372f" name="config.m4" role="src" />
    <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="69d8f8bb1bf2918f32b579729b5ffc4e" name="php_xlswriter.h" role="src" />
+   <file md5sum="ca56860a64463b285e96519376051c20" name="php_xlswriter.h" role="src" />
    <file md5sum="a599c080be5456b40d04776e95670c89" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -267,9 +265,9 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT freeze panes
-    - FEAT set font
-    - Refactor format background
+- FEAT freeze panes
+- FEAT set font
+- Refactor format background
    </notes>
   </release>
   <release>

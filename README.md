@@ -64,9 +64,11 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 * Full mode: Just 3S, the memory is only 558MB;
 * Cursor mode: Just 2.8S, memory is only <1MB;
 
-## Documents
+## [Documents](https://xlswriter-docs.viest.me/)
 
-[文档|Documents](https://xlswriter-docs.viest.me/)
+<div align=center>
+<a href="https://xlswriter-docs.viest.me/"><img src="resource/demo.png"/></a>
+</div>
 
 ## PECL Repository
 

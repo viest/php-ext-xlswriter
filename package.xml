@@ -2,24 +2,44 @@
 <package packagerversion="1.10.9" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
  <name>xlswriter</name>
  <channel>pecl.php.net</channel>
- <summary>An efficient and fast xlsx file export extension.</summary>
- <description>An efficient and fast xlsx file export extension for PHP.
-        - Quickly export xlsx files in php projects.
-        - Export xlsx files under fixed memory.
-        - Insert a calculation formula in an xlsx file.
-        - Insert a local picture in an xlsx file.
-        - Merging cells and cell styles.</description>
+ <summary>Efficient and fast xlsx file extension.</summary>
+ <description>
+  xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file.
+
+  Writer
+
+  - 100% compatible Excel XLSX files.
+  - Full Excel formatting.
+  - Merged cells.
+  - Defined names.
+  - Autofilters.
+  - Charts.
+  - Data validation and drop down lists.
+  - Worksheet PNG/JPEG images.
+  - Memory optimization mode for writing large files.
+  - Works on Linux, FreeBSD, OpenBSD, OS X, Windows.
+  - Compiles for 32 and 64 bit.
+  - FreeBSD License.
+  - The only dependency is on zlib.
+
+  Reader
+
+  - Full read data
+  - Cursor read data
+  - Read by data type
+  - Xlsx to csv
+ </description>
  <lead>
   <name>Wang Jiexin</name>
   <user>wjx</user>
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-10-11</date>
- <time>14:22:14</time>
+ <date>2019-11-21</date>
+ <time>22:30:00</time>
  <version>
-  <release>1.3.1</release>
-  <api>1.3.1</api>
+  <release>1.3.2</release>
+  <api>1.3.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -27,13 +47,17 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT freeze panes
-- FEAT set font
-- Refactor format background
+- FEAT display or hide screen and print gridlines.
+- FEAT worksheet zoom.
+- FEAT data method is written by default from the file header.
+- FEAT returns null if the type is specified and the cell is empty.
+- FEAT sheet list.
+- FEAT xlsx to csv.
  </notes>
  <contents>
   <dir name="/">
    <file md5sum="1cf796971bf051dce46bb715ab550289" name="include/chart.h" role="src" />
+   <file name="include/csv.h" role="src" />
    <file md5sum="f489baf3d3595b98dacd7b51bc6a9125" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
@@ -43,6 +67,7 @@
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
    <file md5sum="24cfe5075b5f5c6e96d15d3bcefcf191" name="kernel/chart.c" role="src" />
    <file md5sum="f1f86ab07b36f4795365db15061ea9d4" name="kernel/common.c" role="src" />
+   <file name="kernel/csv.c" role="src" />
    <file md5sum="5eb5038e1db6226aeae8d93221746cfa" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
    <file md5sum="b475b4d982afa5c969762143ace3977a" name="kernel/format.c" role="src" />
@@ -229,6 +254,24 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-10-11</date>
+   <time>14:22:14</time>
+   <version>
+    <release>1.3.1</release>
+    <api>1.3.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FEAT freeze panes
+    - FEAT set font
+    - Refactor format background
+   </notes>
+  </release>
   <release>
    <date>2019-09-25</date>
    <time>10:51:58</time>

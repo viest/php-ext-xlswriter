@@ -66,7 +66,7 @@
     * [Font](en/yang-shi-lie-biao/font.md)
     * [Number format](en/yang-shi-lie-biao/number.md)
   * [CSV](en/csv/README.md)
-    * [XLSX转为CSV](en/csv/put-csv.md)
+    * [XLSX to CSV](en/csv/put-csv.md)
   * [Assistant functions](en/helper/README.md)
     * [Column index transform](en/helper/column-index-number-string-transform.md)
 * [中文简体](zh-cn/README.md)

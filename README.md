@@ -66,9 +66,7 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 
 ## [Documents](https://xlswriter-docs.viest.me/)
 
-<div align=center>
-<a href="https://xlswriter-docs.viest.me/"><img src="resource/demo.png"/></a>
-</div>
+Includes extensive and detailed instructions that make it easy to get started with xlswriter.
 
 ## PECL Repository
 

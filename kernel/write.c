@@ -176,9 +176,9 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 /*
  * Write the image to the file
  */
-void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res)
+void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format)
 {
-    worksheet_write_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(value), NULL);
+    worksheet_write_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(value), format);
 }
 
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res)

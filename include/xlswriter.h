@@ -78,10 +78,11 @@ typedef struct {
 } xls_resource_chart_t;
 
 typedef struct _vtiful_xls_object {
-    xls_resource_read_t  read_ptr;
-    xls_resource_write_t write_ptr;
-    zend_long            write_line;
-    zend_object          zo;
+    xls_resource_read_t   read_ptr;
+    xls_resource_write_t  write_ptr;
+    zend_long             write_line;
+    xls_resource_format_t format_ptr;
+    zend_object           zo;
 } xls_object;
 
 typedef struct _vtiful_format_object {
@@ -179,11 +180,11 @@ void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
-void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res);
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
 void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
+void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
 
 lxw_error workbook_file(xls_resource_write_t *self);

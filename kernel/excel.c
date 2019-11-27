@@ -176,6 +176,11 @@ ZEND_BEGIN_ARG_INFO_EX(xls_put_csv_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, fp)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_put_csv_callback_arginfo, 0, 0, 2)
+                ZEND_ARG_INFO(0, callback)
+                ZEND_ARG_INFO(0, fp)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_set_type_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, zv_type_t)
 ZEND_END_ARG_INFO()
@@ -974,7 +979,36 @@ PHP_METHOD(vtiful_xls, putCSV)
 
     zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
-    if (xlsx_to_csv(fp, obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW) == XLSWRITER_TRUE) {
+    if (xlsx_to_csv(fp, obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, NULL, NULL) == XLSWRITER_TRUE) {
+        RETURN_TRUE;
+    }
+
+    RETURN_FALSE;
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::putCSVCallback()
+ */
+PHP_METHOD(vtiful_xls, putCSVCallback)
+{
+    zval *fp = NULL, *zv_type = NULL;
+    zend_fcall_info       fci       = empty_fcall_info;
+    zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+            Z_PARAM_FUNC(fci, fci_cache)
+            Z_PARAM_RESOURCE(fp)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.sheet_t) {
+        RETURN_FALSE;
+    }
+
+    zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+
+    if (xlsx_to_csv(fp, obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, &fci, &fci_cache) == XLSWRITER_TRUE) {
         RETURN_TRUE;
     }
 
@@ -1097,6 +1131,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, openSheet,        xls_open_sheet_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, putCSV,           xls_put_csv_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, putCSVCallback,   xls_put_csv_callback_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, sheetList,        NULL,                           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,     NULL,                           ZEND_ACC_PUBLIC)

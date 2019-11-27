@@ -186,6 +186,7 @@
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="test" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
+   <file name="tests/default_format.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
    <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
    <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />

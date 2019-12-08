@@ -162,7 +162,10 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
 
     {
         zend_long _long = 0; double _double = 0;
-        is_numeric_string(string_value, strlen(string_value), &_long, &_double, 0);
+
+        if (!(type & READ_TYPE_STRING)) {
+            is_numeric_string(string_value, strlen(string_value), &_long, &_double, 0);
+        }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
             if (_double > 0) {

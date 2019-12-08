@@ -48,7 +48,7 @@ array(2) {
     [0]=>
     string(5) "Viest"
     [1]=>
-    int(24)
+    string(2) "24"
     [2]=>
     int(1568877706)
   }

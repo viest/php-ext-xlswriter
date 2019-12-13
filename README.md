@@ -64,9 +64,9 @@ Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory
 * Full mode: Just 3S, the memory is only 558MB;
 * Cursor mode: Just 2.8S, memory is only <1MB;
 
-## Documents
+## [Documents](https://xlswriter-docs.viest.me/)
 
-[文档|Documents](https://xlswriter-docs.viest.me/)
+Includes extensive and detailed instructions that make it easy to get started with xlswriter.
 
 ## PECL Repository
 
@@ -117,3 +117,7 @@ Support this project with your organization. Your logo will show up here with a 
 BSD License
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_large)
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/viest/php-ext-xlswriter.svg)](https://starchart.cc/viest/php-ext-xlswriter)

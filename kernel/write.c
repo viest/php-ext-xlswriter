@@ -25,7 +25,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
     zend_uchar value_type = Z_TYPE_P(value);
 
     if (value_type == IS_STRING) {
-        worksheet_write_string(res->worksheet, lxw_row, lxw_col, ZSTR_VAL(zval_get_string(value)), format_handle);
+        worksheet_write_string(res->worksheet, lxw_row, lxw_col, Z_STRVAL_P(value), format_handle);
         return;
     }
 

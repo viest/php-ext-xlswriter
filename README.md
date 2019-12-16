@@ -1,4 +1,6 @@
-![php-excel](resource/logo.png)
+<div align=center>
+<img height="280" src="resource/logo_now.png"/>
+</div>
 
 <div align=center>
 <a href="https://travis-ci.org/viest/php-ext-xlswriter"><img src="https://travis-ci.org/viest/php-ext-xlswriter.svg?branch=master"/></a>

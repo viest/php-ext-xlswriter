@@ -137,6 +137,7 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_formula_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, formula)
+                ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_auto_filter_arginfo, 0, 0, 1)
@@ -146,6 +147,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_merge_cells_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, range)
                 ZEND_ARG_INFO(0, data)
+                ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_column_arginfo, 0, 0, 3)
@@ -625,13 +627,18 @@ PHP_METHOD(vtiful_xls, insertImage)
  */
 PHP_METHOD(vtiful_xls, insertFormula)
 {
+    zval *format_handle = NULL;
     zend_string *formula = NULL;
     zend_long row = 0, column = 0;
 
-    ZEND_PARSE_PARAMETERS_START(3, 3)
+    int argc = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(3, 4)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
             Z_PARAM_STR(formula)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -640,7 +647,13 @@ PHP_METHOD(vtiful_xls, insertFormula)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
+    if (argc == 3) {
+        formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
+    }
+
+    if (argc == 4) {
+        formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
+    }
 }
 /* }}} */
 
@@ -668,11 +681,16 @@ PHP_METHOD(vtiful_xls, autoFilter)
  */
 PHP_METHOD(vtiful_xls, mergeCells)
 {
+    zval *format_handle = NULL;
     zend_string *range = NULL, *data = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
+    int argc = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
             Z_PARAM_STR(range)
             Z_PARAM_STR(data)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -681,7 +699,13 @@ PHP_METHOD(vtiful_xls, mergeCells)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    merge_cells(range, data, &obj->write_ptr);
+    if (argc == 3) {
+        merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
+    }
+
+    if (argc == 4) {
+        merge_cells(range, data, &obj->write_ptr, zval_get_format(format_handle));
+    }
 }
 /* }}} */
 

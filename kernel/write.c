@@ -199,9 +199,9 @@ void auto_filter(zend_string *range, xls_resource_write_t *res)
 /*
  * Merge cells.
  */
-void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res)
+void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res, lxw_format *format)
 {
-    worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), NULL);
+    worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
 }
 
 /*

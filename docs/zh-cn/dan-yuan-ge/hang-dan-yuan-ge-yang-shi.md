@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-setRow(string $range, double $height [, resource $format]);
+setRow(string $range, double $height [, resource $formatHandler]);
 ```
 
 ### **string $range**
@@ -14,7 +14,7 @@ setRow(string $range, double $height [, resource $format]);
 
 > 单元格高度
 
-### **string $format**
+### **resource $formatHandler**
 
 > 单元格样式
 

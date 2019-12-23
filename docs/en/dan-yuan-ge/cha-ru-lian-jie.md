@@ -3,7 +3,7 @@
 ### **Function Prototype**
 
 ```php
-insertUrl(int $row, int $column, string $url[, resource $format])
+insertUrl(int $row, int $column, string $url[, resource $formatHandler])
 ```
 
 #### **int $row**
@@ -18,9 +18,9 @@ insertUrl(int $row, int $column, string $url[, resource $format])
 
 > link address
 
-#### **resource $format**
+#### **resource $formatHandler**
 
-> link style
+> cell style
 
 ###example
 

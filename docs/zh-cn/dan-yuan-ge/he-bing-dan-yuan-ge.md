@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-mergeCells(string $scope, string $data): self
+mergeCells(string $scope, string $data [, resource $formatHandler]): self
 ```
 
 ### **string $scope**
@@ -13,6 +13,10 @@ mergeCells(string $scope, string $data): self
 ### **string $data**
 
 > 数据
+
+### **resource $formatHandler**
+
+> 单元格样式
 
 ## 示例
 

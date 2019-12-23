@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-insertText(int $row, int $column, string|int|double $data[, string $format, resource $style])
+insertText(int $row, int $column, string|int|double $data[, string $format, resource $formatHandler])
 ```
 
 ### **int $row**
@@ -22,7 +22,7 @@ insertText(int $row, int $column, string|int|double $data[, string $format, reso
 
 > 内容格式
 
-### **resource $style**
+### **resource $formatHandler**
 
 > 单元格样式
 

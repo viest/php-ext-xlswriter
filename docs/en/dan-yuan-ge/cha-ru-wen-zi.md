@@ -3,7 +3,7 @@
 ### **Function Prototype**
 
 ```php
-insertText(int $row, int $column, string|int|double $data[, string $format, resource $style])
+insertText(int $row, int $column, string|int|double $data[, string $format, resource $formatHandler])
 ```
 
 #### **int $row**
@@ -22,7 +22,7 @@ insertText(int $row, int $column, string|int|double $data[, string $format, reso
 
 > Content format
 
-#### **resource $style**
+#### **resource $formatHandler**
 
 > cell style
 

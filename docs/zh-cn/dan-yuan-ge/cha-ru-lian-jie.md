@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-insertUrl(int $row, int $column, string $url[, resource $format])
+insertUrl(int $row, int $column, string $url[, resource $formatHandler])
 ```
 
 ### **int $row**
@@ -18,7 +18,7 @@ insertUrl(int $row, int $column, string $url[, resource $format])
 
 > 链接地址
 
-### **resource $format**
+### **resource $formatHandler**
 
 > 链接样式
 

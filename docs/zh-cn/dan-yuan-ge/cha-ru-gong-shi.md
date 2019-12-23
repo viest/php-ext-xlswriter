@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-insertFormula(int $row, int $column, string $formula)
+insertFormula(int $row, int $column, string $formula [, resource $formatHandler])
 ```
 
 ### **int $row**
@@ -17,6 +17,10 @@ insertFormula(int $row, int $column, string $formula)
 ### **string $formula**
 
 > 公式
+
+### **resource $formatHandler**
+
+> 单元格样式
 
 ## 示例
 

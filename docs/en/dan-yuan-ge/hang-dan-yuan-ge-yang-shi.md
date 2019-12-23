@@ -3,7 +3,7 @@
 ### **Function Prototype**
 
 ```php
-setRow(string $range, double $height [, resource $format]);
+setRow(string $range, double $height [, resource $formatHandler]);
 ```
 
 #### **string $range**
@@ -14,7 +14,7 @@ setRow(string $range, double $height [, resource $format]);
 
 > cell height
 
-#### **string $format**
+#### **resource $formatHandler**
 
 > cell style
 

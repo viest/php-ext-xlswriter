@@ -3,7 +3,7 @@
 ### **Function Prototype**
 
 ```php
-insertFormula(int $row, int $column, string $formula)
+insertFormula(int $row, int $column, string $formula [, resource $formatHandler])
 ```
 
 #### **int $row**
@@ -17,6 +17,10 @@ insertFormula(int $row, int $column, string $formula)
 #### **string $formula**
 
 > formula
+
+### **resource $formatHandler**
+
+> cell style
 
 ###example
 

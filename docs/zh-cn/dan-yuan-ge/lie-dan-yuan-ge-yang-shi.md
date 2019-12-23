@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-setColumn(string $range, double $width [, resource $format]);
+setColumn(string $range, double $width [, resource $formatHandler]);
 ```
 
 ### **string $range**
@@ -14,7 +14,7 @@ setColumn(string $range, double $width [, resource $format]);
 
 > 单元格宽度
 
-### **string $format**
+### **resource $formatHandler**
 
 > 单元格样式
 

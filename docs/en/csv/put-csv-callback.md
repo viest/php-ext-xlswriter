@@ -12,7 +12,7 @@ More application scenarios are waiting for you to discover ...
 ## **Function prototype**
 
 ```php
-putCSVCallback (callable $ callback, resource $ handler): bool
+putCSVCallback(callable $callback, resource $handler): bool
 ```
 
 ### **callable $ callback**

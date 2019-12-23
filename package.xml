@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-11-21</date>
- <time>14:40:48</time>
+ <date>2019-12-23</date>
+ <time>23:00:00</time>
  <version>
-  <release>1.3.2</release>
-  <api>1.3.2</api>
+  <release>1.3.3</release>
+  <api>1.3.3</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,12 +45,10 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT display or hide screen and print gridlines.
-- FEAT worksheet zoom.
-- FEAT data method is written by default from the file header.
-- FEAT returns null if the type is specified and the cell is empty.
-- FEAT sheet list.
-- FEAT xlsx to csv.
+- FEAT mergeCells and insertFormula support format.
+- FEAT put csv with callback.
+- FEAT global default format.
+- FIX READ turning data into custom types.
  </notes>
  <contents>
   <dir name="/">
@@ -187,6 +185,7 @@
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file name="tests/default_format.phpt" role="test" />
+   <file name="tests/fix-207.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
    <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
    <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
@@ -197,6 +196,7 @@
    <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="test" />
    <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
    <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
+   <file name="tests/gridlines.phpt" role="test" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="test" />
    <file md5sum="73521b6a1cb84ba3c7730470b836368f" name="tests/insert_date_custom_format.phpt" role="test" />
@@ -254,6 +254,27 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-11-21</date>
+   <time>14:40:48</time>
+   <version>
+    <release>1.3.2</release>
+    <api>1.3.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FEAT display or hide screen and print gridlines.
+    - FEAT worksheet zoom.
+    - FEAT data method is written by default from the file header.
+    - FEAT returns null if the type is specified and the cell is empty.
+    - FEAT sheet list.
+    - FEAT xlsx to csv.
+   </notes>
+  </release>
   <release>
    <date>2019-10-11</date>
    <time>14:22:14</time>

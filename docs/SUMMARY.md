@@ -142,3 +142,4 @@
     * [XLSX转为CSV - 回调模式](zh-cn/csv/put-csv-callback.md)
   * [辅助函数](zh-cn/helper/README.md)
     * [列标字符转化](zh-cn/helper/column-index-number-string-transform.md)
+* [Project recommendation](project-recommendation/README.md)

@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-12-23</date>
- <time>23:00:00</time>
+ <date>2019-12-26</date>
+ <time>22:00:00</time>
  <version>
-  <release>1.3.3</release>
-  <api>1.3.3</api>
+  <release>1.3.3.1</release>
+  <api>1.3.3.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,10 +45,7 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FEAT mergeCells and insertFormula support format.
-- FEAT put csv with callback.
-- FEAT global default format.
-- FIX READ turning data into custom types.
+- FIX merge cells.
  </notes>
  <contents>
   <dir name="/">
@@ -254,6 +251,25 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-12-23</date>
+   <time>23:00:00</time>
+   <version>
+    <release>1.3.3</release>
+    <api>1.3.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FEAT mergeCells and insertFormula support format.
+    - FEAT put csv with callback.
+    - FEAT global default format.
+    - FIX READ turning data into custom types.
+   </notes>
+  </release>
   <release>
    <date>2019-11-21</date>
    <time>14:40:48</time>

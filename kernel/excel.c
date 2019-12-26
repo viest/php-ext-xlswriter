@@ -677,7 +677,7 @@ PHP_METHOD(vtiful_xls, autoFilter)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Excel::mergeCells(string $range, string $data)
+/** {{{ \Vtiful\Kernel\Excel::mergeCells(string $range, string $data, $formatHandle = NULL)
  */
 PHP_METHOD(vtiful_xls, mergeCells)
 {
@@ -699,11 +699,11 @@ PHP_METHOD(vtiful_xls, mergeCells)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 3) {
+    if (argc == 2) {
         merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
     }
 
-    if (argc == 4) {
+    if (argc == 3) {
         merge_cells(range, data, &obj->write_ptr, zval_get_format(format_handle));
     }
 }

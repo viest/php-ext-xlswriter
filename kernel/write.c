@@ -201,7 +201,14 @@ void auto_filter(zend_string *range, xls_resource_write_t *res)
  */
 void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res, lxw_format *format)
 {
-    worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
+    int error = worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
+
+    // Cells that have been placed cannot be modified using optimization mode
+    if(res->worksheet->optimize && error == LXW_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE)
+    {
+        zend_throw_exception(vtiful_exception_ce, "In const memory mode, you cannot modify the placed cells", 170);
+        return;
+    }
 }
 
 /*

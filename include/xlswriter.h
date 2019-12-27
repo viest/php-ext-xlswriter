@@ -125,6 +125,22 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
         }                                                                                                            \
     } while(0);
 
+#define WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(xls_resource_write_t, error)                                            \
+    do {                                                                                                                \
+        if(xls_resource_write_t->worksheet->optimize && error == LXW_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE) {              \
+            zend_throw_exception(vtiful_exception_ce, "In const memory mode, you cannot modify the placed cells", 170); \
+            return;                                                                                                     \
+        }                                                                                                               \
+    } while(0);
+
+#define WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)                                                    \
+    do {                                                                                                  \
+        if(error == LXW_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE) {                                             \
+            zend_throw_exception(vtiful_exception_ce, "Worksheet row or column index out of range", 180); \
+            return;                                                                                       \
+        }                                                                                                 \
+    } while(0);
+
 #define FCALL_TWO_ARGS(bucket)                   \
     ZVAL_COPY_VALUE(&args[0], &bucket->val); \
         if (bucket->key) {                       \

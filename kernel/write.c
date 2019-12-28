@@ -193,7 +193,13 @@ void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_
  */
 void auto_filter(zend_string *range, xls_resource_write_t *res)
 {
-    worksheet_autofilter(res->worksheet, RANGE(ZSTR_VAL(range)));
+    int error = worksheet_autofilter(res->worksheet, RANGE(ZSTR_VAL(range)));
+
+    // Cells that have been placed cannot be modified using optimization mode
+    WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+
+    // Worksheet row or column index out of range
+    WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
 }
 
 /*
@@ -201,7 +207,13 @@ void auto_filter(zend_string *range, xls_resource_write_t *res)
  */
 void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res, lxw_format *format)
 {
-    worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
+    int error = worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
+
+    // Cells that have been placed cannot be modified using optimization mode
+    WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+
+    // Worksheet row or column index out of range
+    WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
 }
 
 /*
@@ -222,7 +234,13 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_f
     if (strchr(rows, ':')) {
         worksheet_set_rows(ROWS(rows), height, res, format);
     } else {
-        worksheet_set_row(res->worksheet, ROW(rows), height, format);
+        int error = worksheet_set_row(res->worksheet, ROW(rows), height, format);
+
+        // Cells that have been placed cannot be modified using optimization mode
+        WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+
+        // Worksheet row or column index out of range
+        WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
     }
 }
 

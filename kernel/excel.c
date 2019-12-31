@@ -949,6 +949,10 @@ PHP_METHOD(vtiful_xls, openSheet)
         RETURN_NULL();
     }
 
+    if (obj->read_ptr.sheet_t != NULL) {
+        xlsxioread_sheet_close(obj->read_ptr.sheet_t);
+    }
+
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
 }
 /* }}} */

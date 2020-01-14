@@ -14,8 +14,6 @@ if (PHP_XLSWRITER != "no") {
 
         ADD_FLAG("CFLAGS_XLSWRITER", ' /I "' + configure_module_dirname + '" ');
 
-        AC_DEFINE("HAVE_LXW_VERSION", 1, "lxw_version available in 0.7.7");
-
         ADD_SOURCES(configure_module_dirname + "\\kernel", "common.c resource.c exception.c excel.c write.c format.c chart.c", "xlswriter");
     } else {
         WARNING("xlswriter not enabled, xlsxwriter.lib or headers not found");

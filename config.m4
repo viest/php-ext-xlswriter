@@ -36,8 +36,11 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c \
+    library/libxlsxwriter/third_party/md5/md5.c \
     library/libxlsxwriter/src/app.c \
     library/libxlsxwriter/src/chart.c \
+    library/libxlsxwriter/src/chartsheet.c \
+    library/libxlsxwriter/src/comment.c \
     library/libxlsxwriter/src/content_types.c \
     library/libxlsxwriter/src/core.c \
     library/libxlsxwriter/src/custom.c \
@@ -50,6 +53,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/src/styles.c \
     library/libxlsxwriter/src/theme.c \
     library/libxlsxwriter/src/utility.c \
+    library/libxlsxwriter/src/vml.c \
     library/libxlsxwriter/src/workbook.c \
     library/libxlsxwriter/src/worksheet.c \
     library/libxlsxwriter/src/xmlwriter.c \
@@ -84,32 +88,11 @@ if test "$PHP_XLSWRITER" != "no"; then
             AC_MSG_ERROR([libxlsxwriter library not found])
         else
             PHP_ADD_INCLUDE($XLSXWRITER_DIR/include)
-            PHP_CHECK_LIBRARY(xlsxwriter, worksheet_write_string,
+            PHP_CHECK_LIBRARY(xlsxwriter, lxw_worksheet_find_cell_in_row,
             [
                 PHP_ADD_LIBRARY_WITH_PATH(xlsxwriter, $i/$PHP_LIBDIR, XLSWRITER_SHARED_LIBADD)
             ],[
-                AC_MSG_ERROR([Wrong libxlsxwriter version or library not found])
-            ],[
-                -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
-            ])
-            PHP_CHECK_LIBRARY(xlsxwriter, lxw_version,
-            [
-                AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
-            ],[
-            ],[
-                -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
-            ])
-            PHP_CHECK_LIBRARY(xlsxwriter, lxw_chartsheet_new,
-            [
-                AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
-            ],[
-            ],[
-                -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
-            ])
-            PHP_CHECK_LIBRARY(xlsxwriter, workbook_add_vba_project,
-            [
-                AC_DEFINE(HAVE_WORKBOOK_ADD_VBA_PROJECT, 1, [ workbook_add_vba_project available in 0.8.7 ])
-            ],[
+                AC_MSG_ERROR([Wrong libxlsxwriter version or library not found, 0.9.3 required])
             ],[
                 -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
             ])
@@ -128,23 +111,6 @@ if test "$PHP_XLSWRITER" != "no"; then
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
         PHP_ADD_INCLUDE([$srcdir/library/libxlsxwriter/include])
 
-        XLSXWRITER_VERSION=`$EGREP "define LXW_VERSION" $srcdir/library/include/libxlsxwriter/xlsxwriter.h | $SED -e 's/[[^0-9\.]]//g'`
-
-        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 709; then
-            AC_DEFINE(HAVE_LXW_VERSION, 1, [ lxw_version available in 0.7.9 ])
-        fi
-
-        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 800; then
-            AC_DEFINE(HAVE_LXW_CHARTSHEET_NEW, 1, [ lxw_chartsheet_new available in 0.8.0 ])
-        fi
-
-        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 807; then
-            AC_DEFINE(HAVE_WORKBOOK_ADD_VBA_PROJECT, 1, [ workbook_add_vba_project available in 0.8.7 ])
-        fi
-
-        if test `echo $XLSXWRITER_VERSION | $SED -e 's/[[^0-9]]/ /g' | $AWK '{print $1*10000 + $2*100 + $3}'` -ge 808; then
-            AC_DEFINE(HAVE_LXW_OPEN, 1, [ lxw_fopen available in 0.8.8 ])
-        fi
         dnl see library/CMakeLists.txt
         LIBOPT="-DNOCRYPT -DNOUNCRYPT"
     fi
@@ -214,6 +180,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/src])
     PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/minizip])
     PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/tmpfileplus])
+    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/md5])
 
     PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
     PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])

@@ -181,6 +181,7 @@
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="test" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
+   <file name="tests/const_memory_index_out_range.phpt" role="test" />
    <file name="tests/default_format.phpt" role="test" />
    <file name="tests/fix-207.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
@@ -223,6 +224,8 @@
    <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
    <file md5sum="42b26f050d9291509d6f583ef43ebde9" name="tests/xlsx_to_csv.phpt" role="test" />
    <file name="tests/xlsx_to_csv_callback.phpt" role="test" />
+   <file name="tests/xlsx_to_csv_callback_custom_delimiter.phpt" role="test" />
+   <file name="tests/xlsx_to_csv_custom_delimiter.phpt" role="test" />
    <file md5sum="a9af7f4ca385ba41b008b50ac67f8e96" name="tests/zoom.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />

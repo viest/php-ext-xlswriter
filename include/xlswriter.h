@@ -141,6 +141,14 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
         }                                                                                                 \
     } while(0);
 
+#define WORKSHEET_WRITER_EXCEPTION(error)                                                  \
+    do {                                                                                   \
+        if(error > LXW_NO_ERROR) {                                                         \
+            zend_throw_exception(vtiful_exception_ce, "Worksheet write exception", error); \
+            return;                                                                        \
+        }                                                                                  \
+    } while(0)
+
 #define FCALL_TWO_ARGS(bucket)                   \
     ZVAL_COPY_VALUE(&args[0], &bucket->val); \
         if (bucket->key) {                       \

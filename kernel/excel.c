@@ -176,11 +176,17 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_put_csv_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, fp)
+                ZEND_ARG_INFO(0, delimiter_str)
+                ZEND_ARG_INFO(0, enclosure_str)
+                ZEND_ARG_INFO(0, escape_str)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_put_csv_callback_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, callback)
                 ZEND_ARG_INFO(0, fp)
+                ZEND_ARG_INFO(0, delimiter_str)
+                ZEND_ARG_INFO(0, enclosure_str)
+                ZEND_ARG_INFO(0, escape_str)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_type_arginfo, 0, 0, 1)
@@ -991,10 +997,16 @@ PHP_METHOD(vtiful_xls, setType)
  */
 PHP_METHOD(vtiful_xls, putCSV)
 {
-    zval *fp = NULL, *zv_type = NULL;;
+    zval *fp = NULL, *zv_type = NULL;
+    char *delimiter_str = NULL, *enclosure_str = NULL, *escape_str = NULL;
+    size_t delimiter_str_len = 0, enclosure_str_len = 0, escape_str_len = 0;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
+    ZEND_PARSE_PARAMETERS_START(1, 4)
             Z_PARAM_RESOURCE(fp)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STRING(delimiter_str, delimiter_str_len)
+            Z_PARAM_STRING(enclosure_str, enclosure_str_len)
+            Z_PARAM_STRING(escape_str,escape_str_len)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1005,7 +1017,10 @@ PHP_METHOD(vtiful_xls, putCSV)
 
     zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
-    if (xlsx_to_csv(fp, obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, NULL, NULL) == XLSWRITER_TRUE) {
+    if (xlsx_to_csv(
+            fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
+            obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, NULL, NULL
+            ) == XLSWRITER_TRUE) {
         RETURN_TRUE;
     }
 
@@ -1018,12 +1033,18 @@ PHP_METHOD(vtiful_xls, putCSV)
 PHP_METHOD(vtiful_xls, putCSVCallback)
 {
     zval *fp = NULL, *zv_type = NULL;
-    zend_fcall_info       fci       = empty_fcall_info;
+    zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fci_cache = empty_fcall_info_cache;
+    char *delimiter_str = NULL, *enclosure_str = NULL, *escape_str = NULL;
+    size_t delimiter_str_len = 0, enclosure_str_len = 0, escape_str_len = 0;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
+    ZEND_PARSE_PARAMETERS_START(2, 5)
             Z_PARAM_FUNC(fci, fci_cache)
             Z_PARAM_RESOURCE(fp)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STRING(delimiter_str, delimiter_str_len)
+            Z_PARAM_STRING(enclosure_str, enclosure_str_len)
+            Z_PARAM_STRING(escape_str,escape_str_len)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1034,7 +1055,10 @@ PHP_METHOD(vtiful_xls, putCSVCallback)
 
     zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
-    if (xlsx_to_csv(fp, obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, &fci, &fci_cache) == XLSWRITER_TRUE) {
+    if (xlsx_to_csv(
+            fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
+            obj->read_ptr.sheet_t, zv_type, READ_SKIP_ROW, &fci, &fci_cache
+            ) == XLSWRITER_TRUE) {
         RETURN_TRUE;
     }
 

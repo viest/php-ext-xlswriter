@@ -72,6 +72,7 @@
     * [XLSX to CSV - Callback function mode](en/csv/put-csv-callback.md)
   * [Assistant functions](en/helper/README.md)
     * [Column index transform](en/helper/column-index-number-string-transform.md)
+* [Project recommendation](project-recommendation/en/README.md)
 * [中文简体](zh-cn/README.md)
   * [安装](zh-cn/an-zhuang/README.md)
     * [环境要求](zh-cn/an-zhuang/huan-jing-yao-qiu.md)
@@ -142,4 +143,4 @@
     * [XLSX转为CSV - 回调模式](zh-cn/csv/put-csv-callback.md)
   * [辅助函数](zh-cn/helper/README.md)
     * [列标字符转化](zh-cn/helper/column-index-number-string-transform.md)
-* [Project recommendation](project-recommendation/README.md)
+* [项目推荐](project-recommendation/zh-cn/README.md)

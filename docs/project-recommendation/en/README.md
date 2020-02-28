@@ -1,6 +1,6 @@
 # Project Recommendation
 
-## 1. [EasySwoole](https://www.easyswoole.com/En/)
+## 1. [EasySwoole](https://www.easyswoole.com/En.html)
 
 ```
   ______                          _____                              _        

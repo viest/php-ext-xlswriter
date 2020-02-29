@@ -96,6 +96,12 @@ ZEND_BEGIN_ARG_INFO_EX(xls_data_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_output_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_handle_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_text_arginfo, 0, 0, 5)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
@@ -187,6 +193,16 @@ ZEND_BEGIN_ARG_INFO_EX(xls_put_csv_callback_arginfo, 0, 0, 2)
                 ZEND_ARG_INFO(0, delimiter_str)
                 ZEND_ARG_INFO(0, enclosure_str)
                 ZEND_ARG_INFO(0, escape_str)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_sheet_list_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_sheet_data_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_next_row_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, zv_type_t)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_type_arginfo, 0, 0, 1)
@@ -1092,11 +1108,11 @@ PHP_METHOD(vtiful_xls, getSheetData)
  */
 PHP_METHOD(vtiful_xls, nextRow)
 {
-    zval *zv_type = NULL;
+    zval *zv_type_t = NULL;
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
-            Z_PARAM_ARRAY(zv_type)
+            Z_PARAM_ARRAY(zv_type_t)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1105,11 +1121,11 @@ PHP_METHOD(vtiful_xls, nextRow)
         RETURN_FALSE;
     }
 
-    if (zv_type == NULL) {
-        zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+    if (zv_type_t == NULL) {
+        zv_type_t = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
     }
 
-    load_sheet_current_row_data(obj->read_ptr.sheet_t, return_value, zv_type, READ_ROW);
+    load_sheet_current_row_data(obj->read_ptr.sheet_t, return_value, zv_type_t, READ_ROW);
 }
 /* }}} */
 
@@ -1156,8 +1172,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, output,        NULL,                       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, getHandle,     NULL,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, output,        xls_output_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getHandle,     xls_get_handle_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, autoFilter,    xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertText,    xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertDate,    xls_insert_date_arginfo,    ZEND_ACC_PUBLIC)
@@ -1182,10 +1198,10 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, openSheet,        xls_open_sheet_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, putCSV,           xls_put_csv_arginfo,            ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, putCSVCallback,   xls_put_csv_callback_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, sheetList,        NULL,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, sheetList,        xls_sheet_list_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, getSheetData,     NULL,                           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, nextRow,          NULL,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getSheetData,     xls_get_sheet_data_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextRow,          xls_next_row_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextCellCallback, xls_next_cell_callback_arginfo, ZEND_ACC_PUBLIC)
 #endif
 

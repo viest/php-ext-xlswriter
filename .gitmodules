@@ -8,5 +8,5 @@
 	branch = R_2_2_7
 [submodule "library/libxlsxio"]
 	path = library/libxlsxio
-	url = https://github.com/brechtsanders/xlsxio.git
-	branch = 0.2.21
+	url = https://github.com/viest/xlsxio.git
+	branch = 0.2.22

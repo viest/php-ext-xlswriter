@@ -34,6 +34,12 @@ $data = $excel->openFile('tutorial.xlsx')
     ->getSheetData();
 
 var_dump($data);
+
+$data = $excel->openFile('tutorial.xlsx')
+    ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_VALUE)
+    ->getSheetData();
+
+var_dump($data);
 ?>
 --CLEAN--
 <?php
@@ -78,6 +84,21 @@ array(2) {
     string(4) "Cost"
   }
   [1]=>
+  array(1) {
+    [0]=>
+    string(5) "viest"
+  }
+}
+array(3) {
+  [0]=>
+  array(1) {
+    [1]=>
+    string(4) "Cost"
+  }
+  [1]=>
+  array(0) {
+  }
+  [2]=>
   array(1) {
     [0]=>
     string(5) "viest"

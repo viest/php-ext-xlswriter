@@ -22,7 +22,7 @@ echo 'skip cells' . PHP_EOL;
 $data = $excel->openFile('tutorial.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS);
 
-while ($data = $excel->nextRow()) {
+while (is_array($data = $excel->nextRow())) {
     var_dump($data);
 }
 
@@ -31,7 +31,7 @@ echo 'skip row' . PHP_EOL;
 $data = $excel->openFile('tutorial.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_ROW);
 
-while ($data = $excel->nextRow()) {
+while (is_array($data = $excel->nextRow())) {
     var_dump($data);
 }
 
@@ -40,7 +40,7 @@ echo 'skip cells & row' . PHP_EOL;
 $data = $excel->openFile('tutorial.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS | \Vtiful\Kernel\Excel::SKIP_EMPTY_ROW);
 
-while ($data = $excel->nextRow()) {
+while (is_array($data = $excel->nextRow())) {
     var_dump($data);
 }
 ?>
@@ -51,14 +51,10 @@ while ($data = $excel->nextRow()) {
 --EXPECT--
 skip cells
 array(1) {
-  [0]=>
+  [1]=>
   string(4) "Cost"
 }
-array(2) {
-  [0]=>
-  string(0) ""
-  [1]=>
-  string(0) ""
+array(0) {
 }
 array(1) {
   [0]=>
@@ -79,7 +75,7 @@ array(2) {
 }
 skip cells & row
 array(1) {
-  [0]=>
+  [1]=>
   string(4) "Cost"
 }
 array(1) {

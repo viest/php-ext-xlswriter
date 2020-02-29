@@ -86,14 +86,16 @@ void data_to_null(zval *zv_result_t)
 /* }}} */
 
 /* {{{ */
-void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_result_t)
+void data_to_custom_type(const char *string_value, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
 {
+    size_t string_value_length = strlen(string_value);
+
     if (type & READ_TYPE_DATETIME) {
         if (!is_number(string_value)) {
             goto STRING;
         }
 
-        if (strlen(string_value) == 0) {
+        if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
             return;
@@ -106,7 +108,7 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
         }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            add_next_index_long(zv_result_t, (zend_long)(value + 0.5));
+            add_index_long(zv_result_t, zv_hashtable_index, (zend_long)(value + 0.5));
         } else {
             ZVAL_LONG(zv_result_t, (zend_long)(value + 0.5));
         }
@@ -119,14 +121,14 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
             goto STRING;
         }
 
-        if (strlen(string_value) == 0) {
+        if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
             return;
         }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            add_next_index_double(zv_result_t, strtod(string_value, NULL));
+            add_index_double(zv_result_t, zv_hashtable_index,strtod(string_value, NULL));
         } else {
             ZVAL_DOUBLE(zv_result_t, strtod(string_value, NULL));
         }
@@ -139,7 +141,7 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
             goto STRING;
         }
 
-        if (strlen(string_value) == 0) {
+        if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
             return;
@@ -150,7 +152,7 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
         sscanf(string_value, ZEND_LONG_FMT, &_long_value);
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            add_next_index_long(zv_result_t, _long_value);
+            add_index_long(zv_result_t, zv_hashtable_index, _long_value);
         } else {
             ZVAL_LONG(zv_result_t, _long_value);
         }
@@ -164,19 +166,19 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
         zend_long _long = 0; double _double = 0;
 
         if (!(type & READ_TYPE_STRING)) {
-            is_numeric_string(string_value, strlen(string_value), &_long, &_double, 0);
+            is_numeric_string(string_value, string_value_length, &_long, &_double, 0);
         }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
             if (_double > 0) {
-                add_next_index_double(zv_result_t, _double);
+                add_index_double(zv_result_t, zv_hashtable_index, _double);
                 return;
             } else if (_long > 0) {
-                add_next_index_long(zv_result_t, _long);
+                add_index_long(zv_result_t, zv_hashtable_index, _long);
                 return;
             }
 
-            add_next_index_stringl(zv_result_t, string_value, strlen(string_value));
+            add_index_stringl(zv_result_t, zv_hashtable_index, string_value, string_value_length);
             return;
         }
 
@@ -188,7 +190,7 @@ void data_to_custom_type(const char *string_value, zend_ulong type, zval *zv_res
             return;
         }
 
-        ZVAL_STRINGL(zv_result_t, string_value, strlen(string_value));
+        ZVAL_STRINGL(zv_result_t, string_value, string_value_length);
     }
 }
 /* }}} */
@@ -203,13 +205,18 @@ int sheet_read_row(xlsxioreadersheet sheet_t)
 /* {{{ */
 unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, zval *zv_type_arr_t, unsigned int flag)
 {
-    zend_ulong _type, _cell_index = 0;
+    zend_long _type, _cell_index = 0, _last_cell_index = 0;
+    zend_bool _skip_empty_value_cell = 0;
     zend_array *_za_type_t = NULL;
     char *_string_value = NULL;
     zval *_current_type = NULL;
 
     if (flag && !sheet_read_row(sheet_t)) {
         return XLSWRITER_FALSE;
+    }
+
+    if (xlsxioread_sheet_flags(sheet_t) & SKIP_EMPTY_VALUE) {
+        _skip_empty_value_cell = 1;
     }
 
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
@@ -223,6 +230,19 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
     while ((_string_value = xlsxioread_sheet_next_cell(sheet_t)) != NULL)
     {
         _type = READ_TYPE_EMPTY;
+        _last_cell_index = xlsxioread_sheet_last_column_index(sheet_t) - 1;
+
+        if (_last_cell_index < 0) {
+            goto FREE_TMP_VALUE;
+        }
+
+        if (_skip_empty_value_cell && strlen(_string_value) == 0) {
+            goto FREE_TMP_VALUE;
+        }
+
+        if (_last_cell_index > _cell_index) {
+            _cell_index = _last_cell_index;
+        }
 
         if (_za_type_t != NULL) {
             if ((_current_type = zend_hash_index_find(_za_type_t, _cell_index)) != NULL) {
@@ -230,12 +250,13 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
                     _type = Z_LVAL_P(_current_type);
                 }
             }
-
-            _cell_index++;
         }
 
-        data_to_custom_type(_string_value, _type, zv_result_t);
+        data_to_custom_type(_string_value, _type, zv_result_t, _cell_index);
 
+        FREE_TMP_VALUE:
+
+        _cell_index++;
         free(_string_value);
     }
 
@@ -322,7 +343,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
             }
         }
 
-        data_to_custom_type(value, _type, &args[2]);
+        data_to_custom_type(value, _type, &args[2], 0);
     }
 
     CALL_USER_FUNCTION:
@@ -337,7 +358,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
 /* }}} */
 
 /* {{{ */
-unsigned int load_sheet_current_row_data_callback(zend_string *zs_sheet_name_t, xlsxioreader file_t, void *callback_data)
+unsigned int load_sheet_current_row_data_callback (zend_string *zs_sheet_name_t, xlsxioreader file_t, void *callback_data)
 {
     if (zs_sheet_name_t == NULL) {
         return xlsxioread_process(file_t, NULL, XLSXIOREAD_SKIP_NONE, sheet_cell_callback, sheet_row_callback, callback_data);
@@ -348,7 +369,7 @@ unsigned int load_sheet_current_row_data_callback(zend_string *zs_sheet_name_t, 
 /* }}} */
 
 /* {{{ */
-void load_sheet_all_data(xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_result_t)
+void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_result_t)
 {
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
         array_init(zv_result_t);

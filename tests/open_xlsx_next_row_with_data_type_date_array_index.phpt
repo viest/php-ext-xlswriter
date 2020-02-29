@@ -21,7 +21,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
 $data = $excel->openFile('tutorial.xlsx')
     ->openSheet('Sheet1');
 
-while ($data = $excel->nextRow([4 => \Vtiful\Kernel\Excel::TYPE_TIMESTAMP])) {
+while (is_array($data = $excel->nextRow([4 => \Vtiful\Kernel\Excel::TYPE_TIMESTAMP]))) {
     var_dump($data);
 }
 ?>
@@ -36,11 +36,7 @@ array(2) {
   [1]=>
   string(4) "Cost"
 }
-array(2) {
-  [0]=>
-  string(0) ""
-  [1]=>
-  string(0) ""
+array(0) {
 }
 array(5) {
   [0]=>

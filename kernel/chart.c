@@ -90,6 +90,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(chart_legend_set_position_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, type)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(chart_to_resource_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Chart::__construct(resource $handle, int $type)
@@ -279,7 +282,7 @@ zend_function_entry chart_methods[] = {
         PHP_ME(vtiful_chart, axisNameX,         chart_axis_name_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_chart, title,             chart_title_name_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_chart, legendSetPosition, chart_legend_set_position_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_chart, toResource,        NULL,                              ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_chart, toResource,        chart_to_resource_arginfo,         ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

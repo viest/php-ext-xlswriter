@@ -5,6 +5,6 @@
 ```php
 // 将粗体与斜体合并为一个样式
 $format          = new \Vtiful\Kernel\Format($fileHandle);
-$boldItalicStyle = $format->bold()->italic()->toResour();
+$boldItalicStyle = $format->bold()->italic()->toResource();
 ```
 

@@ -143,4 +143,6 @@
     * [XLSX转为CSV - 回调模式](zh-cn/csv/put-csv-callback.md)
   * [辅助函数](zh-cn/helper/README.md)
     * [列标字符转化](zh-cn/helper/column-index-number-string-transform.md)
+  * [常见问题]()
+    * [xls文件通过excel转成xlsx格式后无法读取](https://github.com/viest/php-ext-xlswriter/issues/236)
 * [项目推荐](project-recommendation/zh-cn/README.md)

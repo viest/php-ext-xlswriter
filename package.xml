@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2019-12-31</date>
- <time>22:00:00</time>
+ <date>2020-03-19</date>
+ <time>21:15:00</time>
  <version>
-  <release>1.3.3.2</release>
-  <api>1.3.3.2</api>
+  <release>1.3.4</release>
+  <api>1.3.4</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,7 +45,11 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- FIX free up stale sheets.
+- FEAT header support custom format.
+- FEAT putcsv custom delimiter.
+- FEAT ead skip cells,rows,empty value.
+- FIX read data method, the offset of the array index and the row of the cell.
+- FIX insertDate leaked.
  </notes>
  <contents>
   <dir name="/">
@@ -255,6 +259,22 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2019-12-31</date>
+   <time>22:00:00</time>
+   <version>
+    <release>1.3.3.2</release>
+    <api>1.3.3.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - FIX free up stale sheets.
+   </notes>
+  </release>
   <release>
    <date>2019-12-26</date>
    <time>22:00:00</time>

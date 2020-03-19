@@ -26,4 +26,4 @@ $setHeader = $fileObject
 var_dump($setHeader);
 ?>
 --EXPECT--
-./tests/tutorial.xlsx
+string(21) "./tests/tutorial.xlsx"

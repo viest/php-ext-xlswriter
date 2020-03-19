@@ -90,6 +90,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_header_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, header)
+                ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_data_arginfo, 0, 0, 1)
@@ -402,10 +403,13 @@ PHP_METHOD(vtiful_xls, constMemory)
 PHP_METHOD(vtiful_xls, header)
 {
     zend_long header_l_key;
-    zval *header = NULL, *header_value = NULL;
+    lxw_format *format_handle = NULL;
+    zval *header = NULL, *header_value = NULL, *zv_format_handle = NULL;;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_ARRAY(header)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE(zv_format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -414,8 +418,14 @@ PHP_METHOD(vtiful_xls, header)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
+    if (zv_format_handle == NULL) {
+        format_handle = obj->format_ptr.format;
+    } else {
+        format_handle = zval_get_format(zv_format_handle);
+    }
+
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
-         type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, obj->format_ptr.format);
+         type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, format_handle);
     ZEND_HASH_FOREACH_END();
 
     SHEET_LINE_ADD(obj)
@@ -556,7 +566,11 @@ PHP_METHOD(vtiful_xls, insertDate)
         type_writer(&_zv_double_time, row, column, &obj->write_ptr, format, obj->format_ptr.format);
     }
 
-    zend_string_release(format);
+    // Release default format
+    if (ZEND_NUM_ARGS() == 3) {
+        zend_string_release(format);
+    }
+
     zval_ptr_dtor(&_zv_double_time);
 }
 /* }}} */

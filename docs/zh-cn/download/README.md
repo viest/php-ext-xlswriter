@@ -38,6 +38,9 @@ header('Cache-Control: must-revalidate');
 header('Cache-Control: max-age=0');
 header('Pragma: public');
 
+ob_clean();
+flush();
+
 if (copy($filePath, 'php://output') === false) {
     // Throw exception
 }

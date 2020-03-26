@@ -86,10 +86,8 @@ void data_to_null(zval *zv_result_t)
 /* }}} */
 
 /* {{{ */
-void data_to_custom_type(const char *string_value, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
+void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
 {
-    size_t string_value_length = strlen(string_value);
-
     if (type & READ_TYPE_DATETIME) {
         if (!is_number(string_value)) {
             goto STRING;
@@ -229,14 +227,12 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
 
     while ((_string_value = xlsxioread_sheet_next_cell(sheet_t)) != NULL)
     {
+        size_t _string_value_length = strlen(_string_value);
+
         _type = READ_TYPE_EMPTY;
         _last_cell_index = xlsxioread_sheet_last_column_index(sheet_t) - 1;
 
-        if (_last_cell_index < 0) {
-            goto FREE_TMP_VALUE;
-        }
-
-        if (_skip_empty_value_cell && strlen(_string_value) == 0) {
+        if (_last_cell_index < 0 || (_skip_empty_value_cell && _string_value_length == 0)) {
             goto FREE_TMP_VALUE;
         }
 
@@ -245,18 +241,18 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
         }
 
         if (_za_type_t != NULL) {
-            if ((_current_type = zend_hash_index_find(_za_type_t, _cell_index)) != NULL) {
-                if (Z_TYPE_P(_current_type) == IS_LONG) {
-                    _type = Z_LVAL_P(_current_type);
-                }
+            _current_type = zend_hash_index_find(_za_type_t, _cell_index);
+
+            if (_current_type != NULL && Z_TYPE_P(_current_type) == IS_LONG) {
+                _type = Z_LVAL_P(_current_type);
             }
         }
 
-        data_to_custom_type(_string_value, _type, zv_result_t, _cell_index);
+        data_to_custom_type(_string_value, _string_value_length, _type, zv_result_t, _cell_index);
 
         FREE_TMP_VALUE:
 
-        _cell_index++;
+        ++_cell_index;
         free(_string_value);
     }
 
@@ -295,6 +291,8 @@ int sheet_row_callback (size_t row, size_t max_col, void* callback_data)
 /* {{{ */
 int sheet_cell_callback (size_t row, size_t col, const char *value, void *callback_data)
 {
+    size_t _value_length = strlen(value);
+
     if (callback_data == NULL) {
         return FAILURE;
     }
@@ -322,14 +320,14 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
     if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY) {
         zend_long _long = 0; double _double = 0;
 
-        if (is_numeric_string(value, strlen(value), &_long, &_double, 0)) {
+        if (is_numeric_string(value, _value_length, &_long, &_double, 0)) {
             if (_double > 0) {
                 ZVAL_DOUBLE(&args[2], _double);
             } else {
                 ZVAL_LONG(&args[2], _long);
             }
         } else {
-            ZVAL_STRINGL(&args[2], value, strlen(value));
+            ZVAL_STRINGL(&args[2], value, _value_length);
         }
     }
 
@@ -343,7 +341,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
             }
         }
 
-        data_to_custom_type(value, _type, &args[2], 0);
+        data_to_custom_type(value, _value_length, _type, &args[2], 0);
     }
 
     CALL_USER_FUNCTION:

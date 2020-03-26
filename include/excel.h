@@ -14,10 +14,11 @@
 #define VTIFUL_XLS_H
 
 #define V_XLS_HANDLE "handle"
-#define V_XLS_FIL    "fileName"
-#define V_XLS_COF    "config"
-#define V_XLS_PAT    "path"
-#define V_XLS_TYPE   "read_row_type"
+#define V_XLS_FIL           "fileName"
+#define V_XLS_COF           "config"
+#define V_XLS_PAT           "path"
+#define V_XLS_TYPE          "read_row_type"
+#define V_XLS_TYPE_SKIP_ROW "read_row_type_skip"
 
 #define V_XLS_CONST_READ_TYPE_INT      "TYPE_INT"
 #define V_XLS_CONST_READ_TYPE_DOUBLE   "TYPE_DOUBLE"

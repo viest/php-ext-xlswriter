@@ -88,11 +88,15 @@ void data_to_null(zval *zv_result_t)
 /* {{{ */
 void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
 {
-    if (type & READ_TYPE_DATETIME) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
+    if (type == 0) {
+        goto STRING;
+    }
 
+    if (!is_number(string_value)) {
+        goto STRING;
+    }
+
+    if (type & READ_TYPE_DATETIME) {
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
@@ -115,10 +119,6 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
     }
 
     if (type & READ_TYPE_DOUBLE) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
-
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
@@ -135,10 +135,6 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
     }
 
     if (type & READ_TYPE_INT) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
-
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 

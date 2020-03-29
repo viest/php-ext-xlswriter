@@ -57,8 +57,7 @@ void call_object_method(zval *object, const char *function_name, uint32_t param_
     zval z_f_name;
 
     ZVAL_STRINGL(&z_f_name, function_name, strlen(function_name));
-
-    _call_user_function_ex(object, &z_f_name, ret_val, param_count, params, 1);
+    call_user_function_ex(NULL, object, &z_f_name, ret_val, param_count, params, 0, NULL);
 
     if (Z_ISUNDEF_P(ret_val)) {
         ZVAL_NULL(ret_val);

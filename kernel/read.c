@@ -11,6 +11,7 @@
 */
 
 #include "xlswriter.h"
+#include "ext/date/php_date.h"
 
 /* {{{ */
 xlsxioreader file_open(const char *directory, const char *file_name) {
@@ -104,15 +105,55 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
         }
 
         double value = strtod(string_value, NULL);
+        double days, partDay, hours, minutes, seconds;
 
-        if (value != 0) {
-            value = (value - 25569) * 86400;
+        days    = floor(value);
+        partDay = value - days;
+        hours   = floor(partDay * 24);
+        partDay = partDay * 24 - hours;
+        minutes = floor(partDay * 60);
+        partDay = partDay * 60 - minutes;
+        seconds = round(partDay * 60);
+
+        zval datetime;
+        php_date_instantiate(php_date_get_date_ce(), &datetime);
+        php_date_initialize(Z_PHPDATE_P(&datetime), ZEND_STRL("1899-12-30"), NULL, NULL, 1);
+
+        zval _modify_args[1], _modify_result;
+        smart_str _modify_arg_string = {0};
+        if (days >= 0) {
+            smart_str_appendl(&_modify_arg_string, "+", 1);
         }
+        smart_str_append_long(&_modify_arg_string, days);
+        smart_str_appendl(&_modify_arg_string, " days", 5);
+        ZVAL_STR(&_modify_args[0], _modify_arg_string.s);
+        call_object_method(&datetime, "modify", 1, _modify_args, &_modify_result);
+        zval_ptr_dtor(&datetime);
+
+        zval _set_time_args[3], _set_time_result;
+        ZVAL_LONG(&_set_time_args[0], (zend_long)hours);
+        ZVAL_LONG(&_set_time_args[1], (zend_long)minutes);
+        ZVAL_LONG(&_set_time_args[2], (zend_long)seconds);
+        call_object_method(&_modify_result, "setTime", 3, _set_time_args, &_set_time_result);
+        zval_ptr_dtor(&_modify_result);
+
+        zval _format_args[1], _format_result;
+        ZVAL_STRING(&_format_args[0], "U");
+        call_object_method(&_set_time_result, "format", 1, _format_args, &_format_result);
+        zval_ptr_dtor(&_set_time_result);
+
+        zend_long timestamp = ZEND_STRTOL(Z_STRVAL(_format_result), NULL ,10);
+        zval_ptr_dtor(&_format_result);
+
+        // GMT
+        // if (value != 0) {
+        //     timestamp = (value - 25569) * 86400;
+        // }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            add_index_long(zv_result_t, zv_hashtable_index, (zend_long)(value + 0.5));
+            add_index_long(zv_result_t, zv_hashtable_index, timestamp);
         } else {
-            ZVAL_LONG(zv_result_t, (zend_long)(value + 0.5));
+            ZVAL_LONG(zv_result_t, timestamp);
         }
 
         return;
@@ -379,3 +420,24 @@ void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_r
     }
 }
 /* }}} */
+
+void skip_rows(xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long zl_skip_row)
+{
+    while (sheet_read_row(sheet_t))
+    {
+        zval _zv_tmp_row;
+        ZVAL_NULL(&_zv_tmp_row);
+
+        if (xlsxioread_sheet_last_row_index(sheet_t) < zl_skip_row) {
+            sheet_read_row(sheet_t);
+        }
+
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, READ_SKIP_ROW);
+
+        zval_ptr_dtor(&_zv_tmp_row);
+
+        if (xlsxioread_sheet_last_row_index(sheet_t) >= zl_skip_row) {
+            break;
+        }
+    }
+}

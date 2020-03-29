@@ -184,9 +184,28 @@ void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_re
     worksheet_write_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(value), format);
 }
 
+/*
+ * Write the chart to the file
+ */
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res)
 {
     worksheet_insert_chart(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, chart_resource->chart);
+}
+
+/*
+ * Write the datetime to the file
+ */
+void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxw_format *format_handle)
+{
+    lxw_format *value_format = NULL;
+
+    if (format_handle != NULL) {
+        format_copy(value_format, format_handle);
+    }
+
+    value_format = workbook_add_format(res->workbook);
+    format_set_num_format(value_format, ZSTR_VAL(format));
+    worksheet_write_datetime(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, datetime, value_format);
 }
 
 /*

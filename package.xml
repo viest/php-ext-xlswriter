@@ -211,12 +211,14 @@
    <file md5sum="f1addf56af65d4cccc0e1a2e92bd1f46" name="tests/open_xlsx_file.phpt" role="test" />
    <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="test" />
    <file md5sum="30c1a9fbb09eed1908a84c5b617d292f" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
+   <file name="tests/open_xlsx_get_data_skip_rows.phpt" role="test" />
    <file md5sum="6ea988e0cc58f2bba7f2a91e133f00cc" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
    <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_get_sheet_not_found_data.phpt" role="test" />
    <file md5sum="f8a2c32aad6f4828fcac7b4c6ccf7a74" name="tests/open_xlsx_next_cell_callback.phpt" role="test" />
    <file md5sum="38a275929a200a29ca37e4c15cd083ce" name="tests/open_xlsx_next_cell_callback_with_data_type.phpt" role="test" />
    <file md5sum="154e924e44ba43aec9abc6d6b6d389b1" name="tests/open_xlsx_next_row.phpt" role="test" />
    <file md5sum="bb159ef1e1f3312a90cec655c12227b2" name="tests/open_xlsx_next_row_skip_empty.phpt" role="test" />
+   <file name="tests/open_xlsx_next_row_skip_rows.phpt" role="test" />
    <file md5sum="95fca9449059d583fc0b54cf7c571c8f" name="tests/open_xlsx_next_row_with_data_type_date.phpt" role="test" />
    <file md5sum="d39c67c041982264d563450737396e00" name="tests/open_xlsx_next_row_with_data_type_date_array_index.phpt" role="test" />
    <file md5sum="68628ad9158f5860917860eef232cbf3" name="tests/open_xlsx_next_row_with_data_type_string.phpt" role="test" />
@@ -231,6 +233,8 @@
    <file name="tests/xlsx_to_csv_callback.phpt" role="test" />
    <file name="tests/xlsx_to_csv_callback_custom_delimiter.phpt" role="test" />
    <file name="tests/xlsx_to_csv_custom_delimiter.phpt" role="test" />
+   <file name="tests/xlsx_to_csv_skip_rows.phpt" role="test" />
+   <file name="tests/xlsx_to_csv_skip_rows_callback.phpt" role="test" />
    <file md5sum="a9af7f4ca385ba41b008b50ac67f8e96" name="tests/zoom.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />

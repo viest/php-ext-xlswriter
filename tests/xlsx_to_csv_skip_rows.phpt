@@ -1,0 +1,59 @@
+--TEST--
+Check for vtiful presence
+--SKIPIF--
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
+--FILE--
+<?php
+$config   = ['path' => './tests'];
+$excel    = new \Vtiful\Kernel\Excel($config);
+$filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
+    ->header(['Item', 'Cost'])
+    ->data([
+        ['Item_1', 'Cost_1', 10, 10.9999995],
+        ['Item_2', 'Cost_2', 10, 10.9999995],
+        ['Item_3', 'Cost_3', 10, 10.9999995],
+    ])
+    ->output();
+
+$fp = fopen('./tests/file.csv', 'w');
+
+$csvResult = $excel->openFile('tutorial.xlsx')
+    ->openSheet()
+    ->setSkipRows(1)
+    ->putCSV($fp);
+
+fclose($fp);
+
+var_dump($csvResult);
+var_dump(file_get_contents('./tests/file.csv'));
+
+$fp = fopen('./tests/file.csv', 'w');
+
+$csvResult = $excel->openFile('tutorial.xlsx')
+    ->openSheet()
+    ->setSkipRows(2)
+    ->putCSV($fp);
+
+fclose($fp);
+
+var_dump($csvResult);
+var_dump(file_get_contents('./tests/file.csv'));
+?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/file.csv');
+?>
+--EXPECT--
+bool(true)
+string(84) "Item_1,Cost_1,10,10.9999995
+Item_2,Cost_2,10,10.9999995
+Item_3,Cost_3,10,10.9999995
+"
+bool(true)
+string(56) "Item_2,Cost_2,10,10.9999995
+Item_3,Cost_3,10,10.9999995
+"

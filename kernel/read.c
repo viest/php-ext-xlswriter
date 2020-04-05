@@ -15,18 +15,20 @@
 
 /* {{{ */
 xlsxioreader file_open(const char *directory, const char *file_name) {
-    char path[strlen(directory) + strlen(file_name) + 2];
+    char *path = (char *)emalloc(strlen(directory) + strlen(file_name) + 2);
     xlsxioreader file;
 
-    lxw_strcpy(path, directory);
+    strcpy(path, directory);
     strcat(path, "/");
     strcat(path, file_name);
 
     if ((file = xlsxioread_open(path)) == NULL) {
+        efree(path);
         zend_throw_exception(vtiful_exception_ce, "Failed to open file", 100);
         return NULL;
     }
 
+    efree(path);
     return file;
 }
 /* }}} */

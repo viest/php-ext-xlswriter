@@ -2,220 +2,208 @@ version: "{branch}.build.{build}"
 skip_tags: true
 
 branches:
-        only:
-                - master
-                - dev
-                - dev-read
+  only:
+    - master
+    - dev
 
 clone_folder:  c:\projects\xlswriter
 
 install:
-        ps: |
-                if (-not (Test-Path c:\build-cache)) {
-                        mkdir c:\build-cache
-                }
-                $bname = 'php-sdk-' + $env:BIN_SDK_VER + '.zip'
-                if (-not (Test-Path c:\build-cache\$bname)) {
-                        Invoke-WebRequest "https://github.com/OSTC/php-sdk-binary-tools/archive/$bname" -OutFile "c:\build-cache\$bname"
-                }
-                $dname0 = 'php-sdk-binary-tools-php-sdk-' + $env:BIN_SDK_VER
-                $dname1 = 'php-sdk-' + $env:BIN_SDK_VER
-                if (-not (Test-Path c:\build-cache\$dname1)) {
-                        7z x c:\build-cache\$bname -oc:\build-cache
-                        move c:\build-cache\$dname0 c:\build-cache\$dname1
-                }
-                $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname1 = 'zlib'
-                if (-not (Test-Path c:\build-cache\$lname0)) {
-                        $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
-                        Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
-                }
-                if (-not (Test-Path c:\build-cache\$lname1)) {
-                        & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
-                }
-                $lname2 = 'libxlsxwriter-' + $env:LIBXLSXWRITER_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $lname3 = 'libxlsxwriter'
-                if (-not (Test-Path c:\build-cache\$lname2)) {
-                        $url = "https://windows.php.net/downloads/pecl/deps/" + $lname2
-                        Invoke-WebRequest $url -OutFile "c:\build-cache\$lname2"
-                }
-                if (-not (Test-Path c:\build-cache\$lname3)) {
-                        & 7z x c:\build-cache\$lname2 -oc:\build-cache\$lname3
-                }
-                move c:\build-cache\zlib\lib\*.*     c:\build-cache\libxlsxwriter\lib
-                move c:\build-cache\zlib\include\*.* c:\build-cache\libxlsxwriter\include
+  ps: |
+    if (-not (Test-Path c:\build-cache)) {
+            mkdir c:\build-cache
+    }
+    $bname = 'php-sdk-' + $env:BIN_SDK_VER + '.zip'
+    if (-not (Test-Path c:\build-cache\$bname)) {
+            Invoke-WebRequest "https://github.com/OSTC/php-sdk-binary-tools/archive/$bname" -OutFile "c:\build-cache\$bname"
+    }
+    $dname0 = 'php-sdk-binary-tools-php-sdk-' + $env:BIN_SDK_VER
+    $dname1 = 'php-sdk-' + $env:BIN_SDK_VER
+    if (-not (Test-Path c:\build-cache\$dname1)) {
+            7z x c:\build-cache\$bname -oc:\build-cache
+            move c:\build-cache\$dname0 c:\build-cache\$dname1
+    }
+    $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+    $lname1 = 'zlib'
+    if (-not (Test-Path c:\build-cache\$lname0)) {
+            $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
+            Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
+    }
+    if (-not (Test-Path c:\build-cache\$lname1)) {
+            & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
+    }
 
 cache:
-        c:\build-cache -> .appveyor.yml
+  c:\build-cache -> .appveyor.yml
 
 environment:
-        BIN_SDK_VER: 2.1.2
-        LIBXLSXWRITER_VER: 0.7.7
-        matrix:
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x64
-                  VC: vc14
-                  PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x64
-                  VC: vc14
-                  PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x86
-                  VC: vc14
-                  PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x86
-                  VC: vc14
-                  PHP_VER: 7.0.28
-                  ZLIB_VER: 1.2.8
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x64
-                  VC: vc14
-                  PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x64
-                  VC: vc14
-                  PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x86
-                  VC: vc14
-                  PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-                  ARCH: x86
-                  VC: vc14
-                  PHP_VER: 7.1.15
-                  ZLIB_VER: 1.2.8
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x64
-                  VC: vc15
-                  PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x64
-                  VC: vc15
-                  PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x86
-                  VC: vc15
-                  PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x86
-                  VC: vc15
-                  PHP_VER: 7.2.3
-                  ZLIB_VER: 1.2.11
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x64
-                  VC: vc15
-                  PHP_VER: 7.3.0
-                  ZLIB_VER: 1.2.11
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x64
-                  VC: vc15
-                  PHP_VER: 7.3.0
-                  ZLIB_VER: 1.2.11
-                  TS: 1
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x86
-                  VC: vc15
-                  PHP_VER: 7.3.0
-                  ZLIB_VER: 1.2.11
-                  TS: 0
-                - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-                  ARCH: x86
-                  VC: vc15
-                  PHP_VER: 7.3.0
-                  ZLIB_VER: 1.2.11
-                  TS: 1
+  BIN_SDK_VER: 2.1.2
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x64
+      VC: vc14
+      PHP_VER: 7.0.28
+      ZLIB_VER: 1.2.8
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x64
+      VC: vc14
+      PHP_VER: 7.0.28
+      ZLIB_VER: 1.2.8
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x86
+      VC: vc14
+      PHP_VER: 7.0.28
+      ZLIB_VER: 1.2.8
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x86
+      VC: vc14
+      PHP_VER: 7.0.28
+      ZLIB_VER: 1.2.8
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x64
+      VC: vc14
+      PHP_VER: 7.1.15
+      ZLIB_VER: 1.2.8
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x64
+      VC: vc14
+      PHP_VER: 7.1.15
+      ZLIB_VER: 1.2.8
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x86
+      VC: vc14
+      PHP_VER: 7.1.15
+      ZLIB_VER: 1.2.8
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: x86
+      VC: vc14
+      PHP_VER: 7.1.15
+      ZLIB_VER: 1.2.8
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x64
+      VC: vc15
+      PHP_VER: 7.2.3
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x64
+      VC: vc15
+      PHP_VER: 7.2.3
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x86
+      VC: vc15
+      PHP_VER: 7.2.3
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x86
+      VC: vc15
+      PHP_VER: 7.2.3
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x64
+      VC: vc15
+      PHP_VER: 7.3.0
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x64
+      VC: vc15
+      PHP_VER: 7.3.0
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x86
+      VC: vc15
+      PHP_VER: 7.3.0
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ARCH: x86
+      VC: vc15
+      PHP_VER: 7.3.0
+      ZLIB_VER: 1.2.11
+      TS: 1
 
 build_script:
-        ps: |
-                $ts_part = ''
-                if ('0' -eq $env:TS) { $ts_part = '-nts' }
-                $bname = 'php-devel-pack-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
-                if (-not (Test-Path c:\build-cache\$bname)) {
-                        Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
-                        if (-not (Test-Path c:\build-cache\$bname)) {
-                                Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
-                        }
-                }
-                $dname0 = 'php-' + $env:PHP_VER + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
-                $dname1 = 'php-' + $env:PHP_VER + $ts_part + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
-                if (-not (Test-Path c:\build-cache\$dname1)) {
-                        7z x c:\build-cache\$bname -oc:\build-cache
-                        move c:\build-cache\$dname0 c:\build-cache\$dname1
-                }
-                cd c:\projects\xlswriter
-                $env:PATH = 'c:\build-cache\' + $dname1 + ';' + $env:PATH
-                #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
-                #echo "" | Out-File -Encoding "ASCII" -Append task.bat
-                echo "" | Out-File -Encoding "ASCII" task.bat
-                echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
-                $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --enable-debug-pack 2>&1'
-                echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat
-                echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
-                echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
-                $here = (Get-Item -Path "." -Verbose).FullName
-                $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'
-                $task = $here + '\task.bat'
-                & $runner -t $task
+  ps: |
+    $ts_part = ''
+    if ('0' -eq $env:TS) { $ts_part = '-nts' }
+    $bname = 'php-devel-pack-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
+    if (-not (Test-Path c:\build-cache\$bname)) {
+            Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
+            if (-not (Test-Path c:\build-cache\$bname)) {
+                    Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
+            }
+    }
+    $dname0 = 'php-' + $env:PHP_VER + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
+    $dname1 = 'php-' + $env:PHP_VER + $ts_part + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
+    if (-not (Test-Path c:\build-cache\$dname1)) {
+            7z x c:\build-cache\$bname -oc:\build-cache
+            move c:\build-cache\$dname0 c:\build-cache\$dname1
+    }
+    cd c:\projects\xlswriter
+    $env:PATH = 'c:\build-cache\' + $dname1 + ';' + $env:PATH
+    #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
+    #echo "" | Out-File -Encoding "ASCII" -Append task.bat
+    echo "" | Out-File -Encoding "ASCII" task.bat
+    echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
+    echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
+    $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --enable-debug-pack 2>&1'
+    echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat
+    echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
+    echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
+    $here = (Get-Item -Path "." -Verbose).FullName
+    $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'
+    $task = $here + '\task.bat'
+    & $runner -t $task
 
 after_build:
-        ps: |
-                $ts_part = 'ts'
-                if ('0' -eq $env:TS) { $ts_part = 'nts' }
-                $zip_bname = 'php_xlswriter-' + $env:APPVEYOR_REPO_COMMIT.substring(0, 8) + '-' + $env:PHP_VER.substring(0, 3) + '-' + $ts_part + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-                $dir = 'c:\projects\xlswriter\';
-                if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
-                $dir = $dir + 'Release'
-                if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
-                & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\libxlsxwriter\lib\xlsxwriter.lib c:\build-cache\libxlsxwriter\lib\xlsxwriter.pdb
-                Push-AppveyorArtifact c:\$zip_bname
+  ps: |
+    $ts_part = 'ts'
+    if ('0' -eq $env:TS) { $ts_part = 'nts' }
+    $zip_bname = 'php_xlswriter-' + $env:APPVEYOR_REPO_COMMIT.substring(0, 8) + '-' + $env:PHP_VER.substring(0, 3) + '-' + $ts_part + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+    $dir = 'c:\projects\xlswriter\';
+    if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
+    $dir = $dir + 'Release'
+    if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
+    & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\zlib\lib\zlib.lib c:\build-cache\zlib\lib\zlib.pdb
+    Push-AppveyorArtifact c:\$zip_bname
 
 test_script:
-        ps: |
-                $ts_part = ''
-                if ('0' -eq $env:TS) { $ts_part = '-nts' }
-                $bname = 'php-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
-                if (-not (Test-Path c:\build-cache\$bname)) {
-                        Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
-                        if (-not (Test-Path c:\build-cache\$bname)) {
-                                Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
-                        }
-                }
-                $dname = 'php-' + $env:PHP_VER + $ts_part + '-' + $env:VC.toUpper() + '-' + $env:ARCH
-                if (-not (Test-Path c:\build-cache\$dname)) {
-                        7z x c:\build-cache\$bname -oc:\build-cache\$dname
-                }
-                cd c:\projects\xlswriter
-                echo "" | Out-File -Encoding "ASCII" task.bat
-                echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
-                $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\libxlsxwriter\lib --with-extra-includes=c:\build-cache\libxlsxwriter\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
-                echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
-                echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
-                echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
-                $here = (Get-Item -Path "." -Verbose).FullName
-                $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'
-                $task = $here + '\task.bat'
-                & $runner -t $task
+  ps: |
+    $ts_part = ''
+    if ('0' -eq $env:TS) { $ts_part = '-nts' }
+    $bname = 'php-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
+    if (-not (Test-Path c:\build-cache\$bname)) {
+            Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
+            if (-not (Test-Path c:\build-cache\$bname)) {
+                    Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
+            }
+    }
+    $dname = 'php-' + $env:PHP_VER + $ts_part + '-' + $env:VC.toUpper() + '-' + $env:ARCH
+    if (-not (Test-Path c:\build-cache\$dname)) {
+            7z x c:\build-cache\$bname -oc:\build-cache\$dname
+    }
+    cd c:\projects\xlswriter
+    echo "" | Out-File -Encoding "ASCII" task.bat
+    echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
+    $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
+    echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
+    echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
+    echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
+    $here = (Get-Item -Path "." -Verbose).FullName
+    $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'
+    $task = $here + '\task.bat'
+    & $runner -t $task

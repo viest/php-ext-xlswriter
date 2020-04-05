@@ -84,6 +84,10 @@ composer require viest/php-ext-xlswriter-ide-helper:dev-master
 
 <img width="160" src="resource/qq.jpg"/>
 
+## Financial donation
+
+<img height="220" src="resource/pay.jpg"/>
+
 ## Contributors
 
 ### Code Contributors

@@ -11,6 +11,7 @@
 */
 
 #include "xlswriter.h"
+#include "ext/date/php_date.h"
 
 zend_class_entry *vtiful_xls_ce;
 
@@ -208,6 +209,10 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_type_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, zv_type_t)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_skip_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, zv_skip_t)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_next_cell_callback_arginfo, 0, 0, 2)
@@ -557,21 +562,27 @@ PHP_METHOD(vtiful_xls, insertDate)
         format = zend_string_init(ZEND_STRL("yyyy-mm-dd hh:mm:ss"), 0);
     }
 
-    zval _zv_double_time;
-    ZVAL_DOUBLE(&_zv_double_time, ((double)data->value.lval / 86400 + 25569));
+    int yearLocal   = php_idate('Y', data->value.lval, 0);
+    int monthLocal  = php_idate('m', data->value.lval, 0);
+    int dayLocal    = php_idate('d', data->value.lval, 0);
+    int hourLocal   = php_idate('H', data->value.lval, 0);
+    int minuteLocal = php_idate('i', data->value.lval, 0);
+    int secondLocal = php_idate('s', data->value.lval, 0);
+
+    lxw_datetime datetime = {
+            yearLocal, monthLocal, dayLocal, hourLocal, minuteLocal, secondLocal
+    };
 
     if (format_handle) {
-        type_writer(&_zv_double_time, row, column, &obj->write_ptr, format, zval_get_format(format_handle));
+        datetime_writer(&datetime, row, column, format, &obj->write_ptr, zval_get_format(format_handle));
     } else {
-        type_writer(&_zv_double_time, row, column, &obj->write_ptr, format, obj->format_ptr.format);
+        datetime_writer(&datetime, row, column, format, &obj->write_ptr, obj->format_ptr.format);
     }
 
     // Release default format
     if (ZEND_NUM_ARGS() == 3) {
         zend_string_release(format);
     }
-
-    zval_ptr_dtor(&_zv_double_time);
 }
 /* }}} */
 
@@ -1023,6 +1034,28 @@ PHP_METHOD(vtiful_xls, setType)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setSkipRows(int $skip)
+ */
+PHP_METHOD(vtiful_xls, setSkipRows)
+{
+    zend_long zl_skip = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(zl_skip)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    if (!obj->read_ptr.sheet_t) {
+        RETURN_FALSE;
+    }
+
+    skip_rows(obj->read_ptr.sheet_t, NULL, zl_skip);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::putCSV()
  */
 PHP_METHOD(vtiful_xls, putCSV)
@@ -1214,6 +1247,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, putCSVCallback,   xls_put_csv_callback_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, sheetList,        xls_sheet_list_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setSkipRows,      xls_set_skip_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getSheetData,     xls_get_sheet_data_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextRow,          xls_next_row_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextCellCallback, xls_next_cell_callback_arginfo, ZEND_ACC_PUBLIC)

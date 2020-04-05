@@ -11,6 +11,7 @@
 */
 
 #include "xlswriter.h"
+#include "ext/date/php_date.h"
 
 /* {{{ */
 xlsxioreader file_open(const char *directory, const char *file_name) {
@@ -86,15 +87,17 @@ void data_to_null(zval *zv_result_t)
 /* }}} */
 
 /* {{{ */
-void data_to_custom_type(const char *string_value, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
+void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
 {
-    size_t string_value_length = strlen(string_value);
+    if (type == 0) {
+        goto STRING;
+    }
+
+    if (!is_number(string_value)) {
+        goto STRING;
+    }
 
     if (type & READ_TYPE_DATETIME) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
-
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
@@ -102,25 +105,61 @@ void data_to_custom_type(const char *string_value, const zend_ulong type, zval *
         }
 
         double value = strtod(string_value, NULL);
+        double days, partDay, hours, minutes, seconds;
 
-        if (value != 0) {
-            value = (value - 25569) * 86400;
+        days    = floor(value);
+        partDay = value - days;
+        hours   = floor(partDay * 24);
+        partDay = partDay * 24 - hours;
+        minutes = floor(partDay * 60);
+        partDay = partDay * 60 - minutes;
+        seconds = round(partDay * 60);
+
+        zval datetime;
+        php_date_instantiate(php_date_get_date_ce(), &datetime);
+        php_date_initialize(Z_PHPDATE_P(&datetime), ZEND_STRL("1899-12-30"), NULL, NULL, 1);
+
+        zval _modify_args[1], _modify_result;
+        smart_str _modify_arg_string = {0};
+        if (days >= 0) {
+            smart_str_appendl(&_modify_arg_string, "+", 1);
         }
+        smart_str_append_long(&_modify_arg_string, days);
+        smart_str_appendl(&_modify_arg_string, " days", 5);
+        ZVAL_STR(&_modify_args[0], _modify_arg_string.s);
+        call_object_method(&datetime, "modify", 1, _modify_args, &_modify_result);
+        zval_ptr_dtor(&datetime);
+
+        zval _set_time_args[3], _set_time_result;
+        ZVAL_LONG(&_set_time_args[0], (zend_long)hours);
+        ZVAL_LONG(&_set_time_args[1], (zend_long)minutes);
+        ZVAL_LONG(&_set_time_args[2], (zend_long)seconds);
+        call_object_method(&_modify_result, "setTime", 3, _set_time_args, &_set_time_result);
+        zval_ptr_dtor(&_modify_result);
+
+        zval _format_args[1], _format_result;
+        ZVAL_STRING(&_format_args[0], "U");
+        call_object_method(&_set_time_result, "format", 1, _format_args, &_format_result);
+        zval_ptr_dtor(&_set_time_result);
+
+        zend_long timestamp = ZEND_STRTOL(Z_STRVAL(_format_result), NULL ,10);
+        zval_ptr_dtor(&_format_result);
+
+        // GMT
+        // if (value != 0) {
+        //     timestamp = (value - 25569) * 86400;
+        // }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            add_index_long(zv_result_t, zv_hashtable_index, (zend_long)(value + 0.5));
+            add_index_long(zv_result_t, zv_hashtable_index, timestamp);
         } else {
-            ZVAL_LONG(zv_result_t, (zend_long)(value + 0.5));
+            ZVAL_LONG(zv_result_t, timestamp);
         }
 
         return;
     }
 
     if (type & READ_TYPE_DOUBLE) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
-
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
@@ -137,10 +176,6 @@ void data_to_custom_type(const char *string_value, const zend_ulong type, zval *
     }
 
     if (type & READ_TYPE_INT) {
-        if (!is_number(string_value)) {
-            goto STRING;
-        }
-
         if (string_value_length == 0) {
             data_to_null(zv_result_t);
 
@@ -229,14 +264,12 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
 
     while ((_string_value = xlsxioread_sheet_next_cell(sheet_t)) != NULL)
     {
+        size_t _string_value_length = strlen(_string_value);
+
         _type = READ_TYPE_EMPTY;
         _last_cell_index = xlsxioread_sheet_last_column_index(sheet_t) - 1;
 
-        if (_last_cell_index < 0) {
-            goto FREE_TMP_VALUE;
-        }
-
-        if (_skip_empty_value_cell && strlen(_string_value) == 0) {
+        if (_last_cell_index < 0 || (_skip_empty_value_cell && _string_value_length == 0)) {
             goto FREE_TMP_VALUE;
         }
 
@@ -245,18 +278,18 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
         }
 
         if (_za_type_t != NULL) {
-            if ((_current_type = zend_hash_index_find(_za_type_t, _cell_index)) != NULL) {
-                if (Z_TYPE_P(_current_type) == IS_LONG) {
-                    _type = Z_LVAL_P(_current_type);
-                }
+            _current_type = zend_hash_index_find(_za_type_t, _cell_index);
+
+            if (_current_type != NULL && Z_TYPE_P(_current_type) == IS_LONG) {
+                _type = Z_LVAL_P(_current_type);
             }
         }
 
-        data_to_custom_type(_string_value, _type, zv_result_t, _cell_index);
+        data_to_custom_type(_string_value, _string_value_length, _type, zv_result_t, _cell_index);
 
         FREE_TMP_VALUE:
 
-        _cell_index++;
+        ++_cell_index;
         free(_string_value);
     }
 
@@ -295,6 +328,8 @@ int sheet_row_callback (size_t row, size_t max_col, void* callback_data)
 /* {{{ */
 int sheet_cell_callback (size_t row, size_t col, const char *value, void *callback_data)
 {
+    size_t _value_length = strlen(value);
+
     if (callback_data == NULL) {
         return FAILURE;
     }
@@ -322,14 +357,14 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
     if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY) {
         zend_long _long = 0; double _double = 0;
 
-        if (is_numeric_string(value, strlen(value), &_long, &_double, 0)) {
+        if (is_numeric_string(value, _value_length, &_long, &_double, 0)) {
             if (_double > 0) {
                 ZVAL_DOUBLE(&args[2], _double);
             } else {
                 ZVAL_LONG(&args[2], _long);
             }
         } else {
-            ZVAL_STRINGL(&args[2], value, strlen(value));
+            ZVAL_STRINGL(&args[2], value, _value_length);
         }
     }
 
@@ -343,7 +378,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
             }
         }
 
-        data_to_custom_type(value, _type, &args[2], 0);
+        data_to_custom_type(value, _value_length, _type, &args[2], 0);
     }
 
     CALL_USER_FUNCTION:
@@ -385,3 +420,24 @@ void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_r
     }
 }
 /* }}} */
+
+void skip_rows(xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long zl_skip_row)
+{
+    while (sheet_read_row(sheet_t))
+    {
+        zval _zv_tmp_row;
+        ZVAL_NULL(&_zv_tmp_row);
+
+        if (xlsxioread_sheet_last_row_index(sheet_t) < zl_skip_row) {
+            sheet_read_row(sheet_t);
+        }
+
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, READ_SKIP_ROW);
+
+        zval_ptr_dtor(&_zv_tmp_row);
+
+        if (xlsxioread_sheet_last_row_index(sheet_t) >= zl_skip_row) {
+            break;
+        }
+    }
+}

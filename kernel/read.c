@@ -198,30 +198,35 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
     STRING:
 
     {
-        zend_long _long = 0; double _double = 0;
-
         if (!(type & READ_TYPE_STRING)) {
+            zend_long _long = 0; double _double = 0;
             is_numeric_string(string_value, string_value_length, &_long, &_double, 0);
+
+            if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
+                if (_double > 0) {
+                    add_index_double(zv_result_t, zv_hashtable_index, _double);
+                    return;
+                }
+
+                if (_long > 0) {
+                    add_index_long(zv_result_t, zv_hashtable_index, _long);
+                    return;
+                }
+            } else {
+                if (_double > 0) {
+                    ZVAL_DOUBLE(zv_result_t, _double);
+                    return;
+                }
+
+                if (_long > 0) {
+                    ZVAL_LONG(zv_result_t, _long);
+                    return;
+                }
+            }
         }
 
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-            if (_double > 0) {
-                add_index_double(zv_result_t, zv_hashtable_index, _double);
-                return;
-            } else if (_long > 0) {
-                add_index_long(zv_result_t, zv_hashtable_index, _long);
-                return;
-            }
-
             add_index_stringl(zv_result_t, zv_hashtable_index, string_value, string_value_length);
-            return;
-        }
-
-        if (_double > 0) {
-            ZVAL_DOUBLE(zv_result_t, _double);
-            return;
-        } else if (_long > 0) {
-            ZVAL_LONG(zv_result_t, _long);
             return;
         }
 

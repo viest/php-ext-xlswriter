@@ -9,15 +9,7 @@ if (PHP_XLSWRITER != "no") {
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h",  "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\include;" + PHP_EXTRA_INCLUDES) &&
         CHECK_HEADER_ADD_INCLUDE("expat.h",       "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libexpat\\expat\\lib;" + PHP_EXTRA_INCLUDES) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxio_read.h", "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxio\\include;" + PHP_EXTRA_INCLUDES) &&
-        CHECK_HEADER_ADD_INCLUDE("xlswriter.h",   "CFLAGS_XLSWRITER", configure_module_dirname + "\\include;" + PHP_EXTRA_INCLUDES) &&
-        ((
-            ((PHP_ZLIB == "no") && (CHECK_LIB("zlib_a.lib;zlib.lib", "xlswriter", PHP_XLSWRITER))) ||
-            (PHP_ZLIB_SHARED && CHECK_LIB("zlib.lib", "xlswriter", PHP_XLSWRITER)) ||
-            (PHP_ZLIB == "yes" && (!PHP_ZLIB_SHARED))
-        ) || (
-            CHECK_LIB("zlib.lib;zlib_a.lib", "xlswriter", PHP_XLSWRITER) &&
-            CHECK_HEADER_ADD_INCLUDE("zlib.h", "CFLAGS_XLSWRITER", PHP_PHP_BUILD + "\\include;" + PHP_XLSWRITER)
-        ))
+        CHECK_HEADER_ADD_INCLUDE("xlswriter.h",   "CFLAGS_XLSWRITER", configure_module_dirname + "\\include;" + PHP_EXTRA_INCLUDES)
     ) {
         EXTENSION("xlswriter", "xlswriter.c")
 

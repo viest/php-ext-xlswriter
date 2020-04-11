@@ -23,15 +23,6 @@ install:
             7z x c:\build-cache\$bname -oc:\build-cache
             move c:\build-cache\$dname0 c:\build-cache\$dname1
     }
-    $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
-    $lname1 = 'zlib'
-    if (-not (Test-Path c:\build-cache\$lname0)) {
-            $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
-            Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
-    }
-    if (-not (Test-Path c:\build-cache\$lname1)) {
-            & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
-    }
 
 cache:
   c:\build-cache -> .appveyor.yml
@@ -160,7 +151,7 @@ build_script:
     echo "" | Out-File -Encoding "ASCII" task.bat
     echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
-    $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --enable-debug-pack 2>&1'
+    $conf_cmd = 'call configure --with-xlswriter --enable-debug-pack 2>&1'
     echo $conf_cmd | Out-File -Encoding "ASCII" -Append task.bat
     echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
@@ -178,7 +169,7 @@ after_build:
     if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
     $dir = $dir + 'Release'
     if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
-    & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\zlib\lib\zlib.lib c:\build-cache\zlib\lib\zlib.pdb
+    & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE
     Push-AppveyorArtifact c:\$zip_bname
 
 test_script:
@@ -199,7 +190,7 @@ test_script:
     cd c:\projects\xlswriter
     echo "" | Out-File -Encoding "ASCII" task.bat
     echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
-    $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
+    $cmd = 'call configure --with-xlswriter --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
     echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
     echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
     echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat

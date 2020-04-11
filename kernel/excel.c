@@ -12,6 +12,7 @@
 
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
+#include "ext/standard/php_filestat.h"
 
 zend_class_entry *vtiful_xls_ce;
 
@@ -273,7 +274,7 @@ PHP_METHOD(vtiful_xls, __construct)
 PHP_METHOD(vtiful_xls, fileName)
 {
     char *sheet_name = NULL;
-    zval file_path, *dir_path = NULL;
+    zval file_path, dir_exists, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -282,9 +283,16 @@ PHP_METHOD(vtiful_xls, fileName)
             Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
+    ZVAL_NULL(&dir_exists);
     ZVAL_COPY(return_value, getThis());
 
     GET_CONFIG_PATH(dir_path, vtiful_xls_ce, return_value);
+
+    php_stat(ZSTR_VAL(Z_STR_P(dir_path)), strlen(ZSTR_VAL(Z_STR_P(dir_path))), FS_IS_DIR, &dir_exists);
+
+    if (Z_TYPE(dir_exists) == IS_FALSE) {
+        zend_throw_exception(vtiful_exception_ce, "Configure 'path' directory does not exist", 121);
+    }
 
     xls_object *obj = Z_XLS_P(getThis());
 
@@ -302,6 +310,8 @@ PHP_METHOD(vtiful_xls, fileName)
 
         zval_ptr_dtor(&file_path);
     }
+
+    zval_ptr_dtor(&dir_exists);
 }
 /* }}} */
 
@@ -913,15 +923,15 @@ PHP_METHOD(vtiful_xls, stringFromColumnIndex)
 PHP_METHOD(vtiful_xls, gridline)
 {
     zend_long option = LXW_SHOW_ALL_GRIDLINES;
-    
+
     ZEND_PARSE_PARAMETERS_START(1, 1)
             Z_PARAM_LONG(option)
     ZEND_PARSE_PARAMETERS_END();
-    
+
     ZVAL_COPY(return_value, getThis());
 
     xls_object* obj = Z_XLS_P(getThis());
-    
+
     gridlines(&obj->write_ptr, option);
 }
 /* }}} */
@@ -1236,7 +1246,7 @@ zend_function_entry xls_methods[] = {
 
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
-        
+
         PHP_ME(vtiful_xls, columnIndexFromString,  xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,  xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
@@ -1285,7 +1295,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_ALL",    LXW_SHOW_ALL_GRIDLINES)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_PRINT",  LXW_SHOW_PRINT_GRIDLINES)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_SCREEN", LXW_SHOW_SCREEN_GRIDLINES)
-    
+
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_STRING,   READ_TYPE_STRING);

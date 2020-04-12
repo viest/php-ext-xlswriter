@@ -95,6 +95,8 @@
    <file md5sum="6e72c46776f0db175ec8f15144a3c250" name="library/libxlsxwriter/third_party/minizip/crypt.h" role="src" />
    <file md5sum="5960f0b3f3933d8a5f466e9ca36bb756" name="library/libxlsxwriter/third_party/minizip/ioapi.c" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="library/libxlsxwriter/third_party/minizip/ioapi.h" role="src" />
+   <file name="library/libxlsxwriter/third_party/minizip/iowin32.c" role="src" />
+   <file name="library/libxlsxwriter/third_party/minizip/iowin32.h" role="src" />
    <file md5sum="254fe0695464d4cbbaa1fdc0c83c6a3c" name="library/libxlsxwriter/third_party/minizip/miniunz.c" role="src" />
    <file md5sum="e2a4a0c1cad4ceb1f77fb3b7e813bb35" name="library/libxlsxwriter/third_party/minizip/minizip.c" role="src" />
    <file md5sum="174c6f2a32dad5023616fc45855d8c59" name="library/libxlsxwriter/third_party/minizip/mztools.c" role="src" />

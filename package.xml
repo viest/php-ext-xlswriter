@@ -33,15 +33,15 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2020-04-11</date>
- <time>22:00:00</time>
+ <date>2020-04-12</date>
+ <time>13:50:00</time>
  <version>
   <release>1.3.4.1</release>
   <api>1.3.4.1</api>
  </version>
  <stability>
-  <release>beta</release>
-  <api>beta</api>
+  <release>stable</release>
+  <api>stable</api>
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>

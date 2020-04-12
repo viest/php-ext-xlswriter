@@ -45,6 +45,7 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
+- Feat directory not exist error change to exception.
 - Windows full function support.
  </notes>
  <contents>

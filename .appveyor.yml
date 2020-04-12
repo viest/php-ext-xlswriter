@@ -196,7 +196,7 @@ after_build:
   ps: |
     $ts_part = 'ts'
     if ('0' -eq $env:TS) { $ts_part = 'nts' }
-    $zip_bname = 'php_xlswriter-' + $env:APPVEYOR_REPO_COMMIT.substring(0, 8) + '-' + $env:PHP_VER.substring(0, 3) + '-' + $ts_part + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+    $zip_bname = 'php-windows-xlswriter-' + $env:APPVEYOR_REPO_COMMIT.substring(0, 8) + '-' + $env:PHP_VER.substring(0, 3) + '-' + $ts_part + '-' + $env:VC + '-' + $env:ARCH + '.zip'
     $dir = 'c:\projects\xlswriter\';
     if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
     $dir = $dir + 'Release'
@@ -234,7 +234,6 @@ test_script:
 deploy:
   provider: GitHub
   auth_token: $(GITHUB_OAUTH_TOKEN)
-  description: 'PHP extension xlswriter windows release'
   draft: false
   prerelease: false
   on:

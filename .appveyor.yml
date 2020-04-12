@@ -231,3 +231,12 @@ test_script:
     $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'
     $task = $here + '\task.bat'
     & $runner -t $task
+
+deploy:
+  provider: GitHub
+  auth_token: $(GITHUB_OAUTH_TOKEN)
+  description: 'PHP extension xlswriter windows release'
+  draft: false
+  prerelease: false
+  on:
+    APPVEYOR_REPO_TAG: true

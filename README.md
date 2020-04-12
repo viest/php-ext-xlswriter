@@ -48,6 +48,18 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * Cursor read data
 * Read by data type
 
+#### Install
+
+###### Unix
+
+```bash
+pecl install xlswriter
+```
+
+###### Windows
+
+[download dll](https://github.com/viest/php-ext-xlswriter/releases)
+
 #### Benchmark
 
 Test environment: Macbook Pro 13 inch, Intel Core i5, 16GB 2133MHz LPDDR3 Memory, 128GB SSD Storage.

@@ -1,5 +1,4 @@
 version: "{branch}.build.{build}"
-skip_tags: true
 
 branches:
   only:

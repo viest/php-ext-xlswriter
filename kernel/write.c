@@ -935,7 +935,11 @@ _populate_range_data_cache(lxw_workbook *self, lxw_series_range *range)
                 return;
             }
 
+#if defined(LXW_VERSION_ID) && LXW_VERSION_ID >= 93
+            cell_obj = lxw_worksheet_find_cell_in_row(row_obj, col_num);
+#else
             cell_obj = lxw_worksheet_find_cell(row_obj, col_num);
+#endif
 
             if (cell_obj) {
                 if (cell_obj->type == NUMBER_CELL) {

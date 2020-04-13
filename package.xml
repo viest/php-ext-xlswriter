@@ -187,16 +187,16 @@
    <file name="tests/const_memory_index_out_range.phpt" role="test" />
    <file name="tests/default_format.phpt" role="test" />
    <file name="tests/fix-207.phpt" role="test" />
-   <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
-   <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
-   <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
-   <file md5sum="666669e50723870fe7fc7ebbb3354cb4" name="tests/format_font.phpt" role="test" />
-   <file md5sum="c4d791e16e40e172ebc516520cf35e5f" name="tests/format_font_color.phpt" role="test" />
-   <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="test" />
-   <file md5sum="4dfaa3f81e9c7138aca39da99a67f270" name="tests/format_font_strikeout.phpt" role="test" />
-   <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="test" />
-   <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
-   <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
+   <file name="tests/format_align.phpt" role="test" />
+   <file name="tests/format_background.phpt" role="test" />
+   <file name="tests/format_border.phpt" role="test" />
+   <file name="tests/format_font.phpt" role="test" />
+   <file name="tests/format_font_color.phpt" role="test" />
+   <file name="tests/format_font_size.phpt" role="test" />
+   <file name="tests/format_font_strikeout.phpt" role="test" />
+   <file name="tests/format_number.phpt" role="test" />
+   <file name="tests/format_wrap.phpt" role="test" />
+   <file name="tests/freeze_panes.phpt" role="test" />
    <file name="tests/gridlines.phpt" role="test" />
    <file name="tests/header_format.phpt" role="test" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="test" />

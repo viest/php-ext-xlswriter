@@ -6,7 +6,3 @@
 	path = library/libexpat
 	url = https://github.com/libexpat/libexpat.git
 	branch = R_2_2_7
-[submodule "library/libxlsxio"]
-	path = library/libxlsxio
-	url = https://github.com/brechtsanders/xlsxio.git
-	branch = 0.2.21

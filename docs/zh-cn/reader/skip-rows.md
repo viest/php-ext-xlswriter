@@ -1,4 +1,4 @@
-# 忽略空白单元格
+# 跳过指定行
 
 * 读取文件已支持 `windows` 系统，版本号大于等于 `1.3.4.1`；
 * 扩展版本大于等于 `1.2.7`；
@@ -23,23 +23,19 @@ $filePath = $excel->fileName('tutorial.xlsx')
 ## 示例一
 
 ```php
-// 读取全量数据
-// 使用 \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS 忽略空白单元格
+// 读取全量数据, 并忽略第一行
 $data = $excel->openFile('tutorial.xlsx')
-    ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS)
+    ->openSheet('Sheet1')
+    ->setSkipRows(1)
     ->getSheetData();
 ```
 
 ## 示例二
 
 ```php
-// 游标模式
-// 使用 \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS 忽略空白单元格
-
+// 读取全量数据, 并忽略第一行 和 第二行
 $data = $excel->openFile('tutorial.xlsx')
-    ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS);
-
-while ($data = $excel->nextRow()) {
-    var_dump($data);
-}
+    ->openSheet('Sheet1')
+    ->setSkipRows(2)
+    ->getSheetData();
 ```

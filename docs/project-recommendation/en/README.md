@@ -1,6 +1,8 @@
 # Project Recommendation
 
-## 1. [EasySwoole](https://www.easyswoole.com/En.html)
+> Items are sorted according to first letter
+
+## [EasySwoole](https://www.easyswoole.com/En.html)
 
 ```
   ______                          _____                              _        
@@ -34,3 +36,26 @@ EasySwoole is a resident memory-based distributed PHP framework based on Swoole 
 - fast-cache component
 - Policy permission component
 - IOC, coroutine context manager
+
+## [Swoole](https://www.swoole.co.uk/)
+ 
+ ```
+   _____                              _        
+  / ____|                            | |       
+ | (___   __      __   ___     ___   | |   ___ 
+  \___ \  \ \ /\ / /  / _ \   / _ \  | |  / _ \
+  ____) |  \ V  V /  | (_) | | (_) | | | |  __/
+ |_____/    \_/\_/    \___/   \___/  |_|  \___|
+                                               
+ ```
+ 
+ Compared with other async programming frameworks or softwares such as Nginx, Tornado, Node.js, Swoole has the built-in PHP coroutine and async support, multiple threads I/O modules. Developers can use sync or async, coroutine API to write the applications or create thousands of light weight corotuines within one PHP process. Swoole PHP network framework enhances the efficiency of R&D team, enable them to focus on the development of innovative products.
+ 
+ * Event-Driven, Coroutine, Asynchronous Programming For PHP
+ * Async TCP / UDP / HTTP / Websocket / HTTP2 Client/Server Side API
+ * IPv4 / IPv6 / Unixsocket / TCP/ UDP And SSL / TLS / DTLS Support
+ * Native Coroutine Support
+ * High Performance, Scalable, Support C1000K
+ * Milliseconds Task Scheduler
+ * Free And Open Source
+ * Multiprocessing And Daemonize

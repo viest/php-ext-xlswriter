@@ -204,7 +204,7 @@ void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
-void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res, lxw_format *format);
+void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw_format *format);
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);

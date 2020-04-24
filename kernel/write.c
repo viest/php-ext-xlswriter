@@ -225,15 +225,20 @@ void auto_filter(zend_string *range, xls_resource_write_t *res)
 /*
  * Merge cells.
  */
-void merge_cells(zend_string *range, zend_string *value, xls_resource_write_t *res, lxw_format *format)
+void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw_format *format)
 {
-    int error = worksheet_merge_range(res->worksheet, RANGE(ZSTR_VAL(range)), ZSTR_VAL(value), format);
+    char *_range = ZSTR_VAL(range);
+
+    int error = worksheet_merge_range(res->worksheet, RANGE(_range), "", format);
 
     // Cells that have been placed cannot be modified using optimization mode
     WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
 
     // Worksheet row or column index out of range
     WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+
+    // writer merge cell
+    type_writer(value, lxw_name_to_row(_range), lxw_name_to_col(_range), res, NULL, format);
 }
 
 /*

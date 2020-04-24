@@ -738,14 +738,14 @@ PHP_METHOD(vtiful_xls, autoFilter)
  */
 PHP_METHOD(vtiful_xls, mergeCells)
 {
-    zval *format_handle = NULL;
-    zend_string *range = NULL, *data = NULL;
+    zend_string *range = NULL;
+    zval *data = NULL, *format_handle = NULL;
 
     int argc = ZEND_NUM_ARGS();
 
     ZEND_PARSE_PARAMETERS_START(2, 3)
             Z_PARAM_STR(range)
-            Z_PARAM_STR(data)
+            Z_PARAM_ZVAL(data)
             Z_PARAM_OPTIONAL
             Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();

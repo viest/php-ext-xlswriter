@@ -81,6 +81,7 @@
     * [Ubuntu](zh-cn/an-zhuang/ubuntu.md)
     * [Alpine](zh-cn/an-zhuang/alpine.md)
     * [Windows](zh-cn/an-zhuang/windows.md)
+    * [Docker多阶构建](zh-cn/an-zhuang/docker.md)
   * [快速上手](zh-cn/kuai-su-shang-shou/README.md)
     * [导出文件](zh-cn/kuai-su-shang-shou/chuang-jian-wen-jian.md)
     * [读取文件](zh-cn/kuai-su-shang-shou/reader.md)

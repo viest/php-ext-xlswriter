@@ -35,6 +35,7 @@ branches:
   only:
     - master
     - dev
+    - bundle
 
 script:
     - ./travis/run-test.sh

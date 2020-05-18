@@ -22,9 +22,9 @@ $fileHandle = $fileObject->getHandle();
 $format    = new \Vtiful\Kernel\Format($fileHandle);
 $boldStyle = $format->bold()->toResource();
 
-$fileObject->header(['name', 'age'])
+$fileObject->setRow('A1', 10, $boldStyle)
+    ->header(['name', 'age'])
     ->data([['viest', 21]])
-    ->setRow('A1', 10, $boldStyle)
     ->output();
 ```
 

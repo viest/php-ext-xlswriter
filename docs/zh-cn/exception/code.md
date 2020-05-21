@@ -3,7 +3,7 @@
 1. 内存申请失败
 2. 创建输出xlsx文件时出错，通常是权限错误
 3. 在文件汇编期间创建临时文件时遇到错误
-4. 读取tmpfile时出错
+4. 读取临时文件时出错
 5. 创建xlsx文件时zip错误 ZIP_ERRNO
 6. 创建xlsx文件时zip错误 ZIP_PARAMERROR
 7. 创建xlsx文件时zip错误 ZIP_BADZIPFILE

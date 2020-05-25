@@ -175,6 +175,7 @@
    <file md5sum="723ed81ef341086cf06a1f2dade63f1a" name="tests/015.phpt" role="test" />
    <file md5sum="74d4d945e51fb79ffc7954e863a20712" name="tests/016.phpt" role="test" />
    <file md5sum="1f0d501c89c47d7140376ce386eb1cd3" name="tests/018.phpt" role="test" />
+   <file name="tests/activate_sheet.phpt" role="test" />
    <file md5sum="e6c41873fb59cf65b9e0359ccc2cbd05" name="tests/chart_axis_name_x.phpt" role="test" />
    <file md5sum="d07e7f60e961a1cc30f901cb98e3530b" name="tests/chart_axis_name_y.phpt" role="test" />
    <file md5sum="340ad766a0f9e10ccc7a65342838e08f" name="tests/chart_line.phpt" role="test" />

@@ -90,6 +90,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_file_checkout_sheet, 0, 0, 1)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_file_activate_sheet, 0, 0, 1)
+                ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_header_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, header)
                 ZEND_ARG_INFO(0, format_handle)
@@ -370,6 +374,32 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
     SHEET_LINE_SET(obj, line);
 
     obj->write_ptr.worksheet = sheet_t;
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::activateSheet(string $sheetName)
+ */
+PHP_METHOD(vtiful_xls, activateSheet)
+{
+    lxw_worksheet *sheet_t = NULL;
+    zend_string *zs_sheet_name = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_STR(zs_sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if ((sheet_t = workbook_get_worksheet_by_name(obj->write_ptr.workbook, ZSTR_VAL(zs_sheet_name))) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Sheet not fund", 140);
+        return;
+    }
+
+    worksheet_activate(sheet_t);
+
+    RETURN_TRUE;
 }
 /* }}} */
 
@@ -1226,6 +1256,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, checkoutSheet, xls_file_checkout_sheet,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, activateSheet, xls_file_activate_sheet,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)

@@ -399,7 +399,7 @@ PHP_METHOD(vtiful_xls, activateSheet)
 
     worksheet_activate(sheet_t);
 
-    RETURN_TRUE
+    RETURN_TRUE;
 }
 /* }}} */
 

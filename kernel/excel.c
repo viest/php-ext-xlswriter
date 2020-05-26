@@ -948,6 +948,24 @@ PHP_METHOD(vtiful_xls, stringFromColumnIndex)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::timestampFromDateDouble(string $date)
+ */
+PHP_METHOD(vtiful_xls, timestampFromDateDouble)
+{
+    double date = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_DOUBLE(date)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (date <= 0) {
+        RETURN_LONG(0);
+    }
+
+    RETURN_LONG(date_double_to_timestamp(date));
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::gridline(int $option = \Vtiful\Kernel\Excel::GRIDLINES_SHOW_ALL)
  */
 PHP_METHOD(vtiful_xls, gridline)
@@ -1278,8 +1296,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
 
-        PHP_ME(vtiful_xls, columnIndexFromString,  xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-        PHP_ME(vtiful_xls, stringFromColumnIndex,  xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, columnIndexFromString,   xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, stringFromColumnIndex,   xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, timestampFromDateDouble, xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)

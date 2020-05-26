@@ -12,6 +12,7 @@
 
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
+#include "ext/standard/php_math.h"
 
 /* {{{ */
 xlsxioreader file_open(const char *directory, const char *file_name) {
@@ -106,7 +107,7 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
             return;
         }
 
-        double value = strtod(string_value, NULL);
+        double value = zend_strtod(string_value, NULL);
         double days, partDay, hours, minutes, seconds;
 
         days    = floor(value);
@@ -115,7 +116,7 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
         partDay = partDay * 24 - hours;
         minutes = floor(partDay * 60);
         partDay = partDay * 60 - minutes;
-        seconds = round(partDay * 60);
+        seconds = _php_math_round(partDay * 60, 0, PHP_ROUND_HALF_UP);
 
         zval datetime;
         php_date_instantiate(php_date_get_date_ce(), &datetime);

@@ -2,6 +2,8 @@
 *.lo
 *.la
 .libs
+.dockerignore
+Dockerfile
 debug
 debug.php
 php

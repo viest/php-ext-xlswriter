@@ -6,9 +6,9 @@ Check for vtiful presence
 <?php
 var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(43727.306782407));
 var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(NULL));
-var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(4321432143));
+var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(43727));
 ?>
 --EXPECT--
 int(1568877706)
 int(0)
-int(373369527993600)
+int(1568851200)

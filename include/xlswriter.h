@@ -34,6 +34,7 @@
 #include "exception.h"
 #include "format.h"
 #include "chart.h"
+#include "help.h"
 
 #ifdef ENABLE_READER
 #include "xlsxio_read.h"

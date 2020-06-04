@@ -13,6 +13,7 @@
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
 #include "ext/standard/php_math.h"
+#include "ext/standard/php_filestat.h"
 
 /* {{{ */
 xlsxioreader file_open(const char *directory, const char *file_name) {
@@ -23,13 +24,23 @@ xlsxioreader file_open(const char *directory, const char *file_name) {
     strcat(path, "/");
     strcat(path, file_name);
 
+    zval file_exists;
+    php_stat(path, strlen(path), FS_IS_FILE, &file_exists);
+
+    if (Z_TYPE(file_exists) == IS_FALSE) {
+        zval_ptr_dtor(&file_exists);
+        zend_throw_exception(vtiful_exception_ce, "File not found, please check the path in the config or file name", 121);
+    }
+
     if ((file = xlsxioread_open(path)) == NULL) {
         efree(path);
+        zval_ptr_dtor(&file_exists);
         zend_throw_exception(vtiful_exception_ce, "Failed to open file", 100);
         return NULL;
     }
 
     efree(path);
+    zval_ptr_dtor(&file_exists);
     return file;
 }
 /* }}} */

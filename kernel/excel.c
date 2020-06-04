@@ -295,6 +295,7 @@ PHP_METHOD(vtiful_xls, fileName)
     php_stat(ZSTR_VAL(Z_STR_P(dir_path)), strlen(ZSTR_VAL(Z_STR_P(dir_path))), FS_IS_DIR, &dir_exists);
 
     if (Z_TYPE(dir_exists) == IS_FALSE) {
+        zval_ptr_dtor(&dir_exists);
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' directory does not exist", 121);
     }
 

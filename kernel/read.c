@@ -28,8 +28,10 @@ xlsxioreader file_open(const char *directory, const char *file_name) {
     php_stat(path, strlen(path), FS_IS_FILE, &file_exists);
 
     if (Z_TYPE(file_exists) == IS_FALSE) {
+        efree(path);
         zval_ptr_dtor(&file_exists);
         zend_throw_exception(vtiful_exception_ce, "File not found, please check the path in the config or file name", 121);
+        return NULL;
     }
 
     if ((file = xlsxioread_open(path)) == NULL) {

@@ -193,10 +193,12 @@ STATIC int  _compare_defined_names(lxw_defined_name *a, lxw_defined_name *b);
 
 STATIC void _prepare_drawings(lxw_workbook *self);
 STATIC void _add_chart_cache_data(lxw_workbook *self);
+STATIC void _prepare_vml(lxw_workbook *self);
 STATIC void _prepare_defined_names(lxw_workbook *self);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
+void comment_show(xls_resource_write_t *res);
 void zoom(xls_resource_write_t *res, zend_long zoom);
 void gridlines(xls_resource_write_t *res, zend_long option);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
@@ -206,6 +208,7 @@ void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
 void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw_format *format);
+void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_resource_write_t *res);
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);

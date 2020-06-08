@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2020-04-12</date>
- <time>13:50:00</time>
+ <date>2020-05-25</date>
+ <time>14:56:05</time>
  <version>
-  <release>1.3.4.1</release>
-  <api>1.3.4.1</api>
+  <release>1.3.5</release>
+  <api>1.3.5</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,29 +45,29 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feat directory not exist error change to exception.
-- Windows full function support.
+- Feat activate sheet.
+- Feat mergeCells type writer.
  </notes>
  <contents>
   <dir name="/">
    <file md5sum="1cf796971bf051dce46bb715ab550289" name="include/chart.h" role="src" />
-   <file md5sum="582011354c5fedc670cd320ff56bf14d" name="include/csv.h" role="src" />
-   <file md5sum="f489baf3d3595b98dacd7b51bc6a9125" name="include/excel.h" role="src" />
+   <file md5sum="5c0531e61b60e1a2a870b7f876e59e51" name="include/csv.h" role="src" />
+   <file md5sum="3f96242857e4e15ad9f9d25d4c6d4694" name="include/excel.h" role="src" />
    <file md5sum="d00394e8b17a78978c7393f262527265" name="include/exception.h" role="src" />
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
-   <file md5sum="e89c9bd840f3840d051a45c8d9cc21d9" name="include/xlswriter.h" role="src" />
-   <file md5sum="70e5423951513770ffbef5fa2092a046" name="include/read.h" role="src" />
+   <file md5sum="039f639b02555cb81b838ef095549255" name="include/xlswriter.h" role="src" />
+   <file md5sum="11e7354a50bfb3252cf594383222892d" name="include/read.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
-   <file md5sum="8072d43e466085a552f06b34f4fe1352" name="kernel/chart.c" role="src" />
-   <file md5sum="734d6d2748d67100ef4befea5fd1089d" name="kernel/common.c" role="src" />
-   <file md5sum="e26b9880a012607f0917bfbe496066c2" name="kernel/csv.c" role="src" />
-   <file md5sum="3b70020aaa219cf2a9bded9357e0d269" name="kernel/excel.c" role="src" />
+   <file md5sum="e460171d14c9861d63909c4f7615da19" name="kernel/chart.c" role="src" />
+   <file md5sum="27511da273c79454f30935b21fb4d58b" name="kernel/common.c" role="src" />
+   <file md5sum="313318f84d472e263d22b2a2a644a2e0" name="kernel/csv.c" role="src" />
+   <file md5sum="da7c5d652035f626f2811fdb10f0a992" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
-   <file md5sum="84049ca59eca54a3aed97233b16295bd" name="kernel/format.c" role="src" />
+   <file md5sum="c1e9cfc504f9acccaf72b4114acaf726" name="kernel/format.c" role="src" />
    <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
-   <file md5sum="853dd3f2920ceb3a009d3a4297e164d4" name="kernel/write.c" role="src" />
-   <file md5sum="4f6aaed2b5ec6e0d443643b44c4cffa2" name="kernel/read.c" role="src" />
+   <file md5sum="a387d92aea714af13dc2a29105597ab1" name="kernel/write.c" role="src" />
+   <file md5sum="34506b7c53e953b2db01b4bf7f1bef84" name="kernel/read.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
    <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
@@ -95,8 +95,8 @@
    <file md5sum="6e72c46776f0db175ec8f15144a3c250" name="library/libxlsxwriter/third_party/minizip/crypt.h" role="src" />
    <file md5sum="5960f0b3f3933d8a5f466e9ca36bb756" name="library/libxlsxwriter/third_party/minizip/ioapi.c" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="library/libxlsxwriter/third_party/minizip/ioapi.h" role="src" />
-   <file name="library/libxlsxwriter/third_party/minizip/iowin32.c" role="src" />
-   <file name="library/libxlsxwriter/third_party/minizip/iowin32.h" role="src" />
+   <file md5sum="7ac5338e2a4065b9a6ed0ca2c8679f30" name="library/libxlsxwriter/third_party/minizip/iowin32.c" role="src" />
+   <file md5sum="818e2950cc00d787eaa9b710007dc53f" name="library/libxlsxwriter/third_party/minizip/iowin32.h" role="src" />
    <file md5sum="254fe0695464d4cbbaa1fdc0c83c6a3c" name="library/libxlsxwriter/third_party/minizip/miniunz.c" role="src" />
    <file md5sum="e2a4a0c1cad4ceb1f77fb3b7e813bb35" name="library/libxlsxwriter/third_party/minizip/minizip.c" role="src" />
    <file md5sum="174c6f2a32dad5023616fc45855d8c59" name="library/libxlsxwriter/third_party/minizip/mztools.c" role="src" />
@@ -146,11 +146,11 @@
    <file md5sum="8fa5658f138c3fde9c72320a82e92817" name="library/libexpat/expat/lib/xmltok_impl.c" role="src" />
    <file md5sum="d0104fa5078dbd1d9a479699fb792e99" name="library/libexpat/expat/lib/xmltok_ns.c" role="src" />
    <file md5sum="5b8620d98e49772d95fc1d291c26aa79" name="library/libexpat/expat/COPYING" role="doc" />
-   <file md5sum="691a1a335876e3658e802c9213036c63" name="library/libxlsxio/include/xlsxio_read.h" role="src" />
-   <file md5sum="e9ae9dc5369f5ab937d1a68bf9185f22" name="library/libxlsxio/include/xlsxio_version.h" role="src" />
+   <file md5sum="e366ad40a32ddac9e042f0886906e30f" name="library/libxlsxio/include/xlsxio_read.h" role="src" />
+   <file md5sum="553368a7efde46a5f1dec3d27b49b427" name="library/libxlsxio/include/xlsxio_version.h" role="src" />
    <file md5sum="2ca0f632da8358ccf8bc85ca0961142f" name="library/libxlsxio/lib/xlsxio_private.h" role="src" />
    <file md5sum="305da62a3c44f5a4b02bb9b0d8eef4a7" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.h" role="src" />
-   <file md5sum="7d701ce70cc43198a1126804f682098e" name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
+   <file md5sum="1770a690b26c164888f4c4171346b587" name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
    <file md5sum="834dc4698adc79cf033d005c5ea67428" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.c" role="src" />
    <file md5sum="e59b06b20921a3ca95e1473a89c1ab3c" name="library/libxlsxio/LICENSE.txt" role="doc" />
    <file md5sum="57a70a14faab4cc6f169ff95eb20c65f" name="resource/chart_area1.png" role="src" />
@@ -175,7 +175,7 @@
    <file md5sum="723ed81ef341086cf06a1f2dade63f1a" name="tests/015.phpt" role="test" />
    <file md5sum="74d4d945e51fb79ffc7954e863a20712" name="tests/016.phpt" role="test" />
    <file md5sum="1f0d501c89c47d7140376ce386eb1cd3" name="tests/018.phpt" role="test" />
-   <file name="tests/activate_sheet.phpt" role="test" />
+   <file md5sum="c2372ede512fc3b2f1c14ca81a851b88" name="tests/activate_sheet.phpt" role="test" />
    <file md5sum="e6c41873fb59cf65b9e0359ccc2cbd05" name="tests/chart_axis_name_x.phpt" role="test" />
    <file md5sum="d07e7f60e961a1cc30f901cb98e3530b" name="tests/chart_axis_name_y.phpt" role="test" />
    <file md5sum="340ad766a0f9e10ccc7a65342838e08f" name="tests/chart_line.phpt" role="test" />
@@ -185,21 +185,22 @@
    <file md5sum="39f7c511d9019c6815bcf7fd0f7e8224" name="tests/chart_style.phpt" role="test" />
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
-   <file name="tests/const_memory_index_out_range.phpt" role="test" />
-   <file name="tests/default_format.phpt" role="test" />
-   <file name="tests/fix-207.phpt" role="test" />
-   <file name="tests/format_align.phpt" role="test" />
-   <file name="tests/format_background.phpt" role="test" />
-   <file name="tests/format_border.phpt" role="test" />
-   <file name="tests/format_font.phpt" role="test" />
-   <file name="tests/format_font_color.phpt" role="test" />
-   <file name="tests/format_font_size.phpt" role="test" />
-   <file name="tests/format_font_strikeout.phpt" role="test" />
-   <file name="tests/format_number.phpt" role="test" />
-   <file name="tests/format_wrap.phpt" role="test" />
-   <file name="tests/freeze_panes.phpt" role="test" />
-   <file name="tests/gridlines.phpt" role="test" />
-   <file name="tests/header_format.phpt" role="test" />
+   <file md5sum="da803170bdbbdc8191123889c187d9fa" name="tests/const_memory_index_out_range.phpt" role="test" />
+   <file md5sum="64c92ab74560df6044f1a9019458a5b4" name="tests/default_format.phpt" role="test" />
+   <file md5sum="12065dc330a3726532bf066ebd4224c9" name="tests/fix-207.phpt" role="test" />
+   <file md5sum="be10fd5656cead06d963c971ad0359d5" name="tests/fix-243.phpt" role="test" />
+   <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
+   <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
+   <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
+   <file md5sum="666669e50723870fe7fc7ebbb3354cb4" name="tests/format_font.phpt" role="test" />
+   <file md5sum="c4d791e16e40e172ebc516520cf35e5f" name="tests/format_font_color.phpt" role="test" />
+   <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="test" />
+   <file md5sum="4dfaa3f81e9c7138aca39da99a67f270" name="tests/format_font_strikeout.phpt" role="test" />
+   <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="test" />
+   <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
+   <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
+   <file md5sum="e5a973f5d12afe9d8ad068c44afdbea1" name="tests/gridlines.phpt" role="test" />
+   <file md5sum="8fc78ed13774a947195a47861ff10d72" name="tests/header_format.phpt" role="test" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="test" />
    <file md5sum="73521b6a1cb84ba3c7730470b836368f" name="tests/insert_date_custom_format.phpt" role="test" />
@@ -207,20 +208,21 @@
    <file md5sum="74d93209ca5335e793267ed7048a75ad" name="tests/insert_text_resource_format.phpt" role="test" />
    <file md5sum="47de23f6eee379673bfae11d32f3e983" name="tests/insert_url_format.phpt" role="test" />
    <file md5sum="22589301dcf45ef72a98afcd9310c638" name="tests/insert_url_no_format.phpt" role="test" />
+   <file md5sum="6ca1cb508513aa720fbc70362d975d84" name="tests/merge_cell_type_writer.phpt" role="test" />
    <file md5sum="2a8630d73bc312e5b671772d6d8f2b66" name="tests/multiple_file.phpt" role="test" />
    <file md5sum="f1addf56af65d4cccc0e1a2e92bd1f46" name="tests/open_xlsx_file.phpt" role="test" />
    <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="test" />
-   <file md5sum="30c1a9fbb09eed1908a84c5b617d292f" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
-   <file name="tests/open_xlsx_get_data_skip_rows.phpt" role="test" />
-   <file md5sum="6ea988e0cc58f2bba7f2a91e133f00cc" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
+   <file md5sum="1afc255df6ce98e700edb60e0123c7ff" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
+   <file md5sum="b9f407a439cf4cc49588cf6f604f609f" name="tests/open_xlsx_get_data_skip_rows.phpt" role="test" />
+   <file md5sum="0300fa1cdb8bed61ee9fdd0aaf36caaa" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
    <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_get_sheet_not_found_data.phpt" role="test" />
    <file md5sum="f8a2c32aad6f4828fcac7b4c6ccf7a74" name="tests/open_xlsx_next_cell_callback.phpt" role="test" />
    <file md5sum="38a275929a200a29ca37e4c15cd083ce" name="tests/open_xlsx_next_cell_callback_with_data_type.phpt" role="test" />
    <file md5sum="154e924e44ba43aec9abc6d6b6d389b1" name="tests/open_xlsx_next_row.phpt" role="test" />
-   <file md5sum="bb159ef1e1f3312a90cec655c12227b2" name="tests/open_xlsx_next_row_skip_empty.phpt" role="test" />
-   <file name="tests/open_xlsx_next_row_skip_rows.phpt" role="test" />
+   <file md5sum="f0ed82fcca59bad5aab49f1897fe784c" name="tests/open_xlsx_next_row_skip_empty.phpt" role="test" />
+   <file md5sum="a847fd9580c4c47b8cc4400ef32a4596" name="tests/open_xlsx_next_row_skip_rows.phpt" role="test" />
    <file md5sum="95fca9449059d583fc0b54cf7c571c8f" name="tests/open_xlsx_next_row_with_data_type_date.phpt" role="test" />
-   <file md5sum="d39c67c041982264d563450737396e00" name="tests/open_xlsx_next_row_with_data_type_date_array_index.phpt" role="test" />
+   <file md5sum="e964de04f01dcae7a526af85bc003128" name="tests/open_xlsx_next_row_with_data_type_date_array_index.phpt" role="test" />
    <file md5sum="68628ad9158f5860917860eef232cbf3" name="tests/open_xlsx_next_row_with_data_type_string.phpt" role="test" />
    <file md5sum="0a138cc18a114defaf4f6bc36173d8fb" name="tests/open_xlsx_next_row_with_set_type.phpt" role="test" />
    <file md5sum="1f75d70aa9fb4590f4982fbe4070da36" name="tests/open_xlsx_sheet.phpt" role="test" />
@@ -230,21 +232,21 @@
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
    <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
    <file md5sum="42b26f050d9291509d6f583ef43ebde9" name="tests/xlsx_to_csv.phpt" role="test" />
-   <file name="tests/xlsx_to_csv_callback.phpt" role="test" />
-   <file name="tests/xlsx_to_csv_callback_custom_delimiter.phpt" role="test" />
-   <file name="tests/xlsx_to_csv_custom_delimiter.phpt" role="test" />
-   <file name="tests/xlsx_to_csv_skip_rows.phpt" role="test" />
-   <file name="tests/xlsx_to_csv_skip_rows_callback.phpt" role="test" />
+   <file md5sum="899082419da65a680897548affb39a47" name="tests/xlsx_to_csv_callback.phpt" role="test" />
+   <file md5sum="17beb8bf8b770309358816da542837d9" name="tests/xlsx_to_csv_callback_custom_delimiter.phpt" role="test" />
+   <file md5sum="49faf3a76867a4e6f898b8c6b081685f" name="tests/xlsx_to_csv_custom_delimiter.phpt" role="test" />
+   <file md5sum="2afb93fa3c83d8df835991d16b368826" name="tests/xlsx_to_csv_skip_rows.phpt" role="test" />
+   <file md5sum="597867441c909400767ef2653fe33ebc" name="tests/xlsx_to_csv_skip_rows_callback.phpt" role="test" />
    <file md5sum="a9af7f4ca385ba41b008b50ac67f8e96" name="tests/zoom.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="eaeb6282f03795ecd5b977d9e2c3f99b" name="README.md" role="doc" />
-   <file md5sum="2be47018557008ea135ec70e47c43621" name="README_zh.md" role="doc" />
+   <file md5sum="0f1b2f3b7268c5e6a8bee6821cab5bb9" name="README.md" role="doc" />
+   <file md5sum="8623e56525a5efef5cfbbd9d59eb6a5e" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
    <file md5sum="363c74b51a652a02684b47d708a4372f" name="config.m4" role="src" />
-   <file md5sum="0d53f14e0e18df8567ca7f02dbbfc36e" name="config.w32" role="src" />
+   <file md5sum="2711890441a93f59bde54c0517490c0e" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="ca56860a64463b285e96519376051c20" name="php_xlswriter.h" role="src" />
+   <file md5sum="fe18a56730238d8b42abf65ef721a23f" name="php_xlswriter.h" role="src" />
    <file md5sum="a599c080be5456b40d04776e95670c89" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -264,6 +266,23 @@
  </extsrcrelease>
  <changelog>
   <release>
+   <date>2020-04-12</date>
+   <time>13:50:00</time>
+   <version>
+    <release>1.3.4.1</release>
+    <api>1.3.4.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- Feat directory not exist error change to exception.
+- Windows full function support.
+   </notes>
+  </release>
+  <release>
    <date>2020-03-19</date>
    <time>21:15:00</time>
    <version>
@@ -276,11 +295,11 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT header support custom format.
-    - FEAT putcsv custom delimiter.
-    - FEAT ead skip cells,rows,empty value.
-    - FIX read data method, the offset of the array index and the row of the cell.
-    - FIX insertDate leaked.
+- FEAT header support custom format.
+- FEAT putcsv custom delimiter.
+- FEAT ead skip cells,rows,empty value.
+- FIX read data method, the offset of the array index and the row of the cell.
+- FIX insertDate leaked.
    </notes>
   </release>
   <release>
@@ -296,7 +315,7 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FIX free up stale sheets.
+- FIX free up stale sheets.
    </notes>
   </release>
   <release>
@@ -312,7 +331,7 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FIX merge cells.
+- FIX merge cells.
    </notes>
   </release>
   <release>
@@ -328,10 +347,10 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT mergeCells and insertFormula support format.
-    - FEAT put csv with callback.
-    - FEAT global default format.
-    - FIX READ turning data into custom types.
+- FEAT mergeCells and insertFormula support format.
+- FEAT put csv with callback.
+- FEAT global default format.
+- FIX READ turning data into custom types.
    </notes>
   </release>
   <release>
@@ -347,12 +366,12 @@
    </stability>
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
-    - FEAT display or hide screen and print gridlines.
-    - FEAT worksheet zoom.
-    - FEAT data method is written by default from the file header.
-    - FEAT returns null if the type is specified and the cell is empty.
-    - FEAT sheet list.
-    - FEAT xlsx to csv.
+- FEAT display or hide screen and print gridlines.
+- FEAT worksheet zoom.
+- FEAT data method is written by default from the file header.
+- FEAT returns null if the type is specified and the cell is empty.
+- FEAT sheet list.
+- FEAT xlsx to csv.
    </notes>
   </release>
   <release>

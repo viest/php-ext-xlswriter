@@ -12,7 +12,6 @@
 
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
-#include "ext/standard/php_filestat.h"
 
 zend_class_entry *vtiful_xls_ce;
 
@@ -278,7 +277,7 @@ PHP_METHOD(vtiful_xls, __construct)
 PHP_METHOD(vtiful_xls, fileName)
 {
     char *sheet_name = NULL;
-    zval file_path, dir_exists, *dir_path = NULL;
+    zval file_path, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -287,16 +286,13 @@ PHP_METHOD(vtiful_xls, fileName)
             Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
-    ZVAL_NULL(&dir_exists);
     ZVAL_COPY(return_value, getThis());
 
     GET_CONFIG_PATH(dir_path, vtiful_xls_ce, return_value);
 
-    php_stat(ZSTR_VAL(Z_STR_P(dir_path)), strlen(ZSTR_VAL(Z_STR_P(dir_path))), FS_IS_DIR, &dir_exists);
-
-    if (Z_TYPE(dir_exists) == IS_FALSE) {
-        zval_ptr_dtor(&dir_exists);
+    if(directory_exists(ZSTR_VAL(Z_STR_P(dir_path))) == XLSWRITER_FALSE) {
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' directory does not exist", 121);
+        return;
     }
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -315,8 +311,6 @@ PHP_METHOD(vtiful_xls, fileName)
 
         zval_ptr_dtor(&file_path);
     }
-
-    zval_ptr_dtor(&dir_exists);
 }
 /* }}} */
 

@@ -342,13 +342,8 @@ workbook_file(xls_resource_write_t *self)
     /* Add cached data to charts. */
     _add_chart_cache_data(self->workbook);
 
-/* ugly test, new param (use_zip_64) was added in 0.8.7 with workbook_add_vba_project */
-#ifdef HAVE_WORKBOOK_ADD_VBA_PROJECT
     /* Create a packager object to assemble sub-elements into a zip file. */
     packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir, 0);
-#else
-    packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir);
-#endif
 
     /* If the packager fails it is generally due to a zip permission error. */
     if (packager == NULL) {
@@ -552,22 +547,14 @@ STATIC void
 _prepare_drawings(lxw_workbook *self)
 {
     lxw_worksheet *worksheet;
-#ifdef HAVE_LXW_OPEN
     lxw_object_properties *image_options;
-#else
-    lxw_image_options *image_options;
-#endif
     uint16_t chart_ref_id = 0;
     uint16_t image_ref_id = 0;
     uint16_t drawing_id = 0;
 
     STAILQ_FOREACH(worksheet, self->worksheets, list_pointers) {
 
-#ifdef HAVE_LXW_OPEN
         if (STAILQ_EMPTY(worksheet->image_props)
-#else
-        if (STAILQ_EMPTY(worksheet->image_data)
-#endif
             && STAILQ_EMPTY(worksheet->chart_data))
             continue;
 
@@ -575,23 +562,14 @@ _prepare_drawings(lxw_workbook *self)
 
         STAILQ_FOREACH(image_options, worksheet->chart_data, list_pointers) {
             chart_ref_id++;
-#ifdef HAVE_LXW_CHARTSHEET_NEW
             lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
                                         image_options, 0);
-#else
-            lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
-                                        image_options);
-#endif
             if (image_options->chart)
                 STAILQ_INSERT_TAIL(self->ordered_charts, image_options->chart,
                                    ordered_list_pointers);
         }
 
-#ifdef HAVE_LXW_OPEN
         STAILQ_FOREACH(image_options, worksheet->image_props, list_pointers) {
-#else
-        STAILQ_FOREACH(image_options, worksheet->image_data, list_pointers) {
-#endif
 
             if (image_options->image_type == LXW_IMAGE_PNG)
                 self->has_png = LXW_TRUE;
@@ -940,7 +918,7 @@ _populate_range_data_cache(lxw_workbook *self, lxw_series_range *range)
                 return;
             }
 
-            cell_obj = lxw_worksheet_find_cell(row_obj, col_num);
+            cell_obj = lxw_worksheet_find_cell_in_row(row_obj, col_num);
 
             if (cell_obj) {
                 if (cell_obj->type == NUMBER_CELL) {

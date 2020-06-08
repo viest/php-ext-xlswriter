@@ -36,15 +36,21 @@ if (PHP_XLSWRITER != "no") {
                 mztools.c \
                 unzip.c \
                 zip.c \
-                ", "xlswriter");
+                ", "xlswriter", "libxlsxwriter");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxwriter\\third_party\\tmpfileplus", "\
                 tmpfileplus.c \
-                ", "xlswriter");
+                ", "xlswriter", "libxlsxwriter");
+
+        ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxwriter\\third_party\\md5", "\
+                md5.c \
+                ", "xlswriter", "libxlsxwriter");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxwriter\\src", "\
                 app.c \
                 chart.c \
+                chartsheet.c \
+                comment.c \
                 content_types.c \
                 core.c \
                 custom.c \
@@ -57,6 +63,7 @@ if (PHP_XLSWRITER != "no") {
                 styles.c \
                 theme.c \
                 utility.c \
+                vml.c \
                 workbook.c \
                 worksheet.c \
                 xmlwriter.c \
@@ -69,12 +76,12 @@ if (PHP_XLSWRITER != "no") {
                 xmltok.c \
                 xmltok_impl.c \
                 xmltok_ns.c \
-                ", "xlswriter");
+                ", "xlswriter", "libexpat");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxio\\lib", "\
                 xlsxio_read.c \
                 xlsxio_read_sharedstrings.c \
-                ", "xlswriter");
+                ", "xlswriter", "libxlsxio");
     } else {
         WARNING("xlswriter not enabled, xlsxwriter.lib or headers not found");
     }

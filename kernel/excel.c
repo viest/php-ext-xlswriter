@@ -12,7 +12,6 @@
 
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
-#include "ext/standard/php_filestat.h"
 
 zend_class_entry *vtiful_xls_ce;
 
@@ -153,6 +152,15 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_formula_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_comment_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, comment)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_show_comment_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_auto_filter_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, range)
 ZEND_END_ARG_INFO()
@@ -278,7 +286,7 @@ PHP_METHOD(vtiful_xls, __construct)
 PHP_METHOD(vtiful_xls, fileName)
 {
     char *sheet_name = NULL;
-    zval file_path, dir_exists, *dir_path = NULL;
+    zval file_path, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
@@ -287,16 +295,13 @@ PHP_METHOD(vtiful_xls, fileName)
             Z_PARAM_STR(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
-    ZVAL_NULL(&dir_exists);
     ZVAL_COPY(return_value, getThis());
 
     GET_CONFIG_PATH(dir_path, vtiful_xls_ce, return_value);
 
-    php_stat(ZSTR_VAL(Z_STR_P(dir_path)), strlen(ZSTR_VAL(Z_STR_P(dir_path))), FS_IS_DIR, &dir_exists);
-
-    if (Z_TYPE(dir_exists) == IS_FALSE) {
-        zval_ptr_dtor(&dir_exists);
+    if(directory_exists(ZSTR_VAL(Z_STR_P(dir_path))) == XLSWRITER_FALSE) {
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' directory does not exist", 121);
+        return;
     }
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -315,8 +320,6 @@ PHP_METHOD(vtiful_xls, fileName)
 
         zval_ptr_dtor(&file_path);
     }
-
-    zval_ptr_dtor(&dir_exists);
 }
 /* }}} */
 
@@ -711,7 +714,7 @@ PHP_METHOD(vtiful_xls, insertImage)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Excel::insertImage(int $row, int $column, string $imagePath)
+/** {{{ \Vtiful\Kernel\Excel::insertFormula(int $row, int $column, string $formula)
  */
 PHP_METHOD(vtiful_xls, insertFormula)
 {
@@ -742,6 +745,43 @@ PHP_METHOD(vtiful_xls, insertFormula)
     if (argc == 4) {
         formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
     }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertComment(int $row, int $column, string $comment)
+ */
+PHP_METHOD(vtiful_xls, insertComment)
+{
+    zend_string *comment = NULL;
+    zend_long row = 0, column = 0;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_STR(comment)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    comment_writer(comment, row, column, &obj->write_ptr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::showComment()
+ */
+PHP_METHOD(vtiful_xls, showComment)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    comment_show(&obj->write_ptr);
 }
 /* }}} */
 
@@ -1288,6 +1328,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, insertUrl,     xls_insert_url_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImage,   xls_insert_image_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertFormula, xls_insert_formula_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertComment, xls_insert_comment_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, showComment,   xls_show_comment_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)

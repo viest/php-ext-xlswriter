@@ -1,7 +1,7 @@
 [submodule "library/libxlsxwriter"]
 	path = library/libxlsxwriter
 	url = https://github.com/jmcnamara/libxlsxwriter.git
-	branch = RELEASE_0.7.9
+	branch = RELEASE_0.9.4
 [submodule "library/libexpat"]
 	path = library/libexpat
 	url = https://github.com/libexpat/libexpat.git

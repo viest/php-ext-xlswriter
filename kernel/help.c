@@ -13,7 +13,9 @@
 #include "xlswriter.h"
 #include "ext/date/php_date.h"
 #include "ext/standard/php_math.h"
+#include "ext/standard/php_filestat.h"
 
+/* {{{ */
 zend_long date_double_to_timestamp(double value) {
     double days, partDay, hours, minutes, seconds;
 
@@ -57,3 +59,34 @@ zend_long date_double_to_timestamp(double value) {
 
     return timestamp;
 }
+/* }}} */
+
+/* {{{ */
+unsigned int directory_exists(const char *path) {
+    zval dir_exists;
+    php_stat(path, strlen(path), FS_IS_DIR, &dir_exists);
+
+    if (Z_TYPE(dir_exists) == IS_FALSE) {
+        zval_ptr_dtor(&dir_exists);
+        return XLSWRITER_FALSE;
+    }
+
+    zval_ptr_dtor(&dir_exists);
+    return XLSWRITER_TRUE;
+}
+/* }}} */
+
+/* {{{ */
+unsigned int file_exists(const char *path) {
+    zval file_exists;
+    php_stat(path, strlen(path), FS_IS_FILE, &file_exists);
+
+    if (Z_TYPE(file_exists) == IS_FALSE) {
+        zval_ptr_dtor(&file_exists);
+        return XLSWRITER_FALSE;
+    }
+
+    zval_ptr_dtor(&file_exists);
+    return XLSWRITER_TRUE;
+}
+/* }}} */

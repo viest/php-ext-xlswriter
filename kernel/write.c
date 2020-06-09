@@ -209,6 +209,24 @@ void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, z
 }
 
 /*
+ * Write the comment to the cell
+ */
+void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_resource_write_t *res)
+{
+    int error = worksheet_write_comment(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(comment));
+
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/*
+ * Show all comments
+ */
+void comment_show(xls_resource_write_t *res)
+{
+    worksheet_show_comments(res->worksheet);
+}
+
+/*
  * Add the autofilter.
  */
 void auto_filter(zend_string *range, xls_resource_write_t *res)
@@ -333,6 +351,9 @@ workbook_file(xls_resource_write_t *self)
             worksheet->active = 1;
     }
 
+    /* Prepare the worksheet VML elements such as comments. */
+    _prepare_vml(self->workbook);
+
     /* Set the defined names for the worksheets such as Print Titles. */
     _prepare_defined_names(self->workbook);
 
@@ -342,13 +363,8 @@ workbook_file(xls_resource_write_t *self)
     /* Add cached data to charts. */
     _add_chart_cache_data(self->workbook);
 
-/* ugly test, new param (use_zip_64) was added in 0.8.7 with workbook_add_vba_project */
-#ifdef HAVE_WORKBOOK_ADD_VBA_PROJECT
     /* Create a packager object to assemble sub-elements into a zip file. */
-    packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir, 0);
-#else
-    packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir);
-#endif
+    packager = lxw_packager_new(self->workbook->filename, self->workbook->options.tmpdir, self->workbook->options.use_zip64);
 
     /* If the packager fails it is generally due to a zip permission error. */
     if (packager == NULL) {
@@ -380,6 +396,28 @@ workbook_file(xls_resource_write_t *self)
                 "Error = %s\n", self->workbook->filename, strerror(errno));
     }
 
+    /* If LXW_ERROR_ZIP_PARAMETER_ERROR then errno is set by zip. */
+    if (error == LXW_ERROR_ZIP_PARAMETER_ERROR) {
+        fprintf(stderr, "[ERROR] workbook_close(): "
+                        "Zip ZIP_PARAMERROR error while creating xlsx file '%s'. "
+                        "System error = %s\n", self->workbook->filename, strerror(errno));
+    }
+
+    /* If LXW_ERROR_ZIP_BAD_ZIP_FILE then errno is set by zip. */
+    if (error == LXW_ERROR_ZIP_BAD_ZIP_FILE) {
+        fprintf(stderr, "[ERROR] workbook_close(): "
+                        "Zip ZIP_BADZIPFILE error while creating xlsx file '%s'. "
+                        "This may require the use_zip64 option for large files. "
+                        "System error = %s\n", self->workbook->filename, strerror(errno));
+    }
+
+    /* If LXW_ERROR_ZIP_INTERNAL_ERROR then errno is set by zip. */
+    if (error == LXW_ERROR_ZIP_INTERNAL_ERROR) {
+        fprintf(stderr, "[ERROR] workbook_close(): "
+                        "Zip ZIP_INTERNALERROR error while creating xlsx file '%s'. "
+                        "System error = %s\n", self->workbook->filename, strerror(errno));
+    }
+
     /* The next 2 error conditions don't set errno. */
     if (error == LXW_ERROR_ZIP_FILE_ADD) {
         fprintf(stderr, "[ERROR] workbook_close(): "
@@ -401,6 +439,53 @@ workbook_file(xls_resource_write_t *self)
 void _php_vtiful_xls_close(zend_resource *rsrc TSRMLS_DC)
 {
 
+}
+
+/*
+ * Iterate through the worksheets and set up the VML objects.
+ */
+
+STATIC void
+_prepare_vml(lxw_workbook *self)
+{
+    lxw_worksheet *worksheet;
+    lxw_sheet *sheet;
+    uint32_t comment_id = 0;
+    uint32_t vml_drawing_id = 0;
+    uint32_t vml_data_id = 1;
+    uint32_t vml_shape_id = 1024;
+    uint32_t comment_count = 0;
+
+    STAILQ_FOREACH(sheet, self->sheets, list_pointers) {
+        if (sheet->is_chartsheet)
+            continue;
+        else
+            worksheet = sheet->u.worksheet;
+
+        if (!worksheet->has_vml && !worksheet->has_header_vml)
+            continue;
+
+        if (worksheet->has_vml) {
+            self->has_vml = LXW_TRUE;
+            if (worksheet->has_comments) {
+                self->comment_count += 1;
+                comment_id += 1;
+                self->has_comments = LXW_TRUE;
+            }
+
+            vml_drawing_id += 1;
+
+            comment_count = lxw_worksheet_prepare_vml_objects(worksheet,
+                                                              vml_data_id,
+                                                              vml_shape_id,
+                                                              vml_drawing_id,
+                                                              comment_id);
+
+            /* Each VML should start with a shape id incremented by 1024. */
+            vml_data_id += 1 * ((1024 + comment_count) / 1024);
+            vml_shape_id += 1024 * ((1024 + comment_count) / 1024);
+        }
+    }
 }
 
 /*
@@ -552,22 +637,14 @@ STATIC void
 _prepare_drawings(lxw_workbook *self)
 {
     lxw_worksheet *worksheet;
-#ifdef HAVE_LXW_OPEN
     lxw_object_properties *image_options;
-#else
-    lxw_image_options *image_options;
-#endif
     uint16_t chart_ref_id = 0;
     uint16_t image_ref_id = 0;
     uint16_t drawing_id = 0;
 
     STAILQ_FOREACH(worksheet, self->worksheets, list_pointers) {
 
-#ifdef HAVE_LXW_OPEN
         if (STAILQ_EMPTY(worksheet->image_props)
-#else
-        if (STAILQ_EMPTY(worksheet->image_data)
-#endif
             && STAILQ_EMPTY(worksheet->chart_data))
             continue;
 
@@ -575,23 +652,14 @@ _prepare_drawings(lxw_workbook *self)
 
         STAILQ_FOREACH(image_options, worksheet->chart_data, list_pointers) {
             chart_ref_id++;
-#ifdef HAVE_LXW_CHARTSHEET_NEW
             lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
                                         image_options, 0);
-#else
-            lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
-                                        image_options);
-#endif
             if (image_options->chart)
                 STAILQ_INSERT_TAIL(self->ordered_charts, image_options->chart,
                                    ordered_list_pointers);
         }
 
-#ifdef HAVE_LXW_OPEN
         STAILQ_FOREACH(image_options, worksheet->image_props, list_pointers) {
-#else
-        STAILQ_FOREACH(image_options, worksheet->image_data, list_pointers) {
-#endif
 
             if (image_options->image_type == LXW_IMAGE_PNG)
                 self->has_png = LXW_TRUE;

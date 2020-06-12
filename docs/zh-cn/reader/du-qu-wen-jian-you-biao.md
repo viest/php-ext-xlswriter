@@ -12,9 +12,9 @@
 ./configure --enable-reader
 ```
 
-## 示例
+## 示例一
 
-```bash
+```php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
 
@@ -29,5 +29,26 @@ $excel->openFile('tutorial.xlsx')
 
 var_dump($excel->nextRow()); // ['Item', 'Cost']
 var_dump($excel->nextRow()); // NULL
+```
+
+## 示例二
+
+```php
+$config   = ['path' => './tests'];
+$excel    = new \Vtiful\Kernel\Excel($config);
+
+// 导出测试文件
+$filePath = $excel->fileName('tutorial.xlsx')
+    ->header(['Item', 'Cost'])
+    ->output();
+
+// 读取测试文件
+$excel->openFile('tutorial.xlsx')
+    ->openSheet();
+
+// 此处判断请使用【非全等】运算符进行判断，如果出现空行，则有可能返回空数组
+while (($row = $excel->nextRow()) !== NULL) {
+    var_dump($row);
+}
 ```
 

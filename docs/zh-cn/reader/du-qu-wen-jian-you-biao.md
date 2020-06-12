@@ -46,7 +46,8 @@ $filePath = $excel->fileName('tutorial.xlsx')
 $excel->openFile('tutorial.xlsx')
     ->openSheet();
 
-// 此处判断请使用【非全等】运算符进行判断，如果出现空行，则有可能返回空数组
+// 此处判断请使用【非全等】运算符进行判断；
+// 如果使用【非全等】进行判断，出现空行时，返回空数组，将导致读取中断；
 while (($row = $excel->nextRow()) !== NULL) {
     var_dump($row);
 }

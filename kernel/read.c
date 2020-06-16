@@ -302,7 +302,11 @@ int sheet_row_callback (size_t row, size_t max_col, void* callback_data)
 /* {{{ */
 int sheet_cell_callback (size_t row, size_t col, const char *value, void *callback_data)
 {
-    size_t _value_length = strlen(value);
+    size_t _value_length = 0;
+
+    if (value != NULL) {
+        _value_length = strlen(value);
+    }
 
     if (callback_data == NULL) {
         return FAILURE;

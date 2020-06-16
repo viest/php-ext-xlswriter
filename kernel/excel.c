@@ -373,7 +373,7 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
         return;
     }
 
-    line = sheet_t->table->cached_row_num;
+    line = sheet_t->table->cached_row_num + 1;
 
     SHEET_LINE_SET(obj, line);
 

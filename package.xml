@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2020-06-08</date>
- <time>14:22:09</time>
+ <date>2020-06-17</date>
+ <time>01:37:24</time>
  <version>
-  <release>1.3.5</release>
-  <api>1.3.5</api>
+  <release>1.3.6</release>
+  <api>1.3.6</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,8 +45,11 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feat activate sheet.
-- Feat mergeCells type writer.
+- Fix musllibc.
+- Fix null in cell callback.
+- Feat cell comment.
+- Feat timestampFromDateDouble static method.
+- Feat Check for existence before opening file.
  </notes>
  <contents>
   <dir name="/">
@@ -63,11 +66,11 @@
    <file md5sum="f35a72543869ff6d2ad7fc35a6500569" name="kernel/chart.c" role="src" />
    <file md5sum="27511da273c79454f30935b21fb4d58b" name="kernel/common.c" role="src" />
    <file md5sum="313318f84d472e263d22b2a2a644a2e0" name="kernel/csv.c" role="src" />
-   <file md5sum="677f680c3dae4002743d474799bc719a" name="kernel/excel.c" role="src" />
+   <file md5sum="ecc0adec3443c761be7e0bf398622a14" name="kernel/excel.c" role="src" />
    <file md5sum="7ce0d7be6b4ddf68b65be7ed5d6c3e9a" name="kernel/exception.c" role="src" />
    <file md5sum="c1e9cfc504f9acccaf72b4114acaf726" name="kernel/format.c" role="src" />
    <file md5sum="42618454d4a0b33617b33ac0e1bc7a28" name="kernel/help.c" role="src" />
-   <file md5sum="008438046f9cee31bb01fb11608a289f" name="kernel/read.c" role="src" />
+   <file md5sum="aa870e13cd4bc8e22b617ad7e9a26dd6" name="kernel/read.c" role="src" />
    <file md5sum="8d3b0fba03886fadd3f0dfc15d35a5b8" name="kernel/resource.c" role="src" />
    <file md5sum="09077444bf69c1bbe299c5afe1e28533" name="kernel/write.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
@@ -261,7 +264,7 @@
    <file md5sum="b95a884252f626c42b1da09cb76ae56f" name="config.m4" role="src" />
    <file md5sum="91cd5ec534109a13a5672ffc08c584ea" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="fe18a56730238d8b42abf65ef721a23f" name="php_xlswriter.h" role="src" />
+   <file md5sum="151f13e1defaab903cdc33d8b803a244" name="php_xlswriter.h" role="src" />
    <file md5sum="aa52a7cb785d705d2b8ef952b4a3032f" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -280,6 +283,23 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2020-06-08</date>
+   <time>14:22:09</time>
+   <version>
+    <release>1.3.5</release>
+    <api>1.3.5</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- Feat activate sheet.
+- Feat mergeCells type writer.
+   </notes>
+  </release>
   <release>
    <date>2020-04-12</date>
    <time>13:50:00</time>

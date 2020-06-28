@@ -220,6 +220,6 @@ void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, z
 
 lxw_error workbook_file(xls_resource_write_t *self);
 
-zend_string* str_pick_up(zend_string *left, char *right);
+zend_string* str_pick_up(zend_string *left, const char *right, size_t len);
 
 #endif

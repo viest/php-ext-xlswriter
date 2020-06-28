@@ -33,16 +33,16 @@ void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
 /* }}} */
 
 /* {{{ */
-zend_string* str_pick_up(zend_string *left, char *right)
+zend_string* str_pick_up(zend_string *left, const char *right, size_t len)
 {
     zend_string *full = NULL;
 
     size_t _left_length = ZSTR_LEN(left);
-    size_t _extend_length = _left_length + strlen(right);
+    size_t _extend_length = _left_length + len;
 
     full = zend_string_extend(left, _extend_length, 0);
 
-    memcpy(ZSTR_VAL(full) + _left_length, right, strlen(right));
+    memcpy(ZSTR_VAL(full) + _left_length, right, len);
 
     ZSTR_VAL(full)[_extend_length] = '\0';
 

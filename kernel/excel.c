@@ -964,28 +964,38 @@ PHP_METHOD(vtiful_xls, stringFromColumnIndex)
             Z_PARAM_LONG(index)
     ZEND_PARSE_PARAMETERS_END();
 
+    char one[1];
+
     if (index < 26) {
         current = index + 65;
-        result  = zend_string_init((char *)(&current), 1, 0);
-        RETURN_STR(result);
+        one[0] = current;
+
+        ZVAL_STRINGL(return_value, one, 1);
+        return;
     }
 
     if (index < 702) {
         current = index / 26 + 64;
-        result  = zend_string_init((char *)(&current), 1, 0);
+        one[0]  = current;
+        result  = zend_string_init(one, 1, 0);
 
         current = index % 26 + 65;
-        RETURN_STR(str_pick_up(result, (char *)(&current)));
+        one[0]  = current;
+        ZVAL_STR(return_value, str_pick_up(result, one, 1));
+        return;
     }
 
     current = (index - 26) / 676 + 64;
-    result  = zend_string_init((char *)(&current), 1, 0);
+    one[0]  = current;
+    result  = zend_string_init(one, 1, 0);
 
     current = ((index - 26) % 676) / 26 + 65;
-    result  = str_pick_up(result, (char *)(&current));
+    one[0]  = current;
+    result  = str_pick_up(result, one, 1);
 
     current = index % 26 + 65;
-    RETURN_STR(str_pick_up(result, (char *)(&current)));
+    one[0]  = current;
+    ZVAL_STR(return_value, str_pick_up(result, one, 1));
 }
 /* }}} */
 

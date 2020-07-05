@@ -209,7 +209,6 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_f
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
 void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw_format *format);
 void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_resource_write_t *res);
-void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format);
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
 void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format);
@@ -217,6 +216,7 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
 void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxw_format *format_handle);
+void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, zend_string *text, zend_string *tool_tip, lxw_format *format);
 
 lxw_error workbook_file(xls_resource_write_t *self);
 

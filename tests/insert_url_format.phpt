@@ -23,7 +23,7 @@ $filePath = $fileObject->header(['name', 'age'])
         ['viest', 21],
         ['wjx',   21]
     ])
-    ->insertUrl(3, 0, 'https://github.com', $alignStyle)
+    ->insertUrl(3, 0, 'https://github.com', NULL, NULL, $alignStyle)
     ->output();
 
 var_dump($filePath);

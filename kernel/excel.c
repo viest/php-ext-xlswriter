@@ -124,10 +124,12 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_date_arginfo, 0, 0, 5)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(xls_insert_url_arginfo, 0, 0, 4)
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_url_arginfo, 0, 0, 6)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
                 ZEND_ARG_INFO(0, url)
+                ZEND_ARG_INFO(0, text)
+                ZEND_ARG_INFO(0, tool_tip)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
@@ -658,16 +660,18 @@ PHP_METHOD(vtiful_xls, insertChart)
 PHP_METHOD(vtiful_xls, insertUrl)
 {
     zend_long row = 0, column = 0;
-    zend_string *url = NULL;
     zval *format_handle = NULL;
+    zend_string *url = NULL, *text = NULL, *tool_tip = NULL;
 
     int argc = ZEND_NUM_ARGS();
 
-    ZEND_PARSE_PARAMETERS_START(3, 4)
+    ZEND_PARSE_PARAMETERS_START(3, 6)
             Z_PARAM_LONG(row)
             Z_PARAM_LONG(column)
             Z_PARAM_STR(url)
             Z_PARAM_OPTIONAL
+            Z_PARAM_STR(text)
+            Z_PARAM_STR(tool_tip)
             Z_PARAM_RESOURCE(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
@@ -677,12 +681,10 @@ PHP_METHOD(vtiful_xls, insertUrl)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 4) {
-        url_writer(row, column, &obj->write_ptr, url, zval_get_format(format_handle));
-    }
-
-    if (argc == 3) {
-        url_writer(row, column, &obj->write_ptr, url, obj->format_ptr.format);
+    if (format_handle != NULL) {
+        url_writer(row, column, &obj->write_ptr, url, text, tool_tip, zval_get_format(format_handle));
+    } else {
+        url_writer(row, column, &obj->write_ptr, url, text, tool_tip, obj->format_ptr.format);
     }
 }
 /* }}} */

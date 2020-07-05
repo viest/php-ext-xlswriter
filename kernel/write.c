@@ -161,9 +161,24 @@ void format_copy(lxw_format *new_format, lxw_format *other_format)
     new_format->font_only = other_format->font_only;
 }
 
-void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, lxw_format *format)
+void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, zend_string *text, zend_string *tool_tip, lxw_format *format)
 {
-    worksheet_write_url(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format);
+    if (text == NULL && tool_tip == NULL) {
+        worksheet_write_url_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format, NULL, NULL);
+        return;
+    }
+
+    if (text == NULL && tool_tip != NULL) {
+        worksheet_write_url_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format, NULL, ZSTR_VAL(tool_tip));
+        return;
+    }
+
+    if (text != NULL && tool_tip == NULL) {
+        worksheet_write_url_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format, ZSTR_VAL(text), NULL);
+        return;
+    }
+
+    worksheet_write_url_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(url), format, ZSTR_VAL(text), ZSTR_VAL(tool_tip));
 }
 
 /*

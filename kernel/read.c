@@ -212,7 +212,7 @@ int sheet_read_row(xlsxioreadersheet sheet_t)
 /* }}} */
 
 /* {{{ */
-unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, zval *zv_type_arr_t, unsigned int flag)
+unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_result_t, zval *zv_type_arr_t, zend_long data_type_default, unsigned int flag)
 {
     zend_long _type, _cell_index = 0, _last_cell_index = 0;
     zend_bool _skip_empty_value_cell = 0;
@@ -256,7 +256,11 @@ unsigned int load_sheet_current_row_data(xlsxioreadersheet sheet_t, zval *zv_res
 
             if (_current_type != NULL && Z_TYPE_P(_current_type) == IS_LONG) {
                 _type = Z_LVAL_P(_current_type);
+            } else {
+                _type = data_type_default;
             }
+        } else {
+            _type = data_type_default;
         }
 
         data_to_custom_type(_string_value, _string_value_length, _type, zv_result_t, _cell_index);
@@ -332,7 +336,7 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
         goto CALL_USER_FUNCTION;
     }
 
-    if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY) {
+    if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY && _callback_data->data_type_default == READ_TYPE_EMPTY) {
         zend_long _long = 0; double _double = 0;
 
         if (is_numeric_string(value, _value_length, &_long, &_double, 0)) {
@@ -344,6 +348,10 @@ int sheet_cell_callback (size_t row, size_t col, const char *value, void *callba
         } else {
             ZVAL_STRINGL(&args[2], value, _value_length);
         }
+    }
+
+    if (Z_TYPE_P(_callback_data->zv_type_t) != IS_ARRAY && _callback_data->data_type_default != READ_TYPE_EMPTY) {
+        data_to_custom_type(value, _value_length, _callback_data->data_type_default, &args[2], 0);
     }
 
     if (Z_TYPE_P(_callback_data->zv_type_t) == IS_ARRAY) {
@@ -382,7 +390,7 @@ unsigned int load_sheet_current_row_data_callback (zend_string *zs_sheet_name_t,
 /* }}} */
 
 /* {{{ */
-void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_result_t)
+void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long data_type_default, zval *zv_result_t)
 {
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
         array_init(zv_result_t);
@@ -393,13 +401,13 @@ void load_sheet_all_data (xlsxioreadersheet sheet_t, zval *zv_type_t, zval *zv_r
         zval _zv_tmp_row;
         ZVAL_NULL(&_zv_tmp_row);
 
-        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, READ_SKIP_ROW);
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, data_type_default, READ_SKIP_ROW);
         add_next_index_zval(zv_result_t, &_zv_tmp_row);
     }
 }
 /* }}} */
 
-void skip_rows(xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long zl_skip_row)
+void skip_rows(xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long data_type_default, zend_long zl_skip_row)
 {
     while (sheet_read_row(sheet_t))
     {
@@ -410,7 +418,7 @@ void skip_rows(xlsxioreadersheet sheet_t, zval *zv_type_t, zend_long zl_skip_row
             sheet_read_row(sheet_t);
         }
 
-        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, READ_SKIP_ROW);
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, zv_type_t, data_type_default, READ_SKIP_ROW);
 
         zval_ptr_dtor(&_zv_tmp_row);
 

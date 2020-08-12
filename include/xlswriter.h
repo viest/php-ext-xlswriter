@@ -44,9 +44,11 @@
 typedef struct {
     xlsxioreader      file_t;
     xlsxioreadersheet sheet_t;
+    zend_long         data_type_default;
 } xls_resource_read_t;
 
 typedef struct {
+    zend_long             data_type_default;
     zval                  *zv_type_t;
     zend_fcall_info       *fci;
     zend_fcall_info_cache *fci_cache;

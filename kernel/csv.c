@@ -20,7 +20,9 @@ unsigned int xlsx_to_csv(
         const char *delimiter_str, int delimiter_str_len,
         const char *enclosure_str, int enclosure_str_len,
         const char *escape_str, int escape_str_len,
-        xlsxioreadersheet sheet_t, zval *zv_type_arr_t, unsigned int flag, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache
+        xlsxioreadersheet sheet_t,
+        zval *zv_type_arr_t, zend_long data_type_default,
+        unsigned int flag, zend_fcall_info *fci, zend_fcall_info_cache *fci_cache
 )
 {
     ssize_t ret = 0;
@@ -80,7 +82,7 @@ unsigned int xlsx_to_csv(
 
     while (sheet_read_row(sheet_t))
     {
-        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, _zv_type_arr_t, flag);
+        load_sheet_current_row_data(sheet_t, &_zv_tmp_row, _zv_type_arr_t, data_type_default, flag);
 
         if (fci != NULL && fci_cache != NULL) {
             zval retval;

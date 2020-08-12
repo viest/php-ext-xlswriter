@@ -377,6 +377,11 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 
     line = sheet_t->table->cached_row_num + 1;
 
+    // sheet not insert data
+    if (sheet_t->table->cached_row_num > LXW_ROW_MAX) {
+        line = 0;
+    }
+
     SHEET_LINE_SET(obj, line);
 
     obj->write_ptr.worksheet = sheet_t;
@@ -479,7 +484,11 @@ PHP_METHOD(vtiful_xls, header)
          type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, format_handle);
     ZEND_HASH_FOREACH_END();
 
-    SHEET_LINE_ADD(obj)
+    // When inserting the header for the first time, the row number is incremented by one,
+    // and there is no need to increment by one again for subsequent calls.
+    if (obj->write_line == 0) {
+        SHEET_LINE_ADD(obj)
+    }
 }
 /* }}} */
 

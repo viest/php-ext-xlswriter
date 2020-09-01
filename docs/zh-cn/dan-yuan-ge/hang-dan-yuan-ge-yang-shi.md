@@ -32,7 +32,7 @@ $boldStyle = $format->bold()->toResource();
 
 $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
-    ->setRow('A1', 20, $boldStyle,)
+    ->setRow('A1', 20, $boldStyle)
     ->output();
 ```
 

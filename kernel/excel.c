@@ -305,7 +305,7 @@ PHP_METHOD(vtiful_xls, fileName)
 
     ZVAL_COPY(return_value, getThis());
 
-    GET_CONFIG_PATH(dir_path, vtiful_xls_ce, return_value);
+    GET_CONFIG_PATH(dir_path, vtiful_xls_ce, PROP_OBJ(return_value));
 
     if(directory_exists(ZSTR_VAL(Z_STR_P(dir_path))) == XLSWRITER_FALSE) {
         zend_throw_exception(vtiful_exception_ce, "Configure 'path' directory does not exist", 121);
@@ -436,7 +436,7 @@ PHP_METHOD(vtiful_xls, constMemory)
 
     ZVAL_COPY(return_value, getThis());
 
-    GET_CONFIG_PATH(dir_path, vtiful_xls_ce, return_value);
+    GET_CONFIG_PATH(dir_path, vtiful_xls_ce, PROP_OBJ(return_value));
 
     xls_object *obj = Z_XLS_P(getThis());
 
@@ -532,7 +532,7 @@ PHP_METHOD(vtiful_xls, output)
 {
     zval rv, *file_path = NULL;
 
-    file_path = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_FIL), 0, &rv TSRMLS_DC);
+    file_path = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_FIL), 0, &rv TSRMLS_DC);
 
     xls_object *obj = Z_XLS_P(getThis());
 
@@ -1093,7 +1093,7 @@ PHP_METHOD(vtiful_xls, openFile)
 
     ZVAL_COPY(return_value, getThis());
 
-    GET_CONFIG_PATH(zv_config_path, vtiful_xls_ce, return_value);
+    GET_CONFIG_PATH(zv_config_path, vtiful_xls_ce, PROP_OBJ(return_value));
 
     xls_object* obj = Z_XLS_P(getThis());
 
@@ -1231,7 +1231,7 @@ PHP_METHOD(vtiful_xls, putCSV)
         RETURN_FALSE;
     }
 
-    zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+    zv_type = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     if (xlsx_to_csv(
             fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
@@ -1269,7 +1269,7 @@ PHP_METHOD(vtiful_xls, putCSVCallback)
         RETURN_FALSE;
     }
 
-    zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+    zv_type = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     if (xlsx_to_csv(
             fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
@@ -1292,7 +1292,7 @@ PHP_METHOD(vtiful_xls, getSheetData)
         RETURN_FALSE;
     }
 
-    zval *zv_type = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+    zval *zv_type = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     if (zv_type != NULL && Z_TYPE_P(zv_type) == IS_ARRAY) {
         load_sheet_all_data(obj->read_ptr.sheet_t, zv_type, obj->read_ptr.data_type_default, return_value);
@@ -1322,7 +1322,7 @@ PHP_METHOD(vtiful_xls, nextRow)
     }
 
     if (zv_type_t == NULL) {
-        zv_type_t = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+        zv_type_t = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
     }
 
     load_sheet_current_row_data(obj->read_ptr.sheet_t, return_value, zv_type_t, obj->read_ptr.data_type_default, READ_ROW);
@@ -1352,7 +1352,7 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
     xls_read_callback_data callback_data;
 
     callback_data.data_type_default = obj->read_ptr.data_type_default;
-    callback_data.zv_type_t = zend_read_property(vtiful_xls_ce, getThis(), ZEND_STRL(V_XLS_TYPE), 0, NULL);
+    callback_data.zv_type_t = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     callback_data.fci = &fci;
     callback_data.fci_cache = &fci_cache;

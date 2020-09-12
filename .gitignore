@@ -45,3 +45,4 @@ cmake-build-debug
 CMakeLists.txt
 local_test.php
 xlswriter-*.tgz
+benchmark.c

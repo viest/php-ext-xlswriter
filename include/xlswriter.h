@@ -185,13 +185,6 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 #define lxw_snprintf __builtin_snprintf
 #endif
 
-#if PHP_VERSION_ID < 80000
-#define PROP_OBJ(zv) (zv)
-#else
-#define PROP_OBJ(zv) Z_OBJ_P(zv)
-#endif
-
-
 lxw_format           * zval_get_format(zval *handle);
 xls_resource_write_t * zval_get_resource(zval *handle);
 xls_resource_chart_t * zval_get_chart(zval *resource);

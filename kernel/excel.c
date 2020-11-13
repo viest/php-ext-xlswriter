@@ -261,6 +261,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_sheet_zoom_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, scale)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_protection_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, password)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -1078,6 +1082,25 @@ PHP_METHOD(vtiful_xls, zoom)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::protection(string $password)
+ */
+PHP_METHOD(vtiful_xls, protection)
+{
+    zend_string *password = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR(password)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    protection(&obj->write_ptr, password);
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
 /** {{{ \Vtiful\Kernel\Excel::openFile()
@@ -1390,6 +1413,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultFormat, xls_set_global_format,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, freezePanes,   xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
+
+        PHP_ME(vtiful_xls, protection,    xls_protection_arginfo,     ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)

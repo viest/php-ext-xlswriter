@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2020-06-17</date>
- <time>01:37:24</time>
+ <date>2020-08-18</date>
+ <time>18:00:00</time>
  <version>
-  <release>1.3.6</release>
-  <api>1.3.6</api>
+  <release>1.3.7</release>
+  <api>1.3.7</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,11 +45,10 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Fix musllibc.
-- Fix null in cell callback.
-- Feat cell comment.
-- Feat timestampFromDateDouble static method.
-- Feat Check for existence before opening file.
+- Fix IBM s390x.
+- Fix header line no and sheet checkout not init line no.
+- Feat set global type.
+- Feat url text and tool tip.
  </notes>
  <contents>
   <dir name="/">
@@ -284,6 +283,26 @@
  </extsrcrelease>
  <changelog>
   <release>
+   <date>2020-06-17</date>
+   <time>01:37:24</time>
+   <version>
+    <release>1.3.6</release>
+    <api>1.3.6</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Fix musllibc.
+    - Fix null in cell callback.
+    - Feat cell comment.
+    - Feat timestampFromDateDouble static method.
+    - Feat Check for existence before opening file.
+   </notes>
+  </release>
+  <release>
    <date>2020-06-08</date>
    <time>14:22:09</time>
    <version>
@@ -332,7 +351,7 @@
    <notes>
 - FEAT header support custom format.
 - FEAT putcsv custom delimiter.
-- FEAT ead skip cells,rows,empty value.
+- FEAT read skip cells,rows,empty value.
 - FIX read data method, the offset of the array index and the row of the cell.
 - FIX insertDate leaked.
    </notes>

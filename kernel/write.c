@@ -340,6 +340,18 @@ void zoom(xls_resource_write_t *res, zend_long zoom)
 }
 
 /*
+ * Set the worksheet protection
+ */
+void protection(xls_resource_write_t *res, zend_string *password)
+{
+    if (password == NULL) {
+        worksheet_protect(res->worksheet, NULL, NULL);
+    } else {
+        worksheet_protect(res->worksheet, ZSTR_VAL(password), NULL);
+    }
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

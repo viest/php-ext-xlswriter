@@ -1,0 +1,38 @@
+name: php-ext-xlswriter
+
+on: [push, pull_request]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0']
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+
+      - name: Setup Dependencies
+        run: sudo apt-get install zlib1g-dev valgrind -y
+
+      - name: Setup Submodule
+        run: git submodule update --init
+
+      - name: Build Extension And Execute Tests
+        run: |
+          phpize && ./configure --enable-reader
+          make clean && make && make test
+
+      - name: Build Extension And Execute Valgrind Tests
+        if: contains('7.0,7.1,7.2', matrix.php-versions)
+        run: |
+          phpize && ./configure --enable-reader
+          make clean && make && make test
+          REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120

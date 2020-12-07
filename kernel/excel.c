@@ -1121,6 +1121,16 @@ PHP_METHOD(vtiful_xls, openFile)
 
     xls_object* obj = Z_XLS_P(getThis());
 
+    if (obj->read_ptr.file_t != NULL) {
+        xlsxioread_close(obj->read_ptr.file_t);
+        obj->read_ptr.file_t = NULL;
+    }
+
+    if (obj->read_ptr.sheet_t != NULL) {
+        xlsxioread_sheet_close(obj->read_ptr.sheet_t);
+        obj->read_ptr.sheet_t = NULL;
+    }
+
     obj->read_ptr.file_t = file_open(Z_STRVAL_P(zv_config_path), ZSTR_VAL(zs_file_name));
 }
 /* }}} */

@@ -1121,14 +1121,14 @@ PHP_METHOD(vtiful_xls, openFile)
 
     xls_object* obj = Z_XLS_P(getThis());
 
-    if (obj->read_ptr.file_t != NULL) {
-        xlsxioread_close(obj->read_ptr.file_t);
-        obj->read_ptr.file_t = NULL;
-    }
-
     if (obj->read_ptr.sheet_t != NULL) {
         xlsxioread_sheet_close(obj->read_ptr.sheet_t);
         obj->read_ptr.sheet_t = NULL;
+    }
+
+    if (obj->read_ptr.file_t != NULL) {
+        xlsxioread_close(obj->read_ptr.file_t);
+        obj->read_ptr.file_t = NULL;
     }
 
     obj->read_ptr.file_t = file_open(Z_STRVAL_P(zv_config_path), ZSTR_VAL(zs_file_name));
@@ -1160,6 +1160,7 @@ PHP_METHOD(vtiful_xls, openSheet)
         xlsxioread_sheet_close(obj->read_ptr.sheet_t);
     }
 
+    obj->read_ptr.sheet_flag = zl_flag;
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
 }
 /* }}} */
@@ -1329,12 +1330,12 @@ PHP_METHOD(vtiful_xls, getSheetData)
     zval *zv_type = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     if (zv_type != NULL && Z_TYPE_P(zv_type) == IS_ARRAY) {
-        load_sheet_all_data(obj->read_ptr.sheet_t, zv_type, obj->read_ptr.data_type_default, return_value);
+        load_sheet_all_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, zv_type, obj->read_ptr.data_type_default, return_value);
 
         return;
     }
 
-    load_sheet_all_data(obj->read_ptr.sheet_t, NULL, obj->read_ptr.data_type_default, return_value);
+    load_sheet_all_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, NULL, obj->read_ptr.data_type_default, return_value);
 }
 /* }}} */
 
@@ -1359,7 +1360,7 @@ PHP_METHOD(vtiful_xls, nextRow)
         zv_type_t = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
     }
 
-    load_sheet_current_row_data(obj->read_ptr.sheet_t, return_value, zv_type_t, obj->read_ptr.data_type_default, READ_ROW);
+    load_sheet_row_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, zv_type_t, obj->read_ptr.data_type_default, return_value);
 }
 /* }}} */
 

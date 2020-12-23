@@ -3,19 +3,26 @@
 </div>
 
 <div align=center>
+<a href="https://github.com/viest/php-ext-xlswriter/releases"><img src="https://img.shields.io/github/release/viest/php-ext-excel-export.svg"/></a>
+</div>
+
+<div align=center>
+<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg"/></a>
+</div>
+
+<div align=center>
 <a href="https://travis-ci.com/viest/php-ext-xlswriter"><img src="https://travis-ci.com/viest/php-ext-xlswriter.svg?branch=master"/></a>
 <a href="https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master"><img src="https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true"/></a>
-<a href="https://github.com/viest/php-ext-xlswriter/releases"><img src="https://img.shields.io/github/release/viest/php-ext-excel-export.svg"/></a>
+<a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>
 </div>
 
 <div align=center>
 <a href="https://opencollective.com/php-ext-xlswriter"><img src="https://opencollective.com/php-ext-xlswriter/all/badge.svg?label=financial+contributors"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/PHP-%3E%3D%207.0-brightgreen.svg"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/github/contributors/viest/php-ext-excel-export.svg"/></a>
-<a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/platform-macos%20%7C%20linux%20%7C%20windows-brightgreen.svg"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/badge/license-BSD-green.svg"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img src="https://img.shields.io/github/issues/viest/php-ext-excel-export.svg"/></a>
-<a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>
+<a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fviest%2Fphp-ext-xlswriter&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false"/></a>
 </div>
 
 ## 为什么使用xlswriter

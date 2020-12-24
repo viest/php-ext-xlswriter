@@ -45,6 +45,7 @@ typedef struct {
     xlsxioreader      file_t;
     xlsxioreadersheet sheet_t;
     zend_long         data_type_default;
+    zend_long         sheet_flag;
 } xls_resource_read_t;
 
 typedef struct {

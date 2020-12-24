@@ -266,6 +266,12 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_protection_arginfo, 0, 0, 0)
                 ZEND_ARG_INFO(0, password)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_portrait_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_landscape_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -1102,6 +1108,36 @@ PHP_METHOD(vtiful_xls, protection)
 }
 /* }}} */
 
+
+/** {{{ \Vtiful\Kernel\Excel::setPrintedPortrait()
+ */
+PHP_METHOD(vtiful_xls, setPrintedPortrait)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    printed_direction(&obj->write_ptr, XLSWRITER_PRINTED_PORTRAIT);
+}
+/* }}} */
+
+
+/** {{{ \Vtiful\Kernel\Excel::setPrintedLandscape()
+ */
+PHP_METHOD(vtiful_xls, setPrintedLandscape)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    printed_direction(&obj->write_ptr, XLSWRITER_PRINTED_LANDSCAPE);
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
 /** {{{ \Vtiful\Kernel\Excel::openFile()
@@ -1433,6 +1469,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, columnIndexFromString,   xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,   xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, timestampFromDateDouble, xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+
+        PHP_ME(vtiful_xls, setPrintedPortrait, xls_set_printed_portrait_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPrintedLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
 
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)

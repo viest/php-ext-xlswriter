@@ -68,6 +68,11 @@ enum xlswriter_boolean {
     XLSWRITER_TRUE
 };
 
+enum xlswirter_printed_direction {
+    XLSWRITER_PRINTED_LANDSCAPE,
+    XLSWRITER_PRINTED_PORTRAIT,
+};
+
 typedef struct {
     lxw_workbook  *workbook;
     lxw_worksheet *worksheet;
@@ -124,10 +129,18 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
 
 #define WORKBOOK_NOT_INITIALIZED(xls_object_t)                                                                       \
     do {                                                                                                             \
-        if(obj->write_ptr.workbook == NULL) {                                                                        \
+        if(xls_object_t->write_ptr.workbook == NULL) {                                                               \
             zend_throw_exception(vtiful_exception_ce, "Please create a file first, use the filename method", 130);   \
             return;                                                                                                  \
         }                                                                                                            \
+    } while(0);
+
+#define WORKSHEET_NOT_INITIALIZED(xls_object_t)                                                                     \
+    do {                                                                                                            \
+        if (xls_object_t->write_ptr.worksheet == NULL) {                                                            \
+            zend_throw_exception(vtiful_exception_ce, "worksheet not initialized", 200);                            \
+            return;                                                                                                 \
+        }                                                                                                           \
     } while(0);
 
 #define WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(xls_resource_write_t, error)                                \
@@ -214,6 +227,7 @@ void gridlines(xls_resource_write_t *res, zend_long option);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
 void protection(xls_resource_write_t *res, zend_string *password);
 void format_copy(lxw_format *new_format, lxw_format *other_format);
+void printed_direction(xls_resource_write_t *res, unsigned int direction);
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);

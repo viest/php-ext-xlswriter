@@ -25,6 +25,28 @@
 
 int le_xls_writer;
 
+ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_version_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_auther_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+/* {{{ xlswriter_get_version
+ */
+PHP_FUNCTION(xlswriter_get_version)
+{
+    RETURN_STRINGL(PHP_XLSWRITER_VERSION, strlen(PHP_XLSWRITER_VERSION));
+}
+/* }}} */
+
+/* {{{ xlswriter_get_author
+ */
+PHP_FUNCTION(xlswriter_get_author)
+{
+    RETURN_STRINGL(PHP_XLSWRITER_AUTHOR, strlen(PHP_XLSWRITER_AUTHOR));
+}
+/* }}} */
+
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(xlswriter)
@@ -39,7 +61,6 @@ PHP_MINIT_FUNCTION(xlswriter)
 	return SUCCESS;
 }
 /* }}} */
-
 
 /* {{{ PHP_MSHUTDOWN_FUNCTION
  */
@@ -67,7 +88,6 @@ PHP_RSHUTDOWN_FUNCTION(xlswriter)
 	return SUCCESS;
 }
 /* }}} */
-
 
 /* {{{ PHP_MINFO_FUNCTION
  */
@@ -109,6 +129,8 @@ PHP_MINFO_FUNCTION(xlswriter)
  * Every user visible function must have an entry in xlswriter_functions[].
  */
 const zend_function_entry xlswriter_functions[] = {
+    PHP_FE(xlswriter_get_version, xlswriter_get_version_arginfo)
+    PHP_FE(xlswriter_get_author,  xlswriter_get_auther_arginfo)
 	PHP_FE_END
 };
 /* }}} */

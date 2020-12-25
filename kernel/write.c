@@ -364,6 +364,22 @@ void printed_direction(xls_resource_write_t *res, unsigned int direction)
 }
 
 /*
+ * Hide worksheet
+ */
+void hide_worksheet(xls_resource_write_t *res)
+{
+    worksheet_hide(res->worksheet);
+}
+
+/*
+ * First worksheet
+ */
+void first_worksheet(xls_resource_write_t *res)
+{
+    worksheet_set_first_sheet(res->worksheet);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

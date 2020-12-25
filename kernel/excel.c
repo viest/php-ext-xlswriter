@@ -272,6 +272,12 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_landscape_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_hide_sheet_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_first_sheet_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -1138,6 +1144,34 @@ PHP_METHOD(vtiful_xls, setPrintedLandscape)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setCurrentSheetHide()
+ */
+PHP_METHOD(vtiful_xls, setCurrentSheetHide)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    hide_worksheet(&obj->write_ptr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setCurrentSheetIsFirst()
+ */
+PHP_METHOD(vtiful_xls, setCurrentSheetIsFirst)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    first_worksheet(&obj->write_ptr);
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
 /** {{{ \Vtiful\Kernel\Excel::openFile()
@@ -1467,12 +1501,15 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
 
+        PHP_ME(vtiful_xls, setPrintedPortrait,  xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPrintedLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
+
+        PHP_ME(vtiful_xls, setCurrentSheetHide,    xls_hide_sheet_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setCurrentSheetIsFirst, xls_first_sheet_arginfo, ZEND_ACC_PUBLIC)
+
         PHP_ME(vtiful_xls, columnIndexFromString,   xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,   xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, timestampFromDateDouble, xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
-
-        PHP_ME(vtiful_xls, setPrintedPortrait, xls_set_printed_portrait_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setPrintedLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
 
 #ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)

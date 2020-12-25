@@ -222,6 +222,8 @@ STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
 void comment_show(xls_resource_write_t *res);
+void hide_worksheet(xls_resource_write_t *res);
+void first_worksheet(xls_resource_write_t *res);
 void zoom(xls_resource_write_t *res, zend_long zoom);
 void gridlines(xls_resource_write_t *res, zend_long option);
 void auto_filter(zend_string *range, xls_resource_write_t *res);

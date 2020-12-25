@@ -352,6 +352,18 @@ void protection(xls_resource_write_t *res, zend_string *password)
 }
 
 /*
+ * Set the worksheet printed direction
+ */
+void printed_direction(xls_resource_write_t *res, unsigned int direction)
+{
+    if (direction == XLSWRITER_PRINTED_PORTRAIT) {
+        worksheet_set_portrait(res->worksheet);
+    }
+
+    worksheet_set_landscape(res->worksheet);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

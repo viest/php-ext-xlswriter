@@ -1022,10 +1022,11 @@ void data_sheet_expat_callback_find_row_start (void* callbackdata, const XML_Cha
   struct data_sheet_callback_data* data = (struct data_sheet_callback_data*)callbackdata;
   if (XML_Char_icmp_ins(name, X("row")) == 0) {
     const XML_Char* hidden = get_expat_attr_by_name(atts, X("hidden"));
-    if (!hidden || XML_Char_tol(hidden) == 0) {//nesting level for current tag to skip
-//start handler to set after skipping
-//end handler to set after skipping
-//data handler to set after skipping
+    if (!hidden || XML_Char_tol(hidden) == 0 || !(data->flags & XLSXIOREAD_SKIP_HIDDEN_ROWS)) {
+      //nesting level for current tag to skip
+      //start handler to set after skipping
+      //end handler to set after skipping
+      //data handler to set after skipping
 
       data->rownr++;
       data->colnr = 0;

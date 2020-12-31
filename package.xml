@@ -33,8 +33,8 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2020-08-18</date>
- <time>18:00:00</time>
+ <date>2020-12-31</date>
+ <time>23:30:00</time>
  <version>
   <release>1.3.7</release>
   <api>1.3.7</api>
@@ -47,8 +47,16 @@
  <notes>
 - Fix IBM s390x.
 - Fix header line no and sheet checkout not init line no.
+- Fix single instance opens multiple files, but the file handle is not released.
+- Feat worksheet printed.
+- Feat worksheet hidden.
+- Feat workbook custom first worksheet.
+- Feat custom skip hidden rows.
+- Feat skip empty rows.
 - Feat set global type.
 - Feat url text and tool tip.
+- Feat work sheet protection.
+- Helper xlswriter_get_version and xlswriter_get_author
  </notes>
  <contents>
   <dir name="/">
@@ -200,6 +208,7 @@
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file md5sum="da803170bdbbdc8191123889c187d9fa" name="tests/const_memory_index_out_range.phpt" role="test" />
    <file md5sum="64c92ab74560df6044f1a9019458a5b4" name="tests/default_format.phpt" role="test" />
+   <file md5sum="64c92ab74560df6044f1a9019458a5b4" name="tests/first.phpt" role="test" />
    <file md5sum="12065dc330a3726532bf066ebd4224c9" name="tests/fix-207.phpt" role="test" />
    <file md5sum="be10fd5656cead06d963c971ad0359d5" name="tests/fix-243.phpt" role="test" />
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
@@ -210,10 +219,12 @@
    <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="test" />
    <file md5sum="4dfaa3f81e9c7138aca39da99a67f270" name="tests/format_font_strikeout.phpt" role="test" />
    <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_number.phpt" role="test" />
+   <file md5sum="c32a045fc8d621cbbaf8f00008ddb8b5" name="tests/format_unlocked.phpt" role="test" />
    <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
    <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
    <file md5sum="e5a973f5d12afe9d8ad068c44afdbea1" name="tests/gridlines.phpt" role="test" />
    <file md5sum="8fc78ed13774a947195a47861ff10d72" name="tests/header_format.phpt" role="test" />
+   <file md5sum="8fc78ed13774a947195a47861ff10d72" name="tests/hide.phpt" role="test" />
    <file md5sum="b4c6f2949c46ab89099e5f971f152a1f" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="fb81df82009c851b96a6124972ccc3d1" name="tests/image_width_height_styles.phpt" role="test" />
    <file md5sum="0feab11e1d80b80bb1da14d040d88915" name="tests/insert_comment.phpt" role="test" />
@@ -228,9 +239,11 @@
    <file md5sum="819d310ae06737ee40f67f22aadfb8a8" name="tests/open_xlsx_file_not_found.phpt" role="test" />
    <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="test" />
    <file md5sum="1afc255df6ce98e700edb60e0123c7ff" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
+   <file md5sum="1afc255df6ce98e700edb60e0123c7ff" name="tests/open_xlsx_get_data_skip_hidden_rows.phpt" role="test" />
    <file md5sum="b9f407a439cf4cc49588cf6f604f609f" name="tests/open_xlsx_get_data_skip_rows.phpt" role="test" />
    <file md5sum="0300fa1cdb8bed61ee9fdd0aaf36caaa" name="tests/open_xlsx_get_data_with_set_type.phpt" role="test" />
    <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_get_sheet_not_found_data.phpt" role="test" />
+   <file md5sum="4d68e2f3dafa35feef8f4e54786fb6d7" name="tests/open_xlsx_global_data_type.phpt" role="test" />
    <file md5sum="f8a2c32aad6f4828fcac7b4c6ccf7a74" name="tests/open_xlsx_next_cell_callback.phpt" role="test" />
    <file md5sum="38a275929a200a29ca37e4c15cd083ce" name="tests/open_xlsx_next_cell_callback_with_data_type.phpt" role="test" />
    <file md5sum="154e924e44ba43aec9abc6d6b6d389b1" name="tests/open_xlsx_next_row.phpt" role="test" />
@@ -243,11 +256,14 @@
    <file md5sum="1f75d70aa9fb4590f4982fbe4070da36" name="tests/open_xlsx_sheet.phpt" role="test" />
    <file md5sum="90b5a90b6687d034a5cc64ae35a41fb7" name="tests/open_xlsx_sheet_flag.phpt" role="test" />
    <file md5sum="7311707c0af586c68424e05e956e3d79" name="tests/open_xlsx_sheet_list.phpt" role="test" />
+   <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/printed.phpt" role="test" />
+   <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/protection.phpt" role="test" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="test" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
    <file md5sum="05c3bed759d84238b2250c7318d0ddb8" name="tests/show_comment.phpt" role="test" />
    <file md5sum="5811dd930d7b0f916c662139ff1053d4" name="tests/string_from_column_index.phpt" role="test" />
    <file md5sum="8f5261fe0863ffd90ab356bb350f7b8b" name="tests/timestamp_from_date_double.phpt" role="test" />
+   <file md5sum="8f5261fe0863ffd90ab356bb350f7b8b" name="tests/version.phpt" role="test" />
    <file md5sum="42b26f050d9291509d6f583ef43ebde9" name="tests/xlsx_to_csv.phpt" role="test" />
    <file md5sum="899082419da65a680897548affb39a47" name="tests/xlsx_to_csv_callback.phpt" role="test" />
    <file md5sum="17beb8bf8b770309358816da542837d9" name="tests/xlsx_to_csv_callback_custom_delimiter.phpt" role="test" />
@@ -256,6 +272,7 @@
    <file md5sum="597867441c909400767ef2653fe33ebc" name="tests/xlsx_to_csv_skip_rows_callback.phpt" role="test" />
    <file md5sum="a9af7f4ca385ba41b008b50ac67f8e96" name="tests/zoom.phpt" role="test" />
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
+   <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/xlsx/hidden_row.xlsx" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
    <file md5sum="0f1b2f3b7268c5e6a8bee6821cab5bb9" name="README.md" role="doc" />
    <file md5sum="8623e56525a5efef5cfbbd9d59eb6a5e" name="README_zh.md" role="doc" />

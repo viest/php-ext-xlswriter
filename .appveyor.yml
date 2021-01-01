@@ -10,152 +10,176 @@ clone_folder:  c:\projects\xlswriter
 install:
   ps: |
     if (-not (Test-Path c:\build-cache)) {
-            mkdir c:\build-cache
+      mkdir c:\build-cache
     }
     $bname = 'php-sdk-' + $env:BIN_SDK_VER + '.zip'
     if (-not (Test-Path c:\build-cache\$bname)) {
-            Invoke-WebRequest "https://github.com/OSTC/php-sdk-binary-tools/archive/$bname" -OutFile "c:\build-cache\$bname"
+      Invoke-WebRequest "https://github.com/OSTC/php-sdk-binary-tools/archive/$bname" -OutFile "c:\build-cache\$bname"
     }
     $dname0 = 'php-sdk-binary-tools-php-sdk-' + $env:BIN_SDK_VER
     $dname1 = 'php-sdk-' + $env:BIN_SDK_VER
     if (-not (Test-Path c:\build-cache\$dname1)) {
-            7z x c:\build-cache\$bname -oc:\build-cache
-            move c:\build-cache\$dname0 c:\build-cache\$dname1
+      7z x c:\build-cache\$bname -oc:\build-cache
+      move c:\build-cache\$dname0 c:\build-cache\$dname1
     }
-    $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC + '-' + $env:ARCH + '.zip'
+    $lname0 = 'zlib-' + $env:ZLIB_VER + '-' + $env:VC.toLower() + '-' + $env:ARCH + '.zip'
     $lname1 = 'zlib'
     if (-not (Test-Path c:\build-cache\$lname0)) {
-            $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC + "/" + $env:ARCH+ "/" + $lname0
-            Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
+      $zliurl = "https://windows.php.net/downloads/php-sdk/deps/" + $env:VC.toLower() + "/" + $env:ARCH + "/" + $lname0
+      Invoke-WebRequest $zliurl -OutFile "c:\build-cache\$lname0"
     }
     if (-not (Test-Path c:\build-cache\$lname1)) {
-            & 7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
+      7z x c:\build-cache\$lname0 -oc:\build-cache\$lname1
     }
 
 cache:
   c:\build-cache -> .appveyor.yml
 
 environment:
-  BIN_SDK_VER: 2.1.2
+  BIN_SDK_VER: 2.2.0
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x64
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.0.28
       ZLIB_VER: 1.2.8
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x64
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.0.28
       ZLIB_VER: 1.2.8
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x86
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.0.28
       ZLIB_VER: 1.2.8
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x86
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.0.28
       ZLIB_VER: 1.2.8
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x64
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.1.15
       ZLIB_VER: 1.2.8
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x64
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.1.15
       ZLIB_VER: 1.2.8
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x86
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.1.15
       ZLIB_VER: 1.2.8
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: x86
-      VC: vc14
+      VC: VC14
       PHP_VER: 7.1.15
       ZLIB_VER: 1.2.8
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.2.3
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.2.3
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.2.3
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.2.3
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.3.0
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.3.0
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.3.0
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.3.0
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.4.0
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.4.0
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.4.0
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86
-      VC: vc15
+      VC: VC15
       PHP_VER: 7.4.0
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.0.0
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.0.0
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.0.0
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.0.0
       ZLIB_VER: 1.2.11
       TS: 1
 
@@ -163,18 +187,21 @@ build_script:
   ps: |
     $ts_part = ''
     if ('0' -eq $env:TS) { $ts_part = '-nts' }
-    $bname = 'php-devel-pack-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
+    $bname = 'php-devel-pack-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC + '-' + $env:ARCH + '.zip'
     if (-not (Test-Path c:\build-cache\$bname)) {
-            Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
-            if (-not (Test-Path c:\build-cache\$bname)) {
-                    Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
-            }
+      try {
+        Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
+      } catch {
+        if (-not (Test-Path c:\build-cache\$bname)) {
+          Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
+        }
+      }
     }
-    $dname0 = 'php-' + $env:PHP_VER + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
-    $dname1 = 'php-' + $env:PHP_VER + $ts_part + '-devel-' + $env:VC.toUpper() + '-' + $env:ARCH
+    $dname0 = 'php-' + $env:PHP_VER + '-devel-' + $env:VC + '-' + $env:ARCH
+    $dname1 = 'php-' + $env:PHP_VER + $ts_part + '-devel-' + $env:VC + '-' + $env:ARCH
     if (-not (Test-Path c:\build-cache\$dname1)) {
-            7z x c:\build-cache\$bname -oc:\build-cache
-            move c:\build-cache\$dname0 c:\build-cache\$dname1
+      7z x c:\build-cache\$bname -oc:\build-cache
+      move c:\build-cache\$dname0 c:\build-cache\$dname1
     }
     cd c:\projects\xlswriter
     $env:PATH = 'c:\build-cache\' + $dname1 + ';' + $env:PATH
@@ -201,23 +228,30 @@ after_build:
     if ('x64' -eq $env:ARCH) { $dir = $dir + 'x64\' }
     $dir = $dir + 'Release'
     if ('1' -eq $env:TS) { $dir = $dir + '_TS' }
-    & 7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\zlib\lib\zlib_a.lib c:\build-cache\zlib\lib\zlib.pdb
+    if (-not (Test-Path c:\build-cache\zlib\lib\zlib.pdb)) {
+      7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\zlib\lib\zlib_a.lib c:\build-cache\zlib\lib\zlib_a.pdb
+    } else {
+      7z a c:\$zip_bname $dir\php_xlswriter.dll c:\projects\xlswriter\LICENSE c:\build-cache\zlib\lib\zlib_a.lib c:\build-cache\zlib\lib\zlib.pdb
+    }
     Push-AppveyorArtifact c:\$zip_bname
 
 test_script:
   ps: |
     $ts_part = ''
     if ('0' -eq $env:TS) { $ts_part = '-nts' }
-    $bname = 'php-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC.toUpper() + '-' + $env:ARCH + '.zip'
+    $bname = 'php-' + $env:PHP_VER + $ts_part + '-Win32-' + $env:VC + '-' + $env:ARCH + '.zip'
     if (-not (Test-Path c:\build-cache\$bname)) {
-            Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
-            if (-not (Test-Path c:\build-cache\$bname)) {
-                    Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
-            }
+      try {
+        Invoke-WebRequest "http://windows.php.net/downloads/releases/archives/$bname" -OutFile "c:\build-cache\$bname"
+      } catch {
+        if (-not (Test-Path c:\build-cache\$bname)) {
+          Invoke-WebRequest "http://windows.php.net/downloads/releases/$bname" -OutFile "c:\build-cache\$bname"
+        }
+      }
     }
-    $dname = 'php-' + $env:PHP_VER + $ts_part + '-' + $env:VC.toUpper() + '-' + $env:ARCH
+    $dname = 'php-' + $env:PHP_VER + $ts_part + '-' + $env:VC + '-' + $env:ARCH
     if (-not (Test-Path c:\build-cache\$dname)) {
-            7z x c:\build-cache\$bname -oc:\build-cache\$dname
+      7z x c:\build-cache\$bname -oc:\build-cache\$dname
     }
     cd c:\projects\xlswriter
     echo "" | Out-File -Encoding "ASCII" task.bat

@@ -19,8 +19,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
 $excel->openFile('tutorial.xlsx')
     ->setGlobalType(\Vtiful\Kernel\Excel::TYPE_DOUBLE)
     ->nextCellCallback(function ($row, $cell, $data) {
-        echo 'cell:' . $cell . ', row:' . $row . PHP_EOL;
-        var_dump($data);
+        echo 'cell:' . $cell . ', row:' . $row .', data type:' . gettype($data) . PHP_EOL;
     });
 
 echo '----------------' . PHP_EOL;
@@ -48,26 +47,16 @@ var_dump($excel->nextRow());
 @unlink(__DIR__ . '/tutorial.xlsx');
 ?>
 --EXPECT--
-cell:0, row:0
-string(4) "Item"
-cell:1, row:0
-string(4) "Cost"
-cell:2, row:0
-string(3) "Int"
-cell:3, row:0
-string(6) "Double"
-cell:3, row:0
-string(12) "XLSX_ROW_END"
-cell:0, row:1
-string(6) "Item_1"
-cell:1, row:1
-string(6) "Cost_1"
-cell:2, row:1
-float(10)
-cell:3, row:1
-float(10.9999995)
-cell:3, row:1
-string(12) "XLSX_ROW_END"
+cell:0, row:0, data type:string
+cell:1, row:0, data type:string
+cell:2, row:0, data type:string
+cell:3, row:0, data type:string
+cell:3, row:0, data type:string
+cell:0, row:1, data type:string
+cell:1, row:1, data type:string
+cell:2, row:1, data type:double
+cell:3, row:1, data type:double
+cell:3, row:1, data type:string
 ----------------
 array(2) {
   [0]=>

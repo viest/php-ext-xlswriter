@@ -58,8 +58,10 @@ typedef struct {
 
 #ifndef ENABLE_READER
 typedef struct {
-    void * file_t;
-    void * sheet_t;
+    void      *file_t;
+    void      *sheet_t;
+    zend_long data_type_default;
+    zend_long sheet_flag;
 } xls_resource_read_t;
 #endif
 

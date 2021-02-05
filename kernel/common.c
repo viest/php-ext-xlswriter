@@ -70,3 +70,19 @@ void call_object_method(zval *object, const char *function_name, uint32_t param_
     zval_ptr_dtor(&z_f_name);
 }
 /* }}} */
+
+lxw_datetime timestamp_to_datetime(zend_long timestamp)
+{
+    int yearLocal   = php_idate('Y', timestamp, 0);
+    int monthLocal  = php_idate('m', timestamp, 0);
+    int dayLocal    = php_idate('d', timestamp, 0);
+    int hourLocal   = php_idate('H', timestamp, 0);
+    int minuteLocal = php_idate('i', timestamp, 0);
+    int secondLocal = php_idate('s', timestamp, 0);
+
+    lxw_datetime datetime = {
+            yearLocal, monthLocal, dayLocal, hourLocal, minuteLocal, secondLocal
+    };
+
+    return datetime;
+}

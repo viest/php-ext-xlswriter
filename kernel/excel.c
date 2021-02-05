@@ -11,7 +11,6 @@
 */
 
 #include "xlswriter.h"
-#include "ext/date/php_date.h"
 
 zend_class_entry *vtiful_xls_ce;
 
@@ -265,6 +264,11 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_protection_arginfo, 0, 0, 0)
                 ZEND_ARG_INFO(0, password)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_validation_arginfo, 0, 0, 2)
+                ZEND_ARG_INFO(0, range)
+                ZEND_ARG_INFO(0, validation_resource)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_portrait_arginfo, 0, 0, 0)
@@ -640,16 +644,7 @@ PHP_METHOD(vtiful_xls, insertDate)
         format = zend_string_init(ZEND_STRL("yyyy-mm-dd hh:mm:ss"), 0);
     }
 
-    int yearLocal   = php_idate('Y', data->value.lval, 0);
-    int monthLocal  = php_idate('m', data->value.lval, 0);
-    int dayLocal    = php_idate('d', data->value.lval, 0);
-    int hourLocal   = php_idate('H', data->value.lval, 0);
-    int minuteLocal = php_idate('i', data->value.lval, 0);
-    int secondLocal = php_idate('s', data->value.lval, 0);
-
-    lxw_datetime datetime = {
-            yearLocal, monthLocal, dayLocal, hourLocal, minuteLocal, secondLocal
-    };
+    lxw_datetime datetime = timestamp_to_datetime(data->value.lval);
 
     if (format_handle) {
         datetime_writer(&datetime, row, column, format, &obj->write_ptr, zval_get_format(format_handle));
@@ -1172,6 +1167,28 @@ PHP_METHOD(vtiful_xls, setCurrentSheetIsFirst)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::validation()
+ */
+PHP_METHOD(vtiful_xls, validation)
+{
+    zend_string *range = NULL;
+    zval *validation_handle = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+            Z_PARAM_STR(range)
+            Z_PARAM_RESOURCE(validation_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    validation(&obj->write_ptr, range, zval_get_validation(validation_handle));
+}
+/* }}} */
+
 #ifdef ENABLE_READER
 
 /** {{{ \Vtiful\Kernel\Excel::openFile()
@@ -1497,6 +1514,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, freezePanes,   xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, protection,    xls_protection_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, validation,    xls_validation_arginfo,     ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)

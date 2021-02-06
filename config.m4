@@ -21,6 +21,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/format.c \
     kernel/chart.c \
     kernel/help.c \
+    kernel/validation.c \
     "
 
     xls_read_sources="

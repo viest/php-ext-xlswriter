@@ -38,6 +38,7 @@ lxw_format * zval_get_format(zval *handle)
 }
 /* }}} */
 
+/* {{{ */
 xls_resource_chart_t *zval_get_chart(zval *resource)
 {
     xls_resource_chart_t *res;
@@ -48,3 +49,17 @@ xls_resource_chart_t *zval_get_chart(zval *resource)
 
     return res;
 }
+/* }}} */
+
+/* {{{ */
+lxw_data_validation *zval_get_validation(zval *resource)
+{
+    lxw_data_validation *res;
+
+    if((res = (lxw_data_validation *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "validation resources resolution fail", 210);
+    }
+
+    return res;
+}
+/* }}} */

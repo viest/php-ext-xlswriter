@@ -303,6 +303,14 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_f
 }
 
 /*
+ * Add data validations to a worksheet
+ */
+void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation)
+{
+    worksheet_data_validation_cell(res->worksheet, CELL(ZSTR_VAL(range)), validation);
+}
+
+/*
  * Set rows format
  */
 void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format)

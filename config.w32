@@ -28,6 +28,7 @@ if (PHP_XLSWRITER != "no") {
                 read.c \
                 csv.c \
                 help.c \
+                validation.c \
                 ", "xlswriter");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxwriter\\third_party\\minizip", "\

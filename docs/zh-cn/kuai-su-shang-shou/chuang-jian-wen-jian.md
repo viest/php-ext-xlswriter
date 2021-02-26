@@ -4,7 +4,7 @@
 
 ```php
 $config = [
-    'path' => '/home/viest' // 文件保存路径
+    'path' => '/home/viest' // xlsx文件保存路径
 ];
 $excel  = new \Vtiful\Kernel\Excel($config);
 

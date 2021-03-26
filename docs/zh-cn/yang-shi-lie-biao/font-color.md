@@ -22,9 +22,13 @@ $fileObject  = new \Vtiful\Kernel\Excel($config);
 $fileObject = $fileObject->fileName('tutorial.xlsx');
 $fileHandle = $fileObject->getHandle();
 
-// 创建样式资源
+// 使用 扩展自带颜色常量 创建样式资源
 $format     = new \Vtiful\Kernel\Format($fileHandle);
 $colorStyle = $format->fontColor(\Vtiful\Kernel\Format::COLOR_ORANGE)->toResource();
+
+// 使用 RGB16进制数 创建样式资源
+$format     = new \Vtiful\Kernel\Format($fileHandle);
+$colorStyle = $format->fontColor(0xFF69B4)->toResource();
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([

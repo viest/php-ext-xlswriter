@@ -602,7 +602,7 @@ PHP_METHOD(vtiful_xls, insertText)
 
     SHEET_LINE_SET(obj, row);
 
-    if (format_handle) {
+    if (format_handle != NULL) {
         type_writer(data, row, column, &obj->write_ptr, format, zval_get_format(format_handle));
     } else {
         type_writer(data, row, column, &obj->write_ptr, format, obj->format_ptr.format);
@@ -640,13 +640,13 @@ PHP_METHOD(vtiful_xls, insertDate)
     }
 
     // Default datetime format
-    if (format == NULL) {
+    if (format == NULL || (format != NULL && ZSTR_LEN(format) == 0)) {
         format = zend_string_init(ZEND_STRL("yyyy-mm-dd hh:mm:ss"), 0);
     }
 
     lxw_datetime datetime = timestamp_to_datetime(data->value.lval);
 
-    if (format_handle) {
+    if (format_handle != NULL) {
         datetime_writer(&datetime, row, column, format, &obj->write_ptr, zval_get_format(format_handle));
     } else {
         datetime_writer(&datetime, row, column, format, &obj->write_ptr, obj->format_ptr.format);
@@ -771,7 +771,7 @@ PHP_METHOD(vtiful_xls, insertFormula)
         formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
     }
 
-    if (argc == 4) {
+    if (argc == 4 && format_handle != NULL) {
         formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
     }
 }
@@ -860,7 +860,7 @@ PHP_METHOD(vtiful_xls, mergeCells)
         merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
     }
 
-    if (argc == 3) {
+    if (argc == 3 && format_handle != NULL) {
         merge_cells(range, data, &obj->write_ptr, zval_get_format(format_handle));
     }
 }
@@ -889,7 +889,7 @@ PHP_METHOD(vtiful_xls, setColumn)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 3) {
+    if (argc == 3 && format_handle != NULL) {
         set_column(range, width, &obj->write_ptr, zval_get_format(format_handle));
     }
 
@@ -922,7 +922,7 @@ PHP_METHOD(vtiful_xls, setRow)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 3) {
+    if (argc == 3 && format_handle != NULL) {
         set_row(range, height, &obj->write_ptr, zval_get_format(format_handle));
     }
 

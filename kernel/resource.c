@@ -28,7 +28,15 @@ xls_resource_write_t * zval_get_resource(zval *handle)
 /* {{{ */
 lxw_format * zval_get_format(zval *handle)
 {
-    lxw_format *res;
+    lxw_format *res = NULL;
+
+    if (handle == NULL) {
+        return NULL;
+    }
+
+    if (zval_get_type(handle) != IS_RESOURCE) {
+        return NULL;
+    }
 
     if((res = (lxw_format *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "format resources resolution fail", 210);

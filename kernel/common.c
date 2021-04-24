@@ -51,6 +51,23 @@ zend_string* str_pick_up(zend_string *left, const char *right, size_t len)
 /* }}} */
 
 /* {{{ */
+zend_string* char_join_to_zend_str(const char *left, const char *right)
+{
+    size_t _new_len = strlen(left) + strlen(right);
+
+    zend_string *str = zend_string_alloc(_new_len, 0);
+
+    memcpy(ZSTR_VAL(str), left, strlen(left));
+    memcpy(ZSTR_VAL(str) + strlen(left), right, strlen(right) + 1);
+
+    ZSTR_VAL(str)[_new_len] = '\0';
+
+    return str;
+}
+
+/* }}} */
+
+/* {{{ */
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val)
 {
     uint32_t index;

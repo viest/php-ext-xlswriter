@@ -23,14 +23,22 @@ xlsxioreader file_open(const char *directory, const char *file_name) {
     strcat(path, file_name);
 
     if (file_exists(path) == XLSWRITER_FALSE) {
+        zend_string *message = char_join_to_zend_str("File not found, file path:", path);
+        zend_throw_exception(vtiful_exception_ce, ZSTR_VAL(message), 121);
+
+        zend_string_free(message);
         efree(path);
-        zend_throw_exception(vtiful_exception_ce, "File not found, please check the path in the config or file name", 121);
+
         return NULL;
     }
 
     if ((file = xlsxioread_open(path)) == NULL) {
+        zend_string *message = char_join_to_zend_str("Failed to open file, file path:", path);
+        zend_throw_exception(vtiful_exception_ce, ZSTR_VAL(message), 100);
+
+        zend_string_free(message);
         efree(path);
-        zend_throw_exception(vtiful_exception_ce, "Failed to open file", 100);
+
         return NULL;
     }
 

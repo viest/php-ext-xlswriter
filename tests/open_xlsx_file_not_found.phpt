@@ -21,4 +21,4 @@ try {
 //
 ?>
 --EXPECT--
-string(64) "File not found, please check the path in the config or file name"
+string(57) "File not found, file path:./tests/tutorial_not_found.xlsx"

@@ -268,6 +268,7 @@ void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zen
 lxw_error workbook_file(xls_resource_write_t *self);
 
 lxw_datetime timestamp_to_datetime(zend_long timestamp);
+zend_string* char_join_to_zend_str(const char *left, const char *right);
 zend_string* str_pick_up(zend_string *left, const char *right, size_t len);
 
 #endif

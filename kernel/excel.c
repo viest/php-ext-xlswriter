@@ -37,7 +37,9 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 
     intern->read_ptr.file_t   = NULL;
     intern->read_ptr.sheet_t  = NULL;
-    intern->format_ptr.format = NULL;
+
+    intern->format_ptr.format  = NULL;
+    intern->write_ptr.workbook = NULL;
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;
 
@@ -51,16 +53,7 @@ static void vtiful_xls_objects_free(zend_object *object)
 {
     xls_object *intern = php_vtiful_xls_fetch_object(object);
 
-    lxw_workbook_free(intern->write_ptr.workbook);
-
-#ifdef ENABLE_READER
-    xlsxioread_sheet_close(intern->read_ptr.sheet_t);
-    xlsxioread_close(intern->read_ptr.file_t);
-#endif
-
-    if (intern->format_ptr.format != NULL) {
-        intern->format_ptr.format = NULL;
-    }
+    php_vtiful_close_resource(object);
 
     zend_object_std_dtor(&intern->zo);
 }
@@ -70,6 +63,9 @@ static void vtiful_xls_objects_free(zend_object *object)
  */
 ZEND_BEGIN_ARG_INFO_EX(xls_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, config)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_close_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
@@ -307,6 +303,16 @@ PHP_METHOD(vtiful_xls, __construct)
     }
 
     add_property_zval_ex(getThis(), ZEND_STRL(V_XLS_COF), config);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::close()
+ */
+PHP_METHOD(vtiful_xls, close)
+{
+    php_vtiful_close_resource(Z_OBJ_P(getThis()));
+
+    ZVAL_COPY(return_value, getThis());
 }
 /* }}} */
 
@@ -1489,6 +1495,7 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 */
 zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, close,         xls_close_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, checkoutSheet, xls_file_checkout_sheet,    ZEND_ACC_PUBLIC)

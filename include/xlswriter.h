@@ -118,22 +118,6 @@ typedef struct _vtiful_validation_object {
     zend_object zo;
 } validation_object;
 
-static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
-    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
-}
-
-static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
-    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
-}
-
-static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
-    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
-}
-
-static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
-    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
-}
-
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
@@ -223,6 +207,70 @@ static inline validation_object *php_vtiful_validation_fetch_object(zend_object 
 #define PROP_OBJ(zv) Z_OBJ_P(zv)
 #endif
 
+static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
+}
+
+static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
+}
+
+static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
+}
+
+static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+
+    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+}
+
+static inline void php_vtiful_close_resource(zend_object *obj) {
+    if (obj == NULL) {
+        return;
+    }
+
+    xls_object *intern = php_vtiful_xls_fetch_object(obj);
+
+    SHEET_LINE_INIT(intern);
+
+    if (intern->write_ptr.workbook != NULL) {
+        lxw_workbook_free(intern->write_ptr.workbook);
+        intern->write_ptr.workbook = NULL;
+    }
+
+    if (intern->format_ptr.format != NULL) {
+        intern->format_ptr.format = NULL;
+    }
+
+#ifdef ENABLE_READER
+    if (intern->read_ptr.sheet_t != NULL) {
+        xlsxioread_sheet_close(intern->read_ptr.sheet_t);
+        intern->read_ptr.sheet_t = NULL;
+    }
+
+    if (intern->read_ptr.file_t != NULL) {
+        xlsxioread_close(intern->read_ptr.file_t);
+        intern->read_ptr.file_t = NULL;
+    }
+#endif
+
+    intern->read_ptr.data_type_default = READ_TYPE_EMPTY;
+}
 
 lxw_format           * zval_get_format(zval *handle);
 lxw_data_validation  * zval_get_validation(zval *resource);

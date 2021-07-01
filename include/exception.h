@@ -17,4 +17,6 @@ extern zend_class_entry *vtiful_exception_ce;
 
 VTIFUL_STARTUP_FUNCTION(exception);
 
+char* exception_message_map(int code);
+
 #endif

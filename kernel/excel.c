@@ -470,7 +470,11 @@ PHP_METHOD(vtiful_xls, constMemory)
     if(obj->write_ptr.workbook == NULL) {
         xls_file_path(zs_file_name, dir_path, &file_path);
 
-        lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
+        lxw_workbook_options options = {
+            .constant_memory = LXW_TRUE,
+            .tmpdir = NULL,
+            .use_zip64 = LXW_TRUE
+        };
 
         if(zs_sheet_name != NULL) {
             sheet_name = ZSTR_VAL(zs_sheet_name);

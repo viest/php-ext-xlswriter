@@ -8,7 +8,7 @@ PHP_ARG_WITH(libxlsxio, system libxlsxio,
 [  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
 
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
-[  --enable-reader          Enable xlsx reader?], no, no)
+[  --enable-reader          Enable xlsx reader?], yes, yes)
 
 if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="

@@ -64,7 +64,14 @@ zend_long date_double_to_timestamp(double value) {
 /* {{{ */
 unsigned int directory_exists(const char *path) {
     zval dir_exists;
+
+#if PHP_VERSION_ID >= 80100
+    zend_string *zs_path = zend_string_init(path, strlen(path), 0);
+    php_stat(zs_path, FS_IS_DIR, &dir_exists);
+    zend_string_release(zs_path);
+#else
     php_stat(path, strlen(path), FS_IS_DIR, &dir_exists);
+#endif
 
     if (Z_TYPE(dir_exists) == IS_FALSE) {
         zval_ptr_dtor(&dir_exists);
@@ -79,7 +86,14 @@ unsigned int directory_exists(const char *path) {
 /* {{{ */
 unsigned int file_exists(const char *path) {
     zval file_exists;
+
+#if PHP_VERSION_ID >= 80100
+    zend_string *zs_path = zend_string_init(path, strlen(path), 0);
+    php_stat(zs_path, FS_IS_FILE, &file_exists);
+    zend_string_release(zs_path);
+#else
     php_stat(path, strlen(path), FS_IS_FILE, &file_exists);
+#endif
 
     if (Z_TYPE(file_exists) == IS_FALSE) {
         zval_ptr_dtor(&file_exists);

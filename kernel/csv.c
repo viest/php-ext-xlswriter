@@ -94,14 +94,22 @@ unsigned int xlsx_to_csv(
             zend_call_function(fci, fci_cache);
 
             if (Z_TYPE(retval) == IS_ARRAY) {
+#if PHP_VERSION_ID >= 80100
+                ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char, NULL);
+#else
                 ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char);
+#endif
             }
 
             zval_ptr_dtor(&retval);
             goto CLEAN_UP_SCENE;
         }
 
+#if PHP_VERSION_ID >= 80100
+        ret = php_fputcsv(_stream_t, &_zv_tmp_row, delimiter, enclosure, escape_char, NULL);
+#else
         ret = php_fputcsv(_stream_t, &_zv_tmp_row, delimiter, enclosure, escape_char);
+#endif
 
         CLEAN_UP_SCENE:
 

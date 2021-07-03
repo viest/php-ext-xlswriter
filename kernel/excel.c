@@ -327,7 +327,7 @@ PHP_METHOD(vtiful_xls, fileName)
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(zs_file_name)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(zs_sheet_name)
+            Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -367,7 +367,7 @@ PHP_METHOD(vtiful_xls, addSheet)
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(zs_sheet_name)
+            Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -458,7 +458,7 @@ PHP_METHOD(vtiful_xls, constMemory)
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(zs_file_name)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(zs_sheet_name)
+            Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -470,7 +470,11 @@ PHP_METHOD(vtiful_xls, constMemory)
     if(obj->write_ptr.workbook == NULL) {
         xls_file_path(zs_file_name, dir_path, &file_path);
 
-        lxw_workbook_options options = {.constant_memory = LXW_TRUE, .tmpdir = NULL};
+        lxw_workbook_options options = {
+            .constant_memory = LXW_TRUE,
+            .tmpdir = NULL,
+            .use_zip64 = LXW_TRUE
+        };
 
         if(zs_sheet_name != NULL) {
             sheet_name = ZSTR_VAL(zs_sheet_name);
@@ -498,7 +502,7 @@ PHP_METHOD(vtiful_xls, header)
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_ARRAY(header)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE(zv_format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(zv_format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -596,8 +600,8 @@ PHP_METHOD(vtiful_xls, insertText)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(data)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(format)
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_STR_OR_NULL(format)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -629,8 +633,8 @@ PHP_METHOD(vtiful_xls, insertDate)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(data)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(format)
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_STR_OR_NULL(format)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -703,9 +707,9 @@ PHP_METHOD(vtiful_xls, insertUrl)
             Z_PARAM_LONG(column)
             Z_PARAM_STR(url)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(text)
-            Z_PARAM_STR(tool_tip)
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_STR_OR_NULL(text)
+            Z_PARAM_STR_OR_NULL(tool_tip)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -735,8 +739,8 @@ PHP_METHOD(vtiful_xls, insertImage)
             Z_PARAM_LONG(column)
             Z_PARAM_ZVAL(image)
             Z_PARAM_OPTIONAL
-            Z_PARAM_DOUBLE(width)
-            Z_PARAM_DOUBLE(height)
+            Z_PARAM_DOUBLE_OR_NULL(width, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(height, _dummy)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -764,7 +768,7 @@ PHP_METHOD(vtiful_xls, insertFormula)
             Z_PARAM_LONG(column)
             Z_PARAM_STR(formula)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -853,7 +857,7 @@ PHP_METHOD(vtiful_xls, mergeCells)
             Z_PARAM_STR(range)
             Z_PARAM_ZVAL(data)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -886,7 +890,7 @@ PHP_METHOD(vtiful_xls, setColumn)
             Z_PARAM_STR(range)
             Z_PARAM_DOUBLE(width)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -919,7 +923,7 @@ PHP_METHOD(vtiful_xls, setRow)
             Z_PARAM_STR(range)
             Z_PARAM_DOUBLE(height)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE(format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -1041,7 +1045,7 @@ PHP_METHOD(vtiful_xls, timestampFromDateDouble)
     double date = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-            Z_PARAM_DOUBLE(date)
+            Z_PARAM_DOUBLE_OR_NULL(date, _dummy)
     ZEND_PARSE_PARAMETERS_END();
 
     if (date <= 0) {
@@ -1104,7 +1108,7 @@ PHP_METHOD(vtiful_xls, protection)
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(password)
+            Z_PARAM_STR_OR_NULL(password)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -1237,8 +1241,8 @@ PHP_METHOD(vtiful_xls, openSheet)
 
     ZEND_PARSE_PARAMETERS_START(0, 2)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(zs_sheet_name)
-            Z_PARAM_LONG(zl_flag)
+            Z_PARAM_STR_OR_NULL(zs_sheet_name)
+            Z_PARAM_LONG_OR_NULL(zl_flag, _dummy)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -1348,9 +1352,9 @@ PHP_METHOD(vtiful_xls, putCSV)
     ZEND_PARSE_PARAMETERS_START(1, 4)
             Z_PARAM_RESOURCE(fp)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STRING(delimiter_str, delimiter_str_len)
-            Z_PARAM_STRING(enclosure_str, enclosure_str_len)
-            Z_PARAM_STRING(escape_str,escape_str_len)
+            Z_PARAM_STRING_OR_NULL(delimiter_str, delimiter_str_len)
+            Z_PARAM_STRING_OR_NULL(enclosure_str, enclosure_str_len)
+            Z_PARAM_STRING_OR_NULL(escape_str,escape_str_len)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1386,9 +1390,9 @@ PHP_METHOD(vtiful_xls, putCSVCallback)
             Z_PARAM_FUNC(fci, fci_cache)
             Z_PARAM_RESOURCE(fp)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STRING(delimiter_str, delimiter_str_len)
-            Z_PARAM_STRING(enclosure_str, enclosure_str_len)
-            Z_PARAM_STRING(escape_str,escape_str_len)
+            Z_PARAM_STRING_OR_NULL(delimiter_str, delimiter_str_len)
+            Z_PARAM_STRING_OR_NULL(enclosure_str, enclosure_str_len)
+            Z_PARAM_STRING_OR_NULL(escape_str,escape_str_len)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1440,7 +1444,7 @@ PHP_METHOD(vtiful_xls, nextRow)
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
-            Z_PARAM_ARRAY(zv_type_t)
+            Z_PARAM_ARRAY_OR_NULL(zv_type_t)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());
@@ -1468,7 +1472,7 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_FUNC(fci, fci_cache)
             Z_PARAM_OPTIONAL
-            Z_PARAM_STR(zs_sheet_name)
+            Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
 
     xls_object *obj = Z_XLS_P(getThis());

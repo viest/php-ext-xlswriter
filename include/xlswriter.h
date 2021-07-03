@@ -161,12 +161,12 @@ typedef struct _vtiful_validation_object {
         }                                                                                                 \
     } while(0);
 
-#define WORKSHEET_WRITER_EXCEPTION(error)                                                  \
-    do {                                                                                   \
-        if(error > LXW_NO_ERROR) {                                                         \
-            zend_throw_exception(vtiful_exception_ce, "Worksheet write exception", error); \
-            return;                                                                        \
-        }                                                                                  \
+#define WORKSHEET_WRITER_EXCEPTION(error)                                                   \
+    do {                                                                                    \
+        if(error > LXW_NO_ERROR) {                                                          \
+            zend_throw_exception(vtiful_exception_ce, exception_message_map(error), error); \
+            return;                                                                         \
+        }                                                                                   \
     } while(0)
 
 #define FCALL_TWO_ARGS(bucket)                   \
@@ -205,6 +205,21 @@ typedef struct _vtiful_validation_object {
 #define PROP_OBJ(zv) (zv)
 #else
 #define PROP_OBJ(zv) Z_OBJ_P(zv)
+#endif
+
+#if PHP_VERSION_ID < 80000
+#define Z_PARAM_STRING_OR_NULL(dest, dest_len) \
+	Z_PARAM_STRING_EX(dest, dest_len, 1, 0)
+#define Z_PARAM_STR_OR_NULL(dest) \
+	Z_PARAM_STR_EX(dest, 1, 0)
+#define Z_PARAM_RESOURCE_OR_NULL(dest) \
+	Z_PARAM_RESOURCE_EX(dest, 1, 0)
+#define Z_PARAM_DOUBLE_OR_NULL(dest, is_null) \
+	Z_PARAM_DOUBLE_EX(dest, is_null, 1, 0)
+#define Z_PARAM_LONG_OR_NULL(dest, is_null) \
+	Z_PARAM_LONG_EX(dest, is_null, 1, 0)
+#define Z_PARAM_ARRAY_OR_NULL(dest) \
+	Z_PARAM_ARRAY_EX(dest, 1, 0)
 #endif
 
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {

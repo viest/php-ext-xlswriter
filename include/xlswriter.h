@@ -307,6 +307,7 @@ void comment_show(xls_resource_write_t *res);
 void hide_worksheet(xls_resource_write_t *res);
 void first_worksheet(xls_resource_write_t *res);
 void zoom(xls_resource_write_t *res, zend_long zoom);
+void paper(xls_resource_write_t *res, zend_long type);
 void gridlines(xls_resource_write_t *res, zend_long option);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
 void protection(xls_resource_write_t *res, zend_string *password);

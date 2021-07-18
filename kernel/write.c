@@ -387,6 +387,14 @@ void first_worksheet(xls_resource_write_t *res)
 }
 
 /*
+ * Paper format
+ */
+void paper(xls_resource_write_t *res, zend_long type)
+{
+    worksheet_set_paper(res->worksheet, type);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

@@ -395,6 +395,14 @@ void paper(xls_resource_write_t *res, zend_long type)
 }
 
 /*
+ * Set margins
+ */
+void margins(xls_resource_write_t *res, double left, double right, double top, double bottom)
+{
+    worksheet_set_margins(res->worksheet, left, right, top, bottom);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

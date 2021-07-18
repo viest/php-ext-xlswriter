@@ -190,6 +190,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_paper_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, paper)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_margins_arginfo, 0, 0, 4)
+                ZEND_ARG_INFO(0, left)
+                ZEND_ARG_INFO(0, right)
+                ZEND_ARG_INFO(0, top)
+                ZEND_ARG_INFO(0, bottom)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_set_global_format, 0, 0, 1)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
@@ -992,6 +999,30 @@ PHP_METHOD(vtiful_xls, setPaper)
 
     paper(&obj->write_ptr, type);
 }
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setMargins(double|null $left, double|null $right, double|null $top, double|null $bottom)
+ */
+PHP_METHOD(vtiful_xls, setMargins)
+{
+    double left = 0.7, right = 0.7, top = 0.75, bottom = 0.75;
+
+    ZEND_PARSE_PARAMETERS_START(0, 4)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_DOUBLE_OR_NULL(left, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(right, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(top, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(bottom, _dummy)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    // units: inches to cm
+    margins(&obj->write_ptr, left / 2.54, right / 2.54, top / 2.54, bottom / 2.54);
+}
+/* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::defaultFormat(resource $format)
  */
@@ -1572,7 +1603,6 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setPaper,      xls_set_paper_arginfo,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultFormat, xls_set_global_format,      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, freezePanes,   xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
 
@@ -1582,6 +1612,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
 
+        PHP_ME(vtiful_xls, setPaper,     xls_set_paper_arginfo,             ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setMargins,   xls_set_margins_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setPortrait,  xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
 

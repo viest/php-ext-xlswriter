@@ -315,6 +315,7 @@ void format_copy(lxw_format *new_format, lxw_format *other_format);
 void printed_direction(xls_resource_write_t *res, unsigned int direction);
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
+void margins(xls_resource_write_t *res, double left, double right, double top, double bottom);
 void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
 void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation);
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);

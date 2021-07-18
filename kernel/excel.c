@@ -186,6 +186,17 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_row_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, height)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_paper_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, paper)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_margins_arginfo, 0, 0, 4)
+                ZEND_ARG_INFO(0, left)
+                ZEND_ARG_INFO(0, right)
+                ZEND_ARG_INFO(0, top)
+                ZEND_ARG_INFO(0, bottom)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_set_global_format, 0, 0, 1)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
@@ -972,6 +983,47 @@ PHP_METHOD(vtiful_xls, setRow)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setPaper(int $paper)
+ */
+PHP_METHOD(vtiful_xls, setPaper)
+{
+    zend_long type = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(type)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    paper(&obj->write_ptr, type);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setMargins(double|null $left, double|null $right, double|null $top, double|null $bottom)
+ */
+PHP_METHOD(vtiful_xls, setMargins)
+{
+    double left = 0.7, right = 0.7, top = 0.75, bottom = 0.75;
+
+    ZEND_PARSE_PARAMETERS_START(0, 4)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_DOUBLE_OR_NULL(left, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(right, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(top, _dummy)
+            Z_PARAM_DOUBLE_OR_NULL(bottom, _dummy)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    // units: inches to cm
+    margins(&obj->write_ptr, left / 2.54, right / 2.54, top / 2.54, bottom / 2.54);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::defaultFormat(resource $format)
  */
 PHP_METHOD(vtiful_xls, defaultFormat)
@@ -1149,10 +1201,9 @@ PHP_METHOD(vtiful_xls, protection)
 }
 /* }}} */
 
-
-/** {{{ \Vtiful\Kernel\Excel::setPrintedPortrait()
+/** {{{ \Vtiful\Kernel\Excel::setPortrait()
  */
-PHP_METHOD(vtiful_xls, setPrintedPortrait)
+PHP_METHOD(vtiful_xls, setPortrait)
 {
     ZVAL_COPY(return_value, getThis());
 
@@ -1165,9 +1216,9 @@ PHP_METHOD(vtiful_xls, setPrintedPortrait)
 /* }}} */
 
 
-/** {{{ \Vtiful\Kernel\Excel::setPrintedLandscape()
+/** {{{ \Vtiful\Kernel\Excel::setLandscape()
  */
-PHP_METHOD(vtiful_xls, setPrintedLandscape)
+PHP_METHOD(vtiful_xls, setLandscape)
 {
     ZVAL_COPY(return_value, getThis());
 
@@ -1561,8 +1612,10 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
 
-        PHP_ME(vtiful_xls, setPrintedPortrait,  xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setPrintedLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPaper,     xls_set_paper_arginfo,             ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setMargins,   xls_set_margins_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPortrait,  xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, setCurrentSheetHide,    xls_hide_sheet_arginfo,  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setCurrentSheetIsFirst, xls_first_sheet_arginfo, ZEND_ACC_PUBLIC)
@@ -1618,6 +1671,47 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_ALL",    LXW_SHOW_ALL_GRIDLINES)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_PRINT",  LXW_SHOW_PRINT_GRIDLINES)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_SCREEN", LXW_SHOW_SCREEN_GRIDLINES)
+
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_DEFAULT",      0)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_LETTER",       1)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_LETTER_SMALL", 2)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_TABLOID",      3)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_LEDGER",       4)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_LEGAL",        5)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_STATEMENT",    6)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_EXECUTIVE",    7)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_A3",           8)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_A4",           9)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_A4_SMALL",     10)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_A5",           11)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_B4",           12)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_B5",           13)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_FOLIO",        14)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_QUARTO",       15)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_NOTE",         18)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_9",   19)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_10",  20)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_11",  21)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_12",  22)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_14",  23)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_C_SIZE_SHEET", 24)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_D_SIZE_SHEET", 25)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_E_SIZE_SHEET", 26)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_DL",  27)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_C3",  28)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_C4",  29)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_C5",  30)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_C6",  31)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_C65", 32)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_B4",  33)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_B5",  34)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_B6",  35)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_1",   36)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_MONARCH",      37)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_ENVELOPE_2",   38)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_FANFOLD",      39)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_GERMAN_STD_FANFOLD",   40)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_GERMAN_LEGAL_FANFOLD", 41)
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);

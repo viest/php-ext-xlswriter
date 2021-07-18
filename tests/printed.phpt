@@ -8,7 +8,7 @@ try {
     $config = ['path' => './tests'];
     $excel  = new \Vtiful\Kernel\Excel($config);
 
-    $excel->setPrintedPortrait();
+    $excel->setPortrait();
 } catch (\Exception $exception) {
     var_dump($exception->getCode());
     var_dump($exception->getMessage());
@@ -18,7 +18,7 @@ $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
 $excel->fileName('printed_portrait.xlsx', 'sheet1')
-    ->setPrintedPortrait()
+    ->setPortrait()
     ->output();
 
 var_dump($excel);
@@ -27,7 +27,7 @@ $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
 $excel->fileName('printed_landscape.xlsx', 'sheet1')
-    ->setPrintedLandscape()
+    ->setLandscape()
     ->output();
 
 var_dump($excel);

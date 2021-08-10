@@ -186,6 +186,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_row_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, height)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_curr_line_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, row)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_curr_line_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_set_paper_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, paper)
 ZEND_END_ARG_INFO()
@@ -531,6 +538,38 @@ PHP_METHOD(vtiful_xls, constMemory)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setCurrentLine(int $row)
+ */
+PHP_METHOD(vtiful_xls, setCurrentLine)
+{
+    zend_long row = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(row)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (row < SHEET_CURRENT_LINE(obj)) {
+        zend_throw_exception(vtiful_exception_ce, "The row number is abnormal, the behavior will overwrite the previous data", 400);
+        return;
+    }
+
+    SHEET_LINE_SET(obj, row);
+}
+
+/** {{{ \Vtiful\Kernel\Excel::getCurrentLine()
+ */
+PHP_METHOD(vtiful_xls, getCurrentLine)
+{
+    xls_object *obj = Z_XLS_P(getThis());
+
+    RETURN_LONG(SHEET_CURRENT_LINE(obj));
+}
 
 /** {{{ \Vtiful\Kernel\Excel::header(array $header)
  */
@@ -1579,32 +1618,34 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 /** {{{ xls_methods
 */
 zend_function_entry xls_methods[] = {
-        PHP_ME(vtiful_xls, __construct,   xls_construct_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, close,         xls_close_arginfo,          ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, fileName,      xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, addSheet,      xls_file_add_sheet,         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, existSheet,    xls_file_exist_sheet,       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, checkoutSheet, xls_file_checkout_sheet,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, activateSheet, xls_file_activate_sheet,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, constMemory,   xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, header,        xls_header_arginfo,         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, data,          xls_data_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, output,        xls_output_arginfo,         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, getHandle,     xls_get_handle_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, autoFilter,    xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertText,    xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertDate,    xls_insert_date_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertChart,   xls_insert_chart_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertUrl,     xls_insert_url_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertImage,   xls_insert_image_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertFormula, xls_insert_formula_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertComment, xls_insert_comment_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, showComment,   xls_show_comment_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, mergeCells,    xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setColumn,     xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setRow,        xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, defaultFormat, xls_set_global_format,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, freezePanes,   xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, __construct,    xls_construct_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, close,          xls_close_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, fileName,       xls_file_name_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, addSheet,       xls_file_add_sheet,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, existSheet,     xls_file_exist_sheet,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, checkoutSheet,  xls_file_checkout_sheet,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, activateSheet,  xls_file_activate_sheet,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, constMemory,    xls_const_memory_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, header,         xls_header_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, data,           xls_data_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, output,         xls_output_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getHandle,      xls_get_handle_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, autoFilter,     xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertText,     xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertDate,     xls_insert_date_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertChart,    xls_insert_chart_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertUrl,      xls_insert_url_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertImage,    xls_insert_image_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertFormula,  xls_insert_formula_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertComment,  xls_insert_comment_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, showComment,    xls_show_comment_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, mergeCells,     xls_merge_cells_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setColumn,      xls_set_column_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setRow,         xls_set_row_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getCurrentLine, xls_get_curr_line_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setCurrentLine, xls_set_curr_line_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, defaultFormat,  xls_set_global_format,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, freezePanes,    xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, protection,    xls_protection_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, validation,    xls_validation_arginfo,     ZEND_ACC_PUBLIC)

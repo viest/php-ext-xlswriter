@@ -58,6 +58,7 @@ if (PHP_XLSWRITER != "no") {
                 drawing.c \
                 format.c \
                 hash_table.c \
+                metadata.c \
                 packager.c \
                 relationships.c \
                 shared_strings.c \

@@ -8,7 +8,18 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0']
+        php-versions: ['8.0']
+        include:
+          - operating-system: 'ubuntu-18.04'
+            php-versions: '7.0'
+          - operating-system: 'ubuntu-18.04'
+            php-versions: '7.1'
+          - operating-system: 'ubuntu-18.04'
+            php-versions: '7.2'
+          - operating-system: 'ubuntu-18.04'
+            php-versions: '7.3'
+          - operating-system: 'ubuntu-18.04'
+            php-versions: '7.4'
     name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
     steps:
       - name: Checkout
@@ -21,6 +32,7 @@ jobs:
 
       - name: Setup Dependencies
         run: |
+          sudo apt-get --fix-broken install
           sudo apt-get update
           sudo apt-get install zlib1g-dev valgrind -y
 

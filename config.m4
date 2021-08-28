@@ -49,6 +49,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/src/drawing.c \
     library/libxlsxwriter/src/format.c \
     library/libxlsxwriter/src/hash_table.c \
+    library/libxlsxwriter/src/metadata.c \
     library/libxlsxwriter/src/packager.c \
     library/libxlsxwriter/src/relationships.c \
     library/libxlsxwriter/src/shared_strings.c \

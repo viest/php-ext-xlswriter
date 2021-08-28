@@ -7,7 +7,7 @@ Check for vtiful presence
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 
-$textFile = $excel->fileName("tutorial01.xlsx")
+$textFile = $excel->fileName("13.xlsx")
     ->header(['name', 'age']);
 
 for ($index = 0; $index < 10; $index++) {
@@ -21,7 +21,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial01.xlsx');
+@unlink(__DIR__ . '/13.xlsx');
 ?>
 --EXPECT--
-string(23) "./tests/tutorial01.xlsx"
+string(15) "./tests/13.xlsx"

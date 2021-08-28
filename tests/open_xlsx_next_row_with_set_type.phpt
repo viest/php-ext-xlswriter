@@ -10,7 +10,7 @@ skip_disable_reader();
 $config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('open_xlsx_next_row_with_set_type.xlsx');
 
 $filePath = $fileObject->data([
         [1, 'Test']
@@ -18,7 +18,7 @@ $filePath = $fileObject->data([
     ->insertDate(1, 2, 1568389354, 'mmm d yyyy hh:mm AM/PM')
     ->output();
 
-$fileObject->openFile('tutorial.xlsx')
+$fileObject->openFile('open_xlsx_next_row_with_set_type.xlsx')
     ->openSheet()
     ->setType([
         \Vtiful\Kernel\Excel::TYPE_INT,
@@ -32,7 +32,7 @@ var_dump($fileObject->nextRow());
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_row_with_set_type.xlsx');
 ?>
 --EXPECT--
 array(2) {

@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_next_row_with_data_type_date_array_index.xlsx')
     ->header(['', 'Cost'])
     ->data([
         [],
@@ -18,7 +18,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
     ->insertDate(2, 4, 1568818881)
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_next_row_with_data_type_date_array_index.xlsx')
     ->openSheet('Sheet1');
 
 while (is_array($data = $excel->nextRow([4 => \Vtiful\Kernel\Excel::TYPE_TIMESTAMP]))) {
@@ -27,7 +27,7 @@ while (is_array($data = $excel->nextRow([4 => \Vtiful\Kernel\Excel::TYPE_TIMESTA
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_row_with_data_type_date_array_index.xlsx');
 ?>
 --EXPECT--
 array(2) {

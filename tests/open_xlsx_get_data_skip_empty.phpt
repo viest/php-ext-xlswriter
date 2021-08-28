@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_get_data_skip_empty.xlsx')
     ->header(['', 'Cost'])
     ->data([
         [],
@@ -17,25 +17,25 @@ $filePath = $excel->fileName('tutorial.xlsx')
     ])
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS)
     ->getSheetData();
 
 var_dump($data);
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_ROW)
     ->getSheetData();
 
 var_dump($data);
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS|\Vtiful\Kernel\Excel::SKIP_EMPTY_ROW)
     ->getSheetData();
 
 var_dump($data);
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_VALUE)
     ->getSheetData();
 
@@ -43,7 +43,7 @@ var_dump($data);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_get_data_skip_empty.xlsx');
 ?>
 --EXPECT--
 array(3) {

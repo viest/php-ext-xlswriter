@@ -9,14 +9,14 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_next_row_with_data_type_string.xlsx')
     ->header(['Item', 'Cost'])
     ->data([
         ['Item_1', 'Cost_1'],
     ])
     ->output();
 
-$excel->openFile('tutorial.xlsx')
+$excel->openFile('open_xlsx_next_row_with_data_type_string.xlsx')
     ->openSheet();
 
 var_dump($excel->nextRow([\Vtiful\Kernel\Excel::TYPE_STRING, \Vtiful\Kernel\Excel::TYPE_STRING]));
@@ -29,7 +29,7 @@ var_dump($excel->nextRow([\Vtiful\Kernel\Excel::TYPE_STRING, \Vtiful\Kernel\Exce
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_row_with_data_type_string.xlsx');
 ?>
 --EXPECT--
 array(2) {

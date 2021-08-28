@@ -9,14 +9,14 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_global_data_type.xlsx')
     ->header(['Item', 'Cost', 'Int', 'Double'])
     ->data([
         ['Item_1', 'Cost_1', 10, 10.9999995],
     ])
     ->output();
 
-$excel->openFile('tutorial.xlsx')
+$excel->openFile('open_xlsx_global_data_type.xlsx')
     ->setGlobalType(\Vtiful\Kernel\Excel::TYPE_DOUBLE)
     ->nextCellCallback(function ($row, $cell, $data) {
         echo 'cell:' . $cell . ', row:' . $row .', data type:' . gettype($data) . PHP_EOL;
@@ -24,14 +24,14 @@ $excel->openFile('tutorial.xlsx')
 
 echo '----------------' . PHP_EOL;
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_global_data_type.xlsx')
     ->openSheet()
     ->setGlobalType(\Vtiful\Kernel\Excel::TYPE_STRING)
     ->getSheetData();
 
 var_dump($data);
 
-$excel->openFile('tutorial.xlsx')
+$excel->openFile('open_xlsx_global_data_type.xlsx')
     ->openSheet()
     ->setGlobalType(\Vtiful\Kernel\Excel::TYPE_INT);
 
@@ -44,7 +44,7 @@ var_dump($excel->nextRow());
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_global_data_type.xlsx');
 ?>
 --EXPECT--
 cell:0, row:0, data type:string

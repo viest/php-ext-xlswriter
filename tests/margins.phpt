@@ -9,7 +9,7 @@ $config = [
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('margins.xlsx');
 
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
@@ -25,7 +25,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/margins.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(20) "./tests/margins.xlsx"

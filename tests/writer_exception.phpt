@@ -9,7 +9,7 @@ Check for vtiful presence
 
         $fileObject = new \Vtiful\Kernel\Excel($config);
 
-        $fileObject->constMemory('tutorial.xlsx', 'DemoSheet')
+        $fileObject->constMemory('writer_exception.xlsx', 'DemoSheet')
             ->insertText(1, 0, 'viest')
             ->insertText(0, 0, 'viest');
     } catch (\Vtiful\Kernel\Exception $exception) {
@@ -19,7 +19,7 @@ Check for vtiful presence
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/writer_exception.xlsx');
 ?>
 --EXPECT--
 23

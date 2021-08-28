@@ -8,7 +8,7 @@ $config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 
-$fileObject->fileName('tutorial.xlsx')
+$fileObject->fileName('activate_sheet.xlsx')
     ->header(['name', 'age'])
     ->data([
     ['viest', 21],
@@ -26,7 +26,7 @@ $fileObject->output();
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/activate_sheet.xlsx');
 ?>
 --EXPECT--
 bool(true)

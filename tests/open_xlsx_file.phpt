@@ -9,17 +9,17 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_file.xlsx')
     ->header(['Item', 'Cost'])
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx');
+$data = $excel->openFile('open_xlsx_file.xlsx');
 
 var_dump($data);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_file.xlsx');
 ?>
 --EXPECT--
 object(Vtiful\Kernel\Excel)#1 (3) {
@@ -29,7 +29,7 @@ object(Vtiful\Kernel\Excel)#1 (3) {
     string(7) "./tests"
   }
   ["fileName":"Vtiful\Kernel\Excel":private]=>
-  string(21) "./tests/tutorial.xlsx"
+  string(27) "./tests/open_xlsx_file.xlsx"
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }

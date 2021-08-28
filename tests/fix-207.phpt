@@ -10,14 +10,14 @@ skip_disable_reader();
 $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('fix-207.xlsx')
     ->header(['Name', 'Code'])
     ->data([
         ['Viest', '00024']
     ])
     ->output();
 
-$dataOne = $excel->openFile('tutorial.xlsx')
+$dataOne = $excel->openFile('fix-207.xlsx')
     ->openSheet()
     ->setType([
         \Vtiful\Kernel\Excel::TYPE_STRING,
@@ -25,7 +25,7 @@ $dataOne = $excel->openFile('tutorial.xlsx')
     ])
     ->getSheetData();
 
-$dataTwo = $excel->openFile('tutorial.xlsx')
+$dataTwo = $excel->openFile('fix-207.xlsx')
     ->openSheet()
     ->setType([
         \Vtiful\Kernel\Excel::TYPE_STRING,
@@ -38,7 +38,7 @@ var_dump($dataTwo);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/fix-207.xlsx');
 ?>
 --EXPECT--
 array(2) {

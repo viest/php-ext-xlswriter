@@ -7,7 +7,7 @@ Check for vtiful presence
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 
-$textFile = $excel->fileName("tutorial01.xlsx")
+$textFile = $excel->fileName("insert_text_resource_format.xlsx")
     ->header(['name', 'age']);
 
 $fileHandle = $textFile->getHandle();
@@ -26,7 +26,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial01.xlsx');
+@unlink(__DIR__ . '/insert_text_resource_format.xlsx');
 ?>
 --EXPECT--
-string(23) "./tests/tutorial01.xlsx"
+string(40) "./tests/insert_text_resource_format.xlsx"

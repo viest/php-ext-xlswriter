@@ -7,7 +7,7 @@ Check for vtiful presence
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $excel->fileName("tutorial01.xlsx");
+$fileObject = $excel->fileName("gridlines.xlsx");
 
 $fileObject->header(['name', 'age'])
     ->gridline(\Vtiful\Kernel\Excel::GRIDLINES_HIDE_ALL)
@@ -23,7 +23,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial01.xlsx');
+@unlink(__DIR__ . '/gridlines.xlsx');
 ?>
 --EXPECT--
-string(23) "./tests/tutorial01.xlsx"
+string(22) "./tests/gridlines.xlsx"

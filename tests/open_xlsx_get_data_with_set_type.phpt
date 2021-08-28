@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_get_data_with_set_type.xlsx')
     ->header(['Name', 'Age', 'Date'])
     ->data([
         ['Viest', 24]
@@ -17,7 +17,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
     ->insertDate(1, 2, 1568877706)
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_with_set_type.xlsx')
     ->openSheet()
     ->setType([
         \Vtiful\Kernel\Excel::TYPE_STRING,
@@ -30,7 +30,7 @@ var_dump($data);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_get_data_with_set_type.xlsx');
 ?>
 --EXPECT--
 array(2) {

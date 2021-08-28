@@ -10,7 +10,7 @@ $config = [
 
 $fileObject  = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('chart_resource.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $chart         = new \Vtiful\Kernel\Chart($fileHandle, \Vtiful\Kernel\Chart::CHART_LINE);

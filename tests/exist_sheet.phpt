@@ -8,7 +8,7 @@ $config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 
-$fileObject->fileName('tutorial.xlsx')
+$fileObject->fileName('exist_sheet.xlsx')
     ->addSheet('twoSheet');
 
 var_dump($fileObject->existSheet('twoSheet'));
@@ -16,7 +16,7 @@ var_dump($fileObject->existSheet('notFoundSheet'));
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/exist_sheet.xlsx');
 ?>
 --EXPECT--
 bool(true)

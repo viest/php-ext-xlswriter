@@ -13,7 +13,7 @@ $lastFilePath = NULL;
 for ($index = 0; $index < 100; $index++) {
     $fileObject = new \Vtiful\Kernel\Excel($config);
 
-    $fileObject = $fileObject->fileName('tutorial' . $index . '.xlsx');
+    $fileObject = $fileObject->fileName('multiple_file' . $index . '.xlsx');
     $fileHandle = $fileObject->getHandle();
 
     $format     = new \Vtiful\Kernel\Format($fileHandle);
@@ -37,8 +37,8 @@ var_dump($lastFilePath);
 --CLEAN--
 <?php
 for ($index = 0; $index < 100; $index++) {
-    @unlink(__DIR__ . '/tutorial' . $index . '.xlsx');
+    @unlink(__DIR__ . '/multiple_file' . $index . '.xlsx');
 }
 ?>
 --EXPECT--
-string(23) "./tests/tutorial99.xlsx"
+string(28) "./tests/multiple_file99.xlsx"

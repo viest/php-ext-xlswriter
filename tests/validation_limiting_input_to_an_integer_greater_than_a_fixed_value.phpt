@@ -12,15 +12,19 @@ $validation->validationType(\Vtiful\Kernel\Validation::TYPE_INTEGER)
     ->valueNumber(20);
 
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx')
     ->validation('A1', $validation->toResource())
     ->insertText(0, 0, 21)
     ->output();
 
 var_dump($validation, $filePath);
 ?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . '/validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx');
+?>
 --EXPECT--
 object(Vtiful\Kernel\Validation)#1 (0) {
 }
-string(21) "./tests/tutorial.xlsx"
+string(79) "./tests/validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx"
 

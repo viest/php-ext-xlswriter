@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_next_cell_callback_with_data_type.xlsx')
     ->header(['Item', 'Cost', 'Int', 'Double', 'Date'])
     ->data([
         ['Item_1', 'Cost_1', 10, 10.9999995],
@@ -17,7 +17,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
     ->insertDate(1, 4, 1568904314)
     ->output();
 
-$excel->openFile('tutorial.xlsx')
+$excel->openFile('open_xlsx_next_cell_callback_with_data_type.xlsx')
     ->setType([
         \Vtiful\Kernel\Excel::TYPE_STRING,
         \Vtiful\Kernel\Excel::TYPE_STRING,
@@ -31,7 +31,7 @@ $excel->openFile('tutorial.xlsx')
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_cell_callback_with_data_type.xlsx');
 ?>
 --EXPECT--
 cell:0, row:0, data type:string

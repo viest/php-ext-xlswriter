@@ -10,7 +10,7 @@ $config = [
 
 $fileObject  = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('format_font.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format    = new \Vtiful\Kernel\Format($fileHandle);
@@ -31,7 +31,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/format_font.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(24) "./tests/format_font.xlsx"

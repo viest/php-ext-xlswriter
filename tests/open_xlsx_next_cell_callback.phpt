@@ -9,20 +9,20 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_next_cell_callback.xlsx')
     ->header(['Item', 'Cost'])
     ->data([
         ['Item_1', 'Cost_1'],
     ])
     ->output();
 
-$excel->openFile('tutorial.xlsx')->nextCellCallback(function ($row, $cell, $data) {
+$excel->openFile('open_xlsx_next_cell_callback.xlsx')->nextCellCallback(function ($row, $cell, $data) {
     echo 'cell:' . $cell . ', row:' . $row . ', value:' . $data . PHP_EOL;
 });
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_cell_callback.xlsx');
 ?>
 --EXPECT--
 cell:0, row:0, value:Item

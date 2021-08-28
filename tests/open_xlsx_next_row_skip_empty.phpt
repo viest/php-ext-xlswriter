@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_next_row_skip_empty.xlsx')
     ->header(['', 'Cost'])
     ->data([
         [],
@@ -19,7 +19,7 @@ $filePath = $excel->fileName('tutorial.xlsx')
 
 echo 'skip cells' . PHP_EOL;
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_next_row_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS);
 
 while (is_array($data = $excel->nextRow())) {
@@ -28,7 +28,7 @@ while (is_array($data = $excel->nextRow())) {
 
 echo 'skip row' . PHP_EOL;
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_next_row_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_ROW);
 
 while (is_array($data = $excel->nextRow())) {
@@ -37,7 +37,7 @@ while (is_array($data = $excel->nextRow())) {
 
 echo 'skip cells & row' . PHP_EOL;
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_next_row_skip_empty.xlsx')
     ->openSheet('Sheet1', \Vtiful\Kernel\Excel::SKIP_EMPTY_CELLS | \Vtiful\Kernel\Excel::SKIP_EMPTY_ROW);
 
 while (is_array($data = $excel->nextRow())) {
@@ -46,7 +46,7 @@ while (is_array($data = $excel->nextRow())) {
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_row_skip_empty.xlsx');
 ?>
 --EXPECT--
 skip cells

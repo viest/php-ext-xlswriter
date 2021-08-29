@@ -8,7 +8,7 @@ $config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('chart_style.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $chart = new \Vtiful\Kernel\Chart($fileHandle, \Vtiful\Kernel\Chart::CHART_AREA);
@@ -23,7 +23,7 @@ var_dump($chartResource);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/chart_style.xlsx');
 ?>
 --EXPECT--
 resource(5) of type (xlsx)

@@ -10,7 +10,7 @@ $config = [
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('freeze_panes.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $filePath = $fileObject->freezePanes(1, 0)
@@ -25,7 +25,7 @@ var_dump($fileObject->output());
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/freeze_panes.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(25) "./tests/freeze_panes.xlsx"

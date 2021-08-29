@@ -9,7 +9,7 @@ $config = [
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('insert_url_format.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format     = new \Vtiful\Kernel\Format($fileHandle);
@@ -30,7 +30,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/insert_url_format.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(30) "./tests/insert_url_format.xlsx"

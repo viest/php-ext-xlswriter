@@ -8,7 +8,7 @@ $config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('format_border.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $data = [
@@ -32,7 +32,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/format_border.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(26) "./tests/format_border.xlsx"

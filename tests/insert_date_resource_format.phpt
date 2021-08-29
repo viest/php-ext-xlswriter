@@ -9,7 +9,7 @@ $config = [
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('insert_date_resource_format.xlsx');
 
 $fileHandle = $fileObject->getHandle();
 
@@ -24,7 +24,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/insert_date_resource_format.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(40) "./tests/insert_date_resource_format.xlsx"

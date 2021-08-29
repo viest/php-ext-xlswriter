@@ -9,7 +9,7 @@ $config = [
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('format_background.xlsx');
 
 $fileHandle = $fileObject->getHandle();
 
@@ -31,7 +31,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/format_background.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(30) "./tests/format_background.xlsx"

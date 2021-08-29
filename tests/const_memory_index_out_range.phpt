@@ -9,7 +9,7 @@ try {
         'path' => './',
     ]);
 
-    $fileObject = $excel->constMemory('test.xlsx');
+    $fileObject = $excel->constMemory('const_memory_index_out_range.xlsx');
     $fileHandle = $fileObject->getHandle();
 
     $format    = new \Vtiful\Kernel\Format($fileHandle);
@@ -29,7 +29,7 @@ try {
         'path' => './',
     ]);
 
-    $fileObject = $excel->constMemory('test.xlsx');
+    $fileObject = $excel->constMemory('const_memory_index_out_range.xlsx');
     $fileHandle = $fileObject->getHandle();
 
     $format    = new \Vtiful\Kernel\Format($fileHandle);
@@ -49,7 +49,7 @@ try {
         'path' => './',
     ]);
 
-    $fileObject = $excel->constMemory('test.xlsx');
+    $fileObject = $excel->constMemory('const_memory_index_out_range.xlsx');
     $fileHandle = $fileObject->getHandle();
 
     $format    = new \Vtiful\Kernel\Format($fileHandle);
@@ -66,7 +66,7 @@ try {
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/const_memory_index_out_range.xlsx');
 ?>
 --EXPECT--
 170

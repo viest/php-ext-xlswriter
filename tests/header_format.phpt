@@ -10,7 +10,7 @@ $config = [
 
 $excel = new \Vtiful\Kernel\Excel($config);
 
-$fileObject = $excel->fileName('tutorial.xlsx');
+$fileObject = $excel->fileName('header_format.xlsx');
 $fileHandle = $fileObject->getHandle();
 
 $format     = new \Vtiful\Kernel\Format($fileHandle);
@@ -25,5 +25,9 @@ $setHeader = $fileObject
 
 var_dump($setHeader);
 ?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . '/header_format.xlsx');
+?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(26) "./tests/header_format.xlsx"

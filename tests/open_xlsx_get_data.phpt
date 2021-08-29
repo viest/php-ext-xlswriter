@@ -9,17 +9,19 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx')
+$filePath = $excel->fileName('open_xlsx_get_data.xlsx')
     ->header(['Item', 'Cost'])
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx')->openSheet()->getSheetData();
+$data = $excel->openFile('open_xlsx_get_data.xlsx')
+    ->openSheet()
+    ->getSheetData();
 
 var_dump($data);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_get_data.xlsx');
 ?>
 --EXPECT--
 array(1) {

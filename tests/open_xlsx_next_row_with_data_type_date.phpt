@@ -12,13 +12,13 @@ $config = [
 ];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
-$fileObject = $fileObject->fileName('tutorial.xlsx');
+$fileObject = $fileObject->fileName('open_xlsx_next_row_with_data_type_date.xlsx');
 
 $filePath = $fileObject->header(['date'])
     ->insertDate(1, 0, 1568389354, 'mmm d yyyy hh:mm AM/PM')
     ->output();
 
-$fileObject->openFile('tutorial.xlsx')
+$fileObject->openFile('open_xlsx_next_row_with_data_type_date.xlsx')
     ->openSheet();
 
 var_dump($fileObject->nextRow([\Vtiful\Kernel\Excel::TYPE_STRING])); // Header
@@ -31,7 +31,7 @@ var_dump($fileObject->nextRow([\Vtiful\Kernel\Excel::TYPE_TIMESTAMP]));
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_next_row_with_data_type_date.xlsx');
 ?>
 --EXPECT--
 array(1) {

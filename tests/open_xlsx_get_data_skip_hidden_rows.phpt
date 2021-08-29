@@ -22,10 +22,6 @@ $data = $excel->openFile('hidden_row.xlsx')
 
 var_dump($data);
 ?>
---CLEAN--
-<?php
-@unlink(__DIR__ . '/tutorial.xlsx');
-?>
 --EXPECT--
 array(4) {
   [0]=>

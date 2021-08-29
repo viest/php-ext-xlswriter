@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
+$filePath = $excel->fileName('xlsx_to_csv_custom_delimiter.xlsx', 'TestSheet1')
     ->header(['Item', 'Cost'])
     ->data([
         ['Item_1', 'Cost_1', 10, 10.9999995],
@@ -18,7 +18,7 @@ $filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
 
 $fp = fopen('./tests/file.csv', 'w');
 
-$csvResult = $excel->openFile('tutorial.xlsx')
+$csvResult = $excel->openFile('xlsx_to_csv_custom_delimiter.xlsx')
     ->openSheet()
     ->putCSV($fp, ';');
 
@@ -34,7 +34,7 @@ while (($data = fgetcsv($csvHandler, 1000, ';')) !== FALSE) {
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/xlsx_to_csv_custom_delimiter.xlsx');
 @unlink(__DIR__ . '/file.csv');
 ?>
 --EXPECT--

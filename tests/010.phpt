@@ -6,14 +6,14 @@ Check for vtiful presence
 <?php
 $config = ['path' => './tests'];
 $excel_one  = new \Vtiful\Kernel\Excel($config);
-$fileOne = $excel_one->fileName('tutorial01.xlsx')
+$fileOne = $excel_one->fileName('010-1.xlsx')
     ->header(['test1'])
     ->data([
         ['data1'],
     ])
     ->output();
 $excel_two  = new \Vtiful\Kernel\Excel($config);
-$fileTwo = $excel_two->fileName('tutorial02.xlsx')
+$fileTwo = $excel_two->fileName('010-2.xlsx')
     ->header(['test2'])
     ->data([
         ['data2'],
@@ -23,9 +23,9 @@ var_dump($fileOne,$fileTwo);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial01.xlsx');
-@unlink(__DIR__ . '/tutorial02.xlsx');
+@unlink(__DIR__ . '/010-1.xlsx');
+@unlink(__DIR__ . '/010-2.xlsx');
 ?>
 --EXPECT--
-string(23) "./tests/tutorial01.xlsx"
-string(23) "./tests/tutorial02.xlsx"
+string(18) "./tests/010-1.xlsx"
+string(18) "./tests/010-2.xlsx"

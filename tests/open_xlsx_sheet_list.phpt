@@ -9,18 +9,18 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
+$filePath = $excel->fileName('open_xlsx_sheet_list.xlsx', 'TestSheet1')
     ->header(['Item', 'Cost'])
     ->output();
 
-$sheetList = $excel->openFile('tutorial.xlsx')->sheetList();
+$sheetList = $excel->openFile('open_xlsx_sheet_list.xlsx')->sheetList();
 
 var_dump(is_array($sheetList));
 var_dump($sheetList);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_sheet_list.xlsx');
 ?>
 --EXPECT--
 bool(true)

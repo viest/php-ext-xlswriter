@@ -7,7 +7,7 @@ Check for vtiful presence
 $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
-$excel->fileName('tutorial.xlsx');
+$excel->fileName('default_format.xlsx');
 
 $format        = new \Vtiful\Kernel\Format($excel->getHandle());
 $colorOneStyle = $format
@@ -35,7 +35,7 @@ var_dump($filePath);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/default_format.xlsx');
 ?>
 --EXPECT--
-string(21) "./tests/tutorial.xlsx"
+string(27) "./tests/default_format.xlsx"

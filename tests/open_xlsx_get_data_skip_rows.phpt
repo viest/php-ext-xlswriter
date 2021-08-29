@@ -9,7 +9,7 @@ skip_disable_reader();
 <?php
 $config   = ['path' => './tests'];
 $excel    = new \Vtiful\Kernel\Excel($config);
-$filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
+$filePath = $excel->fileName('open_xlsx_get_data_skip_rows.xlsx', 'TestSheet1')
     ->header(['Item', 'Cost'])
     ->data([
         ['Item_1', 'Cost_1', 10, 10.9999995],
@@ -18,7 +18,7 @@ $filePath = $excel->fileName('tutorial.xlsx', 'TestSheet1')
     ])
     ->output();
 
-$data = $excel->openFile('tutorial.xlsx')
+$data = $excel->openFile('open_xlsx_get_data_skip_rows.xlsx')
     ->openSheet()
     ->setSkipRows(3)
     ->getSheetData();
@@ -27,7 +27,7 @@ var_dump($data);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/tutorial.xlsx');
+@unlink(__DIR__ . '/open_xlsx_get_data_skip_rows.xlsx');
 ?>
 --EXPECT--
 array(1) {

@@ -101,6 +101,7 @@
    <file md5sum="698b763dba612426a10ffd6884326971" name="library/libxlsxwriter/include/xlsxwriter/drawing.h" role="src" />
    <file md5sum="ec74d76fe71b53a8775cdc58445ddf29" name="library/libxlsxwriter/include/xlsxwriter/format.h" role="src" />
    <file md5sum="8e58985b43cbb6deb33ed05c84904f41" name="library/libxlsxwriter/include/xlsxwriter/hash_table.h" role="src" />
+   <file md5sum="" name="library/libxlsxwriter/include/xlsxwriter/metadata.h" role="src" />
    <file md5sum="08864d3530608eb76384e7d7e394ddd2" name="library/libxlsxwriter/include/xlsxwriter/packager.h" role="src" />
    <file md5sum="6816cdf9ae2133e93d1c1e06f925a2fe" name="library/libxlsxwriter/include/xlsxwriter/relationships.h" role="src" />
    <file md5sum="13f9c3b8943d6ce4990957df8d27d4ed" name="library/libxlsxwriter/include/xlsxwriter/shared_strings.h" role="src" />
@@ -139,6 +140,7 @@
    <file md5sum="96a82c7d2603e6eb989d5e6a98970c50" name="library/libxlsxwriter/src/drawing.c" role="src" />
    <file md5sum="00e597fe3cfc90dd8f94a848e060de89" name="library/libxlsxwriter/src/format.c" role="src" />
    <file md5sum="e5a958be89a31af95cd02c69eafbf00e" name="library/libxlsxwriter/src/hash_table.c" role="src" />
+   <file md5sum="" name="library/libxlsxwriter/src/metadata.c" role="src" />
    <file md5sum="79761b79072935458fa44fce4af13e13" name="library/libxlsxwriter/src/packager.c" role="src" />
    <file md5sum="ef5c893d9a2d5bef3710f2575aba61d9" name="library/libxlsxwriter/src/relationships.c" role="src" />
    <file md5sum="14e21fdeffc4759a968434ad7a967498" name="library/libxlsxwriter/src/shared_strings.c" role="src" />

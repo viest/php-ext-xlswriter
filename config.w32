@@ -18,17 +18,18 @@ if (PHP_XLSWRITER != "no") {
         AC_DEFINE("HAVE_LXW_VERSION", 1, "lxw_version available in 0.7.7");
 
         ADD_SOURCES(configure_module_dirname + "\\kernel", "\
-                exception.c \
-                resource.c \
-                common.c \
-                excel.c \
-                write.c \
-                format.c \
                 chart.c \
-                read.c \
+                common.c \
                 csv.c \
+                excel.c \
+                exception.c \
+                format.c \
                 help.c \
+                read.c \
+                resource.c \
+                rich_string.c \
                 validation.c \
+                write.c \
                 ", "xlswriter");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxwriter\\third_party\\minizip", "\

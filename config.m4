@@ -13,15 +13,16 @@ PHP_ARG_ENABLE(reader, enable xlsx reader support,
 if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="
     xlswriter.c \
-    kernel/exception.c \
-    kernel/resource.c \
+    kernel/chart.c \
     kernel/common.c \
     kernel/excel.c \
-    kernel/write.c \
+    kernel/exception.c \
     kernel/format.c \
-    kernel/chart.c \
     kernel/help.c \
+    kernel/resource.c \
+    kernel/rich_string.c \
     kernel/validation.c \
+    kernel/write.c \
     "
 
     xls_read_sources="

@@ -386,7 +386,6 @@ PHP_METHOD(vtiful_format, toResource)
 }
 /* }}} */
 
-
 /** {{{ format_methods
 */
 zend_function_entry format_methods[] = {

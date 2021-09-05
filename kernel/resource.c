@@ -60,6 +60,19 @@ xls_resource_chart_t *zval_get_chart(zval *resource)
 /* }}} */
 
 /* {{{ */
+lxw_rich_string_tuple *zval_get_rich_string(zval *resource)
+{
+    lxw_rich_string_tuple *res;
+
+    if((res = (lxw_rich_string_tuple *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "rich string resources resolution fail", 210);
+    }
+
+    return res;
+}
+/* }}} */
+
+/* {{{ */
 lxw_data_validation *zval_get_validation(zval *resource)
 {
     lxw_data_validation *res;

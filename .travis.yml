@@ -27,6 +27,7 @@ notifications:
   email: dev@service.viest.me
 
 before_script:
+  - php -m
   - git submodule update --init
   - sudo apt-get install zlib1g-dev -y
   - phpize && ./configure --enable-reader && make clean && make
@@ -35,7 +36,6 @@ branches:
   only:
     - master
     - dev
-    - bundle
 
 script:
     - ./travis/run-test.sh

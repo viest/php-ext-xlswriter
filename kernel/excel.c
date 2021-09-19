@@ -117,6 +117,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_text_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_rtext_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, rich_strings)
+                ZEND_ARG_INFO(0, format_handle)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_date_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
@@ -696,6 +703,37 @@ PHP_METHOD(vtiful_xls, insertText)
         type_writer(data, row, column, &obj->write_ptr, format, zval_get_format(format_handle));
     } else {
         type_writer(data, row, column, &obj->write_ptr, format, obj->format_ptr.format);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertRichText(int $row, int $column, array $richString[, resource $formatHandle])
+ */
+PHP_METHOD(vtiful_xls, insertRichText)
+{
+    zend_long row = 0, column = 0;
+    zval *rich_strings = NULL, *format_handle = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(3, 4)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ARRAY(rich_strings)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    SHEET_LINE_SET(obj, row);
+
+    if (format_handle != NULL) {
+        rich_string_writer(row, column, &obj->write_ptr, rich_strings, zval_get_format(format_handle));
+    } else {
+        rich_string_writer(row, column, &obj->write_ptr, rich_strings, obj->format_ptr.format);
     }
 }
 /* }}} */
@@ -1632,6 +1670,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getHandle,      xls_get_handle_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, autoFilter,     xls_auto_filter_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertText,     xls_insert_text_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertRichText, xls_insert_rtext_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertDate,     xls_insert_date_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertChart,    xls_insert_chart_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertUrl,      xls_insert_url_arginfo,     ZEND_ACC_PUBLIC)

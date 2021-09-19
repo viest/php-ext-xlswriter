@@ -90,6 +90,49 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
     }
 }
 
+/*
+ * Write the rich string to the file
+ */
+void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zval *rich_strings, lxw_format *format)
+{
+    int index = 0, resource_count = 0;
+    zval *zv_rich_string = NULL;
+
+    lxw_col_t lxw_col = (lxw_col_t)columns;
+    lxw_row_t lxw_row = (lxw_row_t)row;
+
+    if (Z_TYPE_P(rich_strings) != IS_ARRAY) {
+        return;
+    }
+
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(rich_strings), zv_rich_string)
+        if (Z_TYPE_P(zv_rich_string) != IS_OBJECT) {
+            continue;
+        }
+
+        if (!instanceof_function(Z_OBJCE_P(zv_rich_string), vtiful_rich_string_ce)) {
+            zend_throw_exception(vtiful_exception_ce, "The parameter must be an instance of Vtiful\\Kernel\\RichString.", 500);
+            return;
+        }
+
+        resource_count++;
+    ZEND_HASH_FOREACH_END();
+
+    lxw_rich_string_tuple **rich_string_list = (lxw_rich_string_tuple **)ecalloc(resource_count + 1,sizeof(lxw_rich_string_tuple *));
+
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(rich_strings), zv_rich_string)
+        rich_string_object *obj = Z_RICH_STR_P(zv_rich_string);
+        rich_string_list[index] = obj->ptr.tuple;
+        index++;
+    ZEND_HASH_FOREACH_END();
+
+    rich_string_list[index] = NULL;
+
+    WORKSHEET_WRITER_EXCEPTION(worksheet_write_rich_string(res->worksheet, lxw_row, lxw_col, rich_string_list, format));
+
+    efree(rich_string_list);
+}
+
 void format_copy(lxw_format *new_format, lxw_format *other_format)
 {
     new_format->bold = other_format->bold;

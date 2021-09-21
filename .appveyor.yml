@@ -208,6 +208,7 @@ build_script:
     #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
     #echo "" | Out-File -Encoding "ASCII" -Append task.bat
     echo "" | Out-File -Encoding "ASCII" task.bat
+    echo "php -m 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     echo "call phpize 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     $conf_cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --enable-debug-pack 2>&1'
@@ -258,7 +259,7 @@ test_script:
     echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
     $cmd = 'call configure --with-xlswriter --with-extra-libs=c:\build-cache\zlib\lib --with-extra-includes=c:\build-cache\zlib\include --with-prefix=c:\build-cache\' + $dname + ' 2>&1'
     echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
-    echo 'nmake /nologo test TESTS="-q --show-diff --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
+    echo 'nmake /nologo test TESTS="-q --show-all --set-timeout 120" 2>&1' | Out-File -Encoding "ASCII" -Append task.bat
     echo "exit %errorlevel%" | Out-File -Encoding "ASCII" -Append task.bat
     $here = (Get-Item -Path "." -Verbose).FullName
     $runner = 'c:\build-cache\php-sdk-' + $env:BIN_SDK_VER + '\phpsdk' + '-' + $env:VC + '-' + $env:ARCH + '.bat'

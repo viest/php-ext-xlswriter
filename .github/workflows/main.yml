@@ -41,6 +41,7 @@ jobs:
 
       - name: Build Extension And Execute Tests
         run: |
+          php -m
           phpize && ./configure --enable-reader
           make clean && make && make test
 
@@ -49,4 +50,4 @@ jobs:
         run: |
           phpize && ./configure --enable-reader
           make clean && make && make test
-          REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-diff --set-timeout 120
+          REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-all --set-timeout 120

@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2021-07-18</date>
- <time>06:11:08</time>
+ <date>2021-10-07</date>
+ <time>11:00:00</time>
  <version>
-  <release>1.4.0</release>
-  <api>1.4.0</api>
+  <release>1.5.0</release>
+  <api>1.5.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,20 +45,9 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Fix disable reader build failed.
-- Fix insertDate use curtom format segmentation fault.
-- Feat custom free resource.
-- Feat writer validation.
-- Feat writer data validation can be applied to a single cell or a range of cells.
-- Feat reader add file path in open file exception message.
-- Feat exit worksheet.
-- Feat set paper.
-- Feat set margins.
-- Build read module is enabled by default.
-- Perfect exception message.
-- Compatible PHP 8.1 API.
-- Destructive rename method setPrintedLandscape to setLandscape
-- Destructive rename method setPrintedPortrait to setPortrait
+- Feat set current line.
+- Feat get current line.
+- Feat rich string.
  </notes>
  <contents>
   <dir name="/">
@@ -69,6 +58,7 @@
    <file md5sum="82b26b7e42ba7d3f39f2f24b76453d4c" name="include/format.h" role="src" />
    <file md5sum="095bb9cd5e2a99d07dc38f68f3ce7b44" name="include/help.h" role="src" />
    <file md5sum="21277b121af5943771ea98f86c2d274d" name="include/read.h" role="src" />
+   <file md5sum="" name="include/rich_string.h" role="src" />
    <file md5sum="c8a25b604bd0cfd4adc3bdd48123a085" name="include/validation.h" role="src" />
    <file md5sum="17558e27c20e6c048b525c82232ac751" name="include/xlswriter.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
@@ -82,6 +72,7 @@
    <file md5sum="17780629072883b729c72d9c963ccf52" name="kernel/help.c" role="src" />
    <file md5sum="d38f1e85cfa811f281cb8869cde1691d" name="kernel/read.c" role="src" />
    <file md5sum="f4c2d15a31798759e3c3c4e8180afc74" name="kernel/resource.c" role="src" />
+   <file md5sum="" name="kernel/rich_string.c" role="src" />
    <file md5sum="d6d9bcab96f6e87868ff95f3b96efadd" name="kernel/validation.c" role="src" />
    <file md5sum="a77e2e2879672511ecf05232c4928703" name="kernel/write.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
@@ -213,6 +204,7 @@
    <file md5sum="bfdf9e054f8efd971a65d00eca465f2f" name="tests/chart_title.phpt" role="test" />
    <file md5sum="c30ccd60d59ad838e29b78eb4dc396bc" name="tests/close.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
+   <file md5sum="" name="tests/const_memory.phpt" role="test" />
    <file md5sum="da803170bdbbdc8191123889c187d9fa" name="tests/const_memory_index_out_range.phpt" role="test" />
    <file md5sum="64c92ab74560df6044f1a9019458a5b4" name="tests/default_format.phpt" role="test" />
    <file md5sum="8c30c3f3d54a0b52a26f187c7334a020" name="tests/exist_sheet.phpt" role="test" />
@@ -230,6 +222,7 @@
    <file md5sum="42edd142b985015ba2f7de9b1a7b959b" name="tests/format_unlocked.phpt" role="test" />
    <file md5sum="f9c233fedf10a2bbb2ac5534cf8f20ef" name="tests/format_wrap.phpt" role="test" />
    <file md5sum="4d46bc759ff8d41c8c919a0f50c595b0" name="tests/freeze_panes.phpt" role="test" />
+   <file md5sum="" name="tests/get_set_current_line.phpt" role="test" />
    <file md5sum="e5a973f5d12afe9d8ad068c44afdbea1" name="tests/gridlines.phpt" role="test" />
    <file md5sum="8fc78ed13774a947195a47861ff10d72" name="tests/header_format.phpt" role="test" />
    <file md5sum="83897a12ccd1c5f8531d3b6160381c31" name="tests/hide.phpt" role="test" />
@@ -270,6 +263,7 @@
    <file md5sum="11b4e6d86bc1d4dbef8cbf296a7ab710" name="tests/printed.phpt" role="test" />
    <file md5sum="1f09fd9bd48d9d0255d7395e14d54bf4" name="tests/protection.phpt" role="test" />
    <file md5sum="804b7f5bb9d88607e0af7815073b38db" name="tests/protection_password.phpt" role="test" />
+   <file md5sum="" name="tests/rich_string.phpt" role="test" />
    <file md5sum="12ff3ae17d729bbfd48c87a087544924" name="tests/sheet_add.phpt" role="test" />
    <file md5sum="98f47ea5e8aab04af809a1707a1f1476" name="tests/sheet_checkout.phpt" role="test" />
    <file md5sum="05c3bed759d84238b2250c7318d0ddb8" name="tests/show_comment.phpt" role="test" />
@@ -316,6 +310,35 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2021-07-18</date>
+   <time>06:11:08</time>
+   <version>
+    <release>1.4.0</release>
+    <api>1.4.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Fix disable reader build failed.
+    - Fix insertDate use curtom format segmentation fault.
+    - Feat custom free resource.
+    - Feat writer validation.
+    - Feat writer data validation can be applied to a single cell or a range of cells.
+    - Feat reader add file path in open file exception message.
+    - Feat exit worksheet.
+    - Feat set paper.
+    - Feat set margins.
+    - Build read module is enabled by default.
+    - Perfect exception message.
+    - Compatible PHP 8.1 API.
+    - Destructive rename method setPrintedLandscape to setLandscape.
+    - Destructive rename method setPrintedPortrait to setPortrait.
+   </notes>
+  </release>
   <release>
    <date>2021-01-01</date>
    <time>18:18:18</time>

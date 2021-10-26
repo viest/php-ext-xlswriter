@@ -36,8 +36,8 @@
  <date>2021-10-07</date>
  <time>11:00:00</time>
  <version>
-  <release>1.5.0</release>
-  <api>1.5.0</api>
+  <release>1.5.1</release>
+  <api>1.5.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,9 +45,7 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feat set current line.
-- Feat get current line.
-- Feat rich string.
+- Feat customize to enable or disable zip64.
  </notes>
  <contents>
   <dir name="/">
@@ -310,6 +308,24 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2021-10-07</date>
+   <time>11:00:00</time>
+   <version>
+    <release>1.5.0</release>
+    <api>1.5.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Feat set current line.
+    - Feat get current line.
+    - Feat rich string.
+   </notes>
+  </release>
   <release>
    <date>2021-07-18</date>
    <time>06:11:08</time>

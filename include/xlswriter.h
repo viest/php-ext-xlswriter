@@ -231,6 +231,8 @@ typedef struct _vtiful_rich_string_object {
 	Z_PARAM_LONG_EX(dest, is_null, 1, 0)
 #define Z_PARAM_ARRAY_OR_NULL(dest) \
 	Z_PARAM_ARRAY_EX(dest, 1, 0)
+#define Z_PARAM_BOOL_OR_NULL(dest, is_null) \
+	Z_PARAM_BOOL_EX(dest, is_null, 1, 0)
 #endif
 
 static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {

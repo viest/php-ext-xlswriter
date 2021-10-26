@@ -76,6 +76,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_const_memory_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
                 ZEND_ARG_INFO(0, sheet_name)
+                ZEND_ARG_INFO(0, use_zip64)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_file_add_sheet, 0, 0, 1)
@@ -507,13 +508,15 @@ PHP_METHOD(vtiful_xls, activateSheet)
 PHP_METHOD(vtiful_xls, constMemory)
 {
     char *sheet_name = NULL;
+    zend_bool use_zip64 = LXW_TRUE;
     zval file_path, *dir_path = NULL;
     zend_string *zs_file_name = NULL, *zs_sheet_name = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(1, 2)
+    ZEND_PARSE_PARAMETERS_START(1, 3)
             Z_PARAM_STR(zs_file_name)
             Z_PARAM_OPTIONAL
             Z_PARAM_STR_OR_NULL(zs_sheet_name)
+            Z_PARAM_BOOL_OR_NULL(use_zip64, _dummy)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -528,7 +531,7 @@ PHP_METHOD(vtiful_xls, constMemory)
         lxw_workbook_options options = {
             .constant_memory = LXW_TRUE,
             .tmpdir = NULL,
-            .use_zip64 = LXW_TRUE
+            .use_zip64 = use_zip64
         };
 
         if(zs_sheet_name != NULL) {

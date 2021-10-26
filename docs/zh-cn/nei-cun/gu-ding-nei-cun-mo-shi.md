@@ -18,6 +18,8 @@ constMemory(string $fileName[, string $sheetName = 'Sheet1', bool $enableZip64 =
 
 WPS 需要关闭 zip64，否则打开文件可能报文件损坏；
 
+该问题已反馈给WPS，修复进度未知，并且该问题在出现在iOS、Mac、Windows等平台，Android平台无异常。
+
 ## 示例
 
 ```php

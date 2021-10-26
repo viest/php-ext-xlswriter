@@ -11,8 +11,12 @@
 ## **函数原型**
 
 ```php
-constMemory(string $fileName);
+constMemory(string $fileName[, string $sheetName = 'Sheet1', bool $enableZip64 = true]);
 ```
+
+## 提示
+
+WPS 需要关闭 zip64，否则打开文件可能报文件损坏；
 
 ## 示例
 

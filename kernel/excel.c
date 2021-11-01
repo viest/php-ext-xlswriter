@@ -623,6 +623,7 @@ PHP_METHOD(vtiful_xls, header)
  */
 PHP_METHOD(vtiful_xls, data)
 {
+    zend_ulong column_index = 0;
     zval *data = NULL, *data_r_value = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -636,13 +637,25 @@ PHP_METHOD(vtiful_xls, data)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(data), data_r_value)
-        if(Z_TYPE_P(data_r_value) == IS_ARRAY) {
-            ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
-                type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), bucket->h, &obj->write_ptr, NULL, obj->format_ptr.format);
-            ZEND_HASH_FOREACH_END();
-
-            SHEET_LINE_ADD(obj)
+        if(Z_TYPE_P(data_r_value) != IS_ARRAY) {
+            continue;
         }
+
+        column_index = 0;
+
+        ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
+            // numeric index rewriting
+            if (bucket->key == NULL) {
+                column_index = bucket->h;
+            }
+
+            type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, obj->format_ptr.format);
+
+            // next number index
+            ++column_index;
+        ZEND_HASH_FOREACH_END();
+
+        SHEET_LINE_ADD(obj)
     ZEND_HASH_FOREACH_END();
 }
 /* }}} */

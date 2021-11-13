@@ -136,6 +136,7 @@
     * [全局默认样式](zh-cn/yang-shi/default-format.md)
   * [锁定保护](zh-cn/protection/README.md)
     * [密码保护](zh-cn/protection/password.md)
+    * [解除保护](zh-cn/protection/unlock.md)
   * [下载](zh-cn/download/README.md)
   * [样式列表](zh-cn/yang-shi-lie-biao/README.md)
     * [斜体](zh-cn/yang-shi-lie-biao/xie-ti.md)

@@ -156,6 +156,7 @@
     * [文本换行](zh-cn/yang-shi-lie-biao/wen-ben-huan-hang.md)
     * [文本颜色](zh-cn/yang-shi-lie-biao/font-color.md)
     * [文本字号](zh-cn/yang-shi-lie-biao/font-size.md)
+    * [多样式文本](zh-cn/yang-shi-lie-biao/font-rich.md)
     * [粗体](zh-cn/yang-shi-lie-biao/cu-ti.md)
     * [单元格边框](zh-cn/yang-shi-lie-biao/dan-yuan-ge-bian-kuang.md)
     * [边框样式常量](zh-cn/yang-shi-lie-biao/bian-kuang-yang-shi-chang-liang.md)

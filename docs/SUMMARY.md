@@ -111,6 +111,8 @@
     * [面积图](zh-cn/tu-biao/mian-ji-tu.md)
     * [直方图](zh-cn/tu-biao/zhi-fang-tu.md)
     * [条形图](zh-cn/tu-biao/tiao-xing-tu.md)
+  * [数据验证](zh-cn/validation/README.md)
+    * []
   * [单元格](zh-cn/dan-yuan-ge/README.md)
     * [插入文字](zh-cn/dan-yuan-ge/cha-ru-wen-zi.md)
     * [插入链接](zh-cn/dan-yuan-ge/cha-ru-lian-jie.md)

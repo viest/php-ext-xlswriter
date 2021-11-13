@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-insertUrl(int $row, int $column, string $url[, resource $formatHandler])
+insertUrl(int $row, int $column, string $url[, string $text, string $toolTip, resource $formatHandler])
 ```
 
 ### **int $row**
@@ -17,6 +17,14 @@ insertUrl(int $row, int $column, string $url[, resource $formatHandler])
 ### **string $url**
 
 > 链接地址
+
+### **string $text**
+
+> 链接文字
+
+### **string $toolTip**
+
+> 链接提示
 
 ### **resource $formatHandler**
 
@@ -37,7 +45,7 @@ $urlStyle = $format->bold()
     ->underline(\Vtiful\Kernel\Format::UNDERLINE_SINGLE)
     ->toResource();
 
-$urlFile->insertUrl(1, 0, 'https://github.com', $urlStyle);
+$urlFile->insertUrl(1, 0, 'https://github.com', NULL, NULL, $urlStyle);
 
 $urlFile->output();
 ```

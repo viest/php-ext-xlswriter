@@ -321,7 +321,13 @@ void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw
  */
 void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format)
 {
-    worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
+   int error = worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
+
+    // Cells that have been placed cannot be modified using optimization mode
+    WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+
+    // Worksheet row or column index out of range
+    WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
 }
 
 /*

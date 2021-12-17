@@ -2,6 +2,8 @@
 *.lo
 *.la
 .libs
+.idea
+.DS_Store
 .dockerignore
 Dockerfile
 debug
@@ -40,7 +42,6 @@ tests/*/*.exp
 tests/*/*.log
 tests/*/*.sh
 tmp-php.ini
-.idea
 cmake-build-debug
 CMakeLists.txt
 local_test.php

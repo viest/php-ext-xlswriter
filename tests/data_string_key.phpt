@@ -33,7 +33,7 @@ var_dump($excel->nextRow());
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . '/open_xlsx_next_row.xlsx');
+@unlink(__DIR__ . '/data_string_key.xlsx');
 ?>
 --EXPECT--
 array(2) {

@@ -20,9 +20,18 @@ mergeCells(string $scope, string $data [, resource $formatHandler]): self
 
 ## 示例
 
+### 横向合并单元格
+
 ```php
 $excel->fileName("test.xlsx")
   ->mergeCells('A1:C1', 'Merge cells')
   ->output();
 ```
 
+### 纵向合并单元格
+
+```php
+$excel->fileName("test.xlsx")
+  ->mergeCells('A1:A3', 'Merge cells')
+  ->output();
+```

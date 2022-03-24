@@ -22,11 +22,33 @@ WPS 需要关闭 zip64，否则打开文件可能报文件损坏；
 
 ## 示例
 
+### 开启 ZIP64
+
 ```php
 $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
+// ConstMemory 默认开启 ZIP64
 $fileObject = $excel->constMemory('tutorial01.xlsx');
+$fileHandle = $fileObject->getHandle();
+
+$format    = new \Vtiful\Kernel\Format($fileHandle);
+$boldStyle = $format->bold()->toResource();
+
+$fileObject->setRow('A1', 10, $boldStyle) // 写入数据前设置行样式
+    ->header(['name', 'age'])
+    ->data([['viest', 21]])
+    ->output();
+```
+
+### 关闭 ZIP64
+
+```php
+$config = ['path' => './tests'];
+$excel  = new \Vtiful\Kernel\Excel($config);
+
+// 第三个参数 False 即为关闭 ZIP64
+$fileObject = $excel->constMemory('tutorial01.xlsx', NULL, false);
 $fileHandle = $fileObject->getHandle();
 
 $format    = new \Vtiful\Kernel\Format($fileHandle);

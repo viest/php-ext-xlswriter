@@ -11,7 +11,7 @@
 </div>
 
 <div align=center>
-<a href="https://app.travis-ci.com/viest/php-ext-xlswriter"><img src="https://app.travis-ci.com/viest/php-ext-xlswriter.svg?branch=master"/></a>
+<a href="https://github.com/viest/php-ext-xlswriter/actions/workflows/main.yml?query=branch%3Amaster"><img src="https://img.shields.io/github/workflow/status/viest/php-ext-xlswriter/php-ext-xlswriter/master"></a>
 <a href="https://ci.appveyor.com/project/viest/php-ext-excel-export/branch/master"><img src="https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true"/></a>
 <a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>
 </div>

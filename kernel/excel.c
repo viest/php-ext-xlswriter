@@ -637,6 +637,10 @@ PHP_METHOD(vtiful_xls, data)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(data), data_r_value)
+        if (Z_TYPE_P(data_r_value) == IS_REFERENCE) {
+            data_r_value = Z_REFVAL_P(data_r_value);
+        }
+
         if(Z_TYPE_P(data_r_value) != IS_ARRAY) {
             continue;
         }

@@ -38,6 +38,7 @@ zend_long date_double_to_timestamp(double value) {
     }
     smart_str_append_long(&_modify_arg_string, days);
     smart_str_appendl(&_modify_arg_string, " days", 5);
+    ZSTR_VAL(_modify_arg_string.s)[ZSTR_LEN(_modify_arg_string.s)] = '\0';
     ZVAL_STR(&_modify_args[0], _modify_arg_string.s);
     call_object_method(&datetime, "modify", 1, _modify_args, &_modify_result);
     zval_ptr_dtor(&datetime);

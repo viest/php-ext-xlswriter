@@ -3,7 +3,7 @@
 ## **Function Prototype**
 
 ```php
-setPrintedPortrait(): self
+setPortrait(): self
 ```
 
 ## **Example**
@@ -13,6 +13,6 @@ $config = ['path' =>'./tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 
 $excel->fileName('printed_portrait.xlsx','sheet1')
-    ->setPrintedPortrait() // Set the printing direction to portrait
+    ->setPortrait() // Set the printing direction to portrait
     ->output();
 ```

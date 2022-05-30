@@ -3,7 +3,7 @@
 ## **函数原型**
 
 ```php
-setPrintedLandscape(): self
+setLandscape(): self
 ```
 
 ## **实例**
@@ -13,6 +13,6 @@ $config = ['path' => './tests'];
 $excel  = new \Vtiful\Kernel\Excel($config);
 
 $excel->fileName('printed_landscape.xlsx', 'sheet1')
-    ->setPrintedLandscape() // 设置打印方向为横向
+    ->setLandscape() // 设置打印方向为横向
     ->output();
 ```

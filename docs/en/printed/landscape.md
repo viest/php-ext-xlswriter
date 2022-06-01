@@ -3,7 +3,7 @@
 ## **Function Prototype**
 
 ```php
-setPrintedLandscape(): self
+setLandscape(): self
 ```
 
 ## **Example**
@@ -13,6 +13,6 @@ $config = ['path' =>'./tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 
 $excel->fileName('printed_landscape.xlsx','sheet1')
-    ->setPrintedLandscape() // Set the printing direction to landscape
+    ->setLandscape() // Set the printing direction to landscape
     ->output();
 ```

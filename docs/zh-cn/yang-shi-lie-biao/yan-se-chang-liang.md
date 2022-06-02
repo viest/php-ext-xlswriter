@@ -1,5 +1,7 @@
 # 颜色常量
 
+## 内置常量
+
 ```php
 Format::COLOR_BLACK
 Format::COLOR_BLUE
@@ -19,3 +21,9 @@ Format::COLOR_WHITE
 Format::COLOR_YELLOW
 ```
 
+## RGB十六进制示例
+
+```php
+// 午夜的蓝色，#191970
+0x191970
+```

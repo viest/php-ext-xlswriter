@@ -331,6 +331,7 @@ void first_worksheet(xls_resource_write_t *res);
 void zoom(xls_resource_write_t *res, zend_long zoom);
 void paper(xls_resource_write_t *res, zend_long type);
 void gridlines(xls_resource_write_t *res, zend_long option);
+void printed_scale(xls_resource_write_t *res, zend_long scale);
 void auto_filter(zend_string *range, xls_resource_write_t *res);
 void protection(xls_resource_write_t *res, zend_string *password);
 void format_copy(lxw_format *new_format, lxw_format *other_format);

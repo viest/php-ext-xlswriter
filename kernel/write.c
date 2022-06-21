@@ -420,6 +420,22 @@ void printed_direction(xls_resource_write_t *res, unsigned int direction)
 }
 
 /*
+ * Set the worksheet printed scale
+ */
+void printed_scale(xls_resource_write_t *res, zend_long scale)
+{
+    if (scale < 10) {
+        scale = 10;
+    }
+
+    if (scale > 400) {
+        scale = 400;
+    }
+
+    worksheet_set_print_scale(res->worksheet, scale);
+}
+
+/*
  * Hide worksheet
  */
 void hide_worksheet(xls_resource_write_t *res)

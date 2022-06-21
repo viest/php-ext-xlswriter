@@ -303,6 +303,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_landscape_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_printed_scale_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, scale)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_hide_sheet_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -1312,7 +1316,6 @@ PHP_METHOD(vtiful_xls, setPortrait)
 }
 /* }}} */
 
-
 /** {{{ \Vtiful\Kernel\Excel::setLandscape()
  */
 PHP_METHOD(vtiful_xls, setLandscape)
@@ -1324,6 +1327,26 @@ PHP_METHOD(vtiful_xls, setLandscape)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     printed_direction(&obj->write_ptr, XLSWRITER_PRINTED_LANDSCAPE);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setPrintScale(int $scale)
+ */
+PHP_METHOD(vtiful_xls, setPrintScale)
+{
+    zend_long scale = 10;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(scale)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    printed_scale(&obj->write_ptr, scale);
 }
 /* }}} */
 
@@ -1712,10 +1735,11 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, zoom,          xls_sheet_zoom_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, gridline,      xls_sheet_gridline_arginfo, ZEND_ACC_PUBLIC)
 
-        PHP_ME(vtiful_xls, setPaper,     xls_set_paper_arginfo,             ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setMargins,   xls_set_margins_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setPortrait,  xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, setLandscape, xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPaper,      xls_set_paper_arginfo,             ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setMargins,    xls_set_margins_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPortrait,   xls_set_printed_portrait_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setLandscape,  xls_set_printed_landscape_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setPrintScale, xls_set_printed_scale_arginfo,     ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, setCurrentSheetHide,    xls_hide_sheet_arginfo,  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setCurrentSheetIsFirst, xls_first_sheet_arginfo, ZEND_ACC_PUBLIC)

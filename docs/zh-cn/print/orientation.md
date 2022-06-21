@@ -5,6 +5,7 @@
 ```php
 setLandscape(): self
 ```
+
 ### 示例
 
 ```php

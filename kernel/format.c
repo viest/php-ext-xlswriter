@@ -103,6 +103,17 @@ ZEND_BEGIN_ARG_INFO_EX(format_border_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(format_border_color_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, color)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_border_color_of_the_four_sides_arginfo, 0, 0, 4)
+                ZEND_ARG_INFO(0, top_color)
+                ZEND_ARG_INFO(0, right_color)
+                ZEND_ARG_INFO(0, bottom_color)
+                ZEND_ARG_INFO(0, left_color)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(format_font_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, font)
 ZEND_END_ARG_INFO()
@@ -376,6 +387,64 @@ PHP_METHOD(vtiful_format, border)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::borderColor(int $color)
+ */
+PHP_METHOD(vtiful_format, borderColor)
+{
+    zend_long color = -1;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(color)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format && color > 0) {
+        format_set_border_color(obj->ptr.format, color);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::borderColorOfTheFourSides(int $topColor, int $rightColor, int $bottomColor, int $leftColor)
+ */
+PHP_METHOD(vtiful_format, borderColorOfTheFourSides)
+{
+    zend_long top = -1, right = -1, bottom = -1, left = -1;
+
+    ZEND_PARSE_PARAMETERS_START(0, 4)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_LONG_OR_NULL(top, _dummy)
+            Z_PARAM_LONG_OR_NULL(right, _dummy)
+            Z_PARAM_LONG_OR_NULL(bottom, _dummy)
+            Z_PARAM_LONG_OR_NULL(left, _dummy)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        if (top > 0) {
+            format_set_top_color(obj->ptr.format, top);
+        }
+
+        if (right > 0) {
+            format_set_right_color(obj->ptr.format, right);
+        }
+
+        if (bottom > 0) {
+            format_set_bottom_color(obj->ptr.format, bottom);
+        }
+
+        if (left > 0) {
+            format_set_left_color(obj->ptr.format, left);
+        }
+    }
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -389,21 +458,23 @@ PHP_METHOD(vtiful_format, toResource)
 /** {{{ format_methods
 */
 zend_function_entry format_methods[] = {
-        PHP_ME(vtiful_format, __construct,   format_construct_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, wrap,          format_wrap_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, bold,          format_bold_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, italic,        format_italic_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, border,        format_border_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, align,         format_align_arginfo,       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, number,        format_number_arginfo,      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, fontColor,     format_color_arginfo,       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, font,          format_font_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, fontSize,      format_size_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, strikeout,     format_strikeout_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, underline,     format_underline_arginfo,   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, unlocked,      format_unlocked_arginfo,    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, toResource,    format_to_resource_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, background,    format_background_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, __construct,               format_construct_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, wrap,                      format_wrap_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, bold,                      format_bold_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, italic,                    format_italic_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, border,                    format_border_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderColor,               format_border_color_arginfo,                   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderColorOfTheFourSides, format_border_color_of_the_four_sides_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, align,                     format_align_arginfo,                          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, number,                    format_number_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, fontColor,                 format_color_arginfo,                          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, font,                      format_font_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, fontSize,                  format_size_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, strikeout,                 format_strikeout_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, underline,                 format_underline_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, unlocked,                  format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, toResource,                format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, background,                format_background_arginfo,                     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */

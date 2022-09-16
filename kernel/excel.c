@@ -627,7 +627,8 @@ PHP_METHOD(vtiful_xls, header)
  */
 PHP_METHOD(vtiful_xls, data)
 {
-    zend_ulong column_index = 0;
+    zend_ulong column_index = 0, index;
+    zend_string *key;
     zval *data = NULL, *data_r_value = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -651,17 +652,16 @@ PHP_METHOD(vtiful_xls, data)
 
         column_index = 0;
 
-        ZEND_HASH_FOREACH_BUCKET(Z_ARRVAL_P(data_r_value), Bucket *bucket)
+        ZEND_HASH_FOREACH_KEY_VAL_IND(Z_ARRVAL_P(data_r_value), index, key, data) {
             // numeric index rewriting
-            if (bucket->key == NULL) {
-                column_index = bucket->h;
+            if (key == NULL) {
+                column_index = index;
             }
-
-            type_writer(&bucket->val, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, obj->format_ptr.format);
+            type_writer(data, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, obj->format_ptr.format);
 
             // next number index
             ++column_index;
-        ZEND_HASH_FOREACH_END();
+        } ZEND_HASH_FOREACH_END();
 
         SHEET_LINE_ADD(obj)
     ZEND_HASH_FOREACH_END();

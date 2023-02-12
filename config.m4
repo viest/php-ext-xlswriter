@@ -113,7 +113,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     else
         AC_MSG_RESULT([use the bundled library])
         xls_writer_sources="$xls_writer_sources $libxlsxwriter_sources"
-        PHP_ADD_INCLUDE([$srcdir/library/libxlsxwriter/include])
+        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxwriter/include])
 
         dnl see library/CMakeLists.txt
         LIBOPT="-DNOCRYPT -DNOUNCRYPT"
@@ -150,13 +150,13 @@ if test "$PHP_XLSWRITER" != "no"; then
             AC_MSG_RESULT([use the bundled library])
 
             xls_writer_sources="$xls_writer_sources $libexpat"
-            PHP_ADD_INCLUDE([$srcdir/library/libexpat/expat/lib])
-            PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
+            PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
+            PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
             LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
 
             xls_writer_sources="$xls_writer_sources $libxlsxio"
-            PHP_ADD_INCLUDE([$srcdir/library/libxlsxio/include])
-            PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
+            PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxio/include])
+            PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxio/lib])
             LIBOPT="$LIBOPT -DUSE_MINIZIP"
 
         fi
@@ -177,15 +177,15 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     PHP_NEW_EXTENSION(xlswriter, $xls_writer_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 $LIBOPT)
 
-    PHP_ADD_INCLUDE([$srcdir])
-    PHP_ADD_INCLUDE([$srcdir/include])
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR])
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/include])
 
-    PHP_ADD_BUILD_DIR([$abs_builddir/kernel])
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/src])
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/minizip])
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/tmpfileplus])
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxwriter/third_party/md5])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/kernel])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxwriter/src])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxwriter/third_party/minizip])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxwriter/third_party/tmpfileplus])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxwriter/third_party/md5])
 
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libexpat/expat/lib])
-    PHP_ADD_BUILD_DIR([$abs_builddir/library/libxlsxio/lib])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxio/lib])
 fi

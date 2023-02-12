@@ -103,6 +103,13 @@ ZEND_BEGIN_ARG_INFO_EX(format_border_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(format_border_of_the_four_sides_arginfo, 0, 0, 4)
+                ZEND_ARG_INFO(0, top)
+                ZEND_ARG_INFO(0, right)
+                ZEND_ARG_INFO(0, bottom)
+                ZEND_ARG_INFO(0, left)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(format_border_color_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
@@ -367,7 +374,7 @@ PHP_METHOD(vtiful_format, wrap)
 }
 /* }}} */
 
-/** {{{ \Vtiful\Kernel\Format::toResource()
+/** {{{ \Vtiful\Kernel\Format::border()
  */
 PHP_METHOD(vtiful_format, border)
 {
@@ -383,6 +390,33 @@ PHP_METHOD(vtiful_format, border)
 
     if (obj->ptr.format) {
         format_set_border(obj->ptr.format, style);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::borderOfTheFourSides(int $top, int $right, int $bottom, int $left)
+ */
+PHP_METHOD(vtiful_format, borderOfTheFourSides)
+{
+    zend_long top = LXW_BORDER_NONE, right = LXW_BORDER_NONE, bottom = LXW_BORDER_NONE, left = LXW_BORDER_NONE;
+
+    ZEND_PARSE_PARAMETERS_START(0, 4)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_LONG_OR_NULL(top, _dummy)
+            Z_PARAM_LONG_OR_NULL(right, _dummy)
+            Z_PARAM_LONG_OR_NULL(bottom, _dummy)
+            Z_PARAM_LONG_OR_NULL(left, _dummy)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_top(obj->ptr.format, top);
+        format_set_right(obj->ptr.format, right);
+        format_set_bottom(obj->ptr.format, bottom);
+        format_set_left(obj->ptr.format, left);
     }
 }
 /* }}} */
@@ -463,6 +497,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, bold,                      format_bold_arginfo,                           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, italic,                    format_italic_arginfo,                         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, border,                    format_border_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderOfTheFourSides,      format_border_of_the_four_sides_arginfo,       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, borderColor,               format_border_color_arginfo,                   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, borderColorOfTheFourSides, format_border_color_of_the_four_sides_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, align,                     format_align_arginfo,                          ZEND_ACC_PUBLIC)

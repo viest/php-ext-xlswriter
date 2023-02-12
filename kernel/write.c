@@ -355,7 +355,13 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_f
  */
 void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation)
 {
-    worksheet_data_validation_cell(res->worksheet, CELL(ZSTR_VAL(range)), validation);
+    char *rangeStr = ZSTR_VAL(range);
+        
+    if (strchr(rangeStr, ':')) {
+	    worksheet_data_validation_range(res->worksheet, RANGE(rangeStr), validation);
+    } else {
+	    worksheet_data_validation_cell(res->worksheet, CELL(rangeStr), validation);
+    }
 }
 
 /*

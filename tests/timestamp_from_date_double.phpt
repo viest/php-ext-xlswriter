@@ -4,6 +4,7 @@ Check for vtiful presence
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
 <?php
+ini_set('date.timezone', 'UTC');
 var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(43727.306782407));
 var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(NULL));
 var_dump(\Vtiful\Kernel\Excel::timestampFromDateDouble(43727));

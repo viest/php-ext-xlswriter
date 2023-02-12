@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2021-10-07</date>
- <time>11:00:00</time>
+ <date>2021-05-01</date>
+ <time>00:00:00</time>
  <version>
-  <release>1.5.0</release>
-  <api>1.5.0</api>
+  <release>1.5.2</release>
+  <api>1.5.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,9 +45,8 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feat set current line.
-- Feat get current line.
-- Feat rich string.
+- Fix: Write failure on data reference.
+- Fix: String is not zero-terminatedpage.
  </notes>
  <contents>
   <dir name="/">
@@ -206,6 +205,8 @@
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file md5sum="" name="tests/const_memory.phpt" role="test" />
    <file md5sum="da803170bdbbdc8191123889c187d9fa" name="tests/const_memory_index_out_range.phpt" role="test" />
+   <file md5sum="" name="tests/data_reference.phpt" role="test" />
+   <file md5sum="" name="tests/data_string_key.phpt" role="test" />
    <file md5sum="64c92ab74560df6044f1a9019458a5b4" name="tests/default_format.phpt" role="test" />
    <file md5sum="8c30c3f3d54a0b52a26f187c7334a020" name="tests/exist_sheet.phpt" role="test" />
    <file md5sum="84ef50a4df8d5ce312246676a4c933fa" name="tests/first.phpt" role="test" />
@@ -310,6 +311,40 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2021-10-27</date>
+   <time>00:00:00</time>
+   <version>
+    <release>1.5.1</release>
+    <api>1.5.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Feat customize to enable or disable zip64.
+   </notes>
+  </release>
+  <release>
+   <date>2021-10-07</date>
+   <time>11:00:00</time>
+   <version>
+    <release>1.5.0</release>
+    <api>1.5.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Feat set current line.
+    - Feat get current line.
+    - Feat rich string.
+   </notes>
+  </release>
   <release>
    <date>2021-07-18</date>
    <time>06:11:08</time>

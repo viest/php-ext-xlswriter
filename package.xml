@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2021-05-01</date>
+ <date>2023-03-01</date>
  <time>00:00:00</time>
  <version>
-  <release>1.5.2</release>
-  <api>1.5.2</api>
+  <release>1.5.3</release>
+  <api>1.5.3</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,8 +45,9 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Fix: Write failure on data reference.
-- Fix: String is not zero-terminatedpage.
+- Feat: Print scale.
+- Feat: Border color.
+- Fix: PACKED array on PHP 8.2.
  </notes>
  <contents>
   <dir name="/">
@@ -215,6 +216,11 @@
    <file md5sum="df2a6af4ced4ea7660a1691d18e75e8c" name="tests/format_align.phpt" role="test" />
    <file md5sum="6f9186fb9d8eb2ad4d96d149c97ef5f8" name="tests/format_background.phpt" role="test" />
    <file md5sum="c67d20fdc2f1d4b4b429ac905cb4cbf9" name="tests/format_border.phpt" role="test" />
+   <file md5sum="" name="tests/format_border_color.phpt" role="test" />
+   <file md5sum="" name="tests/format_border_color_of_the_four_sides_1.phpt" role="test" />
+   <file md5sum="" name="tests/format_border_color_of_the_four_sides_2.phpt" role="test" />
+   <file md5sum="" name="tests/format_border_of_the_four_sides_1.phpt" role="test" />
+   <file md5sum="" name="tests/format_border_of_the_four_sides_2.phpt" role="test" />
    <file md5sum="666669e50723870fe7fc7ebbb3354cb4" name="tests/format_font.phpt" role="test" />
    <file md5sum="c4d791e16e40e172ebc516520cf35e5f" name="tests/format_font_color.phpt" role="test" />
    <file md5sum="cf25b25c4320818e5c54041d154ddc78" name="tests/format_font_size.phpt" role="test" />
@@ -242,6 +248,7 @@
    <file md5sum="f1addf56af65d4cccc0e1a2e92bd1f46" name="tests/open_xlsx_file.phpt" role="test" />
    <file md5sum="954cb74ff37c13128009c1c7dce1289d" name="tests/open_xlsx_file_not_found.phpt" role="test" />
    <file md5sum="88290bb78df0b94df8901d81d930337e" name="tests/open_xlsx_get_data.phpt" role="test" />
+   <file md5sum="" name="tests/open_xlsx_get_data_bignumbers.phpt" role="test" />
    <file md5sum="1afc255df6ce98e700edb60e0123c7ff" name="tests/open_xlsx_get_data_skip_empty.phpt" role="test" />
    <file md5sum="c15ecd6d53ae6f426bf31601bba288db" name="tests/open_xlsx_get_data_skip_hidden_rows.phpt" role="test" />
    <file md5sum="b9f407a439cf4cc49588cf6f604f609f" name="tests/open_xlsx_get_data_skip_rows.phpt" role="test" />
@@ -274,6 +281,7 @@
    <file md5sum="23ff86aeea108df914c51dde08400642" name="tests/validation_limiting_input_to_an_integer_greater_than_a_fixed_value.phpt" role="test" />
    <file md5sum="8671db3600217d8c0b80264e1a88cf2a" name="tests/validation_limiting_input_to_an_integer_in_a_fixed_range.phpt" role="test" />
    <file md5sum="f6e0b79fc411bdb1eae93456ce120e1e" name="tests/validation_limiting_input_to_an_integer_outside_a_fixed_range.phpt" role="test" />
+   <file md5sum="" name="tests/validation_limiting_to_a_single_or_range_cell.phpt" role="test" />
    <file md5sum="aebc80af940fc8d44c14f802752fc3c9" name="tests/version.phpt" role="test" />
    <file md5sum="eb88090da849ab938551ce94e539e948" name="tests/writer_exception.phpt" role="test" />
    <file md5sum="42b26f050d9291509d6f583ef43ebde9" name="tests/xlsx_to_csv.phpt" role="test" />
@@ -311,6 +319,23 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2022-05-01</date>
+   <time>00:00:00</time>
+   <version>
+    <release>1.5.2</release>
+    <api>1.5.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Fix: Write failure on data reference.
+    - Fix: String is not zero-terminatedpage.
+   </notes>
+  </release>
   <release>
    <date>2021-10-27</date>
    <time>00:00:00</time>

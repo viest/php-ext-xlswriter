@@ -433,7 +433,7 @@ PHP_METHOD(vtiful_validation, valueList)
     int index = 0;
     char **list = NULL;
 
-    Bucket *bucket;
+    zval *data;
     zval *zv_value_list = NULL;
     validation_object *obj = NULL;
 
@@ -465,25 +465,25 @@ PHP_METHOD(vtiful_validation, valueList)
 
     zend_array *za_value_list = Z_ARR_P(zv_value_list);
 
-    ZEND_HASH_FOREACH_BUCKET(za_value_list, bucket)
-            if (Z_TYPE(bucket->val) != IS_STRING) {
+    ZEND_HASH_FOREACH_VAL(za_value_list, data) {
+            if (Z_TYPE_P(data) != IS_STRING) {
                 zend_throw_exception(vtiful_exception_ce, "Arrays can only consist of strings.", 300);
                 return;
             }
-            if (ZSTR_LEN(bucket->val.value.str) == 0 ) {
+            if (Z_STRLEN_P(data) == 0 ) {
                 zend_throw_exception(vtiful_exception_ce, "Array value is empty string.", 301);
                 return;
             }
-    ZEND_HASH_FOREACH_END();
+    } ZEND_HASH_FOREACH_END();
 
     index = 0;
     list = ecalloc(za_value_list->nNumOfElements + 1, sizeof(char *));
 
-    ZEND_HASH_FOREACH_BUCKET(za_value_list, bucket)
-            list[index] = ecalloc(1, bucket->val.value.str->len + 1);
-            strcpy(list[index],bucket->val.value.str->val);
+    ZEND_HASH_FOREACH_VAL(za_value_list, data) {
+            list[index] = ecalloc(1, Z_STRLEN_P(data) + 1);
+            strcpy(list[index], Z_STRVAL_P(data));
             index++;
-    ZEND_HASH_FOREACH_END();
+    } ZEND_HASH_FOREACH_END();
 
     list[index] = NULL;
 

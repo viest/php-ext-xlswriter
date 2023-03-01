@@ -18,7 +18,7 @@
 extern zend_module_entry xlswriter_module_entry;
 #define phpext_xlswriter_ptr &xlswriter_module_entry
 
-#define PHP_XLSWRITER_VERSION "1.5.3"
+#define PHP_XLSWRITER_VERSION "1.5.4"
 #define PHP_XLSWRITER_AUTHOR  "Jiexing.Wang (wjx@php.net)"
 
 #ifdef PHP_WIN32

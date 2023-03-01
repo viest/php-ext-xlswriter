@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2023-03-01</date>
+ <date>2023-03-02</date>
  <time>00:00:00</time>
  <version>
-  <release>1.5.3</release>
-  <api>1.5.3</api>
+  <release>1.5.4</release>
+  <api>1.5.4</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,8 +45,6 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feat: Print scale.
-- Feat: Border color.
 - Fix: PACKED array on PHP 8.2.
  </notes>
  <contents>
@@ -319,6 +317,23 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2023-03-01</date>
+   <time>00:00:00</time>
+   <version>
+    <release>1.5.3</release>
+    <api>1.5.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Feat: Print scale.
+    - Feat: Border color.
+   </notes>
+  </release>
   <release>
    <date>2022-05-01</date>
    <time>00:00:00</time>

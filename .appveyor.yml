@@ -182,6 +182,54 @@ environment:
       PHP_VER: 8.0.0
       ZLIB_VER: 1.2.11
       TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.1.9
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.1.9
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.1.9
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.1.9
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.2.5
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x64
+      VC: vs16
+      PHP_VER: 8.2.5
+      ZLIB_VER: 1.2.11
+      TS: 1
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.2.5
+      ZLIB_VER: 1.2.11
+      TS: 0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
+      VC: vs16
+      PHP_VER: 8.2.5
+      ZLIB_VER: 1.2.11
+      TS: 1
 
 build_script:
   ps: |

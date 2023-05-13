@@ -13,6 +13,8 @@
 #ifndef VTIFUL_XLS_H
 #define VTIFUL_XLS_H
 
+#include "common.h"
+
 #define V_XLS_HANDLE "handle"
 #define V_XLS_FIL    "fileName"
 #define V_XLS_COF    "config"

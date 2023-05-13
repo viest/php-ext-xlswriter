@@ -13,6 +13,8 @@
 #ifndef PHP_EXT_XLS_WRITER_CSV_H
 #define PHP_EXT_XLS_WRITER_CSV_H
 
+#include "common.h"
+
 unsigned int xlsx_to_csv(
         zval *stream_resource,
         const char *delimiter_str, int delimiter_str_len,

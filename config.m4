@@ -96,7 +96,12 @@ if test "$PHP_XLSWRITER" != "no"; then
         done
 
         if test -z "$OPENSSL_DIR"; then
-            AC_MSG_ERROR([openssl library not found])
+            PHP_SETUP_OPENSSL(XLSWRITER_SHARED_LIBADD,
+            [
+                AC_DEFINE(USE_OPENSSL_MD5, 1, [ use openssl md5 ])
+            ], [
+                AC_MSG_ERROR([openssl library not found])
+            ])
         else
             PHP_ADD_INCLUDE($OPENSSL_DIR/include)
 

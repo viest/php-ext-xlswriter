@@ -10,6 +10,9 @@ PHP_ARG_WITH(libxlsxio, system libxlsxio,
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], yes, yes)
 
+PHP_ARG_ENABLE(md5, MD5 support,
+[  --enable-md5             Use third party MD5?], no, no)
+
 if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="
     xlswriter.c \
@@ -37,9 +40,12 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/third_party/minizip/zip.c \
     "
 
+   md5_sources="
+   library/libxlsxwriter/third_party/md5/md5.c \
+   "
+
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c \
-    library/libxlsxwriter/third_party/md5/md5.c \
     library/libxlsxwriter/src/app.c \
     library/libxlsxwriter/src/chart.c \
     library/libxlsxwriter/src/chartsheet.c \
@@ -78,8 +84,13 @@ if test "$PHP_XLSWRITER" != "no"; then
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
-    if test "$PHP_LIBXLSXWRITER" != "no"; then
 
+    if test "$PHP_MD5" != "no"; then
+        AC_MSG_RESULT([use the bundled md5 library])
+        xls_writer_sources="$xls_writer_sources $md5_sources"
+    fi
+
+    if test "$PHP_LIBXLSXWRITER" != "no"; then
         for i in $PHP_LIBXLSXWRITER /usr/local /usr; do
             if test -r $i/include/xlsxwriter.h; then
                 XLSXWRITER_DIR=$i

@@ -11,7 +11,7 @@ PHP_ARG_WITH(openssl_md5, openssl MD5,
 [  --with-openssl-md5=DIR   Use openssl MD5], no, no)
 
 PHP_ARG_WITH(bundled_md5, bundled MD5,
-[  --with-bundled-md5       Use bundled MD5], no, no)
+[  --with-bundled-md5       Use bundled MD5], yes, yes)
 
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], yes, yes)

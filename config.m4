@@ -92,12 +92,6 @@ if test "$PHP_XLSWRITER" != "no"; then
         if test -r ${PHP_OPENSSL_DIR}/include/openssl/md5.h; then
             OPENSSL_DIR=$i
             AC_MSG_RESULT([found in $i])
-            break
-        fi
-
-        if test -z "$OPENSSL_DIR"; then
-            AC_MSG_ERROR([openssl library not found])
-        else
             PHP_ADD_INCLUDE($OPENSSL_DIR/include)
 
             PHP_CHECK_LIBRARY(crypto, MD5_Init,
@@ -108,17 +102,16 @@ if test "$PHP_XLSWRITER" != "no"; then
             ],[
                 -L$OPENSSL_DIR/lib -lcrypto
             ])
-
             AC_DEFINE(USE_OPENSSL_MD5, 1, [ use openssl md5 ])
+        else
+            AC_MSG_ERROR([openssl library not found])
         fi
-
-        PHP_BUNDLED_MD5=no
-    fi
-
-    if test "$PHP_BUNDLED_MD5" != "no"; then
+    else
         AC_MSG_RESULT([use the bundled md5 library])
         xls_writer_sources="$xls_writer_sources $md5_sources"
     fi
+
+
 
     if test "$PHP_LIBXLSXWRITER" != "no"; then
         for i in $PHP_LIBXLSXWRITER /usr/local /usr /usr/local/opt; do

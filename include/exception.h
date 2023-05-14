@@ -13,6 +13,8 @@
 #ifndef VTIFUL_XLS_EXCEPTION_H
 #define VTIFUL_XLS_EXCEPTION_H
 
+#include "common.h"
+
 extern zend_class_entry *vtiful_exception_ce;
 
 VTIFUL_STARTUP_FUNCTION(exception);

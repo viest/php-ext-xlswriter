@@ -13,6 +13,8 @@
 #ifndef PHP_EXT_XLS_WRITER_VALIDATION_H
 #define PHP_EXT_XLS_WRITER_VALIDATION_H
 
+#include "common.h"
+
 extern zend_class_entry *vtiful_validation_ce;
 
 VTIFUL_STARTUP_FUNCTION(validation);

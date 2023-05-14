@@ -622,7 +622,7 @@ workbook_file(xls_resource_write_t *self)
 
 void _php_vtiful_xls_close(zend_resource *rsrc TSRMLS_DC)
 {
-
+    //
 }
 
 /*

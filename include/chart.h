@@ -13,6 +13,8 @@
 #ifndef PHP_EXT_EXCEL_EXPORT_CHART_H
 #define PHP_EXT_EXCEL_EXPORT_CHART_H
 
+#include "common.h"
+
 extern zend_class_entry *vtiful_chart_ce;
 
 VTIFUL_STARTUP_FUNCTION(chart);

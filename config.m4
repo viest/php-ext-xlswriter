@@ -7,6 +7,12 @@ PHP_ARG_WITH(libxlsxwriter, system libxlsxwriter,
 PHP_ARG_WITH(libxlsxio, system libxlsxio,
 [  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
 
+PHP_ARG_WITH(openssl_md5, openssl MD5,
+[  --with-openssl-md5=DIR   Use openssl MD5], no, no)
+
+PHP_ARG_WITH(bundled_md5, bundled MD5,
+[  --with-bundled-md5       Use bundled MD5], no, no)
+
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], yes, yes)
 
@@ -37,9 +43,12 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/third_party/minizip/zip.c \
     "
 
+   md5_sources="
+   library/libxlsxwriter/third_party/md5/md5.c \
+   "
+
     libxlsxwriter_sources="
     library/libxlsxwriter/third_party/tmpfileplus/tmpfileplus.c \
-    library/libxlsxwriter/third_party/md5/md5.c \
     library/libxlsxwriter/src/app.c \
     library/libxlsxwriter/src/chart.c \
     library/libxlsxwriter/src/chartsheet.c \
@@ -78,9 +87,44 @@ if test "$PHP_XLSWRITER" != "no"; then
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
-    if test "$PHP_LIBXLSXWRITER" != "no"; then
 
-        for i in $PHP_LIBXLSXWRITER /usr/local /usr; do
+    if test "$PHP_OPENSSL_MD5" != "no"; then
+        AC_MSG_RESULT([use the openssl md5 library])
+        for i in $PHP_OPENSSL_MD5 /usr/local /usr /usr/local/opt; do
+            if test -r $i/include/openssl/md5.h; then
+                OPENSSL_DIR=$i
+                AC_MSG_RESULT([found in $i])
+                break
+            fi
+        done
+
+        if test -z "$OPENSSL_DIR"; then
+            AC_MSG_ERROR([openssl library not found])
+        else
+            PHP_ADD_INCLUDE($OPENSSL_DIR/include)
+
+            PHP_CHECK_LIBRARY(crypto, MD5_Init,
+            [
+                PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENSSL_DIR/lib, XLSWRITER_SHARED_LIBADD)
+            ],[
+                AC_MSG_ERROR([Wrong openssl MD5_Init not found])
+            ],[
+                -L$OPENSSL_DIR/lib -lcrypto
+            ])
+
+            AC_DEFINE(USE_OPENSSL_MD5, 1, [ use openssl md5 ])
+        fi
+
+        PHP_BUNDLED_MD5=no
+    fi
+
+    if test "$PHP_BUNDLED_MD5" != "no"; then
+        AC_MSG_RESULT([use the bundled md5 library])
+        xls_writer_sources="$xls_writer_sources $md5_sources"
+    fi
+
+    if test "$PHP_LIBXLSXWRITER" != "no"; then
+        for i in $PHP_LIBXLSXWRITER /usr/local /usr /usr/local/opt; do
             if test -r $i/include/xlsxwriter.h; then
                 XLSXWRITER_DIR=$i
                 AC_MSG_RESULT([found in $i])
@@ -116,7 +160,7 @@ if test "$PHP_XLSWRITER" != "no"; then
         PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxwriter/include])
 
         dnl see library/CMakeLists.txt
-        LIBOPT="-DNOCRYPT -DNOUNCRYPT"
+        LIBOPT="$LIBOPT -DNOCRYPT -DNOUNCRYPT"
     fi
 
     if test "$PHP_READER" = "yes"; then

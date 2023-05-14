@@ -13,6 +13,8 @@
 #ifndef PHP_READ_INCLUDE_H
 #define PHP_READ_INCLUDE_H
 
+#include "common.h"
+
 #define READ_SKIP_ROW 0
 #define READ_ROW 0x01
 #define SKIP_EMPTY_VALUE 0x100

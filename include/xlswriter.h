@@ -30,6 +30,7 @@
 #include "xlsxwriter/packager.h"
 #include "xlsxwriter/format.h"
 
+#include "common.h"
 #include "php_xlswriter.h"
 #include "excel.h"
 #include "validation.h"

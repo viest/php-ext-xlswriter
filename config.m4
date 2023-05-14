@@ -7,11 +7,8 @@ PHP_ARG_WITH(libxlsxwriter, system libxlsxwriter,
 PHP_ARG_WITH(libxlsxio, system libxlsxio,
 [  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
 
-PHP_ARG_WITH(openssl_md5, openssl MD5,
-[  --with-openssl-md5=DIR   Use openssl MD5], no, no)
-
-PHP_ARG_WITH(bundled_md5, bundled MD5,
-[  --with-bundled-md5       Use bundled MD5], yes, yes)
+PHP_ARG_WITH(openssl, openssl MD5,
+[  --with-openssl=DIR   Use openssl MD5], no, no)
 
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], yes, yes)
@@ -88,9 +85,9 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
 
-    if test "$PHP_OPENSSL_MD5" != "no"; then
+    if test "$PHP_OPENSSL" != "no"; then
         AC_MSG_RESULT([use the openssl md5 library])
-        for i in $PHP_OPENSSL_MD5 /usr/local /usr /usr/local/opt; do
+        for i in $PHP_OPENSSL /usr/local /usr /usr/local/opt; do
             if test -r $i/include/openssl/md5.h; then
                 OPENSSL_DIR=$i
                 AC_MSG_RESULT([found in $i])
@@ -114,11 +111,7 @@ if test "$PHP_XLSWRITER" != "no"; then
 
             AC_DEFINE(USE_OPENSSL_MD5, 1, [ use openssl md5 ])
         fi
-
-        PHP_BUNDLED_MD5=no
-    fi
-
-    if test "$PHP_BUNDLED_MD5" != "no"; then
+    else
         AC_MSG_RESULT([use the bundled md5 library])
         xls_writer_sources="$xls_writer_sources $md5_sources"
     fi

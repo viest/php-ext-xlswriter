@@ -7,11 +7,10 @@ PHP_ARG_WITH(libxlsxwriter, system libxlsxwriter,
 PHP_ARG_WITH(libxlsxio, system libxlsxio,
 [  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
 
-PHP_ARG_WITH(openssl_md5, openssl MD5,
-[  --with-openssl-md5=DIR   Use openssl MD5], no, no)
-
-PHP_ARG_WITH(bundled_md5, bundled MD5,
-[  --with-bundled-md5       Use bundled MD5], no, no)
+PHP_ARG_WITH([openssl_dir],
+  [dir of openssl],
+  [AS_HELP_STRING([[--with-openssl-dir[=DIR]]],
+    [Include Openssl md5 support])], [no], [no])
 
 PHP_ARG_ENABLE(reader, enable xlsx reader support,
 [  --enable-reader          Enable xlsx reader?], yes, yes)
@@ -88,15 +87,13 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
 
-    if test "$PHP_OPENSSL_MD5" != "no"; then
+    if test "$PHP_OPENSSL_DIR" != "no"; then
         AC_MSG_RESULT([use the openssl md5 library])
-        for i in $PHP_OPENSSL_MD5 /usr/local /usr /usr/local/opt; do
-            if test -r $i/include/openssl/md5.h; then
-                OPENSSL_DIR=$i
-                AC_MSG_RESULT([found in $i])
-                break
-            fi
-        done
+        if test -r ${PHP_OPENSSL_DIR}/include/openssl/md5.h; then
+            OPENSSL_DIR=$i
+            AC_MSG_RESULT([found in $i])
+            break
+        fi
 
         if test -z "$OPENSSL_DIR"; then
             AC_MSG_ERROR([openssl library not found])

@@ -16,6 +16,7 @@ $boldStyle = $format->bold()->toResource();
 $filePath = $fileObject->header(['name', 'age'])
     ->data([['viest', 21]])
     ->setColumn('A:A', 200, $boldStyle)
+    ->setColumn('B:B', 200, null)
     ->output();
 
 var_dump($filePath);

@@ -16,10 +16,12 @@ $boldStyle = $format->bold()->toResource();
 $filePath = $fileObject->header(['name', 'age'])
     ->data([
         ['viest', 21],
-        ['wjx',   21]
+        ['wjx',   21],
+        ['abc',   21]
     ])
     ->setRow('A1', 200, $boldStyle)
     ->setRow('A2:A3', 200, $boldStyle)
+    ->setRow('A4:A4', 200, null)
     ->output();
 
 var_dump($filePath);

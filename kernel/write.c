@@ -296,9 +296,9 @@ void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw
 /*
  * Set column format
  */
-void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format)
+void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options)
 {
-   int error = worksheet_set_column(res->worksheet, COLS(ZSTR_VAL(range)), width, format);
+    int error = worksheet_set_column_opt(res->worksheet, COLS(ZSTR_VAL(range)), width, format, user_options);
 
     // Cells that have been placed cannot be modified using optimization mode
     WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
@@ -310,14 +310,14 @@ void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw
 /*
  * Set row format
  */
-void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format)
+void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options)
 {
     char *rows = ZSTR_VAL(range);
 
     if (strchr(rows, ':')) {
-        worksheet_set_rows(ROWS(rows), height, res, format);
+        worksheet_set_rows(ROWS(rows), height, res, format, user_options);
     } else {
-        int error = worksheet_set_row(res->worksheet, ROW(rows), height, format);
+        int error = worksheet_set_row_opt(res->worksheet, ROW(rows), height, format, user_options);
 
         // Cells that have been placed cannot be modified using optimization mode
         WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
@@ -344,10 +344,10 @@ void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validati
 /*
  * Set rows format
  */
-void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format)
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options)
 {
     while (1) {
-        worksheet_set_row(res->worksheet, end, height, format);
+        worksheet_set_row_opt(res->worksheet, end, height, format, user_options);
         if (end == start)
             break;
         end--;

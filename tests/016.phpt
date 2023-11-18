@@ -9,6 +9,7 @@ $excel = new \Vtiful\Kernel\Excel($config);
 
 $filePath = $excel->fileName("16.xlsx")
     ->mergeCells('A1:C1', 'Merge cells')
+    ->mergeCells('A2:C2', 'Merge cells, explicit null (default) format', null)
     ->output();
 
 var_dump($filePath);

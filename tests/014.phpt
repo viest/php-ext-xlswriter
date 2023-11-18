@@ -10,13 +10,15 @@ $excel = new \Vtiful\Kernel\Excel($config);
 $freeFile = $excel->fileName("14.xlsx")
     ->header(['name', 'money']);
 
-for($index = 1; $index < 10; $index++) {
+for($index = 1; $index <= 10; $index++) {
     $freeFile->insertText($index, 0, 'vikin');
     $freeFile->insertText($index, 1, 10);
 }
 
 $freeFile->insertText(12, 0, "Total");
 $freeFile->insertFormula(12, 1, '=SUM(B2:B11)');
+$freeFile->insertText(13, 0, "Total (default format)");
+$freeFile->insertFormula(13, 1, '=SUM(B2:B11)', null);
 
 $filePath = $freeFile->output();
 

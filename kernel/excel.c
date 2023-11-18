@@ -919,12 +919,10 @@ PHP_METHOD(vtiful_xls, insertFormula)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 3) {
-        formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
-    }
-
     if (argc == 4 && format_handle != NULL) {
         formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
+    } else {
+        formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
     }
 }
 /* }}} */
@@ -1008,12 +1006,10 @@ PHP_METHOD(vtiful_xls, mergeCells)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 2) {
-        merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
-    }
-
     if (argc == 3 && format_handle != NULL) {
         merge_cells(range, data, &obj->write_ptr, zval_get_format(format_handle));
+    } else {
+        merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
     }
 }
 /* }}} */
@@ -1043,9 +1039,7 @@ PHP_METHOD(vtiful_xls, setColumn)
 
     if (argc == 3 && format_handle != NULL) {
         set_column(range, width, &obj->write_ptr, zval_get_format(format_handle));
-    }
-
-    if (argc == 2) {
+    } else {
         set_column(range, width, &obj->write_ptr, NULL);
     }
 }
@@ -1076,9 +1070,7 @@ PHP_METHOD(vtiful_xls, setRow)
 
     if (argc == 3 && format_handle != NULL) {
         set_row(range, height, &obj->write_ptr, zval_get_format(format_handle));
-    }
-
-    if (argc == 2) {
+    } else {
         set_row(range, height, &obj->write_ptr, NULL);
     }
 }

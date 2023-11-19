@@ -105,3 +105,10 @@ unsigned int file_exists(const char *path) {
     return XLSWRITER_TRUE;
 }
 /* }}} */
+
+lxw_row_col_options* default_row_col_options() {
+    size_t obj_size = sizeof(lxw_row_col_options);
+    void *obj = emalloc(obj_size);
+    memset(obj, 0, obj_size);
+    return obj;
+}

@@ -125,6 +125,10 @@ ZEND_BEGIN_ARG_INFO_EX(format_font_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, font)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(format_rotation_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, angle)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(format_to_resource_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
@@ -479,6 +483,26 @@ PHP_METHOD(vtiful_format, borderColorOfTheFourSides)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::rotation(int $angle)
+ */
+PHP_METHOD(vtiful_format, rotation)
+{
+    zend_long angle = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(angle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_rotation(obj->ptr.format, angle);
+    }
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -508,6 +532,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, strikeout,                 format_strikeout_arginfo,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, underline,                 format_underline_arginfo,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, unlocked,                  format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, rotation,                  format_rotation_arginfo,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, toResource,                format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, background,                format_background_arginfo,                     ZEND_ACC_PUBLIC)
         PHP_FE_END

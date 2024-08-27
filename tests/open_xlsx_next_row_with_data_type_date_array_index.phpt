@@ -36,11 +36,7 @@ array(2) {
   [1]=>
   string(4) "Cost"
 }
-array(2) {
-  [0]=>
-  string(0) ""
-  [1]=>
-  string(0) ""
+array(0) {
 }
 array(5) {
   [0]=>

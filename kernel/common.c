@@ -88,6 +88,7 @@ void call_object_method(zval *object, const char *function_name, uint32_t param_
 }
 /* }}} */
 
+/* {{{ */
 lxw_datetime timestamp_to_datetime(zend_long timestamp)
 {
     int yearLocal   = php_idate('Y', timestamp, 0);
@@ -103,3 +104,52 @@ lxw_datetime timestamp_to_datetime(zend_long timestamp)
 
     return datetime;
 }
+/* }}} */
+
+/* {{{ */
+lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *format_handle)
+{
+    if (format == NULL && format_handle == NULL) {
+        return NULL;
+    }
+
+    if (format != NULL && format_handle != NULL) {
+        zend_string *_format_key = strpprintf(0, "%p|%s", format_handle, format->val);
+
+        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(_format_key->val));
+
+        if (exit_format != NULL) {
+            zend_string_release(_format_key);
+
+            return (lxw_format *)exit_format;
+        }
+
+        lxw_format *new_format = workbook_add_format((&obj->write_ptr)->workbook);
+        format_copy(new_format, format_handle);
+        format_set_num_format(new_format, ZSTR_VAL(format));
+
+        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(_format_key->val), new_format);
+
+        zend_string_release(_format_key);
+
+        return new_format;
+    }
+
+    if (format != NULL) {
+        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(format->val));
+
+        if (exit_format != NULL) {
+            return (lxw_format *)exit_format;
+        }
+
+        lxw_format *new_format = workbook_add_format((&obj->write_ptr)->workbook);
+        format_set_num_format(new_format, ZSTR_VAL(format));
+
+        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(format->val), new_format);
+
+        return new_format;
+    }
+
+    return format_handle;
+}
+/* }}} */

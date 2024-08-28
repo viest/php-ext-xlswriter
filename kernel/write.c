@@ -36,10 +36,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
 
     if (value_type == IS_LONG) {
         if (format != NULL && format_handle == NULL) {
-            value_format = workbook_add_format(res->workbook);
-
-            format_set_num_format(value_format, ZSTR_VAL(format));
-            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), value_format));
+            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), format_handle));
             return;
         }
 
@@ -49,12 +46,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
         }
 
         if(format != NULL && format_handle != NULL) {
-            value_format = workbook_add_format(res->workbook);
-
-            format_copy(value_format, format_handle);
-            format_set_num_format(value_format, ZSTR_VAL(format));
-
-            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), value_format));
+            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, (double)zval_get_long(value), format_handle));
             return;
         }
 
@@ -63,10 +55,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
 
     if (value_type == IS_DOUBLE) {
         if (format != NULL && format_handle == NULL) {
-            value_format = workbook_add_format(res->workbook);
-            format_set_num_format(value_format, ZSTR_VAL(format));
-
-            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), value_format));
+            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), format_handle));
             return;
         }
 
@@ -76,12 +65,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
         }
 
         if(format != NULL && format_handle != NULL) {
-            value_format = workbook_add_format(res->workbook);
-
-            format_copy(value_format, format_handle);
-            format_set_num_format(value_format, ZSTR_VAL(format));
-
-            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), value_format));
+            WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, lxw_row, lxw_col, zval_get_double(value), format_handle));
             return;
         }
 
@@ -255,14 +239,7 @@ void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_
  */
 void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxw_format *format_handle)
 {
-    lxw_format *value_format = workbook_add_format(res->workbook);
-
-    if (format_handle != NULL) {
-        format_copy(value_format, format_handle);
-    }
-
-    format_set_num_format(value_format, ZSTR_VAL(format));
-    worksheet_write_datetime(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, datetime, value_format);
+    worksheet_write_datetime(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, datetime, format_handle);
 }
 
 /*

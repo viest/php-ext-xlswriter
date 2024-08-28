@@ -35,11 +35,16 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 
     intern->zo.handlers = &vtiful_xls_handlers;
 
-    intern->read_ptr.file_t   = NULL;
-    intern->read_ptr.sheet_t  = NULL;
+    HashTable *formats_cache_ht = emalloc(sizeof(HashTable));
+    zend_hash_init(formats_cache_ht, 0, NULL, ZVAL_PTR_DTOR, 0);
+
+    intern->read_ptr.file_t  = NULL;
+    intern->read_ptr.sheet_t = NULL;
 
     intern->format_ptr.format  = NULL;
     intern->write_ptr.workbook = NULL;
+
+    intern->formats_cache_ptr.maps = formats_cache_ht;
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;
 
@@ -612,7 +617,7 @@ PHP_METHOD(vtiful_xls, header)
     }
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL_P(header), header_l_key, header_value)
-         type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, format_handle);
+         type_writer(header_value, 0, header_l_key, &obj->write_ptr, NULL, object_format(obj, NULL, format_handle));
     ZEND_HASH_FOREACH_END();
 
     // When inserting the header for the first time, the row number is incremented by one,
@@ -657,7 +662,7 @@ PHP_METHOD(vtiful_xls, data)
             if (key == NULL) {
                 column_index = index;
             }
-            type_writer(data, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, obj->format_ptr.format);
+            type_writer(data, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, object_format(obj, NULL, obj->format_ptr.format));
 
             // next number index
             ++column_index;
@@ -724,9 +729,9 @@ PHP_METHOD(vtiful_xls, insertText)
     SHEET_LINE_SET(obj, row);
 
     if (format_handle != NULL) {
-        type_writer(data, row, column, &obj->write_ptr, format, zval_get_format(format_handle));
+        type_writer(data, row, column, &obj->write_ptr, format, object_format(obj, format, zval_get_format(format_handle)));
     } else {
-        type_writer(data, row, column, &obj->write_ptr, format, obj->format_ptr.format);
+        type_writer(data, row, column, &obj->write_ptr, format, object_format(obj, format, obj->format_ptr.format));
     }
 }
 /* }}} */
@@ -799,9 +804,9 @@ PHP_METHOD(vtiful_xls, insertDate)
     lxw_datetime datetime = timestamp_to_datetime(data->value.lval);
 
     if (format_handle != NULL) {
-        datetime_writer(&datetime, row, column, format, &obj->write_ptr, zval_get_format(format_handle));
+        datetime_writer(&datetime, row, column, format, &obj->write_ptr, object_format(obj, format, zval_get_format(format_handle)));
     } else {
-        datetime_writer(&datetime, row, column, format, &obj->write_ptr, obj->format_ptr.format);
+        datetime_writer(&datetime, row, column, format, &obj->write_ptr, object_format(obj, format, obj->format_ptr.format));
     }
 
     // Release default format
@@ -1007,9 +1012,9 @@ PHP_METHOD(vtiful_xls, mergeCells)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     if (argc == 3 && format_handle != NULL) {
-        merge_cells(range, data, &obj->write_ptr, zval_get_format(format_handle));
+        merge_cells(range, data, &obj->write_ptr, object_format(obj, NULL, zval_get_format(format_handle)));
     } else {
-        merge_cells(range, data, &obj->write_ptr, obj->format_ptr.format);
+        merge_cells(range, data, &obj->write_ptr, object_format(obj, NULL, obj->format_ptr.format));
     }
 }
 /* }}} */

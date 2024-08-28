@@ -89,6 +89,10 @@ typedef struct {
 } xls_resource_format_t;
 
 typedef struct {
+    HashTable *maps;
+} xls_resource_formats_cache_t;
+
+typedef struct {
     lxw_data_validation *validation;
 } xls_resource_validation_t;
 
@@ -102,11 +106,12 @@ typedef struct {
 } xls_resource_rich_string_t;
 
 typedef struct _vtiful_xls_object {
-    xls_resource_read_t   read_ptr;
-    xls_resource_write_t  write_ptr;
-    zend_long             write_line;
-    xls_resource_format_t format_ptr;
-    zend_object           zo;
+    xls_resource_read_t          read_ptr;
+    xls_resource_write_t         write_ptr;
+    zend_long                    write_line;
+    xls_resource_format_t        format_ptr;
+    xls_resource_formats_cache_t formats_cache_ptr;
+    zend_object                  zo;
 } xls_object;
 
 typedef struct _vtiful_format_object {
@@ -294,6 +299,10 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
         intern->format_ptr.format = NULL;
     }
 
+    if (intern->formats_cache_ptr.maps != NULL) {
+        zend_hash_destroy(intern->formats_cache_ptr.maps);
+    }
+
 #ifdef ENABLE_READER
     if (intern->read_ptr.sheet_t != NULL) {
         xlsxioread_sheet_close(intern->read_ptr.sheet_t);
@@ -360,5 +369,7 @@ lxw_error workbook_file(xls_resource_write_t *self);
 lxw_datetime timestamp_to_datetime(zend_long timestamp);
 zend_string* char_join_to_zend_str(const char *left, const char *right);
 zend_string* str_pick_up(zend_string *left, const char *right, size_t len);
+
+lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *format_handle);
 
 #endif

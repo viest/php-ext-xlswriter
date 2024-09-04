@@ -773,7 +773,7 @@ PHP_METHOD(vtiful_xls, insertDate)
 {
     zval *data = NULL, *format_handle = NULL;
     zend_long row = 0, column = 0;
-    zend_string *format = NULL;
+    zend_string *format = NULL, *default_format = NULL;
 
     ZEND_PARSE_PARAMETERS_START(3, 5)
             Z_PARAM_LONG(row)
@@ -798,7 +798,8 @@ PHP_METHOD(vtiful_xls, insertDate)
 
     // Default datetime format
     if (format == NULL || (format != NULL && ZSTR_LEN(format) == 0)) {
-        format = zend_string_init(ZEND_STRL("yyyy-mm-dd hh:mm:ss"), 0);
+        default_format = zend_string_init(ZEND_STRL("yyyy-mm-dd hh:mm:ss"), 0);
+        format = default_format;
     }
 
     lxw_datetime datetime = timestamp_to_datetime(data->value.lval);
@@ -810,8 +811,8 @@ PHP_METHOD(vtiful_xls, insertDate)
     }
 
     // Release default format
-    if (ZEND_NUM_ARGS() == 3) {
-        zend_string_release(format);
+    if (default_format != NULL) {
+        zend_string_release(default_format);
     }
 }
 /* }}} */

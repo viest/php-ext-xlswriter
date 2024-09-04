@@ -3,7 +3,6 @@
 ARG_WITH("xlswriter", "xlswriter support", "no");
 
 if (PHP_XLSWRITER != "no") {
-
     if (
         CHECK_HEADER_ADD_INCLUDE("minizip/zip.h", "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\third_party;" + PHP_EXTRA_INCLUDES) &&
         CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h",  "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\include;" + PHP_EXTRA_INCLUDES) &&

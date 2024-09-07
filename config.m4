@@ -1,17 +1,35 @@
-PHP_ARG_WITH(xlswriter, xlswriter support,
-[  --with-xlswriter         Include xlswriter support], yes)
+PHP_ARG_WITH([xlswriter],
+    [xlswriter support],
+    [AS_HELP_STRING([--without-xlswriter],
+        [Disable xlswriter support])],
+    [yes])
 
-PHP_ARG_WITH(libxlsxwriter, system libxlsxwriter,
-[  --with-libxlsxwriter=DIR Use system libxlsxwriter], no, no)
+PHP_ARG_WITH([libxlsxwriter],
+    [system libxlsxwriter],
+    [AS_HELP_STRING([[--with-libxlsxwriter[=DIR]]],
+        [Use system libxlsxwriter])],
+    [no],
+    [no])
 
-PHP_ARG_WITH(libxlsxio, system libxlsxio,
-[  --with-libxlsxio=DIR     Use system libxlsxio], no, no)
+PHP_ARG_WITH([libxlsxio],
+    [system libxlsxio],
+    [AS_HELP_STRING([[--with-libxlsxio[=DIR]]],
+        [Use system libxlsxio])],
+    [no],
+    [no])
 
-PHP_ARG_WITH(openssl, openssl MD5,
-[  --with-openssl=DIR   Use openssl MD5], no, no)
+PHP_ARG_WITH([openssl],
+    [openssl MD5],
+    [AS_HELP_STRING([[--with-openssl[=DIR]]],
+        [Use openssl MD5])],
+    [no],
+    [no])
 
-PHP_ARG_ENABLE(reader, enable xlsx reader support,
-[  --enable-reader          Enable xlsx reader?], yes, yes)
+PHP_ARG_ENABLE([reader],
+    [whether to enable the xlsx reader support],
+    [AS_HELP_STRING([--disable-reader],
+        [Disable xlsx reader])],
+    [yes])
 
 if test "$PHP_XLSWRITER" != "no"; then
     xls_writer_sources="

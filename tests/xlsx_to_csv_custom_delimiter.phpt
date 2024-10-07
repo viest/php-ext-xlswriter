@@ -28,7 +28,7 @@ if (($csvHandler = fopen('./tests/file.csv', 'r')) === FALSE) {
     die('csv file open failure');
 }
 
-while (($data = fgetcsv($csvHandler, 1000, ';')) !== FALSE) {
+while (($data = fgetcsv($csvHandler, 1000, ';', '"', '\\')) !== FALSE) {
     var_dump($data);
 }
 ?>

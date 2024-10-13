@@ -89,6 +89,10 @@ typedef struct {
 } xls_resource_format_t;
 
 typedef struct {
+    HashTable *maps;
+} xls_resource_formats_cache_t;
+
+typedef struct {
     lxw_data_validation *validation;
 } xls_resource_validation_t;
 
@@ -102,11 +106,13 @@ typedef struct {
 } xls_resource_rich_string_t;
 
 typedef struct _vtiful_xls_object {
-    xls_resource_read_t   read_ptr;
-    xls_resource_write_t  write_ptr;
-    zend_long             write_line;
-    xls_resource_format_t format_ptr;
-    zend_object           zo;
+    xls_resource_read_t          read_ptr;
+    xls_resource_write_t         write_ptr;
+    zend_long                    write_line;
+    xls_resource_format_t        format_ptr;
+    xls_resource_formats_cache_t formats_cache_ptr;
+    lxw_row_col_options          *row_options;
+    zend_object                  zo;
 } xls_object;
 
 typedef struct _vtiful_format_object {
@@ -294,6 +300,15 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
         intern->format_ptr.format = NULL;
     }
 
+    if (intern->formats_cache_ptr.maps != NULL) {
+        zend_hash_destroy(intern->formats_cache_ptr.maps);
+    }
+
+    if (intern->row_options != NULL) {
+        efree(intern->row_options);
+        intern->row_options = NULL;
+    }
+
 #ifdef ENABLE_READER
     if (intern->read_ptr.sheet_t != NULL) {
         xlsxioread_sheet_close(intern->read_ptr.sheet_t);
@@ -340,14 +355,14 @@ void printed_direction(xls_resource_write_t *res, unsigned int direction);
 void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path);
 void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column);
 void margins(xls_resource_write_t *res, double left, double right, double top, double bottom);
-void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format);
+void set_row(zend_string *range, double height, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options);
 void validation(xls_resource_write_t *res, zend_string *range, lxw_data_validation *validation);
-void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format);
+void set_column(zend_string *range, double width, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options);
 void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxw_format *format);
 void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_resource_write_t *res);
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val);
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
-void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format);
+void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
@@ -360,5 +375,7 @@ lxw_error workbook_file(xls_resource_write_t *self);
 lxw_datetime timestamp_to_datetime(zend_long timestamp);
 zend_string* char_join_to_zend_str(const char *left, const char *right);
 zend_string* str_pick_up(zend_string *left, const char *right, size_t len);
+
+lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *format_handle);
 
 #endif

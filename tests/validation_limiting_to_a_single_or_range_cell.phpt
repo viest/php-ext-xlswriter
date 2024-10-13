@@ -18,6 +18,10 @@ $filePath = $excel->fileName('tutorial.xlsx')
 
 var_dump($validation, $filePath);
 ?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . '/tutorial.xlsx');
+?>
 --EXPECT--
 object(Vtiful\Kernel\Validation)#1 (0) {
 }

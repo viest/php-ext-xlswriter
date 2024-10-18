@@ -497,7 +497,7 @@ PHP_METHOD(vtiful_format, rotation)
 
     format_object *obj = Z_FORMAT_P(getThis());
 
-    if (obj->ptr.format) {
+    if (obj->ptr.format && ((angle >= -90 && angle <= 90) || angle == 270)) {
         format_set_rotation(obj->ptr.format, angle);
     }
 }

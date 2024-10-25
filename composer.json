@@ -1,0 +1,18 @@
+{
+  "name": "viest/xlswriter",
+  "type": "php-ext",
+  "license": "BSD-2-Clause",
+  "description": "xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file.",
+  "require": {
+    "php": ">= 7.0"
+  },
+  "php-ext": {
+    "extension-name": "xlswriter",
+    "configure-options": [
+      {
+        "name": "enable-reader",
+        "description": "Enable reader support"
+      }
+    ]
+  }
+}

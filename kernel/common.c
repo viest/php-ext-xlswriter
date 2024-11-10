@@ -114,6 +114,10 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
     }
 
     if (format != NULL && format_handle != NULL) {
+        if (format->len <= 0) {
+            return format_handle;
+        }
+
         zend_string *_format_key = strpprintf(0, "%p|%s", format_handle, format->val);
 
         void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(_format_key->val));
@@ -136,6 +140,10 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
     }
 
     if (format != NULL) {
+        if (format->len <= 0) {
+            return NULL;
+        }
+
         void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(format->val));
 
         if (exit_format != NULL) {

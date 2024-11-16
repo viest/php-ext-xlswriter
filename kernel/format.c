@@ -129,6 +129,10 @@ ZEND_BEGIN_ARG_INFO_EX(format_rotation_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, angle)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(format_indent_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, level)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(format_to_resource_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
@@ -503,6 +507,26 @@ PHP_METHOD(vtiful_format, rotation)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Format::indent()
+ */
+PHP_METHOD(vtiful_format, indent)
+{
+    zend_long level = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(level)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format && level >= 0) {
+        format_set_indent(obj->ptr.format, level);
+    }
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Format::toResource()
  */
 PHP_METHOD(vtiful_format, toResource)
@@ -533,6 +557,7 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, underline,                 format_underline_arginfo,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, unlocked,                  format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, rotation,                  format_rotation_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, indent,                    format_indent_arginfo,                         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, toResource,                format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, background,                format_background_arginfo,                     ZEND_ACC_PUBLIC)
         PHP_FE_END

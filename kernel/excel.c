@@ -1230,10 +1230,10 @@ PHP_METHOD(vtiful_xls, defaultRowOptions)
  */
 PHP_METHOD(vtiful_xls, outlineSettings)
 {
-    bool visible = true;
-    bool below = true;
-    bool right = true;
-    bool auto_style = false;
+    zend_bool visible = 1;
+    zend_bool below = 1;
+    zend_bool right = 1;
+    zend_bool auto_style = 0;
 
     ZEND_PARSE_PARAMETERS_START(0, 4)
             Z_PARAM_OPTIONAL

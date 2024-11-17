@@ -234,6 +234,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_default_row_options_arginfo, 0, 0, 0)
                 ZEND_ARG_INFO(0, hidden)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_outline_settings_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, visible)
+                ZEND_ARG_INFO(0, below)
+                ZEND_ARG_INFO(0, right)
+                ZEND_ARG_INFO(0, auto_style)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_open_file_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, zs_file_name)
 ZEND_END_ARG_INFO()
@@ -1219,6 +1226,31 @@ PHP_METHOD(vtiful_xls, defaultRowOptions)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::outlineSettings(bool $visible = true, bool $below = true, bool $right = true, bool $autoStyle = false)
+ */
+PHP_METHOD(vtiful_xls, outlineSettings)
+{
+    zend_bool visible = 1;
+    zend_bool below = 1;
+    zend_bool right = 1;
+    zend_bool auto_style = 0;
+
+    ZEND_PARSE_PARAMETERS_START(0, 4)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_BOOL_OR_NULL(visible, _dummy)
+            Z_PARAM_BOOL_OR_NULL(below, _dummy)
+            Z_PARAM_BOOL_OR_NULL(right, _dummy)
+            Z_PARAM_BOOL_OR_NULL(auto_style, _dummy)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    outline_settings(&obj->write_ptr, visible, below, right, auto_style);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::freezePanes(int $row, int $column)
  */
 PHP_METHOD(vtiful_xls, freezePanes)
@@ -1805,6 +1837,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setCurrentLine,    xls_set_curr_line_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultFormat,     xls_set_global_format,               ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultRowOptions, xls_set_default_row_options_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, outlineSettings,   xls_set_outline_settings_arginfo,    ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, freezePanes,    xls_freeze_panes_arginfo,   ZEND_ACC_PUBLIC)
 

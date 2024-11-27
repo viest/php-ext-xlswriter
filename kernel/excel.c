@@ -79,6 +79,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_set_tab_color_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, color)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_const_memory_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
                 ZEND_ARG_INFO(0, sheet_name)
@@ -1771,6 +1775,26 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::setTabColor(int $color)
+ */
+PHP_METHOD(vtiful_xls, setTabColor)
+{
+    zend_long color;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(color)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    worksheet_set_tab_color(obj->write_ptr.worksheet, (lxw_color_t)color);
+}
+/* }}} */
+
 #endif
 
 /** {{{ xls_methods
@@ -1779,6 +1803,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,       xls_construct_arginfo,               ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, close,             xls_close_arginfo,                   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, fileName,          xls_file_name_arginfo,               ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setTabColor,       xls_set_tab_color_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,          xls_file_add_sheet,                  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, existSheet,        xls_file_exist_sheet,                ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, checkoutSheet,     xls_file_checkout_sheet,             ZEND_ACC_PUBLIC)
@@ -1920,6 +1945,23 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_STRING,   READ_TYPE_STRING);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DATETIME, READ_TYPE_DATETIME);
+
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_BLACK",   LXW_COLOR_BLACK);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_BLUE",    LXW_COLOR_BLUE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_BROWN",   LXW_COLOR_BROWN);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_CYAN",    LXW_COLOR_CYAN);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_GRAY",    LXW_COLOR_GRAY);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_GREEN",   LXW_COLOR_GREEN);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_LIME",    LXW_COLOR_LIME);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_MAGENTA", LXW_COLOR_MAGENTA);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_NAVY",    LXW_COLOR_NAVY);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_ORANGE",  LXW_COLOR_ORANGE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_PINK",    LXW_COLOR_PINK);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_PURPLE",  LXW_COLOR_PURPLE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_RED",     LXW_COLOR_RED);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_SILVER",  LXW_COLOR_SILVER);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_WHITE",   LXW_COLOR_WHITE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COLOR_YELLOW",  LXW_COLOR_YELLOW);
 
     return SUCCESS;
 }

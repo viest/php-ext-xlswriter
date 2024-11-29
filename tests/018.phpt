@@ -9,9 +9,9 @@ $excel = new \Vtiful\Kernel\Excel($config);
 
 $fileObject = $excel->fileName("18.xlsx");
 
-$fileObject->header(['name', 'age'])
-    ->data([['viest', 21]])
-    ->data([['wjx', 21]]);
+$fileObject->header(['name', 'age', 'active'])
+    ->data([['viest', 21, true]])
+    ->data([['wjx', 21, false]]);
 
 $filePath = $fileObject->output();
 

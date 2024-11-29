@@ -23,4 +23,4 @@ var_dump($filePath);
 @unlink(__DIR__ . '/add_defined_name_test.xlsx');
 ?>
 --EXPECT--
-string(36) "./tests/add_defined_name_test.xlsx"
+string(34) "./tests/add_defined_name_test.xlsx"

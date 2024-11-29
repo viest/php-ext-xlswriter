@@ -23,4 +23,4 @@ var_dump($filePath);
 @unlink(__DIR__ . '/set_tab_color_test.xlsx');
 ?>
 --EXPECT--
-string(34) "./tests/set_tab_color_test.xlsx"
+string(31) "./tests/set_tab_color_test.xlsx"

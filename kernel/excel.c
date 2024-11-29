@@ -79,6 +79,11 @@ ZEND_BEGIN_ARG_INFO_EX(xls_file_name_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_add_defined_name_arginfo, 0, 0, 2)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_INFO(0, formula)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_const_memory_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, file_name)
                 ZEND_ARG_INFO(0, sheet_name)
@@ -1771,6 +1776,33 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::addDefinedName(string $name, string $formula)
+ */
+PHP_METHOD(vtiful_xls, addDefinedName)
+{
+    zend_string *name = NULL, *formula = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_STR(name)
+        Z_PARAM_STR(formula)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    lxw_error error = workbook_define_name(
+        obj->write_ptr.workbook,
+        ZSTR_VAL(name),
+        ZSTR_VAL(formula)
+    );
+
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+/* }}} */
+
 #endif
 
 /** {{{ xls_methods
@@ -1779,6 +1811,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, __construct,       xls_construct_arginfo,               ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, close,             xls_close_arginfo,                   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, fileName,          xls_file_name_arginfo,               ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, addDefinedName,    xls_add_defined_name_arginfo,        ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, addSheet,          xls_file_add_sheet,                  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, existSheet,        xls_file_exist_sheet,                ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, checkoutSheet,     xls_file_checkout_sheet,             ZEND_ACC_PUBLIC)

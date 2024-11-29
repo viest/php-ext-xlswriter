@@ -72,6 +72,25 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
         WORKSHEET_WRITER_EXCEPTION(worksheet_write_number(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, zval_get_double(value), NULL));
         return;
     }
+
+   if (value_type == IS_TRUE || value_type == IS_FALSE) {
+       if (format != NULL && format_handle == NULL) {
+           WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, lxw_row, lxw_col, zend_is_true(value), format_handle));
+           return;
+       }
+
+       if (format == NULL && format_handle != NULL) {
+           WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, lxw_row, lxw_col, zend_is_true(value), format_handle));
+           return;
+       }
+
+       if(format != NULL && format_handle != NULL) {
+           WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, lxw_row, lxw_col, zend_is_true(value), format_handle));
+           return;
+       }
+
+       WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, lxw_row, lxw_col, zend_is_true(value), NULL));
+   }
 }
 
 /*

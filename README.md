@@ -100,14 +100,6 @@ Includes extensive and detailed instructions that make it easy to get started wi
 composer require viest/php-ext-xlswriter-ide-helper:dev-master
 ```
 
-## Exchange group
-
-<img alt="php-ext-xlswriter" width="160" src="resource/qq.jpg"/>
-
-## Financial donation
-
-<img alt="php-ext-xlswriter" height="220" src="resource/pay.jpg"/>
-
 ## Contributors
 
 ### Code Contributors

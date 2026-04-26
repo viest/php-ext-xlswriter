@@ -290,6 +290,16 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_get_defined_names_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_get_data_validations_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_auto_filter_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_formula_ast_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, formula)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_get_sheet_data_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -2522,6 +2532,142 @@ PHP_METHOD(vtiful_xls, getDefaultColumnWidth)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::getFormulaAst(string $formula): array
+ *  Static. Tokenises and parses the given Excel formula into a recursive
+ *  tree of {kind, ...} nodes. NO evaluation — by design.
+ *  Leading '=' is optional.
+ */
+PHP_METHOD(vtiful_xls, getFormulaAst)
+{
+    zend_string *src;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(src)
+    ZEND_PARSE_PARAMETERS_END();
+
+    formula_ast_parse(ZSTR_VAL(src), ZSTR_LEN(src), return_value);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getDataValidations()
+ *  Returns [{type, operator, formula1, formula2, allow_blank, show_drop_down,
+ *  show_input_message, show_error_message, error_style, prompt, prompt_title,
+ *  error, error_title, sqref}, ...].
+ */
+PHP_METHOD(vtiful_xls, getDataValidations)
+{
+    xls_object *obj = Z_XLS_P(getThis());
+    size_t i, n;
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    n = lxr_worksheet_data_validation_count(obj->read_ptr.sheet_t);
+    for (i = 0; i < n; i++) {
+        lxr_data_validation d;
+        zval entry;
+        if (!lxr_worksheet_data_validation_get(obj->read_ptr.sheet_t, i, &d)) continue;
+        array_init(&entry);
+#define ADD_NULLABLE_STR(key, val) \
+    do { if (val) add_assoc_string(&entry, key, (char *)val); \
+         else     add_assoc_null  (&entry, key); } while (0)
+        ADD_NULLABLE_STR("type",         d.type);
+        ADD_NULLABLE_STR("operator",     d.operator_);
+        ADD_NULLABLE_STR("error_style",  d.error_style);
+        ADD_NULLABLE_STR("formula1",     d.formula1);
+        ADD_NULLABLE_STR("formula2",     d.formula2);
+        ADD_NULLABLE_STR("prompt",       d.prompt);
+        ADD_NULLABLE_STR("prompt_title", d.prompt_title);
+        ADD_NULLABLE_STR("error",        d.error);
+        ADD_NULLABLE_STR("error_title",  d.error_title);
+        ADD_NULLABLE_STR("sqref",        d.sqref);
+#undef ADD_NULLABLE_STR
+        add_assoc_bool(&entry, "allow_blank",         d.allow_blank);
+        add_assoc_bool(&entry, "show_drop_down",      d.show_drop_down);
+        add_assoc_bool(&entry, "show_input_message",  d.show_input_message);
+        add_assoc_bool(&entry, "show_error_message",  d.show_error_message);
+        add_next_index_zval(return_value, &entry);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getAutoFilter()
+ *  Returns null when no autoFilter is set; otherwise an associative array:
+ *  {range, columns: [{col_id, type, values?, custom_and?, custom?, top?,
+ *  percent?, top_value?}, ...]}.
+ */
+PHP_METHOD(vtiful_xls, getAutoFilter)
+{
+    xls_object *obj = Z_XLS_P(getThis());
+    lxr_autofilter af;
+    size_t i;
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+    if (!lxr_worksheet_autofilter(obj->read_ptr.sheet_t, &af)) {
+        RETURN_NULL();
+    }
+    array_init(return_value);
+    if (af.range) add_assoc_string(return_value, "range", (char *)af.range);
+    else          add_assoc_null  (return_value, "range");
+
+    zval columns;
+    array_init(&columns);
+    for (i = 0; i < af.columns_count; i++) {
+        const lxr_filter_column *fc = &af.columns[i];
+        zval col;
+        const char *kind_name = "none";
+        switch (fc->kind) {
+            case LXR_FILTER_LIST:    kind_name = "list";    break;
+            case LXR_FILTER_CUSTOM:  kind_name = "custom";  break;
+            case LXR_FILTER_TOP10:   kind_name = "top10";   break;
+            case LXR_FILTER_DYNAMIC: kind_name = "dynamic"; break;
+            default: break;
+        }
+        array_init(&col);
+        add_assoc_long  (&col, "col_id", (zend_long)fc->col_id);
+        add_assoc_string(&col, "type",   (char *)kind_name);
+
+        if (fc->kind == LXR_FILTER_LIST) {
+            zval values;
+            array_init(&values);
+            if (fc->values) {
+                size_t j = 0;
+                while (fc->values[j]) {
+                    add_next_index_string(&values, (char *)fc->values[j]);
+                    j++;
+                }
+            }
+            add_assoc_zval(&col, "values", &values);
+        } else if (fc->kind == LXR_FILTER_CUSTOM) {
+            zval cf1, cf2;
+            array_init(&cf1);
+            if (fc->custom_op_1)  add_assoc_string(&cf1, "operator", (char *)fc->custom_op_1);
+            if (fc->custom_val_1) add_assoc_string(&cf1, "value",    (char *)fc->custom_val_1);
+            add_assoc_bool  (&col, "and",        fc->custom_and);
+            add_assoc_zval  (&col, "criterion1", &cf1);
+            if (fc->custom_op_2 || fc->custom_val_2) {
+                array_init(&cf2);
+                if (fc->custom_op_2)  add_assoc_string(&cf2, "operator", (char *)fc->custom_op_2);
+                if (fc->custom_val_2) add_assoc_string(&cf2, "value",    (char *)fc->custom_val_2);
+                add_assoc_zval(&col, "criterion2", &cf2);
+            } else {
+                add_assoc_null(&col, "criterion2");
+            }
+        } else if (fc->kind == LXR_FILTER_TOP10) {
+            add_assoc_bool  (&col, "top",     fc->top);
+            add_assoc_bool  (&col, "percent", fc->percent);
+            add_assoc_double(&col, "value",   fc->top_value);
+        }
+        add_next_index_zval(&columns, &col);
+    }
+    add_assoc_zval(return_value, "columns", &columns);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::getDefinedNames()
  *  Returns [{name, formula, scope, hidden}, ...]. scope is sheet name when
  *  bound to a single sheet, null for workbook-scope.
@@ -2849,8 +2995,19 @@ static void cell_value_to_zval(zval *out, const lxr_cell *c) {
     }
 }
 
+static const char *formula_kind_name(lxr_formula_kind k) {
+    switch (k) {
+    case LXR_FORMULA_ARRAY:     return "array";
+    case LXR_FORMULA_DATATABLE: return "dataTable";
+    case LXR_FORMULA_SHARED:    return "shared";
+    case LXR_FORMULA_NORMAL:
+    default:                    return "normal";
+    }
+}
+
 static void build_rich_cell(zval *out, const lxr_cell *c, const lxr_worksheet *ws) {
     zval value;
+    int verbose = ws ? ((lxr_worksheet_flags(ws) & LXR_FORMULA_VERBOSE) != 0) : 0;
     array_init(out);
 
     cell_value_to_zval(&value, c);
@@ -2858,10 +3015,44 @@ static void build_rich_cell(zval *out, const lxr_cell *c, const lxr_worksheet *w
     add_assoc_string(out, "type", cell_type_name(c->type));
     add_assoc_long(out, "style_id", (zend_long)c->style_id);
 
-    if (c->type == LXR_CELL_FORMULA && c->value.formula.formula.ptr) {
-        add_assoc_stringl(out, "formula",
-                          c->value.formula.formula.ptr,
-                          c->value.formula.formula.len);
+    if (c->type == LXR_CELL_FORMULA) {
+        if (!verbose) {
+            /* Default shape: plain string. May be empty for shared-formula
+             * follower cells (the writer only emits the master expression). */
+            if (c->value.formula.formula.ptr) {
+                add_assoc_stringl(out, "formula",
+                                  c->value.formula.formula.ptr,
+                                  c->value.formula.formula.len);
+            }
+        } else {
+            /* Verbose shape: associative array under the "formula" key. */
+            zval f, cached;
+            array_init(&f);
+            add_assoc_string(&f, "type", (char *)formula_kind_name(c->value.formula.kind));
+            if (c->value.formula.formula.ptr) {
+                add_assoc_stringl(&f, "text",
+                                  c->value.formula.formula.ptr,
+                                  c->value.formula.formula.len);
+            } else {
+                add_assoc_string(&f, "text", "");
+            }
+            if (c->value.formula.ref.ptr) {
+                add_assoc_stringl(&f, "ref",
+                                  c->value.formula.ref.ptr,
+                                  c->value.formula.ref.len);
+            } else {
+                add_assoc_null(&f, "ref");
+            }
+            if (c->value.formula.si >= 0) {
+                add_assoc_long(&f, "si", (zend_long)c->value.formula.si);
+            } else {
+                add_assoc_null(&f, "si");
+            }
+            add_assoc_bool(&f, "is_dynamic", c->value.formula.is_dynamic);
+            cell_value_to_zval(&cached, c);
+            add_assoc_zval(&f, "cached_value", &cached);
+            add_assoc_zval(out, "formula", &f);
+        }
     }
 
     /* Surface a hyperlink URL (or internal anchor) when the cell carries one.
@@ -3229,6 +3420,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getDefaultRowHeight,   xls_get_default_row_height_arginfo,  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getDefaultColumnWidth, xls_get_default_column_width_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getDefinedNames,       xls_get_defined_names_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getDataValidations,    xls_get_data_validations_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getAutoFilter,         xls_get_auto_filter_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getFormulaAst,         xls_get_formula_ast_arginfo,         ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setGlobalType,    xls_set_global_type_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setSkipRows,      xls_set_skip_arginfo,           ZEND_ACC_PUBLIC)
@@ -3268,6 +3462,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, LXR_SKIP_EMPTY_CELLS);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_VALUE, SKIP_EMPTY_VALUE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_MERGED_FOLLOW, LXR_SKIP_MERGED_FOLLOW);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_FORMULA_VERBOSE,    LXR_FORMULA_VERBOSE);
 #endif
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_HIDE_ALL",    LXW_HIDE_ALL_GRIDLINES)

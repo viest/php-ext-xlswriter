@@ -42,6 +42,14 @@ typedef enum {
     LXR_CELL_INLINE_STRING
 } lxr_cell_type;
 
+/* Formula sub-types per ECMA-376 §18.18.31 (ST_CellFormulaType). */
+typedef enum {
+    LXR_FORMULA_NORMAL    = 0,
+    LXR_FORMULA_ARRAY     = 1,
+    LXR_FORMULA_DATATABLE = 2,
+    LXR_FORMULA_SHARED    = 3
+} lxr_formula_kind;
+
 typedef struct {
     size_t        row;
     size_t        col;
@@ -54,8 +62,14 @@ typedef struct {
         lxr_str string;
         int     boolean;
         struct {
-            lxr_str formula;
-            lxr_str cached;
+            lxr_str          formula;     /* expression text (may be empty
+                                             on a shared-formula follower) */
+            lxr_str          cached;      /* cached <v> value */
+            lxr_formula_kind kind;
+            lxr_str          ref;         /* range for array/dataTable, e.g.
+                                             "A1:B3"; empty otherwise */
+            int              si;          /* shared index, or -1 */
+            int              is_dynamic;  /* aca="1" → 1 */
         }       formula;
         char    error_code[8];
     } value;
@@ -73,6 +87,10 @@ typedef struct {
  * row-shaped read APIs (Excel::nextRow / nextRowWithFormula / getSheetData).
  * The master cell — i.e. (first_row, first_col) of the merge — is unaffected. */
 #define LXR_SKIP_MERGED_FOLLOW 0x10
+/* When set, Excel::nextRowWithFormula's "formula" field is an associative
+ * array (type/text/ref/si/is_dynamic/cached_value) instead of a plain string.
+ * Default OFF preserves existing string-shaped output. */
+#define LXR_FORMULA_VERBOSE    0x20
 
 typedef enum {
     LXR_SST_MODE_FULL = 0,

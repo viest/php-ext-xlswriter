@@ -481,6 +481,9 @@ void add_table_writer(xls_resource_write_t *res,
 
 lxw_error workbook_file(xls_resource_write_t *self);
 
+/* Phase 3 — formula AST */
+void formula_ast_parse(const char *src, size_t n, zval *return_value);
+
 lxw_datetime timestamp_to_datetime(zend_long timestamp);
 zend_string* char_join_to_zend_str(const char *left, const char *right);
 zend_string* str_pick_up(zend_string *left, const char *right, size_t len);

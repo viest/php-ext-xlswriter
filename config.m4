@@ -38,6 +38,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/validation.c \
     kernel/conditional_format.c \
     kernel/table.c \
+    kernel/formula_ast.c \
     kernel/write.c \
     "
 

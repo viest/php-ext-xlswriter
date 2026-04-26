@@ -30,6 +30,7 @@ if (PHP_XLSWRITER != "no") {
                 validation.c \
                 conditional_format.c \
                 table.c \
+                formula_ast.c \
                 write.c \
                 ", "xlswriter");
 

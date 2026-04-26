@@ -92,6 +92,13 @@ static void emit_cell(lxr_worksheet *ws, lxr_cell *out)
         out->value.formula.formula.len = ws->cell_formula_len;
         out->value.formula.cached.ptr  = ws->cell_value;
         out->value.formula.cached.len  = ws->cell_value_len;
+        out->value.formula.kind        = ws->cell_formula_kind;
+        out->value.formula.ref.ptr     = ws->cell_formula_ref[0]
+            ? ws->cell_formula_ref : NULL;
+        out->value.formula.ref.len     = ws->cell_formula_ref[0]
+            ? strlen(ws->cell_formula_ref) : 0;
+        out->value.formula.si          = ws->cell_formula_si;
+        out->value.formula.is_dynamic  = ws->cell_formula_is_dynamic;
         return;
     }
 
@@ -182,6 +189,10 @@ static void reset_cell(lxr_worksheet *ws)
     ws->cell_has_inline = 0;
     ws->cell_row = 0;
     ws->cell_col = 0;
+    ws->cell_formula_kind       = LXR_FORMULA_NORMAL;
+    ws->cell_formula_ref[0]     = 0;
+    ws->cell_formula_si         = -1;
+    ws->cell_formula_is_dynamic = 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -311,7 +322,23 @@ static void on_start(void *ud, const char *name, const char **attrs)
         if (lxr_xml_name_eq(name, "v")) {
             ws->state = LXR_WS_IN_VALUE;
         } else if (lxr_xml_name_eq(name, "f")) {
+            const char *t_attr   = lxr_xml_attr(attrs, "t");
+            const char *ref_attr = lxr_xml_attr(attrs, "ref");
+            const char *si_attr  = lxr_xml_attr(attrs, "si");
+            const char *aca_attr = lxr_xml_attr(attrs, "aca");
             ws->cell_has_formula = 1;
+            if (t_attr) {
+                if (strcmp(t_attr, "array") == 0)          ws->cell_formula_kind = LXR_FORMULA_ARRAY;
+                else if (strcmp(t_attr, "dataTable") == 0) ws->cell_formula_kind = LXR_FORMULA_DATATABLE;
+                else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXR_FORMULA_SHARED;
+                else                                        ws->cell_formula_kind = LXR_FORMULA_NORMAL;
+            }
+            if (ref_attr) copy_attr(ws->cell_formula_ref,
+                                    sizeof(ws->cell_formula_ref), ref_attr);
+            if (si_attr) ws->cell_formula_si = (int)strtol(si_attr, NULL, 10);
+            if (aca_attr && (strcmp(aca_attr, "1") == 0 ||
+                             strcmp(aca_attr, "true") == 0))
+                ws->cell_formula_is_dynamic = 1;
             ws->state = LXR_WS_IN_FORMULA;
         } else if (lxr_xml_name_eq(name, "is")) {
             ws->cell_has_inline = 1;

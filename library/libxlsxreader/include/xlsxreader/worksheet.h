@@ -110,6 +110,66 @@ int lxr_worksheet_col_options(const lxr_worksheet *ws, size_t col,
 int    lxr_worksheet_default_row_height(const lxr_worksheet *ws, double *out);
 int    lxr_worksheet_default_col_width (const lxr_worksheet *ws, double *out);
 
+/* ---- Data validation ---------------------------------------------------- */
+
+/* All string pointers are owned by the worksheet; valid until close. */
+typedef struct {
+    const char *type;          /* "whole","decimal","list","date","time",
+                                  "textLength","custom" — or NULL */
+    const char *operator_;     /* "between","notBetween","equal", ... — or NULL */
+    const char *error_style;   /* "stop","warning","information" — or NULL */
+    const char *formula1;
+    const char *formula2;
+    const char *prompt;
+    const char *prompt_title;
+    const char *error;
+    const char *error_title;
+    const char *sqref;         /* original sqref (may be space-separated list) */
+    int allow_blank;
+    int show_drop_down;        /* per OOXML this is INVERTED — 1 means "hide" */
+    int show_input_message;
+    int show_error_message;
+} lxr_data_validation;
+
+size_t lxr_worksheet_data_validation_count(const lxr_worksheet *ws);
+int    lxr_worksheet_data_validation_get  (const lxr_worksheet *ws, size_t idx,
+                                           lxr_data_validation *out);
+
+/* ---- AutoFilter --------------------------------------------------------- */
+
+typedef enum {
+    LXR_FILTER_NONE = 0,
+    LXR_FILTER_LIST,           /* discrete value match (<filters>) */
+    LXR_FILTER_CUSTOM,         /* operator-based (<customFilters>) */
+    LXR_FILTER_TOP10,          /* <top10>: top/bottom N (or %) */
+    LXR_FILTER_DYNAMIC         /* <dynamicFilter>: aboveAverage etc. */
+} lxr_filter_kind;
+
+typedef struct {
+    int             col_id;          /* 0-based column offset within the autoFilter range */
+    lxr_filter_kind kind;
+    /* For LXR_FILTER_LIST: list of value strings. */
+    const char    **values;          /* NULL-terminated; NULL when not applicable */
+    /* For LXR_FILTER_CUSTOM: at most two predicates joined by AND/OR. */
+    int             custom_and;      /* 1 = AND, 0 = OR */
+    const char     *custom_op_1;     /* "equal","greaterThan", ... */
+    const char     *custom_val_1;
+    const char     *custom_op_2;
+    const char     *custom_val_2;
+    /* For LXR_FILTER_TOP10. */
+    int             top;             /* 1=top, 0=bottom */
+    int             percent;         /* 1=percent */
+    double          top_value;       /* N */
+} lxr_filter_column;
+
+typedef struct {
+    const char              *range;       /* original ref attr (e.g. "A1:Z100"), or NULL */
+    const lxr_filter_column *columns;
+    size_t                   columns_count;
+} lxr_autofilter;
+
+int lxr_worksheet_autofilter(const lxr_worksheet *ws, lxr_autofilter *out);
+
 #ifdef __cplusplus
 }
 #endif

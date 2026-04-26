@@ -113,6 +113,48 @@ typedef struct {
     } *cols;
     size_t cols_count;
     size_t cols_cap;
+
+    /* Data validations (each entry owns its strings). */
+    struct lxr_dv_owned {
+        char *type;
+        char *operator_;
+        char *error_style;
+        char *formula1;
+        char *formula2;
+        char *prompt;
+        char *prompt_title;
+        char *error;
+        char *error_title;
+        char *sqref;
+        int   allow_blank;
+        int   show_drop_down;
+        int   show_input_message;
+        int   show_error_message;
+    } *dvs;
+    size_t dvs_count;
+    size_t dvs_cap;
+
+    /* AutoFilter (single per sheet). */
+    int    autofilter_present;
+    char  *autofilter_range;        /* owned */
+    struct lxr_filter_column_owned {
+        int    col_id;
+        int    kind;                /* lxr_filter_kind */
+        char **values;              /* NULL-terminated, owned */
+        int    custom_and;
+        char  *custom_op_1;
+        char  *custom_val_1;
+        char  *custom_op_2;
+        char  *custom_val_2;
+        int    top;
+        int    percent;
+        double top_value;
+    } *filter_columns;
+    size_t filter_columns_count;
+    size_t filter_columns_cap;
+    /* Materialised public-facing copy assembled lazily by accessor (cached
+     * here so the returned pointer stays valid). */
+    lxr_filter_column *filter_columns_pub;
 } lxr_worksheet_meta;
 
 /* Worksheet FSM states (per plans/reader.md §8). */
@@ -179,6 +221,12 @@ struct lxr_worksheet {
 
     int           cell_has_formula;
     int           cell_has_inline;
+
+    /* Formula attributes from <f t ref si aca>. */
+    lxr_formula_kind cell_formula_kind;
+    char             cell_formula_ref[64];
+    int              cell_formula_si;          /* -1 if absent */
+    int              cell_formula_is_dynamic;
 
     int           pending_cell;        /* a complete cell awaits consumer */
 

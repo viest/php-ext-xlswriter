@@ -284,6 +284,14 @@ typedef enum {
     M_IN_COLS,
     M_IN_MERGECELLS,
     M_IN_HYPERLINKS,
+    M_IN_DATAVALIDATIONS,
+    M_IN_DATAVALIDATION,    /* parsing a single <dataValidation>; capturing
+                              <formula1>/<formula2> children */
+    M_IN_DV_FORMULA1,
+    M_IN_DV_FORMULA2,
+    M_IN_AUTOFILTER,
+    M_IN_FILTERCOLUMN,
+    M_IN_FILTERS,           /* <filters> inside a <filterColumn> */
     M_SKIP
 } m_state;
 
@@ -294,7 +302,81 @@ typedef struct {
     m_state             state_before_skip;
     int                 skip_depth;
     char               *skip_tag;
+    /* DV text accumulator — ECMA-376 puts formulas inside <formula1>/<formula2>
+     * as text children, so we collect them like definedName text. */
+    char               *txt;
+    size_t              txt_len;
+    size_t              txt_cap;
 } m_ctx;
+
+static void txt_append(m_ctx *c, const char *s, size_t n)
+{
+    size_t need = c->txt_len + n + 1;
+    if (need > c->txt_cap) {
+        size_t nc = c->txt_cap ? c->txt_cap : 64;
+        char *nb;
+        while (nc < need) nc *= 2;
+        nb = (char *)realloc(c->txt, nc);
+        if (!nb) return;
+        c->txt = nb;
+        c->txt_cap = nc;
+    }
+    memcpy(c->txt + c->txt_len, s, n);
+    c->txt_len += n;
+    c->txt[c->txt_len] = 0;
+}
+
+static void txt_reset(m_ctx *c) { c->txt_len = 0; if (c->txt) c->txt[0] = 0; }
+
+/* DV/filter helpers — append entries. */
+
+static struct lxr_dv_owned *meta_push_dv(lxr_worksheet_meta *m)
+{
+    if (m->dvs_count >= m->dvs_cap) {
+        size_t nc = m->dvs_cap ? m->dvs_cap * 2 : 4;
+        struct lxr_dv_owned *nb = (struct lxr_dv_owned *)realloc(
+            m->dvs, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->dvs = nb;
+        m->dvs_cap = nc;
+    }
+    {
+        struct lxr_dv_owned *d = &m->dvs[m->dvs_count++];
+        memset(d, 0, sizeof(*d));
+        return d;
+    }
+}
+
+static struct lxr_filter_column_owned *meta_push_filter_column(lxr_worksheet_meta *m)
+{
+    if (m->filter_columns_count >= m->filter_columns_cap) {
+        size_t nc = m->filter_columns_cap ? m->filter_columns_cap * 2 : 4;
+        struct lxr_filter_column_owned *nb = (struct lxr_filter_column_owned *)realloc(
+            m->filter_columns, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->filter_columns = nb;
+        m->filter_columns_cap = nc;
+    }
+    {
+        struct lxr_filter_column_owned *fc = &m->filter_columns[m->filter_columns_count++];
+        memset(fc, 0, sizeof(*fc));
+        return fc;
+    }
+}
+
+/* For LXR_FILTER_LIST: append to a NULL-terminated owned values array. */
+static void filter_column_push_value(struct lxr_filter_column_owned *fc, const char *val)
+{
+    size_t n = 0;
+    char **nv;
+    if (!val) return;
+    if (fc->values) while (fc->values[n]) n++;
+    nv = (char **)realloc(fc->values, (n + 2) * sizeof(*nv));
+    if (!nv) return;
+    nv[n]     = strdup(val);
+    nv[n + 1] = NULL;
+    fc->values = nv;
+}
 
 static void enter_skip(m_ctx *c, const char *tag)
 {
@@ -337,6 +419,16 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
             c->state = M_IN_MERGECELLS;
         } else if (lxr_xml_name_eq(name, "hyperlinks")) {
             c->state = M_IN_HYPERLINKS;
+        } else if (lxr_xml_name_eq(name, "dataValidations")) {
+            c->state = M_IN_DATAVALIDATIONS;
+        } else if (lxr_xml_name_eq(name, "autoFilter")) {
+            const char *ref = lxr_xml_attr(attrs, "ref");
+            c->m->autofilter_present = 1;
+            if (ref) {
+                free(c->m->autofilter_range);
+                c->m->autofilter_range = strdup(ref);
+            }
+            c->state = M_IN_AUTOFILTER;
         } else if (lxr_xml_name_eq(name, "sheetProtection")) {
             const char *v;
             c->m->prot_present = 1;
@@ -402,6 +494,112 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
             lxr_range r;
             parse_a1_range(ref, &r);
             if (r.first_row && r.first_col) meta_push_merge(c->m, r);
+        }
+        break;
+
+    case M_IN_DATAVALIDATIONS:
+        if (lxr_xml_name_eq(name, "dataValidation")) {
+            struct lxr_dv_owned *d = meta_push_dv(c->m);
+            const char *v;
+            if (!d) break;
+            if ((v = lxr_xml_attr(attrs, "type")))               d->type        = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "operator")))           d->operator_   = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "errorStyle")))         d->error_style = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "prompt")))             d->prompt      = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "promptTitle")))        d->prompt_title= strdup(v);
+            if ((v = lxr_xml_attr(attrs, "error")))              d->error       = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "errorTitle")))         d->error_title = strdup(v);
+            if ((v = lxr_xml_attr(attrs, "sqref")))              d->sqref       = strdup(v);
+            d->allow_blank          = attr_truthy(lxr_xml_attr(attrs, "allowBlank"));
+            d->show_drop_down       = attr_truthy(lxr_xml_attr(attrs, "showDropDown"));
+            d->show_input_message   = attr_truthy(lxr_xml_attr(attrs, "showInputMessage"));
+            d->show_error_message   = attr_truthy(lxr_xml_attr(attrs, "showErrorMessage"));
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+
+    case M_IN_DATAVALIDATION:
+        if (lxr_xml_name_eq(name, "formula1")) {
+            txt_reset(c);
+            c->state = M_IN_DV_FORMULA1;
+        } else if (lxr_xml_name_eq(name, "formula2")) {
+            txt_reset(c);
+            c->state = M_IN_DV_FORMULA2;
+        } else {
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_AUTOFILTER:
+        if (lxr_xml_name_eq(name, "filterColumn")) {
+            const char *cid = lxr_xml_attr(attrs, "colId");
+            struct lxr_filter_column_owned *fc = meta_push_filter_column(c->m);
+            if (fc) {
+                fc->col_id = cid ? (int)strtol(cid, NULL, 10) : 0;
+                fc->kind   = LXR_FILTER_NONE;
+            }
+            c->state = M_IN_FILTERCOLUMN;
+        } else {
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_FILTERCOLUMN:
+        if (c->m->filter_columns_count == 0) { enter_skip(c, name); break; }
+        {
+            struct lxr_filter_column_owned *fc =
+                &c->m->filter_columns[c->m->filter_columns_count - 1];
+            if (lxr_xml_name_eq(name, "filters")) {
+                fc->kind = LXR_FILTER_LIST;
+                c->state = M_IN_FILTERS;
+            } else if (lxr_xml_name_eq(name, "customFilters")) {
+                const char *and_attr = lxr_xml_attr(attrs, "and");
+                fc->kind = LXR_FILTER_CUSTOM;
+                fc->custom_and = attr_truthy(and_attr);
+                /* children customFilter come in <customFilter operator val>;
+                 * parse them inline by transitioning into a list-style scan. */
+                c->state = M_IN_FILTERS;  /* reuse */
+            } else if (lxr_xml_name_eq(name, "top10")) {
+                const char *val_attr  = lxr_xml_attr(attrs, "val");
+                const char *top_attr  = lxr_xml_attr(attrs, "top");
+                const char *pct_attr  = lxr_xml_attr(attrs, "percent");
+                fc->kind      = LXR_FILTER_TOP10;
+                fc->top       = top_attr ? attr_truthy(top_attr) : 1;
+                fc->percent   = attr_truthy(pct_attr);
+                fc->top_value = val_attr ? strtod(val_attr, NULL) : 0;
+                enter_skip(c, name);
+            } else if (lxr_xml_name_eq(name, "dynamicFilter")) {
+                fc->kind = LXR_FILTER_DYNAMIC;
+                enter_skip(c, name);
+            } else {
+                enter_skip(c, name);
+            }
+        }
+        break;
+
+    case M_IN_FILTERS:
+        if (c->m->filter_columns_count == 0) { enter_skip(c, name); break; }
+        {
+            struct lxr_filter_column_owned *fc =
+                &c->m->filter_columns[c->m->filter_columns_count - 1];
+            if (lxr_xml_name_eq(name, "filter")) {
+                const char *v = lxr_xml_attr(attrs, "val");
+                if (v) filter_column_push_value(fc, v);
+                enter_skip(c, name);
+            } else if (lxr_xml_name_eq(name, "customFilter")) {
+                const char *op  = lxr_xml_attr(attrs, "operator");
+                const char *val = lxr_xml_attr(attrs, "val");
+                if (!fc->custom_op_1) {
+                    fc->custom_op_1  = op  ? strdup(op)  : strdup("equal");
+                    fc->custom_val_1 = val ? strdup(val) : NULL;
+                } else if (!fc->custom_op_2) {
+                    fc->custom_op_2  = op  ? strdup(op)  : strdup("equal");
+                    fc->custom_val_2 = val ? strdup(val) : NULL;
+                }
+                enter_skip(c, name);
+            } else {
+                enter_skip(c, name);
+            }
         }
         break;
 
@@ -505,11 +703,59 @@ static void m_on_end(void *ud, const char *name)
     case M_IN_HYPERLINKS:
         if (lxr_xml_name_eq(name, "hyperlinks")) c->state = M_IN_WORKSHEET;
         break;
+    case M_IN_DATAVALIDATION:
+        if (lxr_xml_name_eq(name, "dataValidation")) c->state = M_IN_DATAVALIDATIONS;
+        break;
+    case M_IN_DATAVALIDATIONS:
+        if (lxr_xml_name_eq(name, "dataValidations")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_DV_FORMULA1:
+        if (lxr_xml_name_eq(name, "formula1")) {
+            if (c->m->dvs_count > 0 && c->txt_len > 0) {
+                struct lxr_dv_owned *d = &c->m->dvs[c->m->dvs_count - 1];
+                free(d->formula1);
+                d->formula1 = strdup(c->txt);
+            }
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+    case M_IN_DV_FORMULA2:
+        if (lxr_xml_name_eq(name, "formula2")) {
+            if (c->m->dvs_count > 0 && c->txt_len > 0) {
+                struct lxr_dv_owned *d = &c->m->dvs[c->m->dvs_count - 1];
+                free(d->formula2);
+                d->formula2 = strdup(c->txt);
+            }
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+    case M_IN_FILTERCOLUMN:
+        if (lxr_xml_name_eq(name, "filterColumn")) c->state = M_IN_AUTOFILTER;
+        break;
+    case M_IN_FILTERS:
+        if (lxr_xml_name_eq(name, "filters") ||
+            lxr_xml_name_eq(name, "customFilters")) {
+            c->state = M_IN_FILTERCOLUMN;
+        }
+        break;
+    case M_IN_AUTOFILTER:
+        if (lxr_xml_name_eq(name, "autoFilter")) c->state = M_IN_WORKSHEET;
+        break;
     case M_IN_WORKSHEET:
         if (lxr_xml_name_eq(name, "worksheet")) c->state = M_INIT;
         break;
     default:
         break;
+    }
+}
+
+/* Text capture for <formula1>/<formula2>. */
+static void m_on_text(void *ud, const char *text, int len)
+{
+    m_ctx *c = (m_ctx *)ud;
+    if (len <= 0) return;
+    if (c->state == M_IN_DV_FORMULA1 || c->state == M_IN_DV_FORMULA2) {
+        txt_append(c, text, (size_t)len);
     }
 }
 
@@ -546,10 +792,11 @@ lxr_error lxr_worksheet_meta_load(lxr_worksheet *ws)
     ctx.rels  = &rels;
     ctx.state = M_INIT;
 
-    lxr_xml_pump_set_handlers(pump, m_on_start, m_on_end, NULL, &ctx);
+    lxr_xml_pump_set_handlers(pump, m_on_start, m_on_end, m_on_text, &ctx);
     rc = lxr_xml_pump_run(pump);
 
     free(ctx.skip_tag);
+    free(ctx.txt);
     lxr_xml_pump_destroy(pump);
     lxr_zip_close_entry(zf);
     rel_map_free(&rels);
@@ -572,6 +819,40 @@ void lxr_worksheet_meta_free(lxr_worksheet_meta *m)
     }
     free(m->rows);
     free(m->cols);
+    if (m->dvs) {
+        for (i = 0; i < m->dvs_count; i++) {
+            free(m->dvs[i].type);
+            free(m->dvs[i].operator_);
+            free(m->dvs[i].error_style);
+            free(m->dvs[i].formula1);
+            free(m->dvs[i].formula2);
+            free(m->dvs[i].prompt);
+            free(m->dvs[i].prompt_title);
+            free(m->dvs[i].error);
+            free(m->dvs[i].error_title);
+            free(m->dvs[i].sqref);
+        }
+        free(m->dvs);
+    }
+    free(m->autofilter_range);
+    if (m->filter_columns) {
+        for (i = 0; i < m->filter_columns_count; i++) {
+            if (m->filter_columns[i].values) {
+                size_t j = 0;
+                while (m->filter_columns[i].values[j]) {
+                    free(m->filter_columns[i].values[j]);
+                    j++;
+                }
+                free(m->filter_columns[i].values);
+            }
+            free(m->filter_columns[i].custom_op_1);
+            free(m->filter_columns[i].custom_val_1);
+            free(m->filter_columns[i].custom_op_2);
+            free(m->filter_columns[i].custom_val_2);
+        }
+        free(m->filter_columns);
+    }
+    free(m->filter_columns_pub);
     memset(m, 0, sizeof(*m));
 }
 
@@ -722,5 +1003,75 @@ int lxr_worksheet_default_col_width(const lxr_worksheet *ws, double *out)
 {
     if (!ws || !out || !ws->meta.has_default_col_width) return 0;
     *out = ws->meta.default_col_width;
+    return 1;
+}
+
+/* ---- Data validation accessors ----------------------------------------- */
+
+size_t lxr_worksheet_data_validation_count(const lxr_worksheet *ws)
+{
+    return ws ? ws->meta.dvs_count : 0;
+}
+
+int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
+                                      lxr_data_validation *out)
+{
+    const struct lxr_dv_owned *d;
+    if (!ws || !out || idx >= ws->meta.dvs_count) return 0;
+    d = &ws->meta.dvs[idx];
+    out->type               = d->type;
+    out->operator_          = d->operator_;
+    out->error_style        = d->error_style;
+    out->formula1           = d->formula1;
+    out->formula2           = d->formula2;
+    out->prompt             = d->prompt;
+    out->prompt_title       = d->prompt_title;
+    out->error              = d->error;
+    out->error_title        = d->error_title;
+    out->sqref              = d->sqref;
+    out->allow_blank        = d->allow_blank;
+    out->show_drop_down     = d->show_drop_down;
+    out->show_input_message = d->show_input_message;
+    out->show_error_message = d->show_error_message;
+    return 1;
+}
+
+/* ---- AutoFilter accessor ------------------------------------------------ */
+
+int lxr_worksheet_autofilter(const lxr_worksheet *ws, lxr_autofilter *out)
+{
+    lxr_worksheet_meta *m;
+    size_t i;
+    if (!ws || !out) return 0;
+    m = (lxr_worksheet_meta *)&ws->meta;  /* mutable for cache materialisation */
+    if (!m->autofilter_present) return 0;
+
+    /* Lazily materialise a stable public-shape array of filter columns so
+     * out->columns has a predictable lifetime (same as the worksheet). */
+    if (!m->filter_columns_pub && m->filter_columns_count > 0) {
+        m->filter_columns_pub = (lxr_filter_column *)
+            calloc(m->filter_columns_count, sizeof(lxr_filter_column));
+        if (m->filter_columns_pub) {
+            for (i = 0; i < m->filter_columns_count; i++) {
+                const struct lxr_filter_column_owned *src = &m->filter_columns[i];
+                lxr_filter_column *dst = &m->filter_columns_pub[i];
+                dst->col_id        = src->col_id;
+                dst->kind          = (lxr_filter_kind)src->kind;
+                dst->values        = (const char **)src->values;
+                dst->custom_and    = src->custom_and;
+                dst->custom_op_1   = src->custom_op_1;
+                dst->custom_val_1  = src->custom_val_1;
+                dst->custom_op_2   = src->custom_op_2;
+                dst->custom_val_2  = src->custom_val_2;
+                dst->top           = src->top;
+                dst->percent       = src->percent;
+                dst->top_value     = src->top_value;
+            }
+        }
+    }
+
+    out->range         = m->autofilter_range;
+    out->columns       = m->filter_columns_pub;
+    out->columns_count = m->filter_columns_count;
     return 1;
 }

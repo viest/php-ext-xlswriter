@@ -2,8 +2,8 @@
 #define LXR_XML_PUMP_H
 
 #include <stddef.h>
-#include <sys/types.h>
 
+#include "lxr_compat.h"
 #include "xlsxreader/common.h"
 #include "lxr_zip.h"
 

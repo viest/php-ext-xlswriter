@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 
 #include "ioapi.h"
 #include "unzip.h"
 
+#include "lxr_compat.h"
 #include "lxr_zip.h"
 
 struct lxr_zip {
@@ -101,14 +101,14 @@ static voidpf ZCALLBACK lxr_fd_open(voidpf opaque, const char *filename, int mod
 static uLong ZCALLBACK lxr_fd_read(voidpf opaque, voidpf stream, void *buf, uLong size)
 {
     lxr_fd_stream *s = (lxr_fd_stream *)stream;
-    ssize_t n = read(s->fd, buf, size);
+    ssize_t n = lxr_read(s->fd, buf, size);
     return n < 0 ? 0 : (uLong)n;
 }
 
 static long ZCALLBACK lxr_fd_tell(voidpf opaque, voidpf stream)
 {
     lxr_fd_stream *s = (lxr_fd_stream *)stream;
-    return (long)lseek(s->fd, 0, SEEK_CUR);
+    return (long)lxr_lseek(s->fd, 0, SEEK_CUR);
 }
 
 static long ZCALLBACK lxr_fd_seek(voidpf opaque, voidpf stream, uLong offset, int origin)
@@ -121,7 +121,7 @@ static long ZCALLBACK lxr_fd_seek(voidpf opaque, voidpf stream, uLong offset, in
     case ZLIB_FILEFUNC_SEEK_END: whence = SEEK_END; break;
     default: return -1;
     }
-    return lseek(s->fd, (off_t)offset, whence) < 0 ? -1 : 0;
+    return lxr_lseek(s->fd, (lxr_off_t)offset, whence) < 0 ? -1 : 0;
 }
 
 static int ZCALLBACK lxr_fd_close(voidpf opaque, voidpf stream)

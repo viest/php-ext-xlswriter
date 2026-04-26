@@ -2,8 +2,8 @@
 #define LXR_ZIP_H
 
 #include <stddef.h>
-#include <sys/types.h>
 
+#include "lxr_compat.h"
 #include "xlsxreader/common.h"
 
 typedef struct lxr_zip      lxr_zip;

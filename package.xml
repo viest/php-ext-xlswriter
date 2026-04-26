@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2026-04-25</date>
+ <date>2026-05-01</date>
  <time>00:00:00</time>
  <version>
-  <release>1.6.0</release>
-  <api>1.6.0</api>
+  <release>2.0.0</release>
+  <api>2.0.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -46,14 +46,27 @@
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
 - Refactor: replaced libxlsxio dependency with the in-tree libxlsxreader (PHP-agnostic C library, lives under library/libxlsxreader/).
-- Reader: shared-strings table now supports both FULL and STREAMING modes.
-- Reader: explicit FSM-driven worksheet parser with 64KB XML buffer; honors 1900 vs 1904 date systems via workbook.xml.
+- Reader: shared-strings table now supports both FULL and STREAMING modes; FSM-driven worksheet parser with 64KB XML buffer; honors 1900 vs 1904 date systems via workbook.xml.
 - Reader: PHP API (openFile/openSheet/nextRow/nextCellCallback/getSheetData/setType/setGlobalType/setSkipRows/putCSV/putCSVCallback) is fully backward compatible.
+- Reader: surface sheet-level metadata — getMergedCells, getHyperlinks, getSheetProtection, getRowOptions/getColumnOptions, getDefaultRowHeight/getDefaultColumnWidth, getDefinedNames, sheetListWithMeta.
+- Reader: surface page setup, rich-text runs, comments, charts, and conditional formats — getPageSetup, nextRowRich, iterateImages, iterateComments, iterateCharts, getConditionalFormats.
+- Reader: full formula attributes (next-row-with-formula), data validations (getDataValidations), autofilter (getAutoFilter); new static helper Excel::getFormulaAst() for tokenizing formulas without evaluation.
+- Reader: getStyleFormat resolves a style id to a rich array of font/fill/border/alignment/protection.
+- Writer: conditional formats (Vtiful\Kernel\ConditionalFormat + conditionalFormatCell/Range).
+- Writer: Excel tables (Vtiful\Kernel\Table + addTable).
+- Writer: page setup — setHeader/setFooter, repeatRows/repeatColumns, printArea, horizontalPageBreaks/verticalPageBreaks, fitToPages, setTabColor.
+- Writer: workbook properties — setProperties, setCustomProperty.
+- Writer: defined names — defineName (workbook- and sheet-scoped).
+- Writer: insertCommentOpt, insertImageBuffer, setBackgroundImage/Buffer, insertRichText.
+- Format: borderColorOfTheFourSides, borderOfTheFourSides, indent, rotation, locked/unlocked/hidden cell protection.
+- Build: feature-flagged reader (--disable-reader produces a write-only build); minizip is shared between writer and reader.
+- Update libxlsxwriter from 1.1.3 to 1.1.6.
  </notes>
  <contents>
   <dir name="/">
    <file md5sum="1cf796971bf051dce46bb715ab550289" name="include/chart.h" role="src" />
    <file md5sum="" name="include/common.h" role="src" />
+   <file md5sum="" name="include/conditional_format.h" role="src" />
    <file md5sum="7e182a4b3e7d46e2a075b4500c62441a" name="include/csv.h" role="src" />
    <file md5sum="230bb9471b8c6f884c35e6279ec52df9" name="include/excel.h" role="src" />
    <file md5sum="07719d1125f1db8889ffceffa37feea6" name="include/exception.h" role="src" />
@@ -61,25 +74,30 @@
    <file md5sum="095bb9cd5e2a99d07dc38f68f3ce7b44" name="include/help.h" role="src" />
    <file md5sum="21277b121af5943771ea98f86c2d274d" name="include/read.h" role="src" />
    <file md5sum="" name="include/rich_string.h" role="src" />
+   <file md5sum="" name="include/table.h" role="src" />
    <file md5sum="c8a25b604bd0cfd4adc3bdd48123a085" name="include/validation.h" role="src" />
    <file md5sum="17558e27c20e6c048b525c82232ac751" name="include/xlswriter.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
    <file md5sum="f35a72543869ff6d2ad7fc35a6500569" name="kernel/chart.c" role="src" />
    <file md5sum="b41d28a7ed0c9f3fc4494df274f36e32" name="kernel/common.c" role="src" />
+   <file md5sum="" name="kernel/conditional_format.c" role="src" />
    <file md5sum="f98af5a5d15eb371d77e71938ca502b6" name="kernel/csv.c" role="src" />
    <file md5sum="c535e73a0a83aaee527650d0440bbd5f" name="kernel/excel.c" role="src" />
    <file md5sum="30d0acb47f850c23d424d3df18da18f2" name="kernel/exception.c" role="src" />
    <file md5sum="7229a2cb1f66a12710bfef883c182ae9" name="kernel/format.c" role="src" />
+   <file md5sum="" name="kernel/formula_ast.c" role="src" />
    <file md5sum="17780629072883b729c72d9c963ccf52" name="kernel/help.c" role="src" />
    <file md5sum="d38f1e85cfa811f281cb8869cde1691d" name="kernel/read.c" role="src" />
    <file md5sum="f4c2d15a31798759e3c3c4e8180afc74" name="kernel/resource.c" role="src" />
    <file md5sum="" name="kernel/rich_string.c" role="src" />
+   <file md5sum="" name="kernel/table.c" role="src" />
    <file md5sum="d6d9bcab96f6e87868ff95f3b96efadd" name="kernel/validation.c" role="src" />
    <file md5sum="a77e2e2879672511ecf05232c4928703" name="kernel/write.c" role="src" />
    <file md5sum="347e1ee73d3492ef6567d422441db3fa" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="0540d079aa31f63f9a716bbb9b5ee4b2" name="library/libxlsxwriter/include/xlsxwriter/third_party/md5.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
+   <file md5sum="" name="library/libxlsxwriter/include/xlsxwriter/third_party/emyg_dtoa.h" role="src" />
    <file md5sum="91ecc39f822ba460d99a451fec030cfa" name="library/libxlsxwriter/include/xlsxwriter/third_party/tmpfileplus.h" role="src" />
    <file md5sum="de224c89e67700652f117cab66f4acbb" name="library/libxlsxwriter/include/xlsxwriter/third_party/tree.h" role="src" />
    <file md5sum="f6e837ae4769d683fa51d651a232ece0" name="library/libxlsxwriter/include/xlsxwriter/third_party/zip.h" role="src" />
@@ -99,6 +117,7 @@
    <file md5sum="6816cdf9ae2133e93d1c1e06f925a2fe" name="library/libxlsxwriter/include/xlsxwriter/relationships.h" role="src" />
    <file md5sum="13f9c3b8943d6ce4990957df8d27d4ed" name="library/libxlsxwriter/include/xlsxwriter/shared_strings.h" role="src" />
    <file md5sum="61f1e1b82191a615089e6a8e0ff04efe" name="library/libxlsxwriter/include/xlsxwriter/styles.h" role="src" />
+   <file md5sum="" name="library/libxlsxwriter/include/xlsxwriter/table.h" role="src" />
    <file md5sum="2d68d7510df717aa4795ecd9aad91c45" name="library/libxlsxwriter/include/xlsxwriter/theme.h" role="src" />
    <file md5sum="24a7dd56db39738d7b9df32afe396781" name="library/libxlsxwriter/include/xlsxwriter/utility.h" role="src" />
    <file md5sum="88c636eeae54b96bfb3477a0d4ebc6fc" name="library/libxlsxwriter/include/xlsxwriter/vml.h" role="src" />
@@ -138,6 +157,7 @@
    <file md5sum="ef5c893d9a2d5bef3710f2575aba61d9" name="library/libxlsxwriter/src/relationships.c" role="src" />
    <file md5sum="14e21fdeffc4759a968434ad7a967498" name="library/libxlsxwriter/src/shared_strings.c" role="src" />
    <file md5sum="242383ee731ffe6882d913af07542ddb" name="library/libxlsxwriter/src/styles.c" role="src" />
+   <file md5sum="" name="library/libxlsxwriter/src/table.c" role="src" />
    <file md5sum="5eea4e478283b613143ef38a7a2ace21" name="library/libxlsxwriter/src/theme.c" role="src" />
    <file md5sum="2a828095139b820ee85777c8f6aedf23" name="library/libxlsxwriter/src/utility.c" role="src" />
    <file md5sum="8a8509b3b870d128073ca8d15c0c03c7" name="library/libxlsxwriter/src/vml.c" role="src" />
@@ -168,23 +188,29 @@
    <file md5sum="5b8620d98e49772d95fc1d291c26aa79" name="library/libexpat/expat/COPYING" role="doc" />
    <file md5sum="" name="library/libxlsxreader/include/xlsxreader.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/include/xlsxreader/common.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/drawing.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/styles.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/include/xlsxreader/workbook.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/include/xlsxreader/worksheet.h" role="src" />
-   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/styles.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_compat.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/lxr_internal.h" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/lxr_zip.h" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/lxr_xml_pump.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_numfmt.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/lxr_sst.h" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/lxr_styles_priv.h" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/lxr_numfmt.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_xml_pump.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_zip.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/chart_meta.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/comments.c" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/common.c" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/zip_io.c" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/xml_pump.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/drawing.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/numfmt.c" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/sst.c" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/styles.c" role="src" />
-   <file md5sum="" name="library/libxlsxreader/src/numfmt.c" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/workbook.c" role="src" />
    <file md5sum="" name="library/libxlsxreader/src/worksheet.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/worksheet_meta.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/xml_pump.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/zip_io.c" role="src" />
    <file md5sum="57a70a14faab4cc6f169ff95eb20c65f" name="resource/chart_area1.png" role="src" />
    <file md5sum="242b1dcf124660314a3cbf5dc892669b" name="resource/chart_simple.png" role="src" />
    <file md5sum="f27a98466d7df8685391e3b152b729e2" name="resource/logo.png" role="src" />
@@ -333,6 +359,23 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2024-11-10</date>
+   <time>00:00:00</time>
+   <version>
+    <release>1.5.8</release>
+    <api>1.5.8</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+    - Fix: insertDate format.
+    - Feat: format rotation.
+   </notes>
+  </release>
   <release>
    <date>2024-09-04</date>
    <time>00:00:00</time>

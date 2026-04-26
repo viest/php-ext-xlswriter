@@ -22,7 +22,6 @@
 <a href="https://github.com/viest/php-ext-xlswriter"><img alt="php-ext-xlswriter" src="https://img.shields.io/github/contributors/viest/php-ext-excel-export.svg"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img alt="php-ext-xlswriter" src="https://img.shields.io/badge/license-BSD-green.svg"/></a>
 <a href="https://github.com/viest/php-ext-xlswriter"><img alt="php-ext-xlswriter" src="https://img.shields.io/github/issues/viest/php-ext-excel-export.svg"/></a>
-<a href="https://hits.seeyoufarm.com"><img alt="php-ext-xlswriter" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fviest%2Fphp-ext-xlswriter&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false"/></a>
 </div>
 
 ## Why use xlswriter

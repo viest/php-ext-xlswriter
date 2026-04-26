@@ -93,25 +93,25 @@ environment:
       ARCH: x64
       VC: vs16
       PHP_VER: 8.2.26
-      ZLIB_VER: 1.2.13
+      ZLIB_VER: 1.2.12
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
       PHP_VER: 8.2.26
-      ZLIB_VER: 1.2.13
+      ZLIB_VER: 1.2.12
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
       PHP_VER: 8.3.14
-      ZLIB_VER: 1.2.13
+      ZLIB_VER: 1.2.12
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
       PHP_VER: 8.3.14
-      ZLIB_VER: 1.2.13
+      ZLIB_VER: 1.2.12
       TS: 1
 
 build_script:

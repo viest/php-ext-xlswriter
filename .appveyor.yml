@@ -34,26 +34,34 @@ install:
 cache:
   c:\build-cache -> .appveyor.yml
 
-# Matrix mirrors .github/workflows/main.yml: PHP 7.4-8.4, x64, NTS + TS.
-# x86 was dropped — small share of Windows PHP installs and doubling the
-# matrix is expensive on AppVeyor's free tier.
+# Matrix mirrors .github/workflows/main.yml as far as the SDK allows:
+# PHP 7.4-8.3, x64, NTS + TS. x86 was dropped — small share of Windows
+# PHP installs and doubling the matrix is expensive on free tier.
 #
 # VC mapping follows windows.php.net's official builds:
-#   PHP 7.4        -> VC15  (Visual Studio 2017)
+#   PHP 7.4        -> vc15  (Visual Studio 2017)
 #   PHP 8.0 - 8.3  -> vs16  (Visual Studio 2019)
-#   PHP 8.4        -> vs17  (Visual Studio 2022)
+#
+# PHP 8.4 (vs17 / Visual Studio 2022) is intentionally absent: the
+# pinned php-sdk-binary-tools 2.2.0 does not ship a phpsdk-vs17-*.bat
+# runner, so no `nmake` build is possible from within phpsdk's shell.
+# Reinstate once a 2.3.x release with vs17 support is tagged.
+#
+# NB: VC value MUST be lowercase — windows.php.net's archive URLs are
+# case-sensitive (`/php-devel-pack-…-Win32-vc15-x64.zip` 200,
+# `…-VC15-…` 404).
 environment:
   BIN_SDK_VER: 2.2.0
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: VC15
+      VC: vc15
       PHP_VER: 7.4.33
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: VC15
+      VC: vc15
       PHP_VER: 7.4.33
       ZLIB_VER: 1.2.11
       TS: 1
@@ -103,18 +111,6 @@ environment:
       ARCH: x64
       VC: vs16
       PHP_VER: 8.3.14
-      ZLIB_VER: 1.2.13
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      ARCH: x64
-      VC: vs17
-      PHP_VER: 8.4.1
-      ZLIB_VER: 1.2.13
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      ARCH: x64
-      VC: vs17
-      PHP_VER: 8.4.1
       ZLIB_VER: 1.2.13
       TS: 1
 

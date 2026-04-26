@@ -63,6 +63,7 @@ if (PHP_XLSWRITER != "no") {
                 relationships.c \
                 shared_strings.c \
                 styles.c \
+                table.c \
                 theme.c \
                 utility.c \
                 vml.c \

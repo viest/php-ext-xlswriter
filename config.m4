@@ -72,6 +72,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/src/relationships.c \
     library/libxlsxwriter/src/shared_strings.c \
     library/libxlsxwriter/src/styles.c \
+    library/libxlsxwriter/src/table.c \
     library/libxlsxwriter/src/theme.c \
     library/libxlsxwriter/src/utility.c \
     library/libxlsxwriter/src/vml.c \

@@ -105,6 +105,22 @@ typedef struct {
     size_t last_col;
 } lxr_range;
 
+/* A formatted run inside a rich-text string cell. All string pointers (text,
+ * font_name, color) are owned by the worksheet/SST and remain valid until
+ * lxr_workbook_close(). text/text_len contain the run's plain text;
+ * font_name and color may be NULL when unset. font_size is 0.0 when absent. */
+typedef struct {
+    const char *text;
+    size_t      text_len;
+    const char *font_name;       /* or NULL */
+    double      font_size;
+    int         bold;
+    int         italic;
+    int         strike;
+    int         underline;       /* 0=none, 1=single, 2=double, 3=single-acc, 4=double-acc */
+    const char *color;           /* RGB hex like "FF0000" or NULL */
+} lxr_string_run;
+
 #ifdef __cplusplus
 }
 #endif

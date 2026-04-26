@@ -4,12 +4,25 @@
 #include "lxr_sst.h"
 #include "lxr_xml_pump.h"
 
+/* Per-SI run accumulator — populated while scanning <r>...</r>. */
+typedef struct {
+    lxr_sst_run *items;
+    size_t       count;
+    size_t       cap;
+} lxr_run_list;
+
 struct lxr_sst {
     lxr_sst_mode mode;
 
     char  **strings;
     size_t  loaded_count;
     size_t  capacity;
+
+    /* Parallel run table: one list per SST index. The outer pointer is
+     * lazily allocated alongside strings so existing callers that don't use
+     * runs pay nothing extra. */
+    lxr_run_list *runs;
+    size_t        runs_capacity;
 
     lxr_zip      *zip;
     lxr_zip_file *zf;
@@ -24,6 +37,19 @@ struct lxr_sst {
     char         *cur_buf;
     size_t        cur_len;
     size_t        cur_cap;
+
+    /* Run-tracking state. */
+    int           in_r;           /* inside <r> */
+    int           in_rpr;         /* inside <rPr> */
+    int           in_run_t;       /* inside <r>...<t>...</t> */
+    /* Buffer for the run's text. */
+    char         *run_text_buf;
+    size_t        run_text_len;
+    size_t        run_text_cap;
+    /* Pending properties for the run being assembled. */
+    lxr_sst_run   pending;
+    /* Runs collected for the current <si>. */
+    lxr_run_list  cur_runs;
 };
 
 /* --- buffer helpers ------------------------------------------------------ */
@@ -46,6 +72,62 @@ static int append_text(lxr_sst *s, const char *src, size_t n)
     return 0;
 }
 
+static int append_run_text(lxr_sst *s, const char *src, size_t n)
+{
+    size_t need = s->run_text_len + n + 1;
+    if (need > s->run_text_cap) {
+        size_t new_cap = s->run_text_cap ? s->run_text_cap : 32;
+        char  *nb;
+        while (new_cap < need) new_cap *= 2;
+        nb = (char *)realloc(s->run_text_buf, new_cap);
+        if (!nb) return -1;
+        s->run_text_buf = nb;
+        s->run_text_cap = new_cap;
+    }
+    memcpy(s->run_text_buf + s->run_text_len, src, n);
+    s->run_text_len += n;
+    s->run_text_buf[s->run_text_len] = 0;
+    return 0;
+}
+
+static void run_clear_pending(lxr_sst *s)
+{
+    free(s->pending.text);
+    free(s->pending.font_name);
+    free(s->pending.color);
+    memset(&s->pending, 0, sizeof(s->pending));
+}
+
+static int run_list_push(lxr_run_list *l, lxr_sst_run r)
+{
+    if (l->count >= l->cap) {
+        size_t nc = l->cap ? l->cap * 2 : 4;
+        lxr_sst_run *nb = (lxr_sst_run *)realloc(l->items, nc * sizeof(*nb));
+        if (!nb) return -1;
+        l->items = nb;
+        l->cap   = nc;
+    }
+    l->items[l->count++] = r;
+    return 0;
+}
+
+static int sst_runs_ensure(lxr_sst *s, size_t at_least)
+{
+    if (at_least <= s->runs_capacity) return 0;
+    {
+        size_t nc = s->runs_capacity ? s->runs_capacity * 2 : 16;
+        lxr_run_list *nb;
+        while (nc < at_least) nc *= 2;
+        nb = (lxr_run_list *)realloc(s->runs, nc * sizeof(*nb));
+        if (!nb) return -1;
+        memset(nb + s->runs_capacity, 0,
+               (nc - s->runs_capacity) * sizeof(*nb));
+        s->runs = nb;
+        s->runs_capacity = nc;
+    }
+    return 0;
+}
+
 static int commit_string(lxr_sst *s)
 {
     char *str;
@@ -58,7 +140,26 @@ static int commit_string(lxr_sst *s)
     }
     str = s->cur_buf ? strdup(s->cur_buf) : strdup("");
     if (!str) return -1;
-    s->strings[s->loaded_count++] = str;
+    s->strings[s->loaded_count] = str;
+
+    /* Migrate any collected runs into the parallel runs[] table. */
+    if (s->cur_runs.count > 0) {
+        if (sst_runs_ensure(s, s->loaded_count + 1) == 0) {
+            s->runs[s->loaded_count] = s->cur_runs;
+        } else {
+            /* OOM — drop the runs but keep the string. */
+            size_t i;
+            for (i = 0; i < s->cur_runs.count; i++) {
+                free(s->cur_runs.items[i].text);
+                free(s->cur_runs.items[i].font_name);
+                free(s->cur_runs.items[i].color);
+            }
+            free(s->cur_runs.items);
+        }
+        memset(&s->cur_runs, 0, sizeof(s->cur_runs));
+    }
+
+    s->loaded_count++;
 
     /* reset accumulator (keep the buffer for reuse) */
     s->cur_len = 0;
@@ -71,7 +172,6 @@ static int commit_string(lxr_sst *s)
 static void on_start(void *ud, const char *name, const char **attrs)
 {
     lxr_sst *s = (lxr_sst *)ud;
-    (void)attrs;
 
     if (s->skip_depth > 0) {
         s->skip_depth++;
@@ -87,7 +187,65 @@ static void on_start(void *ud, const char *name, const char **attrs)
         s->in_si   = 1;
         s->cur_len = 0;
         if (s->cur_buf) s->cur_buf[0] = 0;
-    } else if (lxr_xml_name_eq(name, "t") && s->in_si) {
+        memset(&s->cur_runs, 0, sizeof(s->cur_runs));
+        return;
+    }
+    if (!s->in_si) return;
+
+    /* Inside <si>: handle <r>, <t>, and rPr children. */
+    if (s->in_r) {
+        if (lxr_xml_name_eq(name, "rPr")) {
+            s->in_rpr = 1;
+            return;
+        }
+        if (s->in_rpr) {
+            const char *v;
+            if (lxr_xml_name_eq(name, "rFont")) {
+                if ((v = lxr_xml_attr(attrs, "val"))) {
+                    free(s->pending.font_name);
+                    s->pending.font_name = strdup(v);
+                }
+            } else if (lxr_xml_name_eq(name, "sz")) {
+                if ((v = lxr_xml_attr(attrs, "val"))) s->pending.font_size = strtod(v, NULL);
+            } else if (lxr_xml_name_eq(name, "b")) {
+                v = lxr_xml_attr(attrs, "val");
+                s->pending.bold = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "i")) {
+                v = lxr_xml_attr(attrs, "val");
+                s->pending.italic = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "strike")) {
+                v = lxr_xml_attr(attrs, "val");
+                s->pending.strike = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "u")) {
+                v = lxr_xml_attr(attrs, "val");
+                if (!v || strcmp(v, "single") == 0)             s->pending.underline = 1;
+                else if (strcmp(v, "double") == 0)              s->pending.underline = 2;
+                else if (strcmp(v, "singleAccounting") == 0)    s->pending.underline = 3;
+                else if (strcmp(v, "doubleAccounting") == 0)    s->pending.underline = 4;
+            } else if (lxr_xml_name_eq(name, "color")) {
+                if ((v = lxr_xml_attr(attrs, "rgb"))) {
+                    free(s->pending.color);
+                    s->pending.color = strdup(v);
+                }
+            }
+            return;
+        }
+        if (lxr_xml_name_eq(name, "t")) {
+            s->in_run_t  = 1;
+            s->in_t      = 1;
+            s->run_text_len = 0;
+            if (s->run_text_buf) s->run_text_buf[0] = 0;
+        }
+        return;
+    }
+    if (lxr_xml_name_eq(name, "r")) {
+        s->in_r = 1;
+        run_clear_pending(s);
+        s->run_text_len = 0;
+        if (s->run_text_buf) s->run_text_buf[0] = 0;
+        return;
+    }
+    if (lxr_xml_name_eq(name, "t")) {
         s->in_t = 1;
     }
 }
@@ -106,6 +264,17 @@ static void on_end(void *ud, const char *name)
     }
     if (lxr_xml_name_eq(name, "t")) {
         s->in_t = 0;
+        if (s->in_run_t) s->in_run_t = 0;
+    } else if (lxr_xml_name_eq(name, "rPr")) {
+        s->in_rpr = 0;
+    } else if (lxr_xml_name_eq(name, "r") && s->in_r) {
+        /* Commit the run. */
+        s->pending.text = s->run_text_len > 0 ? strdup(s->run_text_buf) : strdup("");
+        run_list_push(&s->cur_runs, s->pending);
+        memset(&s->pending, 0, sizeof(s->pending));
+        s->in_r = 0;
+        s->run_text_len = 0;
+        if (s->run_text_buf) s->run_text_buf[0] = 0;
     } else if (lxr_xml_name_eq(name, "si") && s->in_si) {
         commit_string(s);
         s->in_si = 0;
@@ -120,8 +289,12 @@ static void on_end(void *ud, const char *name)
 static void on_text(void *ud, const char *text, int len)
 {
     lxr_sst *s = (lxr_sst *)ud;
-    if (s->skip_depth == 0 && s->in_t && len > 0) {
+    if (s->skip_depth || len <= 0) return;
+    if (s->in_t) {
         append_text(s, text, (size_t)len);
+    }
+    if (s->in_run_t) {
+        append_run_text(s, text, (size_t)len);
     }
 }
 
@@ -194,12 +367,51 @@ size_t lxr_sst_loaded_count(const lxr_sst *s)
     return s ? s->loaded_count : 0;
 }
 
+const lxr_sst_run *lxr_sst_get_runs(lxr_sst *s, uint32_t index, size_t *out_count)
+{
+    if (out_count) *out_count = 0;
+    if (!s) return NULL;
+    /* Drive the pump if needed (STREAMING mode) — same logic as lxr_sst_get. */
+    if (index >= s->loaded_count && s->mode == LXR_SST_MODE_STREAMING && !s->eof) {
+        while ((uint32_t)s->loaded_count <= index && !s->eof) {
+            if (lxr_xml_pump_resume(s->pump) != LXR_NO_ERROR) return NULL;
+            if (!lxr_xml_pump_is_suspended(s->pump)) break;
+        }
+    }
+    if (index >= s->loaded_count) return NULL;
+    if (!s->runs || index >= s->runs_capacity) return NULL;
+    if (out_count) *out_count = s->runs[index].count;
+    return s->runs[index].items;
+}
+
 void lxr_sst_close(lxr_sst *s)
 {
-    size_t i;
+    size_t i, j;
     if (!s) return;
     for (i = 0; i < s->loaded_count; i++) free(s->strings[i]);
     free(s->strings);
+    if (s->runs) {
+        for (i = 0; i < s->runs_capacity; i++) {
+            for (j = 0; j < s->runs[i].count; j++) {
+                free(s->runs[i].items[j].text);
+                free(s->runs[i].items[j].font_name);
+                free(s->runs[i].items[j].color);
+            }
+            free(s->runs[i].items);
+        }
+        free(s->runs);
+    }
+    /* Free any in-progress run state (e.g. STREAMING mode never finished). */
+    for (i = 0; i < s->cur_runs.count; i++) {
+        free(s->cur_runs.items[i].text);
+        free(s->cur_runs.items[i].font_name);
+        free(s->cur_runs.items[i].color);
+    }
+    free(s->cur_runs.items);
+    free(s->pending.text);
+    free(s->pending.font_name);
+    free(s->pending.color);
+    free(s->run_text_buf);
     free(s->cur_buf);
     free(s->skip_tag);
     if (s->pump) lxr_xml_pump_destroy(s->pump);

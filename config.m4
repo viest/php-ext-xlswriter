@@ -103,6 +103,8 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxreader/src/workbook.c \
     library/libxlsxreader/src/worksheet.c \
     library/libxlsxreader/src/worksheet_meta.c \
+    library/libxlsxreader/src/comments.c \
+    library/libxlsxreader/src/chart_meta.c \
     library/libxlsxreader/src/drawing.c \
     "
 

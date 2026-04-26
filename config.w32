@@ -94,6 +94,8 @@ if (PHP_XLSWRITER != "no") {
                 workbook.c \
                 worksheet.c \
                 worksheet_meta.c \
+                comments.c \
+                chart_meta.c \
                 drawing.c \
                 ", "xlswriter", "libxlsxreader");
     } else {

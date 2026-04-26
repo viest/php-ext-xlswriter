@@ -155,6 +155,66 @@ typedef struct {
     /* Materialised public-facing copy assembled lazily by accessor (cached
      * here so the returned pointer stays valid). */
     lxr_filter_column *filter_columns_pub;
+
+    /* Page setup (§8.2.5). */
+    int    page_has_margins;
+    double page_margin_left, page_margin_right;
+    double page_margin_top,  page_margin_bottom;
+    double page_margin_header, page_margin_footer;
+
+    int    page_has_setup;
+    int    page_paper_size;
+    int    page_fit_to_width;
+    int    page_fit_to_height;
+    int    page_scale;
+    int    page_orientation_landscape;
+    int    page_horizontal_dpi;
+    int    page_vertical_dpi;
+    int    page_first_page_number;
+    int    page_use_first_page_number;
+
+    int    page_print_h_centered;
+    int    page_print_v_centered;
+    int    page_print_grid_lines;
+    int    page_print_headings;
+
+    char  *page_odd_header;
+    char  *page_odd_footer;
+    char  *page_even_header;
+    char  *page_even_footer;
+    char  *page_first_header;
+    char  *page_first_footer;
+    int    page_different_odd_even;
+    int    page_different_first;
+    int    page_scale_with_doc;
+    int    page_align_with_margins;
+
+    /* Conditional formats (§8.2.3): per-block lists of cfRule entries. */
+    struct lxr_cf_rule_owned {
+        char  *type;
+        char  *operator_;
+        int    priority;
+        int    stop_if_true;
+        int    dxf_id;
+        int    percent;
+        int    bottom;
+        double rank;
+        char  *text;
+        char  *time_period;
+        char  *formula1;
+        char  *formula2;
+    };
+    struct lxr_cf_block_owned {
+        char                     *sqref;
+        struct lxr_cf_rule_owned *rules;
+        size_t                    rules_count;
+        size_t                    rules_cap;
+    } *cf_blocks;
+    size_t cf_blocks_count;
+    size_t cf_blocks_cap;
+    /* Lazily materialised public copy. */
+    lxr_cf_rule  *cf_rules_pub;     /* contiguous; one big array */
+    size_t        cf_rules_pub_n;
 } lxr_worksheet_meta;
 
 /* Worksheet FSM states (per plans/reader.md §8). */
@@ -227,6 +287,37 @@ struct lxr_worksheet {
     char             cell_formula_ref[64];
     int              cell_formula_si;          /* -1 if absent */
     int              cell_formula_is_dynamic;
+
+    /* Inline-string rich-run accumulator (§8.2.2). Reset when a new cell
+     * starts; survives until the next cell so emit_cell sees the runs. */
+    int           inline_in_r;
+    int           inline_in_rpr;
+    int           inline_in_run_t;
+    char         *inline_run_text_buf;
+    size_t        inline_run_text_len;
+    size_t        inline_run_text_cap;
+    /* The pending run's font / colour properties — heap-allocated strings. */
+    char         *inline_pending_text;
+    char         *inline_pending_font_name;
+    char         *inline_pending_color;
+    double        inline_pending_font_size;
+    int           inline_pending_bold;
+    int           inline_pending_italic;
+    int           inline_pending_strike;
+    int           inline_pending_underline;
+    /* Committed runs for the cell currently being emitted. */
+    struct {
+        char  *text;
+        char  *font_name;
+        char  *color;
+        double font_size;
+        int    bold;
+        int    italic;
+        int    strike;
+        int    underline;
+    }            *inline_runs;
+    size_t        inline_runs_count;
+    size_t        inline_runs_cap;
 
     int           pending_cell;        /* a complete cell awaits consumer */
 

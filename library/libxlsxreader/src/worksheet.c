@@ -193,6 +193,20 @@ static void reset_cell(lxr_worksheet *ws)
     ws->cell_formula_ref[0]     = 0;
     ws->cell_formula_si         = -1;
     ws->cell_formula_is_dynamic = 0;
+    /* Free any rich runs accumulated for the previous inline-string cell. */
+    if (ws->inline_runs) {
+        size_t i;
+        for (i = 0; i < ws->inline_runs_count; i++) {
+            free(ws->inline_runs[i].text);
+            free(ws->inline_runs[i].font_name);
+            free(ws->inline_runs[i].color);
+        }
+        ws->inline_runs_count = 0;
+    }
+    ws->inline_in_r = ws->inline_in_rpr = ws->inline_in_run_t = 0;
+    free(ws->inline_pending_text);     ws->inline_pending_text = NULL;
+    free(ws->inline_pending_font_name); ws->inline_pending_font_name = NULL;
+    free(ws->inline_pending_color);     ws->inline_pending_color = NULL;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -357,7 +371,16 @@ static void on_start(void *ud, const char *name, const char **attrs)
         if (lxr_xml_name_eq(name, "t")) {
             ws->state = LXR_WS_IN_INLINE_STR_T;
         } else if (lxr_xml_name_eq(name, "r")) {
-            /* rich-text run — wait for inner <t> */
+            /* Begin a new rich-text run. */
+            ws->inline_in_r = 1;
+            free(ws->inline_pending_text);     ws->inline_pending_text = NULL;
+            free(ws->inline_pending_font_name); ws->inline_pending_font_name = NULL;
+            free(ws->inline_pending_color);     ws->inline_pending_color = NULL;
+            ws->inline_pending_font_size = 0;
+            ws->inline_pending_bold = ws->inline_pending_italic = 0;
+            ws->inline_pending_strike = ws->inline_pending_underline = 0;
+            ws->inline_run_text_len = 0;
+            if (ws->inline_run_text_buf) ws->inline_run_text_buf[0] = 0;
         } else {
             free(ws->skip_tag);
             ws->skip_tag = strdup(name);
@@ -368,7 +391,51 @@ static void on_start(void *ud, const char *name, const char **attrs)
         break;
 
     default:
+        /* Inline-string rich runs sit on top of the existing FSM. We don't
+         * dedicate a new state because the structure is local and small. */
+        if (ws->state == LXR_WS_IN_INLINE_STR && ws->inline_in_r) {
+            /* (handled above) */
+        }
         break;
+    }
+
+    /* Out-of-band: <r>/<rPr>/<t>/<rPr children> handling for inline rich runs. */
+    if (ws->inline_in_r) {
+        if (lxr_xml_name_eq(name, "rPr")) {
+            ws->inline_in_rpr = 1;
+        } else if (ws->inline_in_rpr) {
+            const char *v;
+            if (lxr_xml_name_eq(name, "rFont")) {
+                if ((v = lxr_xml_attr(attrs, "val"))) {
+                    free(ws->inline_pending_font_name);
+                    ws->inline_pending_font_name = strdup(v);
+                }
+            } else if (lxr_xml_name_eq(name, "sz")) {
+                if ((v = lxr_xml_attr(attrs, "val"))) ws->inline_pending_font_size = strtod(v, NULL);
+            } else if (lxr_xml_name_eq(name, "b")) {
+                v = lxr_xml_attr(attrs, "val");
+                ws->inline_pending_bold = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "i")) {
+                v = lxr_xml_attr(attrs, "val");
+                ws->inline_pending_italic = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "strike")) {
+                v = lxr_xml_attr(attrs, "val");
+                ws->inline_pending_strike = !v || strcmp(v, "0") != 0;
+            } else if (lxr_xml_name_eq(name, "u")) {
+                v = lxr_xml_attr(attrs, "val");
+                if (!v || strcmp(v, "single") == 0)             ws->inline_pending_underline = 1;
+                else if (strcmp(v, "double") == 0)              ws->inline_pending_underline = 2;
+                else if (strcmp(v, "singleAccounting") == 0)    ws->inline_pending_underline = 3;
+                else if (strcmp(v, "doubleAccounting") == 0)    ws->inline_pending_underline = 4;
+            } else if (lxr_xml_name_eq(name, "color")) {
+                if ((v = lxr_xml_attr(attrs, "rgb"))) {
+                    free(ws->inline_pending_color);
+                    ws->inline_pending_color = strdup(v);
+                }
+            }
+        } else if (lxr_xml_name_eq(name, "t")) {
+            ws->inline_in_run_t = 1;
+        }
     }
 }
 
@@ -389,6 +456,12 @@ static void on_text(void *ud, const char *text, int len)
     case LXR_WS_IN_INLINE_STR_T:
         append_buf(&ws->cell_inline, &ws->cell_inline_len, &ws->cell_inline_cap,
                    text, (size_t)len);
+        /* Fall-through-style: when this <t> sits inside an <r>, also feed
+         * the per-run text accumulator. */
+        if (ws->inline_in_run_t) {
+            append_buf(&ws->inline_run_text_buf, &ws->inline_run_text_len,
+                       &ws->inline_run_text_cap, text, (size_t)len);
+        }
         break;
     default:
         break;
@@ -410,6 +483,39 @@ static void on_end(void *ud, const char *name)
              * </row> would (back to IN_SHEETDATA). */
         }
         return;
+    }
+
+    /* Out-of-band: rich-text run end transitions for inline strings. */
+    if (ws->inline_in_run_t && lxr_xml_name_eq(name, "t")) {
+        ws->inline_in_run_t = 0;
+    } else if (ws->inline_in_rpr && lxr_xml_name_eq(name, "rPr")) {
+        ws->inline_in_rpr = 0;
+    } else if (ws->inline_in_r && lxr_xml_name_eq(name, "r")) {
+        /* Commit run to inline_runs[]. */
+        if (ws->inline_runs_count >= ws->inline_runs_cap) {
+            size_t nc = ws->inline_runs_cap ? ws->inline_runs_cap * 2 : 4;
+            void *nb = realloc(ws->inline_runs, nc * sizeof(*ws->inline_runs));
+            if (nb) {
+                ws->inline_runs = nb;
+                ws->inline_runs_cap = nc;
+            }
+        }
+        if (ws->inline_runs_count < ws->inline_runs_cap) {
+            ws->inline_runs[ws->inline_runs_count].text =
+                ws->inline_run_text_len > 0 ? strdup(ws->inline_run_text_buf) : strdup("");
+            ws->inline_runs[ws->inline_runs_count].font_name = ws->inline_pending_font_name;
+            ws->inline_runs[ws->inline_runs_count].color     = ws->inline_pending_color;
+            ws->inline_runs[ws->inline_runs_count].font_size = ws->inline_pending_font_size;
+            ws->inline_runs[ws->inline_runs_count].bold      = ws->inline_pending_bold;
+            ws->inline_runs[ws->inline_runs_count].italic    = ws->inline_pending_italic;
+            ws->inline_runs[ws->inline_runs_count].strike    = ws->inline_pending_strike;
+            ws->inline_runs[ws->inline_runs_count].underline = ws->inline_pending_underline;
+            ws->inline_runs_count++;
+            /* The pending struct's owned strings are now owned by inline_runs. */
+            ws->inline_pending_font_name = NULL;
+            ws->inline_pending_color     = NULL;
+        }
+        ws->inline_in_r = 0;
     }
 
     switch (ws->state) {
@@ -522,6 +628,20 @@ void lxr_worksheet_close(lxr_worksheet *ws)
     free(ws->cell_inline);
     free(ws->skip_tag);
     free(ws->target_path);
+    /* Inline rich-text run state. */
+    if (ws->inline_runs) {
+        size_t i;
+        for (i = 0; i < ws->inline_runs_count; i++) {
+            free(ws->inline_runs[i].text);
+            free(ws->inline_runs[i].font_name);
+            free(ws->inline_runs[i].color);
+        }
+        free(ws->inline_runs);
+    }
+    free(ws->inline_run_text_buf);
+    free(ws->inline_pending_text);
+    free(ws->inline_pending_font_name);
+    free(ws->inline_pending_color);
     free(ws);
 }
 

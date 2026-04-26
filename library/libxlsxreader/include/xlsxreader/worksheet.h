@@ -170,6 +170,131 @@ typedef struct {
 
 int lxr_worksheet_autofilter(const lxr_worksheet *ws, lxr_autofilter *out);
 
+/* ---- Page setup --------------------------------------------------------- */
+
+typedef struct {
+    /* Margins (inches). has_* indicate explicit element presence. */
+    int    has_margins;
+    double margin_left, margin_right, margin_top, margin_bottom;
+    double margin_header, margin_footer;
+
+    /* pageSetup attrs. */
+    int    has_setup;
+    int    paper_size;          /* 0 if absent */
+    int    fit_to_width;
+    int    fit_to_height;
+    int    scale;               /* 0 if absent (interpreted as default 100) */
+    int    orientation_landscape;  /* 1 = landscape, 0 = portrait/default */
+    int    horizontal_dpi;
+    int    vertical_dpi;
+    int    first_page_number;
+    int    use_first_page_number;
+
+    /* printOptions. */
+    int    print_horizontal_centered;
+    int    print_vertical_centered;
+    int    print_grid_lines;
+    int    print_headings;
+
+    /* Header / footer text (strings; pointers owned by worksheet). */
+    const char *odd_header;
+    const char *odd_footer;
+    const char *even_header;
+    const char *even_footer;
+    const char *first_header;
+    const char *first_footer;
+    int   different_odd_even;
+    int   different_first;
+    int   scale_with_doc;
+    int   align_with_margins;
+} lxr_page_setup;
+
+int lxr_worksheet_page_setup(const lxr_worksheet *ws, lxr_page_setup *out);
+
+/* ---- Conditional formats (§8.2.3) -------------------------------------- */
+
+typedef struct {
+    const char *type;       /* "cellIs","expression","colorScale","dataBar",
+                                "iconSet","top10","aboveAverage","duplicateValues",
+                                "uniqueValues","containsText","containsBlanks",
+                                "notContainsBlanks","containsErrors","notContainsErrors",
+                                "timePeriod" — or NULL */
+    const char *operator_;  /* "greaterThan","between", ... — or NULL */
+    int         priority;
+    int         stop_if_true;
+    int         dxf_id;     /* -1 if absent */
+    int         percent;    /* top10's percent attr */
+    int         bottom;     /* top10's bottom attr */
+    double      rank;       /* top10's rank attr */
+    const char *text;       /* containsText/notContainsText/etc. */
+    const char *time_period; /* timePeriod's attr */
+    /* up to 2 inline formulas (formula1, formula2) */
+    const char *formula1;
+    const char *formula2;
+} lxr_cf_rule;
+
+typedef struct {
+    const char        *sqref;     /* the conditionalFormatting sqref */
+    const lxr_cf_rule *rules;
+    size_t             rules_count;
+} lxr_cf_block;
+
+size_t lxr_worksheet_cf_block_count(const lxr_worksheet *ws);
+int    lxr_worksheet_cf_block_get  (const lxr_worksheet *ws, size_t idx,
+                                    lxr_cf_block *out);
+
+/* ---- Comments (§8.2.1) -------------------------------------------------- */
+
+typedef struct {
+    size_t      row;          /* 1-based */
+    size_t      col;          /* 1-based */
+    const char *text;
+    const char *author;
+    int         visible;      /* legacy VML's "visible" attr */
+    int         threaded;
+    const char *parent_id;    /* threaded reply parent GUID, or NULL */
+} lxr_comment_info;
+
+typedef int (*lxr_comment_cb)(const lxr_comment_info *info, void *userdata);
+
+/* Iterates legacy + threaded comments. cb returning non-zero stops. Returns
+ * LXR_NO_ERROR on success; ZIP_ENTRY_NOT_FOUND when the sheet has none. */
+lxr_error lxr_worksheet_iterate_comments(lxr_worksheet *ws,
+                                         lxr_comment_cb cb, void *userdata);
+
+/* ---- Chart metadata (§8.2.4) ------------------------------------------- */
+
+typedef struct {
+    const char *name;        /* series name, may be NULL */
+    const char *categories;  /* category range / formula */
+    const char *values;      /* values range */
+} lxr_chart_series_info;
+
+typedef struct {
+    const char *type;        /* "bar"/"line"/"pie"/"area"/"scatter"/"radar"/"doughnut" or NULL */
+    const char *title;
+    /* 1-based inclusive anchor; 0 if not from a twoCellAnchor. */
+    size_t from_row, from_col, to_row, to_col;
+    const lxr_chart_series_info *series;
+    size_t                       series_count;
+} lxr_chart_meta;
+
+typedef int (*lxr_chart_cb)(const lxr_chart_meta *info, void *userdata);
+
+lxr_error lxr_worksheet_iterate_charts(lxr_worksheet *ws,
+                                       lxr_chart_cb cb, void *userdata);
+
+/* ---- Rich-text runs (§8.2.2) ------------------------------------------- */
+
+/* For LXR_CELL_STRING (SST) and LXR_CELL_INLINE_STRING cells, fills `out`
+ * with up to `cap` runs and returns the actual count. When `out` is NULL
+ * just returns the run count. Callers can sniff the run count first, then
+ * allocate appropriately. The pointers inside each run remain valid until
+ * the next streaming step that overwrites the inline buffer (for inline
+ * strings) or until the workbook is closed (for SST strings). */
+size_t lxr_cell_string_runs(const lxr_worksheet *ws, const lxr_cell *c,
+                            lxr_string_run *out, size_t cap);
+
 #ifdef __cplusplus
 }
 #endif

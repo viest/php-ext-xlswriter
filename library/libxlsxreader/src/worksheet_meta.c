@@ -292,6 +292,17 @@ typedef enum {
     M_IN_AUTOFILTER,
     M_IN_FILTERCOLUMN,
     M_IN_FILTERS,           /* <filters> inside a <filterColumn> */
+    /* §8.2.5 page setup — text-collecting states for header/footer. */
+    M_IN_HEADERFOOTER,
+    M_IN_ODD_HEADER,
+    M_IN_ODD_FOOTER,
+    M_IN_EVEN_HEADER,
+    M_IN_EVEN_FOOTER,
+    M_IN_FIRST_HEADER,
+    M_IN_FIRST_FOOTER,
+    M_IN_CONDFMT,
+    M_IN_CFRULE,
+    M_IN_CF_FORMULA,
     M_SKIP
 } m_state;
 
@@ -429,6 +440,58 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
                 c->m->autofilter_range = strdup(ref);
             }
             c->state = M_IN_AUTOFILTER;
+        } else if (lxr_xml_name_eq(name, "pageMargins")) {
+            const char *l = lxr_xml_attr(attrs, "left");
+            const char *r = lxr_xml_attr(attrs, "right");
+            const char *t = lxr_xml_attr(attrs, "top");
+            const char *b = lxr_xml_attr(attrs, "bottom");
+            const char *h = lxr_xml_attr(attrs, "header");
+            const char *f = lxr_xml_attr(attrs, "footer");
+            c->m->page_has_margins = 1;
+            if (l) c->m->page_margin_left   = strtod(l, NULL);
+            if (r) c->m->page_margin_right  = strtod(r, NULL);
+            if (t) c->m->page_margin_top    = strtod(t, NULL);
+            if (b) c->m->page_margin_bottom = strtod(b, NULL);
+            if (h) c->m->page_margin_header = strtod(h, NULL);
+            if (f) c->m->page_margin_footer = strtod(f, NULL);
+        } else if (lxr_xml_name_eq(name, "pageSetup")) {
+            const char *v;
+            c->m->page_has_setup = 1;
+            if ((v = lxr_xml_attr(attrs, "paperSize")))    c->m->page_paper_size    = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "fitToWidth")))   c->m->page_fit_to_width  = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "fitToHeight")))  c->m->page_fit_to_height = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "scale")))        c->m->page_scale         = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "orientation"))
+                && strcmp(v, "landscape") == 0)            c->m->page_orientation_landscape = 1;
+            if ((v = lxr_xml_attr(attrs, "horizontalDpi")))   c->m->page_horizontal_dpi = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "verticalDpi")))     c->m->page_vertical_dpi   = (int)strtol(v, NULL, 10);
+            if ((v = lxr_xml_attr(attrs, "firstPageNumber"))) c->m->page_first_page_number = (int)strtol(v, NULL, 10);
+            c->m->page_use_first_page_number = attr_truthy(lxr_xml_attr(attrs, "useFirstPageNumber"));
+        } else if (lxr_xml_name_eq(name, "printOptions")) {
+            c->m->page_print_h_centered  = attr_truthy(lxr_xml_attr(attrs, "horizontalCentered"));
+            c->m->page_print_v_centered  = attr_truthy(lxr_xml_attr(attrs, "verticalCentered"));
+            c->m->page_print_grid_lines  = attr_truthy(lxr_xml_attr(attrs, "gridLines"));
+            c->m->page_print_headings    = attr_truthy(lxr_xml_attr(attrs, "headings"));
+        } else if (lxr_xml_name_eq(name, "conditionalFormatting")) {
+            const char *sqref = lxr_xml_attr(attrs, "sqref");
+            if (c->m->cf_blocks_count >= c->m->cf_blocks_cap) {
+                size_t nc = c->m->cf_blocks_cap ? c->m->cf_blocks_cap * 2 : 4;
+                struct lxr_cf_block_owned *nb = realloc(c->m->cf_blocks,
+                                                        nc * sizeof(*nb));
+                if (nb) { c->m->cf_blocks = nb; c->m->cf_blocks_cap = nc; }
+            }
+            if (c->m->cf_blocks_count < c->m->cf_blocks_cap) {
+                struct lxr_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count++];
+                memset(bk, 0, sizeof(*bk));
+                if (sqref) bk->sqref = strdup(sqref);
+            }
+            c->state = M_IN_CONDFMT;
+        } else if (lxr_xml_name_eq(name, "headerFooter")) {
+            c->m->page_different_odd_even = attr_truthy(lxr_xml_attr(attrs, "differentOddEven"));
+            c->m->page_different_first    = attr_truthy(lxr_xml_attr(attrs, "differentFirst"));
+            c->m->page_scale_with_doc     = attr_truthy(lxr_xml_attr(attrs, "scaleWithDoc"));
+            c->m->page_align_with_margins = attr_truthy(lxr_xml_attr(attrs, "alignWithMargins"));
+            c->state = M_IN_HEADERFOOTER;
         } else if (lxr_xml_name_eq(name, "sheetProtection")) {
             const char *v;
             c->m->prot_present = 1;
@@ -575,6 +638,54 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
                 enter_skip(c, name);
             }
         }
+        break;
+
+    case M_IN_CONDFMT:
+        if (lxr_xml_name_eq(name, "cfRule") && c->m->cf_blocks_count > 0) {
+            struct lxr_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count - 1];
+            const char *v;
+            if (bk->rules_count >= bk->rules_cap) {
+                size_t nc = bk->rules_cap ? bk->rules_cap * 2 : 2;
+                struct lxr_cf_rule_owned *nb = realloc(bk->rules, nc * sizeof(*nb));
+                if (nb) { bk->rules = nb; bk->rules_cap = nc; }
+            }
+            if (bk->rules_count < bk->rules_cap) {
+                struct lxr_cf_rule_owned *r = &bk->rules[bk->rules_count++];
+                memset(r, 0, sizeof(*r));
+                r->dxf_id = -1;
+                if ((v = lxr_xml_attr(attrs, "type")))        r->type        = strdup(v);
+                if ((v = lxr_xml_attr(attrs, "operator")))    r->operator_   = strdup(v);
+                if ((v = lxr_xml_attr(attrs, "priority")))    r->priority    = (int)strtol(v, NULL, 10);
+                if ((v = lxr_xml_attr(attrs, "dxfId")))       r->dxf_id      = (int)strtol(v, NULL, 10);
+                if ((v = lxr_xml_attr(attrs, "rank")))        r->rank        = strtod(v, NULL);
+                if ((v = lxr_xml_attr(attrs, "text")))        r->text        = strdup(v);
+                if ((v = lxr_xml_attr(attrs, "timePeriod")))  r->time_period = strdup(v);
+                r->stop_if_true = attr_truthy(lxr_xml_attr(attrs, "stopIfTrue"));
+                r->percent      = attr_truthy(lxr_xml_attr(attrs, "percent"));
+                r->bottom       = attr_truthy(lxr_xml_attr(attrs, "bottom"));
+            }
+            c->state = M_IN_CFRULE;
+        }
+        break;
+
+    case M_IN_CFRULE:
+        if (lxr_xml_name_eq(name, "formula")) {
+            txt_reset(c);
+            c->state = M_IN_CF_FORMULA;
+        } else {
+            /* colorScale, dataBar, iconSet — skip nested element trees. */
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_HEADERFOOTER:
+        if      (lxr_xml_name_eq(name, "oddHeader"))   { txt_reset(c); c->state = M_IN_ODD_HEADER;   }
+        else if (lxr_xml_name_eq(name, "oddFooter"))   { txt_reset(c); c->state = M_IN_ODD_FOOTER;   }
+        else if (lxr_xml_name_eq(name, "evenHeader"))  { txt_reset(c); c->state = M_IN_EVEN_HEADER;  }
+        else if (lxr_xml_name_eq(name, "evenFooter"))  { txt_reset(c); c->state = M_IN_EVEN_FOOTER;  }
+        else if (lxr_xml_name_eq(name, "firstHeader")) { txt_reset(c); c->state = M_IN_FIRST_HEADER; }
+        else if (lxr_xml_name_eq(name, "firstFooter")) { txt_reset(c); c->state = M_IN_FIRST_FOOTER; }
+        else                                            enter_skip(c, name);
         break;
 
     case M_IN_FILTERS:
@@ -741,6 +852,43 @@ static void m_on_end(void *ud, const char *name)
     case M_IN_AUTOFILTER:
         if (lxr_xml_name_eq(name, "autoFilter")) c->state = M_IN_WORKSHEET;
         break;
+    case M_IN_HEADERFOOTER:
+        if (lxr_xml_name_eq(name, "headerFooter")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_CFRULE:
+        if (lxr_xml_name_eq(name, "cfRule")) c->state = M_IN_CONDFMT;
+        break;
+    case M_IN_CONDFMT:
+        if (lxr_xml_name_eq(name, "conditionalFormatting"))
+            c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_CF_FORMULA:
+        if (lxr_xml_name_eq(name, "formula")) {
+            if (c->m->cf_blocks_count > 0) {
+                struct lxr_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count - 1];
+                if (bk->rules_count > 0 && c->txt_len > 0) {
+                    struct lxr_cf_rule_owned *r = &bk->rules[bk->rules_count - 1];
+                    if (!r->formula1)      r->formula1 = strdup(c->txt);
+                    else if (!r->formula2) r->formula2 = strdup(c->txt);
+                }
+            }
+            c->state = M_IN_CFRULE;
+        }
+        break;
+#define HF_END(state_, tagname_, slot_)                              \
+    case state_:                                                     \
+        if (lxr_xml_name_eq(name, tagname_)) {                       \
+            free(c->m->slot_);                                       \
+            c->m->slot_ = c->txt_len > 0 ? strdup(c->txt) : NULL;    \
+            c->state = M_IN_HEADERFOOTER;                            \
+        } break;
+    HF_END(M_IN_ODD_HEADER,   "oddHeader",   page_odd_header)
+    HF_END(M_IN_ODD_FOOTER,   "oddFooter",   page_odd_footer)
+    HF_END(M_IN_EVEN_HEADER,  "evenHeader",  page_even_header)
+    HF_END(M_IN_EVEN_FOOTER,  "evenFooter",  page_even_footer)
+    HF_END(M_IN_FIRST_HEADER, "firstHeader", page_first_header)
+    HF_END(M_IN_FIRST_FOOTER, "firstFooter", page_first_footer)
+#undef HF_END
     case M_IN_WORKSHEET:
         if (lxr_xml_name_eq(name, "worksheet")) c->state = M_INIT;
         break;
@@ -749,13 +897,24 @@ static void m_on_end(void *ud, const char *name)
     }
 }
 
-/* Text capture for <formula1>/<formula2>. */
+/* Text capture for <formula1>/<formula2> and header/footer text fields. */
 static void m_on_text(void *ud, const char *text, int len)
 {
     m_ctx *c = (m_ctx *)ud;
     if (len <= 0) return;
-    if (c->state == M_IN_DV_FORMULA1 || c->state == M_IN_DV_FORMULA2) {
+    switch (c->state) {
+    case M_IN_DV_FORMULA1:
+    case M_IN_DV_FORMULA2:
+    case M_IN_ODD_HEADER:
+    case M_IN_ODD_FOOTER:
+    case M_IN_EVEN_HEADER:
+    case M_IN_EVEN_FOOTER:
+    case M_IN_FIRST_HEADER:
+    case M_IN_FIRST_FOOTER:
+    case M_IN_CF_FORMULA:
         txt_append(c, text, (size_t)len);
+        break;
+    default: break;
     }
 }
 
@@ -853,6 +1012,29 @@ void lxr_worksheet_meta_free(lxr_worksheet_meta *m)
         free(m->filter_columns);
     }
     free(m->filter_columns_pub);
+    free(m->page_odd_header);
+    free(m->page_odd_footer);
+    free(m->page_even_header);
+    free(m->page_even_footer);
+    free(m->page_first_header);
+    free(m->page_first_footer);
+    if (m->cf_blocks) {
+        for (i = 0; i < m->cf_blocks_count; i++) {
+            size_t j;
+            free(m->cf_blocks[i].sqref);
+            for (j = 0; j < m->cf_blocks[i].rules_count; j++) {
+                free(m->cf_blocks[i].rules[j].type);
+                free(m->cf_blocks[i].rules[j].operator_);
+                free(m->cf_blocks[i].rules[j].text);
+                free(m->cf_blocks[i].rules[j].time_period);
+                free(m->cf_blocks[i].rules[j].formula1);
+                free(m->cf_blocks[i].rules[j].formula2);
+            }
+            free(m->cf_blocks[i].rules);
+        }
+        free(m->cf_blocks);
+    }
+    free(m->cf_rules_pub);
     memset(m, 0, sizeof(*m));
 }
 
@@ -1033,6 +1215,173 @@ int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
     out->show_drop_down     = d->show_drop_down;
     out->show_input_message = d->show_input_message;
     out->show_error_message = d->show_error_message;
+    return 1;
+}
+
+/* ---- Conditional format accessors (§8.2.3) ----------------------------- */
+
+size_t lxr_worksheet_cf_block_count(const lxr_worksheet *ws)
+{
+    return ws ? ws->meta.cf_blocks_count : 0;
+}
+
+int lxr_worksheet_cf_block_get(const lxr_worksheet *ws, size_t idx,
+                               lxr_cf_block *out)
+{
+    lxr_worksheet_meta *m;
+    const struct lxr_cf_block_owned *bk;
+    size_t i;
+    if (!ws || !out) return 0;
+    m = (lxr_worksheet_meta *)&ws->meta;
+    if (idx >= m->cf_blocks_count) return 0;
+    bk = &m->cf_blocks[idx];
+
+    /* Materialise a public-shape rules array per block, lazily and once.
+     * We over-allocate cf_rules_pub to hold ALL rules across all blocks
+     * (positions are sequential within the array per block). */
+    if (!m->cf_rules_pub) {
+        size_t total = 0, j, off = 0;
+        for (j = 0; j < m->cf_blocks_count; j++) total += m->cf_blocks[j].rules_count;
+        m->cf_rules_pub = (lxr_cf_rule *)calloc(total ? total : 1, sizeof(lxr_cf_rule));
+        if (!m->cf_rules_pub) return 0;
+        m->cf_rules_pub_n = total;
+        for (j = 0; j < m->cf_blocks_count; j++) {
+            for (i = 0; i < m->cf_blocks[j].rules_count; i++, off++) {
+                const struct lxr_cf_rule_owned *src = &m->cf_blocks[j].rules[i];
+                lxr_cf_rule                    *dst = &m->cf_rules_pub[off];
+                dst->type        = src->type;
+                dst->operator_   = src->operator_;
+                dst->priority    = src->priority;
+                dst->stop_if_true = src->stop_if_true;
+                dst->dxf_id      = src->dxf_id;
+                dst->percent     = src->percent;
+                dst->bottom      = src->bottom;
+                dst->rank        = src->rank;
+                dst->text        = src->text;
+                dst->time_period = src->time_period;
+                dst->formula1    = src->formula1;
+                dst->formula2    = src->formula2;
+            }
+        }
+    }
+
+    /* Find the offset of this block's rules in the contiguous array. */
+    {
+        size_t j, off = 0;
+        for (j = 0; j < idx; j++) off += m->cf_blocks[j].rules_count;
+        out->sqref       = bk->sqref;
+        out->rules       = bk->rules_count > 0 ? &m->cf_rules_pub[off] : NULL;
+        out->rules_count = bk->rules_count;
+    }
+    return 1;
+}
+
+/* ---- Rich-text runs accessor (§8.2.2) ---------------------------------- */
+
+size_t lxr_cell_string_runs(const lxr_worksheet *ws, const lxr_cell *c,
+                            lxr_string_run *out, size_t cap)
+{
+    if (!ws || !c) return 0;
+
+    if (c->type == LXR_CELL_STRING) {
+        /* SST cell: cell.raw holds the SST index as decimal text. */
+        uint32_t idx;
+        size_t   count = 0;
+        const lxr_sst_run *runs;
+        size_t i;
+        if (!ws->wb || !ws->wb->sst || !c->raw.ptr) return 0;
+        idx = (uint32_t)strtoul(c->raw.ptr, NULL, 10);
+        runs = lxr_sst_get_runs(ws->wb->sst, idx, &count);
+        if (count == 0) return 0;
+        if (out) {
+            for (i = 0; i < count && i < cap; i++) {
+                out[i].text       = runs[i].text;
+                out[i].text_len   = runs[i].text ? strlen(runs[i].text) : 0;
+                out[i].font_name  = runs[i].font_name;
+                out[i].font_size  = runs[i].font_size;
+                out[i].bold       = runs[i].bold;
+                out[i].italic     = runs[i].italic;
+                out[i].strike     = runs[i].strike;
+                out[i].underline  = runs[i].underline;
+                out[i].color      = runs[i].color;
+            }
+        }
+        return count;
+    }
+
+    if (c->type == LXR_CELL_INLINE_STRING) {
+        size_t i, n = ws->inline_runs_count;
+        if (n == 0) return 0;
+        if (out) {
+            for (i = 0; i < n && i < cap; i++) {
+                out[i].text       = ws->inline_runs[i].text;
+                out[i].text_len   = ws->inline_runs[i].text ? strlen(ws->inline_runs[i].text) : 0;
+                out[i].font_name  = ws->inline_runs[i].font_name;
+                out[i].font_size  = ws->inline_runs[i].font_size;
+                out[i].bold       = ws->inline_runs[i].bold;
+                out[i].italic     = ws->inline_runs[i].italic;
+                out[i].strike     = ws->inline_runs[i].strike;
+                out[i].underline  = ws->inline_runs[i].underline;
+                out[i].color      = ws->inline_runs[i].color;
+            }
+        }
+        return n;
+    }
+
+    return 0;
+}
+
+/* ---- Page setup accessor ------------------------------------------------ */
+
+int lxr_worksheet_page_setup(const lxr_worksheet *ws, lxr_page_setup *out)
+{
+    const lxr_worksheet_meta *m;
+    if (!ws || !out) return 0;
+    m = &ws->meta;
+    /* If nothing about the page was parsed, surface 0 so callers can return
+     * an explicit "no page setup" sentinel. */
+    if (!m->page_has_margins && !m->page_has_setup &&
+        !m->page_print_h_centered && !m->page_print_v_centered &&
+        !m->page_print_grid_lines && !m->page_print_headings &&
+        !m->page_odd_header && !m->page_odd_footer &&
+        !m->page_even_header && !m->page_even_footer &&
+        !m->page_first_header && !m->page_first_footer) return 0;
+
+    memset(out, 0, sizeof(*out));
+    out->has_margins   = m->page_has_margins;
+    out->margin_left   = m->page_margin_left;
+    out->margin_right  = m->page_margin_right;
+    out->margin_top    = m->page_margin_top;
+    out->margin_bottom = m->page_margin_bottom;
+    out->margin_header = m->page_margin_header;
+    out->margin_footer = m->page_margin_footer;
+
+    out->has_setup           = m->page_has_setup;
+    out->paper_size          = m->page_paper_size;
+    out->fit_to_width        = m->page_fit_to_width;
+    out->fit_to_height       = m->page_fit_to_height;
+    out->scale               = m->page_scale;
+    out->orientation_landscape = m->page_orientation_landscape;
+    out->horizontal_dpi      = m->page_horizontal_dpi;
+    out->vertical_dpi        = m->page_vertical_dpi;
+    out->first_page_number   = m->page_first_page_number;
+    out->use_first_page_number = m->page_use_first_page_number;
+
+    out->print_horizontal_centered = m->page_print_h_centered;
+    out->print_vertical_centered   = m->page_print_v_centered;
+    out->print_grid_lines          = m->page_print_grid_lines;
+    out->print_headings            = m->page_print_headings;
+
+    out->odd_header   = m->page_odd_header;
+    out->odd_footer   = m->page_odd_footer;
+    out->even_header  = m->page_even_header;
+    out->even_footer  = m->page_even_footer;
+    out->first_header = m->page_first_header;
+    out->first_footer = m->page_first_footer;
+    out->different_odd_even = m->page_different_odd_even;
+    out->different_first    = m->page_different_first;
+    out->scale_with_doc     = m->page_scale_with_doc;
+    out->align_with_margins = m->page_align_with_margins;
     return 1;
 }
 

@@ -1839,13 +1839,21 @@ static void cell_value_to_zval(zval *out, const lxr_cell *c) {
         return;
     case LXR_CELL_FORMULA:
         if (c->value.formula.cached.ptr && c->value.formula.cached.len > 0) {
-            zend_long _l = 0; double _d = 0;
+            zend_long _l = 0;
+            double    _d = 0;
             int kind = is_numeric_string(c->value.formula.cached.ptr,
                                          c->value.formula.cached.len, &_l, &_d, 0);
-            if (kind == IS_LONG)        ZVAL_LONG(out, _l);
-            else if (kind == IS_DOUBLE) ZVAL_DOUBLE(out, _d);
-            else                        ZVAL_STRINGL(out, c->value.formula.cached.ptr,
-                                                          c->value.formula.cached.len);
+            /* Braces are mandatory: on PHP 7.4 some Z_VAL_* macros expand to
+             * a bare `{ ... }` block (not `do { } while (0)`), so chaining
+             * `if (...) MACRO; else if (...) MACRO;` orphans the else. */
+            if (kind == IS_LONG) {
+                ZVAL_LONG(out, _l);
+            } else if (kind == IS_DOUBLE) {
+                ZVAL_DOUBLE(out, _d);
+            } else {
+                ZVAL_STRINGL(out, c->value.formula.cached.ptr,
+                                  c->value.formula.cached.len);
+            }
         } else {
             ZVAL_NULL(out);
         }

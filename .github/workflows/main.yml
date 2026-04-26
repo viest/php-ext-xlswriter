@@ -53,6 +53,12 @@ jobs:
     container:
       image: php:8.3-cli-alpine
     steps:
+      # actions/checkout@v4 falls back to a tarball download (which cannot
+      # fetch submodules) when git ≥ 2.18 is missing in the container, so
+      # install it before the checkout step.
+      - name: Install git in container
+        run: apk add --no-cache git
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

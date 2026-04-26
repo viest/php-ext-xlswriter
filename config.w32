@@ -28,6 +28,8 @@ if (PHP_XLSWRITER != "no") {
                 resource.c \
                 rich_string.c \
                 validation.c \
+                conditional_format.c \
+                table.c \
                 write.c \
                 ", "xlswriter");
 

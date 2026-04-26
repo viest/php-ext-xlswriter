@@ -56,6 +56,8 @@ PHP_MINIT_FUNCTION(xlswriter)
 	VTIFUL_STARTUP_MODULE(chart);
     VTIFUL_STARTUP_MODULE(validation);
     VTIFUL_STARTUP_MODULE(rich_string);
+    VTIFUL_STARTUP_MODULE(conditional_format);
+    VTIFUL_STARTUP_MODULE(table);
 
 	le_xls_writer = zend_register_list_destructors_ex(_php_vtiful_xls_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 

@@ -36,6 +36,8 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/resource.c \
     kernel/rich_string.c \
     kernel/validation.c \
+    kernel/conditional_format.c \
+    kernel/table.c \
     kernel/write.c \
     "
 

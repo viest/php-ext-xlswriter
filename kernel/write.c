@@ -450,6 +450,175 @@ void margins(xls_resource_write_t *res, double left, double right, double top, d
     worksheet_set_margins(res->worksheet, left, right, top, bottom);
 }
 
+/* ------------------------------------------------------------------------ */
+/* Phase 2 writer helpers                                                    */
+/* ------------------------------------------------------------------------ */
+
+/* Comment with full options. Caller fills out the lxw_comment_options
+ * struct (zero-init for defaults). */
+void comment_opt_writer(zend_string *comment, zend_long row, zend_long columns,
+                        lxw_comment_options *options, xls_resource_write_t *res)
+{
+    int error = worksheet_write_comment_opt(res->worksheet,
+                                            (lxw_row_t)row, (lxw_col_t)columns,
+                                            ZSTR_VAL(comment), options);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Image from in-memory buffer. */
+void image_buffer_writer(zend_long row, zend_long columns,
+                         const unsigned char *bytes, size_t size,
+                         lxw_image_options *options,
+                         xls_resource_write_t *res)
+{
+    int error;
+    if (options) {
+        error = worksheet_insert_image_buffer_opt(res->worksheet,
+                                                  (lxw_row_t)row, (lxw_col_t)columns,
+                                                  bytes, size, options);
+    } else {
+        error = worksheet_insert_image_buffer(res->worksheet,
+                                              (lxw_row_t)row, (lxw_col_t)columns,
+                                              bytes, size);
+    }
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Header / footer (with optional image filenames). */
+void header_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options)
+{
+    int error = options
+        ? worksheet_set_header_opt(res->worksheet, value, options)
+        : worksheet_set_header(res->worksheet, value);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void footer_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options)
+{
+    int error = options
+        ? worksheet_set_footer_opt(res->worksheet, value, options)
+        : worksheet_set_footer(res->worksheet, value);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Print: repeat rows / columns / area. Inputs are 0-based. */
+void repeat_rows_writer(xls_resource_write_t *res,
+                        zend_long first_row, zend_long last_row)
+{
+    int error = worksheet_repeat_rows(res->worksheet,
+                                      (lxw_row_t)first_row, (lxw_row_t)last_row);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void repeat_columns_writer(xls_resource_write_t *res,
+                           zend_long first_col, zend_long last_col)
+{
+    int error = worksheet_repeat_columns(res->worksheet,
+                                         (lxw_col_t)first_col, (lxw_col_t)last_col);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void print_area_writer(xls_resource_write_t *res,
+                       zend_long first_row, zend_long first_col,
+                       zend_long last_row,  zend_long last_col)
+{
+    int error = worksheet_print_area(res->worksheet,
+                                     (lxw_row_t)first_row, (lxw_col_t)first_col,
+                                     (lxw_row_t)last_row,  (lxw_col_t)last_col);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Page breaks. The libxlsxwriter API expects a 0-terminated array. */
+void h_pagebreaks_writer(xls_resource_write_t *res, lxw_row_t *breaks)
+{
+    int error = worksheet_set_h_pagebreaks(res->worksheet, breaks);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void v_pagebreaks_writer(xls_resource_write_t *res, lxw_col_t *breaks)
+{
+    int error = worksheet_set_v_pagebreaks(res->worksheet, breaks);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void fit_to_pages_writer(xls_resource_write_t *res,
+                         zend_long width, zend_long height)
+{
+    worksheet_fit_to_pages(res->worksheet, (uint16_t)width, (uint16_t)height);
+}
+
+/* Sheet tab color. */
+void tab_color_writer(xls_resource_write_t *res, zend_long rgb)
+{
+    worksheet_set_tab_color(res->worksheet, (lxw_color_t)rgb);
+}
+
+/* Background image (file or buffer). */
+void background_image_writer(xls_resource_write_t *res, const char *path)
+{
+    int error = worksheet_set_background(res->worksheet, path);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void background_image_buffer_writer(xls_resource_write_t *res,
+                                    const unsigned char *bytes, size_t size)
+{
+    int error = worksheet_set_background_buffer(res->worksheet, bytes, size);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Document properties (workbook-level). */
+void workbook_properties_writer(xls_resource_write_t *res,
+                                lxw_doc_properties *props)
+{
+    int error = workbook_set_properties(res->workbook, props);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Defined names (workbook-level or sheet-scoped via "Sheet!Name"). */
+void define_name_writer(xls_resource_write_t *res,
+                        const char *name, const char *formula)
+{
+    int error = workbook_define_name(res->workbook, name, formula);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Conditional format (cell or range). */
+void conditional_format_writer(xls_resource_write_t *res,
+                               zend_long first_row, zend_long first_col,
+                               zend_long last_row,  zend_long last_col,
+                               lxw_conditional_format *cf)
+{
+    int error;
+    if (first_row == last_row && first_col == last_col) {
+        error = worksheet_conditional_format_cell(res->worksheet,
+                                                  (lxw_row_t)first_row,
+                                                  (lxw_col_t)first_col, cf);
+    } else {
+        error = worksheet_conditional_format_range(res->worksheet,
+                                                   (lxw_row_t)first_row,
+                                                   (lxw_col_t)first_col,
+                                                   (lxw_row_t)last_row,
+                                                   (lxw_col_t)last_col, cf);
+    }
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Excel Table. */
+void add_table_writer(xls_resource_write_t *res,
+                      zend_long first_row, zend_long first_col,
+                      zend_long last_row,  zend_long last_col,
+                      lxw_table_options *opts)
+{
+    int error = worksheet_add_table(res->worksheet,
+                                    (lxw_row_t)first_row, (lxw_col_t)first_col,
+                                    (lxw_row_t)last_row,  (lxw_col_t)last_col,
+                                    opts);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
 /*
  * Call finalization code and close file.
  */

@@ -371,6 +371,86 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_first_sheet_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
+
+/* ----- Phase 2 arginfos ------------------------------------------------- */
+
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_comment_opt_arginfo, 0, 0, 4)
+    ZEND_ARG_INFO(0, row)
+    ZEND_ARG_INFO(0, column)
+    ZEND_ARG_INFO(0, text)
+    ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_image_buffer_arginfo, 0, 0, 3)
+    ZEND_ARG_INFO(0, row)
+    ZEND_ARG_INFO(0, column)
+    ZEND_ARG_INFO(0, bytes)
+    ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_header_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, value)
+    ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_repeat_rows_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_repeat_columns_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_print_area_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_pagebreaks_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, breaks)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_fit_to_pages_arginfo, 0, 0, 2)
+    ZEND_ARG_INFO(0, width)
+    ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_tab_color_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, rgb)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_properties_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, props)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_custom_property_arginfo, 0, 0, 2)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_INFO(0, value)
+    ZEND_ARG_INFO(0, type)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_define_name_arginfo, 0, 0, 2)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_INFO(0, formula)
+    ZEND_ARG_INFO(0, scopeSheet)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_background_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, path)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_set_background_buffer_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, bytes)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_conditional_format_arginfo, 0, 0, 2)
+    ZEND_ARG_INFO(0, range)
+    ZEND_ARG_INFO(0, conditional_format)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_add_table_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, range)
+    ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::__construct(array $config)
@@ -1496,6 +1576,623 @@ PHP_METHOD(vtiful_xls, setCurrentSheetIsFirst)
 }
 /* }}} */
 
+/* ----- Phase 2 methods --------------------------------------------------- */
+
+/* Helper: read string key from assoc array, or NULL. */
+static const char *zarr_str(zval *arr, const char *key, size_t key_len)
+{
+    zval *v = zend_hash_str_find(Z_ARRVAL_P(arr), key, key_len);
+    return (v && Z_TYPE_P(v) == IS_STRING) ? Z_STRVAL_P(v) : NULL;
+}
+
+/* Helper: read long key, default if absent. */
+static zend_long zarr_long(zval *arr, const char *key, size_t key_len, zend_long dflt)
+{
+    zval *v = zend_hash_str_find(Z_ARRVAL_P(arr), key, key_len);
+    if (!v) return dflt;
+    return zval_get_long(v);
+}
+
+/* Helper: read double key. */
+static double zarr_double(zval *arr, const char *key, size_t key_len, double dflt)
+{
+    zval *v = zend_hash_str_find(Z_ARRVAL_P(arr), key, key_len);
+    if (!v) return dflt;
+    return zval_get_double(v);
+}
+
+/** {{{ \Vtiful\Kernel\Excel::insertCommentOpt(int $row, int $col, string $text, array $options) */
+PHP_METHOD(vtiful_xls, insertCommentOpt)
+{
+    zend_long row, col;
+    zend_string *text;
+    zval *options;
+    lxw_comment_options o;
+    const char *s;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_LONG(row)
+        Z_PARAM_LONG(col)
+        Z_PARAM_STR(text)
+        Z_PARAM_ARRAY(options)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    memset(&o, 0, sizeof(o));
+    if ((s = zarr_str(options, "author",     sizeof("author") - 1)))     o.author    = (char *)s;
+    if ((s = zarr_str(options, "font_name",  sizeof("font_name") - 1)))  o.font_name = (char *)s;
+    o.x_offset    = zarr_long  (options, "x_offset",    sizeof("x_offset") - 1, 0);
+    o.y_offset    = zarr_long  (options, "y_offset",    sizeof("y_offset") - 1, 0);
+    o.x_scale     = zarr_double(options, "x_scale",     sizeof("x_scale") - 1, 0);
+    o.y_scale     = zarr_double(options, "y_scale",     sizeof("y_scale") - 1, 0);
+    o.color       = (lxw_color_t)zarr_long(options, "color",      sizeof("color") - 1, 0);
+    o.font_size   = zarr_double(options, "font_size",   sizeof("font_size") - 1, 0);
+    o.visible     = (uint8_t)zarr_long(options, "visible", sizeof("visible") - 1, 0);
+    o.width       = zarr_double(options, "width",       sizeof("width") - 1, 0);
+    o.height      = zarr_double(options, "height",      sizeof("height") - 1, 0);
+    o.start_row   = (lxw_row_t)zarr_long(options, "start_row", sizeof("start_row") - 1, 0);
+    o.start_col   = (lxw_col_t)zarr_long(options, "start_col", sizeof("start_col") - 1, 0);
+
+    comment_opt_writer(text, row, col, &o, &obj->write_ptr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertImageBuffer(int $row, int $col, string $bytes, ?array $opts = null) */
+PHP_METHOD(vtiful_xls, insertImageBuffer)
+{
+    zend_long row, col;
+    zend_string *bytes;
+    zval *options = NULL;
+    lxw_image_options o;
+    int has_opts = 0;
+
+    ZEND_PARSE_PARAMETERS_START(3, 4)
+        Z_PARAM_LONG(row)
+        Z_PARAM_LONG(col)
+        Z_PARAM_STR(bytes)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_ARRAY_OR_NULL(options)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    memset(&o, 0, sizeof(o));
+    if (options && Z_TYPE_P(options) == IS_ARRAY) {
+        const char *url, *desc;
+        o.x_offset = zarr_long  (options, "x_offset", sizeof("x_offset") - 1, 0);
+        o.y_offset = zarr_long  (options, "y_offset", sizeof("y_offset") - 1, 0);
+        o.x_scale  = zarr_double(options, "x_scale",  sizeof("x_scale") - 1, 1.0);
+        o.y_scale  = zarr_double(options, "y_scale",  sizeof("y_scale") - 1, 1.0);
+        o.object_position = (uint8_t)zarr_long(options, "object_position",
+                                               sizeof("object_position") - 1, 2);
+        if ((url  = zarr_str(options, "url",         sizeof("url") - 1)))         o.url         = (char *)url;
+        if ((desc = zarr_str(options, "description", sizeof("description") - 1))) o.description = (char *)desc;
+        has_opts = 1;
+    }
+
+    image_buffer_writer(row, col,
+                        (const unsigned char *)ZSTR_VAL(bytes), ZSTR_LEN(bytes),
+                        has_opts ? &o : NULL,
+                        &obj->write_ptr);
+}
+/* }}} */
+
+/* Header / footer common helper: build options struct from PHP array. */
+static void build_header_footer_opts(zval *options, lxw_header_footer_options *o)
+{
+    const char *s;
+    memset(o, 0, sizeof(*o));
+    if (!options || Z_TYPE_P(options) != IS_ARRAY) return;
+    o->margin = zarr_double(options, "margin", sizeof("margin") - 1, 0);
+    if ((s = zarr_str(options, "image_left",   sizeof("image_left")   - 1))) o->image_left   = (char *)s;
+    if ((s = zarr_str(options, "image_center", sizeof("image_center") - 1))) o->image_center = (char *)s;
+    if ((s = zarr_str(options, "image_right",  sizeof("image_right")  - 1))) o->image_right  = (char *)s;
+}
+
+/** {{{ \Vtiful\Kernel\Excel::setHeader(string $value, ?array $options = null) */
+PHP_METHOD(vtiful_xls, setHeader)
+{
+    zend_string *value;
+    zval *options = NULL;
+    lxw_header_footer_options o;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+        Z_PARAM_STR(value)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_ARRAY_OR_NULL(options)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (options) {
+        build_header_footer_opts(options, &o);
+        header_writer(&obj->write_ptr, ZSTR_VAL(value), &o);
+    } else {
+        header_writer(&obj->write_ptr, ZSTR_VAL(value), NULL);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setFooter(string $value, ?array $options = null) */
+PHP_METHOD(vtiful_xls, setFooter)
+{
+    zend_string *value;
+    zval *options = NULL;
+    lxw_header_footer_options o;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+        Z_PARAM_STR(value)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_ARRAY_OR_NULL(options)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (options) {
+        build_header_footer_opts(options, &o);
+        footer_writer(&obj->write_ptr, ZSTR_VAL(value), &o);
+    } else {
+        footer_writer(&obj->write_ptr, ZSTR_VAL(value), NULL);
+    }
+}
+/* }}} */
+
+/* Parse e.g. "1:3" into (first, last) 0-based row indices. */
+static int parse_row_range(const char *s, lxw_row_t *first, lxw_row_t *last)
+{
+    long a, b;
+    char *end;
+    if (!s) return 0;
+    a = strtol(s, &end, 10);
+    if (end == s || a < 1) return 0;
+    if (*end == ':') {
+        b = strtol(end + 1, NULL, 10);
+        if (b < a) return 0;
+    } else {
+        b = a;
+    }
+    *first = (lxw_row_t)(a - 1);
+    *last  = (lxw_row_t)(b - 1);
+    return 1;
+}
+
+/* Convert "A" / "AB" to 0-based column index. Returns -1 on failure. */
+static int col_letters_to_index(const char *s, size_t len)
+{
+    int n = 0;
+    size_t i;
+    for (i = 0; i < len; i++) {
+        char c = s[i];
+        if (c >= 'a' && c <= 'z') c = (char)(c - 32);
+        if (c < 'A' || c > 'Z') return -1;
+        n = n * 26 + (c - 'A' + 1);
+    }
+    return n - 1;
+}
+
+/* Parse "A:C" into 0-based first/last column. */
+static int parse_col_range(const char *s, size_t len, lxw_col_t *first, lxw_col_t *last)
+{
+    const char *colon = memchr(s, ':', len);
+    int a, b;
+    if (!colon) {
+        a = col_letters_to_index(s, len);
+        if (a < 0) return 0;
+        *first = (lxw_col_t)a;
+        *last  = (lxw_col_t)a;
+        return 1;
+    }
+    a = col_letters_to_index(s, (size_t)(colon - s));
+    b = col_letters_to_index(colon + 1, len - (size_t)(colon - s) - 1);
+    if (a < 0 || b < 0 || b < a) return 0;
+    *first = (lxw_col_t)a;
+    *last  = (lxw_col_t)b;
+    return 1;
+}
+
+/** {{{ \Vtiful\Kernel\Excel::repeatRows(string $rangeA1) — e.g. "1:3" */
+PHP_METHOD(vtiful_xls, repeatRows)
+{
+    zend_string *range;
+    lxw_row_t first, last;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(range) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (!parse_row_range(ZSTR_VAL(range), &first, &last)) {
+        zend_throw_exception(vtiful_exception_ce, "Invalid row range, expected like \"1:3\"", 220);
+        return;
+    }
+    repeat_rows_writer(&obj->write_ptr, first, last);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::repeatColumns(string $rangeA1) — e.g. "A:C" */
+PHP_METHOD(vtiful_xls, repeatColumns)
+{
+    zend_string *range;
+    lxw_col_t first, last;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(range) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (!parse_col_range(ZSTR_VAL(range), ZSTR_LEN(range), &first, &last)) {
+        zend_throw_exception(vtiful_exception_ce, "Invalid column range, expected like \"A:C\"", 221);
+        return;
+    }
+    repeat_columns_writer(&obj->write_ptr, first, last);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::printArea(string $rangeA1) */
+PHP_METHOD(vtiful_xls, printArea)
+{
+    zend_string *range;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(range) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    /* Use libxlsxwriter's RANGE() expansion which expects a writable C string. */
+    print_area_writer(&obj->write_ptr,
+                      lxw_name_to_row  (ZSTR_VAL(range)),
+                      lxw_name_to_col  (ZSTR_VAL(range)),
+                      lxw_name_to_row_2(ZSTR_VAL(range)),
+                      lxw_name_to_col_2(ZSTR_VAL(range)));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::horizontalPageBreaks(array $rows) — 1-based row numbers */
+PHP_METHOD(vtiful_xls, horizontalPageBreaks)
+{
+    zval *zarr, *v;
+    int count, idx;
+    lxw_row_t *arr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_ARRAY(zarr) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    count = zend_hash_num_elements(Z_ARRVAL_P(zarr));
+    arr = ecalloc(count + 1, sizeof(lxw_row_t));
+    idx = 0;
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(zarr), v) {
+        zend_long row = zval_get_long(v);
+        if (row > 0) arr[idx++] = (lxw_row_t)row;  /* writer expects 0-based of the *next* page; user passes 1-based row at the break, which equals next page's first row in 0-based - 1. We pass as-is to mirror libxlsxwriter docs (lxw uses 0-based "break before this row"). */
+    } ZEND_HASH_FOREACH_END();
+    arr[idx] = 0;
+    h_pagebreaks_writer(&obj->write_ptr, arr);
+    efree(arr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::verticalPageBreaks(array $cols) — 0-based column numbers */
+PHP_METHOD(vtiful_xls, verticalPageBreaks)
+{
+    zval *zarr, *v;
+    int count, idx;
+    lxw_col_t *arr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_ARRAY(zarr) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    count = zend_hash_num_elements(Z_ARRVAL_P(zarr));
+    arr = ecalloc(count + 1, sizeof(lxw_col_t));
+    idx = 0;
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(zarr), v) {
+        zend_long col = zval_get_long(v);
+        if (col > 0) arr[idx++] = (lxw_col_t)col;
+    } ZEND_HASH_FOREACH_END();
+    arr[idx] = 0;
+    v_pagebreaks_writer(&obj->write_ptr, arr);
+    efree(arr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::fitToPages(int $width, int $height) */
+PHP_METHOD(vtiful_xls, fitToPages)
+{
+    zend_long width, height;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_LONG(width)
+        Z_PARAM_LONG(height)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    fit_to_pages_writer(&obj->write_ptr, width, height);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setTabColor(int $rgb) */
+PHP_METHOD(vtiful_xls, setTabColor)
+{
+    zend_long rgb;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(rgb) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    tab_color_writer(&obj->write_ptr, rgb);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setProperties(array $props) */
+PHP_METHOD(vtiful_xls, setProperties)
+{
+    zval *props;
+    lxw_doc_properties dp;
+    const char *s;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_ARRAY(props) ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    memset(&dp, 0, sizeof(dp));
+    if ((s = zarr_str(props, "title",          sizeof("title") - 1)))          dp.title          = (char *)s;
+    if ((s = zarr_str(props, "subject",        sizeof("subject") - 1)))        dp.subject        = (char *)s;
+    if ((s = zarr_str(props, "author",         sizeof("author") - 1)))         dp.author         = (char *)s;
+    if ((s = zarr_str(props, "manager",        sizeof("manager") - 1)))        dp.manager        = (char *)s;
+    if ((s = zarr_str(props, "company",        sizeof("company") - 1)))        dp.company        = (char *)s;
+    if ((s = zarr_str(props, "category",       sizeof("category") - 1)))       dp.category       = (char *)s;
+    if ((s = zarr_str(props, "keywords",       sizeof("keywords") - 1)))       dp.keywords       = (char *)s;
+    if ((s = zarr_str(props, "comments",       sizeof("comments") - 1)))       dp.comments       = (char *)s;
+    if ((s = zarr_str(props, "status",         sizeof("status") - 1)))         dp.status         = (char *)s;
+    if ((s = zarr_str(props, "hyperlink_base", sizeof("hyperlink_base") - 1))) dp.hyperlink_base = (char *)s;
+    dp.created = (time_t)zarr_long(props, "created", sizeof("created") - 1, 0);
+
+    workbook_properties_writer(&obj->write_ptr, &dp);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setCustomProperty(string $name, mixed $value, ?string $type = null) */
+PHP_METHOD(vtiful_xls, setCustomProperty)
+{
+    zend_string *name;
+    zval *value;
+    zend_string *type = NULL;
+    int error = LXW_NO_ERROR;
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+        Z_PARAM_STR(name)
+        Z_PARAM_ZVAL(value)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_STR_OR_NULL(type)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    const char *t = type ? ZSTR_VAL(type) : NULL;
+
+    if ((t && strcmp(t, "string") == 0) ||
+        (!t && Z_TYPE_P(value) == IS_STRING)) {
+        zend_string *zs = zval_get_string(value);
+        error = workbook_set_custom_property_string(obj->write_ptr.workbook,
+                                                    ZSTR_VAL(name), ZSTR_VAL(zs));
+        zend_string_release(zs);
+    } else if ((t && strcmp(t, "number") == 0) ||
+               (!t && (Z_TYPE_P(value) == IS_DOUBLE || Z_TYPE_P(value) == IS_LONG))) {
+        error = workbook_set_custom_property_number(obj->write_ptr.workbook,
+                                                    ZSTR_VAL(name), zval_get_double(value));
+    } else if ((t && strcmp(t, "boolean") == 0) ||
+               (!t && (Z_TYPE_P(value) == IS_TRUE || Z_TYPE_P(value) == IS_FALSE))) {
+        error = workbook_set_custom_property_boolean(obj->write_ptr.workbook,
+                                                     ZSTR_VAL(name),
+                                                     zend_is_true(value) ? 1 : 0);
+    } else if (t && strcmp(t, "datetime") == 0) {
+        lxw_datetime dt = timestamp_to_datetime(zval_get_long(value));
+        error = workbook_set_custom_property_datetime(obj->write_ptr.workbook,
+                                                      ZSTR_VAL(name), &dt);
+    } else {
+        zend_throw_exception(vtiful_exception_ce,
+            "Unsupported custom property type — pass type as one of "
+            "'string','number','boolean','datetime'", 222);
+        return;
+    }
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::defineName(string $name, string $formula, ?string $scopeSheet = null)
+ *  When $scopeSheet is provided, the name is registered as "Sheet!Name"
+ *  per libxlsxwriter convention.
+ */
+PHP_METHOD(vtiful_xls, defineName)
+{
+    zend_string *name, *formula;
+    zend_string *scope = NULL;
+    char *qualified = NULL;
+    const char *the_name;
+
+    ZEND_PARSE_PARAMETERS_START(2, 3)
+        Z_PARAM_STR(name)
+        Z_PARAM_STR(formula)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_STR_OR_NULL(scope)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (scope) {
+        size_t need = ZSTR_LEN(scope) + 1 + ZSTR_LEN(name) + 1;
+        qualified = emalloc(need);
+        snprintf(qualified, need, "%s!%s", ZSTR_VAL(scope), ZSTR_VAL(name));
+        the_name = qualified;
+    } else {
+        the_name = ZSTR_VAL(name);
+    }
+
+    define_name_writer(&obj->write_ptr, the_name, ZSTR_VAL(formula));
+    if (qualified) efree(qualified);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setBackgroundImage(string $path) */
+PHP_METHOD(vtiful_xls, setBackgroundImage)
+{
+    zend_string *path;
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(path) ZEND_PARSE_PARAMETERS_END();
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+    background_image_writer(&obj->write_ptr, ZSTR_VAL(path));
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::setBackgroundImageBuffer(string $bytes) */
+PHP_METHOD(vtiful_xls, setBackgroundImageBuffer)
+{
+    zend_string *bytes;
+    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(bytes) ZEND_PARSE_PARAMETERS_END();
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+    background_image_buffer_writer(&obj->write_ptr,
+        (const unsigned char *)ZSTR_VAL(bytes), ZSTR_LEN(bytes));
+}
+/* }}} */
+
+/* Helper — extract the conditional-format struct pointer from either an
+ * object or null. Returns NULL on type error. */
+static lxw_conditional_format *fetch_cf(zval *handle)
+{
+    if (Z_TYPE_P(handle) == IS_OBJECT &&
+        instanceof_function(Z_OBJCE_P(handle), vtiful_cond_format_ce)) {
+        cond_format_object *o = Z_COND_FMT_P(handle);
+        return o->ptr.cf;
+    }
+    return NULL;
+}
+
+/** {{{ \Vtiful\Kernel\Excel::conditionalFormatCell(string $rangeA1, ConditionalFormat $cf) */
+PHP_METHOD(vtiful_xls, conditionalFormatCell)
+{
+    zend_string *range;
+    zval *handle;
+    lxw_conditional_format *cf;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_STR(range)
+        Z_PARAM_ZVAL(handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    cf = fetch_cf(handle);
+    if (!cf) {
+        zend_throw_exception(vtiful_exception_ce,
+            "conditionalFormatCell expects a Vtiful\\Kernel\\ConditionalFormat", 223);
+        return;
+    }
+
+    conditional_format_writer(&obj->write_ptr,
+        lxw_name_to_row(ZSTR_VAL(range)),
+        lxw_name_to_col(ZSTR_VAL(range)),
+        lxw_name_to_row(ZSTR_VAL(range)),
+        lxw_name_to_col(ZSTR_VAL(range)),
+        cf);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::conditionalFormatRange(string $rangeA1, ConditionalFormat $cf) */
+PHP_METHOD(vtiful_xls, conditionalFormatRange)
+{
+    zend_string *range;
+    zval *handle;
+    lxw_conditional_format *cf;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_STR(range)
+        Z_PARAM_ZVAL(handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    cf = fetch_cf(handle);
+    if (!cf) {
+        zend_throw_exception(vtiful_exception_ce,
+            "conditionalFormatRange expects a Vtiful\\Kernel\\ConditionalFormat", 223);
+        return;
+    }
+
+    conditional_format_writer(&obj->write_ptr,
+        lxw_name_to_row  (ZSTR_VAL(range)),
+        lxw_name_to_col  (ZSTR_VAL(range)),
+        lxw_name_to_row_2(ZSTR_VAL(range)),
+        lxw_name_to_col_2(ZSTR_VAL(range)),
+        cf);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::addTable(string $rangeA1, ?Table $opts = null) */
+PHP_METHOD(vtiful_xls, addTable)
+{
+    zend_string *range;
+    zval *handle = NULL;
+    lxw_table_options *opts = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+        Z_PARAM_STR(range)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_ZVAL(handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (handle && Z_TYPE_P(handle) == IS_OBJECT &&
+        instanceof_function(Z_OBJCE_P(handle), vtiful_table_ce)) {
+        table_object *t = Z_TABLE_P(handle);
+        opts = t->ptr.opts;
+    }
+
+    add_table_writer(&obj->write_ptr,
+        lxw_name_to_row  (ZSTR_VAL(range)),
+        lxw_name_to_col  (ZSTR_VAL(range)),
+        lxw_name_to_row_2(ZSTR_VAL(range)),
+        lxw_name_to_col_2(ZSTR_VAL(range)),
+        opts);
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::validation()
  */
 PHP_METHOD(vtiful_xls, validation)
@@ -2491,6 +3188,27 @@ zend_function_entry xls_methods[] = {
 
         PHP_ME(vtiful_xls, setCurrentSheetHide,    xls_hide_sheet_arginfo,  ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setCurrentSheetIsFirst, xls_first_sheet_arginfo, ZEND_ACC_PUBLIC)
+
+        /* Phase 2 writer additions */
+        PHP_ME(vtiful_xls, insertCommentOpt,         xls_insert_comment_opt_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertImageBuffer,        xls_insert_image_buffer_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setHeader,                xls_set_header_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setFooter,                xls_set_header_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, repeatRows,               xls_repeat_rows_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, repeatColumns,            xls_repeat_columns_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, printArea,                xls_print_area_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, horizontalPageBreaks,     xls_pagebreaks_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, verticalPageBreaks,       xls_pagebreaks_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, fitToPages,               xls_fit_to_pages_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setTabColor,              xls_set_tab_color_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setProperties,            xls_set_properties_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setCustomProperty,        xls_set_custom_property_arginfo,   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, defineName,               xls_define_name_arginfo,           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setBackgroundImage,       xls_set_background_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, setBackgroundImageBuffer, xls_set_background_buffer_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, conditionalFormatCell,    xls_conditional_format_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, conditionalFormatRange,   xls_conditional_format_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, addTable,                 xls_add_table_arginfo,             ZEND_ACC_PUBLIC)
 
         PHP_ME(vtiful_xls, columnIndexFromString,   xls_index_to_string, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, stringFromColumnIndex,   xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)

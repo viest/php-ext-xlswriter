@@ -1,2 +1,0 @@
-# yang-shi-lie-biao
-

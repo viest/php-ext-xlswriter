@@ -1,9 +1,53 @@
-# Print orientation
+# Page orientation
 
-> _Documentation in progress (v1.6.0+)._
+## Landscape
 
-## Methods
+```php
+setLandscape(): self
+```
 
-`Excel::setLandscape()`
+### Example
 
-`Excel::setPortrait()`
+```php
+$config = [
+    'path' => './tests'
+];
+
+$fileObject = new \Vtiful\Kernel\Excel($config);
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+
+$filePath = $fileObject->header(['name', 'age'])
+    ->data([
+        ['viest', 21],
+        ['wjx',   21]
+    ])
+    ->setPaper(\Vtiful\Kernel\Excel::PAPER_A3)
+    ->setLandscape()
+    ->output();
+```
+
+## Portrait
+
+```php
+setPortrait(): self
+```
+
+### Example
+
+```php
+$config = [
+    'path' => './tests'
+];
+
+$fileObject = new \Vtiful\Kernel\Excel($config);
+$fileObject = $fileObject->fileName('tutorial.xlsx');
+
+$filePath = $fileObject->header(['name', 'age'])
+    ->data([
+        ['viest', 21],
+        ['wjx',   21]
+    ])
+    ->setPaper(\Vtiful\Kernel\Excel::PAPER_A3)
+    ->setPortrait()
+    ->output();
+```

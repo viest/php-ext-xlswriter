@@ -1,7 +1,28 @@
 # 标签颜色
 
-> _此页面正在补充中（v1.6.0+ 新功能）。_
+## **函数原型**
 
-## 方法签名
+```php
+setTabColor(int $rgb): self
+```
 
-`Excel::setTabColor(int $color)`
+### **int $rgb**
+
+> 工作表标签颜色，使用 `0xRRGGBB` 整数表达，也可以直接使用 `Format::COLOR_*` 常量。
+> 例如 `0xFF0000` 为红色，`0x00B050` 为绿色。
+
+## 示例
+
+```php
+$config = [
+    'path' => './tests'
+];
+
+$excel = new \Vtiful\Kernel\Excel($config);
+
+$excel->fileName('tutorial.xlsx', 'sheet1')
+      ->setTabColor(0xFF0000)
+      ->addSheet('sheet2')
+      ->setTabColor(\Vtiful\Kernel\Format::COLOR_GREEN)
+      ->output();
+```

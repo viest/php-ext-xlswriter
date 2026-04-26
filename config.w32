@@ -12,7 +12,7 @@ if (PHP_XLSWRITER != "no") {
     ) {
         EXTENSION("xlswriter", "xlswriter.c")
 
-        ADD_FLAG("CFLAGS_XLSWRITER", ' /D ENABLE_READER /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /D NOCRYPT /D NOUNCRYPT /I "' + configure_module_dirname + '" /I "' + configure_module_dirname + '\\library\\libxlsxreader\\src" ');
+        ADD_FLAG("CFLAGS_XLSWRITER", ' /D ENABLE_READER /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /D NOCRYPT /D NOUNCRYPT /I "' + configure_module_dirname + '" /I "' + configure_module_dirname + '\\library\\libxlsxreader\\src" /I "' + configure_module_dirname + '\\library\\libxlsxwriter\\third_party\\minizip" ');
 
         AC_DEFINE("HAVE_LXW_VERSION", 1, "lxw_version available in 0.7.7");
 

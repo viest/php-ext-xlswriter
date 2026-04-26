@@ -99,6 +99,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxreader/src/numfmt.c \
     library/libxlsxreader/src/workbook.c \
     library/libxlsxreader/src/worksheet.c \
+    library/libxlsxreader/src/worksheet_meta.c \
     library/libxlsxreader/src/drawing.c \
     "
 

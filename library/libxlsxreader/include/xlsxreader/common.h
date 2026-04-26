@@ -63,17 +63,29 @@ typedef struct {
     lxr_str raw;
 } lxr_cell;
 
-#define LXR_SKIP_NONE        0x00
-#define LXR_SKIP_EMPTY_ROWS  0x01
-#define LXR_SKIP_EMPTY_CELLS 0x02
-#define LXR_SKIP_ALL_EMPTY   0x03
-#define LXR_SKIP_EXTRA_CELLS 0x04
-#define LXR_SKIP_HIDDEN_ROWS 0x08
+#define LXR_SKIP_NONE          0x00
+#define LXR_SKIP_EMPTY_ROWS    0x01
+#define LXR_SKIP_EMPTY_CELLS   0x02
+#define LXR_SKIP_ALL_EMPTY     0x03
+#define LXR_SKIP_EXTRA_CELLS   0x04
+#define LXR_SKIP_HIDDEN_ROWS   0x08
+/* When set, the non-master cells inside a merged region surface as null in
+ * row-shaped read APIs (Excel::nextRow / nextRowWithFormula / getSheetData).
+ * The master cell — i.e. (first_row, first_col) of the merge — is unaffected. */
+#define LXR_SKIP_MERGED_FOLLOW 0x10
 
 typedef enum {
     LXR_SST_MODE_FULL = 0,
     LXR_SST_MODE_STREAMING
 } lxr_sst_mode;
+
+/* Inclusive 1-based cell range. (0, 0, 0, 0) means "unset". */
+typedef struct {
+    size_t first_row;
+    size_t first_col;
+    size_t last_row;
+    size_t last_col;
+} lxr_range;
 
 #ifdef __cplusplus
 }

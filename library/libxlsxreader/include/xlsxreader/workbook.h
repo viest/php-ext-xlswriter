@@ -26,6 +26,27 @@ void      lxr_workbook_close      (lxr_workbook *wb);
 size_t            lxr_workbook_sheet_count(const lxr_workbook *wb);
 const char       *lxr_workbook_sheet_name (const lxr_workbook *wb, size_t index);
 
+typedef enum {
+    LXR_SHEET_VISIBLE      = 0,
+    LXR_SHEET_HIDDEN       = 1,
+    LXR_SHEET_VERY_HIDDEN  = 2
+} lxr_sheet_visibility;
+
+lxr_sheet_visibility lxr_workbook_sheet_visibility(const lxr_workbook *wb, size_t index);
+
+/* Defined names (a.k.a. named ranges). scope_sheet_index is -1 for
+ * workbook-scope; otherwise the 0-based sheet index it's bound to. */
+typedef struct {
+    const char *name;
+    const char *formula;
+    int         scope_sheet_index;
+    int         hidden;
+} lxr_defined_name;
+
+size_t lxr_workbook_defined_name_count(const lxr_workbook *wb);
+int    lxr_workbook_defined_name_get  (const lxr_workbook *wb, size_t idx,
+                                       lxr_defined_name *out);
+
 lxr_error lxr_workbook_get_worksheet_by_name (lxr_workbook   *wb,
                                               const char     *name,
                                               uint32_t        flags,

@@ -90,6 +90,7 @@ if (PHP_XLSWRITER != "no") {
                 numfmt.c \
                 workbook.c \
                 worksheet.c \
+                worksheet_meta.c \
                 drawing.c \
                 ", "xlswriter", "libxlsxreader");
     } else {

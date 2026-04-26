@@ -96,6 +96,30 @@ void sheet_list(lxr_workbook *wb, zval *zv_result_t)
     }
 }
 
+void sheet_list_with_meta(lxr_workbook *wb, zval *zv_result_t)
+{
+    size_t i, n;
+    if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
+        array_init(zv_result_t);
+    }
+    n = lxr_workbook_sheet_count(wb);
+    for (i = 0; i < n; i++) {
+        const char *name = lxr_workbook_sheet_name(wb, i);
+        const char *state;
+        zval entry;
+        if (!name) continue;
+        switch (lxr_workbook_sheet_visibility(wb, i)) {
+            case LXR_SHEET_HIDDEN:      state = "hidden";     break;
+            case LXR_SHEET_VERY_HIDDEN: state = "veryHidden"; break;
+            default:                    state = "visible";    break;
+        }
+        array_init(&entry);
+        add_assoc_stringl(&entry, "name", name, strlen(name));
+        add_assoc_string (&entry, "state", state);
+        add_next_index_zval(zv_result_t, &entry);
+    }
+}
+
 /* ------------------------------------------------------------------------- */
 /* Type helpers                                                              */
 /* ------------------------------------------------------------------------- */
@@ -210,13 +234,16 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         return XLSWRITER_FALSE;
     }
 
-    int           skip_empty_cells = (lxr_worksheet_flags(r->sheet_t) & LXR_SKIP_EMPTY_CELLS) != 0;
-    int           skip_empty_value = (lxr_worksheet_flags(r->sheet_t) & SKIP_EMPTY_VALUE)     != 0;
+    uint32_t      ws_flags         = lxr_worksheet_flags(r->sheet_t);
+    int           skip_empty_cells = (ws_flags & LXR_SKIP_EMPTY_CELLS)   != 0;
+    int           skip_empty_value = (ws_flags & SKIP_EMPTY_VALUE)       != 0;
+    int           skip_merged_foll = (ws_flags & LXR_SKIP_MERGED_FOLLOW) != 0;
     zend_array   *za_type          = (zv_type_arr_t && Z_TYPE_P(zv_type_arr_t) == IS_ARRAY)
                                        ? Z_ARR_P(zv_type_arr_t) : NULL;
     size_t        expected_col     = 1;
     size_t        row_max_col      = 0;
     int           saw_real_cell    = 0;
+    size_t        row_nr           = lxr_worksheet_current_row(r->sheet_t);
     lxr_cell      cell;
 
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
@@ -238,8 +265,13 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
          * libxlsxio's empty placeholder cells were filtered. */
         if (!skip_empty_cells && !skip_empty_value) {
             while (expected_col < cur_col) {
-                emit_typed_value(zv_result_t, za_type, data_type_default,
-                                 "", 0, (zend_ulong)(expected_col - 1));
+                if (skip_merged_foll &&
+                    lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
+                    add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
+                } else {
+                    emit_typed_value(zv_result_t, za_type, data_type_default,
+                                     "", 0, (zend_ulong)(expected_col - 1));
+                }
                 expected_col++;
             }
         } else if (skip_empty_value || skip_empty_cells) {
@@ -248,8 +280,13 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
             expected_col = cur_col;
         }
 
-        emit_typed_value(zv_result_t, za_type, data_type_default,
-                         str, str_len, (zend_ulong)(cur_col - 1));
+        if (skip_merged_foll &&
+            lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, cur_col)) {
+            add_index_null(zv_result_t, (zend_ulong)(cur_col - 1));
+        } else {
+            emit_typed_value(zv_result_t, za_type, data_type_default,
+                             str, str_len, (zend_ulong)(cur_col - 1));
+        }
 
         expected_col  = cur_col + 1;
         if (cur_col > row_max_col) row_max_col = cur_col;
@@ -261,8 +298,13 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
      * blanks. */
     if (!skip_empty_cells && !skip_empty_value && saw_real_cell && r->cols > 0) {
         while (expected_col <= r->cols) {
-            emit_typed_value(zv_result_t, za_type, data_type_default,
-                             "", 0, (zend_ulong)(expected_col - 1));
+            if (skip_merged_foll &&
+                lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
+                add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
+            } else {
+                emit_typed_value(zv_result_t, za_type, data_type_default,
+                                 "", 0, (zend_ulong)(expected_col - 1));
+            }
             expected_col++;
         }
     }

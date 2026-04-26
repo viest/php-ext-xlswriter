@@ -14,10 +14,19 @@
 #include "lxr_xml_pump.h"
 
 typedef struct {
-    char *name;     /* sheet display name */
-    char *rel_id;   /* relationship id, e.g. "rId1" */
-    char *target;   /* zip entry path, e.g. "xl/worksheets/sheet1.xml" */
+    char *name;       /* sheet display name */
+    char *rel_id;     /* relationship id, e.g. "rId1" */
+    char *target;     /* zip entry path, e.g. "xl/worksheets/sheet1.xml" */
+    int   visibility; /* lxr_sheet_visibility */
 } lxr_sheet_info;
+
+/* Defined name entry, owned by workbook. */
+typedef struct {
+    char *name;
+    char *formula;
+    int   scope_sheet_index;
+    int   hidden;
+} lxr_defined_name_entry;
 
 struct lxr_workbook {
     lxr_zip          *zip;
@@ -36,7 +45,75 @@ struct lxr_workbook {
     lxr_styles       *styles;
 
     lxr_open_options  opts;
+
+    /* defined names */
+    lxr_defined_name_entry *defined_names;
+    size_t                  defined_name_count;
+    size_t                  defined_name_cap;
 };
+
+/* Per-worksheet metadata cached at sheet open (mergeCells, hyperlinks, sheet
+ * protection, row/col options, default sizes). Loaded eagerly via a
+ * dedicated parsing pass that ignores <c> children inside <sheetData>. */
+typedef struct {
+    /* Defaults from <sheetFormatPr>. */
+    int    has_default_row_height;
+    double default_row_height;
+    int    has_default_col_width;
+    double default_col_width;
+
+    /* Merged cells. */
+    lxr_range *merges;
+    size_t     merges_count;
+    size_t     merges_cap;
+
+    /* Hyperlinks (owned). url_storage / etc. point into a pool of strings. */
+    struct lxr_hyperlink_owned {
+        lxr_range range;
+        char     *url;
+        char     *location;
+        char     *display;
+        char     *tooltip;
+    } *hyperlinks;
+    size_t hyperlinks_count;
+    size_t hyperlinks_cap;
+
+    /* Sheet protection (defined in xlsxreader/worksheet.h). */
+    int  prot_present;
+    char prot_hash[20];
+    int  prot_sheet, prot_content, prot_objects, prot_scenarios;
+    int  prot_format_cells, prot_format_columns, prot_format_rows;
+    int  prot_insert_columns, prot_insert_rows, prot_insert_hyperlinks;
+    int  prot_delete_columns, prot_delete_rows;
+    int  prot_select_locked_cells, prot_sort, prot_auto_filter;
+    int  prot_pivot_tables, prot_select_unlocked_cells;
+
+    /* Row metadata: sparse, indexed by row number 1-based. */
+    struct lxr_row_meta {
+        size_t row;
+        int    has_height;
+        double height;
+        int    hidden;
+        int    outline_level;
+        int    collapsed;
+        int    custom_height;
+    } *rows;
+    size_t rows_count;
+    size_t rows_cap;
+
+    /* Column metadata: each entry covers [min, max]. */
+    struct lxr_col_meta {
+        size_t min;
+        size_t max;
+        int    has_width;
+        double width;
+        int    hidden;
+        int    outline_level;
+        int    collapsed;
+    } *cols;
+    size_t cols_count;
+    size_t cols_cap;
+} lxr_worksheet_meta;
 
 /* Worksheet FSM states (per plans/reader.md §8). */
 typedef enum {
@@ -118,6 +195,9 @@ struct lxr_worksheet {
     size_t          skip_rows_remaining;
 
     int             eof;
+
+    /* Phase 1 metadata cache (eager, populated at open time). */
+    lxr_worksheet_meta meta;
 };
 
 /* worksheet.c */
@@ -125,6 +205,10 @@ lxr_error lxr_worksheet_open_internal(lxr_workbook *wb,
                                       const char *target_path,
                                       uint32_t flags,
                                       lxr_worksheet **out);
+
+/* worksheet_meta.c */
+lxr_error lxr_worksheet_meta_load(lxr_worksheet *ws);
+void      lxr_worksheet_meta_free(lxr_worksheet_meta *m);
 
 /* numeric helpers */
 int64_t lxr_excel_serial_to_unix(double serial, int uses_1904);

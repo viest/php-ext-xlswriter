@@ -261,6 +261,35 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(xls_sheet_list_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_sheet_list_with_meta_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_merged_cells_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_hyperlinks_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_sheet_protection_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_row_options_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, row)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_column_options_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, colA1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_default_row_height_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_default_column_width_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_defined_names_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_get_sheet_data_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -1576,6 +1605,261 @@ PHP_METHOD(vtiful_xls, sheetList)
 }
 /* }}} */
 
+/** {{{ \Vtiful\Kernel\Excel::sheetListWithMeta()
+ *  Returns [{name, state}, ...] where state ∈ {visible, hidden, veryHidden}.
+ */
+PHP_METHOD(vtiful_xls, sheetListWithMeta)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+
+    if (obj->read_ptr.file_t == NULL) {
+        RETURN_NULL();
+    }
+
+    sheet_list_with_meta(obj->read_ptr.file_t, return_value);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getMergedCells()
+ *  Returns [{first_row, first_col, last_row, last_col}, ...] (1-based).
+ */
+PHP_METHOD(vtiful_xls, getMergedCells)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    size_t i, n;
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    n = lxr_worksheet_merged_count(obj->read_ptr.sheet_t);
+    for (i = 0; i < n; i++) {
+        lxr_range r;
+        zval entry;
+        if (!lxr_worksheet_merged_get(obj->read_ptr.sheet_t, i, &r)) continue;
+        array_init(&entry);
+        add_assoc_long(&entry, "first_row", (zend_long)r.first_row);
+        add_assoc_long(&entry, "first_col", (zend_long)r.first_col);
+        add_assoc_long(&entry, "last_row",  (zend_long)r.last_row);
+        add_assoc_long(&entry, "last_col",  (zend_long)r.last_col);
+        add_next_index_zval(return_value, &entry);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getHyperlinks()
+ *  Returns [{first_row, first_col, last_row, last_col, url, location,
+ *  display, tooltip}, ...]. Missing values are PHP null.
+ */
+PHP_METHOD(vtiful_xls, getHyperlinks)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    size_t i, n;
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    n = lxr_worksheet_hyperlink_count(obj->read_ptr.sheet_t);
+    for (i = 0; i < n; i++) {
+        lxr_hyperlink h;
+        zval entry;
+        if (!lxr_worksheet_hyperlink_get(obj->read_ptr.sheet_t, i, &h)) continue;
+        array_init(&entry);
+        add_assoc_long(&entry, "first_row", (zend_long)h.range.first_row);
+        add_assoc_long(&entry, "first_col", (zend_long)h.range.first_col);
+        add_assoc_long(&entry, "last_row",  (zend_long)h.range.last_row);
+        add_assoc_long(&entry, "last_col",  (zend_long)h.range.last_col);
+        if (h.url)      add_assoc_string(&entry, "url",      (char *)h.url);
+        else            add_assoc_null  (&entry, "url");
+        if (h.location) add_assoc_string(&entry, "location", (char *)h.location);
+        else            add_assoc_null  (&entry, "location");
+        if (h.display)  add_assoc_string(&entry, "display",  (char *)h.display);
+        else            add_assoc_null  (&entry, "display");
+        if (h.tooltip)  add_assoc_string(&entry, "tooltip",  (char *)h.tooltip);
+        else            add_assoc_null  (&entry, "tooltip");
+        add_next_index_zval(return_value, &entry);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getSheetProtection()
+ *  Returns null if no <sheetProtection> in the sheet, else assoc array of
+ *  flags + password_hash.
+ */
+PHP_METHOD(vtiful_xls, getSheetProtection)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    lxr_protection p;
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+
+    if (!lxr_worksheet_protection(obj->read_ptr.sheet_t, &p) || !p.is_present) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    add_assoc_string(return_value, "password_hash",          p.password_hash);
+    add_assoc_bool  (return_value, "sheet",                  p.sheet);
+    add_assoc_bool  (return_value, "content",                p.content);
+    add_assoc_bool  (return_value, "objects",                p.objects);
+    add_assoc_bool  (return_value, "scenarios",              p.scenarios);
+    add_assoc_bool  (return_value, "format_cells",           p.format_cells);
+    add_assoc_bool  (return_value, "format_columns",         p.format_columns);
+    add_assoc_bool  (return_value, "format_rows",            p.format_rows);
+    add_assoc_bool  (return_value, "insert_columns",         p.insert_columns);
+    add_assoc_bool  (return_value, "insert_rows",            p.insert_rows);
+    add_assoc_bool  (return_value, "insert_hyperlinks",      p.insert_hyperlinks);
+    add_assoc_bool  (return_value, "delete_columns",         p.delete_columns);
+    add_assoc_bool  (return_value, "delete_rows",            p.delete_rows);
+    add_assoc_bool  (return_value, "select_locked_cells",    p.select_locked_cells);
+    add_assoc_bool  (return_value, "sort",                   p.sort);
+    add_assoc_bool  (return_value, "auto_filter",            p.auto_filter);
+    add_assoc_bool  (return_value, "pivot_tables",           p.pivot_tables);
+    add_assoc_bool  (return_value, "select_unlocked_cells",  p.select_unlocked_cells);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getRowOptions(int $row)
+ *  Returns null if the row has no metadata, else assoc array.
+ *  $row is 0-based to match PHP convention; converted to 1-based internally.
+ */
+PHP_METHOD(vtiful_xls, getRowOptions)
+{
+    xls_object*  obj = Z_XLS_P(getThis());
+    zend_long    zl_row;
+    lxr_row_options ro;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(zl_row)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+    if (zl_row < 0) RETURN_NULL();
+
+    if (!lxr_worksheet_row_options(obj->read_ptr.sheet_t, (size_t)(zl_row + 1), &ro)) {
+        RETURN_NULL();
+    }
+    array_init(return_value);
+    if (ro.has_height) add_assoc_double(return_value, "height", ro.height);
+    else               add_assoc_null  (return_value, "height");
+    add_assoc_bool(return_value, "hidden",        ro.hidden);
+    add_assoc_long(return_value, "outline_level", ro.outline_level);
+    add_assoc_bool(return_value, "collapsed",     ro.collapsed);
+    add_assoc_bool(return_value, "custom_height", ro.custom_height);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getColumnOptions(string $colA1)
+ *  $colA1 is an A1-style column letter (e.g. "A", "AB"). Returns null if
+ *  the column has no metadata.
+ */
+PHP_METHOD(vtiful_xls, getColumnOptions)
+{
+    xls_object*  obj = Z_XLS_P(getThis());
+    zend_string *zs_col;
+    lxr_col_options co;
+    size_t col = 0;
+    const char *p;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(zs_col)
+    ZEND_PARSE_PARAMETERS_END();
+
+    if (obj->read_ptr.sheet_t == NULL) {
+        RETURN_NULL();
+    }
+
+    p = ZSTR_VAL(zs_col);
+    while (*p && ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z'))) {
+        char ch = *p;
+        if (ch >= 'a' && ch <= 'z') ch -= 32;
+        col = col * 26 + (size_t)(ch - 'A' + 1);
+        p++;
+    }
+    if (col == 0) RETURN_NULL();
+
+    if (!lxr_worksheet_col_options(obj->read_ptr.sheet_t, col, &co)) {
+        RETURN_NULL();
+    }
+    array_init(return_value);
+    if (co.has_width) add_assoc_double(return_value, "width", co.width);
+    else              add_assoc_null  (return_value, "width");
+    add_assoc_bool(return_value, "hidden",        co.hidden);
+    add_assoc_long(return_value, "outline_level", co.outline_level);
+    add_assoc_bool(return_value, "collapsed",     co.collapsed);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getDefaultRowHeight()
+ *  Returns the worksheet's default row height (in points), or null.
+ */
+PHP_METHOD(vtiful_xls, getDefaultRowHeight)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    double h;
+
+    if (obj->read_ptr.sheet_t == NULL) RETURN_NULL();
+    if (!lxr_worksheet_default_row_height(obj->read_ptr.sheet_t, &h)) RETURN_NULL();
+    RETURN_DOUBLE(h);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getDefaultColumnWidth()
+ *  Returns the worksheet's default column width (in characters), or null.
+ */
+PHP_METHOD(vtiful_xls, getDefaultColumnWidth)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    double w;
+
+    if (obj->read_ptr.sheet_t == NULL) RETURN_NULL();
+    if (!lxr_worksheet_default_col_width(obj->read_ptr.sheet_t, &w)) RETURN_NULL();
+    RETURN_DOUBLE(w);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::getDefinedNames()
+ *  Returns [{name, formula, scope, hidden}, ...]. scope is sheet name when
+ *  bound to a single sheet, null for workbook-scope.
+ */
+PHP_METHOD(vtiful_xls, getDefinedNames)
+{
+    xls_object* obj = Z_XLS_P(getThis());
+    size_t i, n;
+
+    if (obj->read_ptr.file_t == NULL) {
+        RETURN_NULL();
+    }
+    array_init(return_value);
+    n = lxr_workbook_defined_name_count(obj->read_ptr.file_t);
+    for (i = 0; i < n; i++) {
+        lxr_defined_name dn;
+        zval entry;
+        if (!lxr_workbook_defined_name_get(obj->read_ptr.file_t, i, &dn)) continue;
+        array_init(&entry);
+        add_assoc_string(&entry, "name",    (char *)(dn.name    ? dn.name    : ""));
+        add_assoc_string(&entry, "formula", (char *)(dn.formula ? dn.formula : ""));
+        if (dn.scope_sheet_index >= 0) {
+            const char *sn = lxr_workbook_sheet_name(
+                obj->read_ptr.file_t, (size_t)dn.scope_sheet_index);
+            if (sn) add_assoc_string(&entry, "scope", (char *)sn);
+            else    add_assoc_null  (&entry, "scope");
+        } else {
+            add_assoc_null(&entry, "scope");
+        }
+        add_assoc_bool(&entry, "hidden", dn.hidden);
+        add_next_index_zval(return_value, &entry);
+    }
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::setType(array $rowType)
  */
 PHP_METHOD(vtiful_xls, setType)
@@ -1868,7 +2152,7 @@ static void cell_value_to_zval(zval *out, const lxr_cell *c) {
     }
 }
 
-static void build_rich_cell(zval *out, const lxr_cell *c) {
+static void build_rich_cell(zval *out, const lxr_cell *c, const lxr_worksheet *ws) {
     zval value;
     array_init(out);
 
@@ -1882,6 +2166,14 @@ static void build_rich_cell(zval *out, const lxr_cell *c) {
                           c->value.formula.formula.ptr,
                           c->value.formula.formula.len);
     }
+
+    /* Surface a hyperlink URL (or internal anchor) when the cell carries one.
+     * Cells without a hyperlink omit the key entirely so the existing tuple
+     * shape is unchanged for non-link callers. */
+    if (ws) {
+        const char *url = lxr_worksheet_hyperlink_url(ws, c->row, c->col);
+        if (url) add_assoc_string(out, "url", (char *)url);
+    }
 }
 
 /** {{{ \Vtiful\Kernel\Excel::nextRowWithFormula()
@@ -1890,6 +2182,7 @@ PHP_METHOD(vtiful_xls, nextRowWithFormula)
 {
     xls_object *obj = Z_XLS_P(getThis());
     lxr_cell    cell;
+    int         skip_merged_foll;
 
     if (!obj->read_ptr.sheet_t) {
         RETURN_NULL();
@@ -1899,11 +2192,19 @@ PHP_METHOD(vtiful_xls, nextRowWithFormula)
         RETURN_NULL();
     }
 
+    skip_merged_foll = (lxr_worksheet_flags(obj->read_ptr.sheet_t)
+                        & LXR_SKIP_MERGED_FOLLOW) != 0;
+
     array_init(return_value);
     while (lxr_worksheet_next_cell(obj->read_ptr.sheet_t, &cell) == LXR_NO_ERROR) {
-        zval rich;
-        build_rich_cell(&rich, &cell);
         zend_ulong idx = cell.col > 0 ? (zend_ulong)(cell.col - 1) : 0;
+        if (skip_merged_foll &&
+            lxr_worksheet_in_merge_follow(obj->read_ptr.sheet_t, cell.row, cell.col)) {
+            add_index_null(return_value, idx);
+            continue;
+        }
+        zval rich;
+        build_rich_cell(&rich, &cell, obj->read_ptr.sheet_t);
         add_index_zval(return_value, idx, &rich);
     }
 }
@@ -2201,6 +2502,15 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, putCSV,           xls_put_csv_arginfo,            ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, putCSVCallback,   xls_put_csv_callback_arginfo,   ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, sheetList,        xls_sheet_list_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, sheetListWithMeta, xls_sheet_list_with_meta_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getMergedCells,        xls_get_merged_cells_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getHyperlinks,         xls_get_hyperlinks_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getSheetProtection,    xls_get_sheet_protection_arginfo,    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getRowOptions,         xls_get_row_options_arginfo,         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getColumnOptions,      xls_get_column_options_arginfo,      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getDefaultRowHeight,   xls_get_default_row_height_arginfo,  ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getDefaultColumnWidth, xls_get_default_column_width_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getDefinedNames,       xls_get_defined_names_arginfo,       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setGlobalType,    xls_set_global_type_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setSkipRows,      xls_set_skip_arginfo,           ZEND_ACC_PUBLIC)
@@ -2239,6 +2549,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_HIDDEN_ROW,  LXR_SKIP_HIDDEN_ROWS);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, LXR_SKIP_EMPTY_CELLS);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_VALUE, SKIP_EMPTY_VALUE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_MERGED_FOLLOW, LXR_SKIP_MERGED_FOLLOW);
 #endif
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_HIDE_ALL",    LXW_HIDE_ALL_GRIDLINES)

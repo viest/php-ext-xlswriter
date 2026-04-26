@@ -83,7 +83,8 @@ static char *rels_path_of(const char *path)
     return out;
 }
 
-static int sheet_array_push(lxr_workbook *wb, const char *name, const char *rid)
+static int sheet_array_push(lxr_workbook *wb, const char *name, const char *rid,
+                            lxr_sheet_visibility vis)
 {
     if (wb->sheet_count >= wb->sheet_cap) {
         size_t cap = wb->sheet_cap ? wb->sheet_cap * 2 : 8;
@@ -93,9 +94,10 @@ static int sheet_array_push(lxr_workbook *wb, const char *name, const char *rid)
         wb->sheets    = nb;
         wb->sheet_cap = cap;
     }
-    wb->sheets[wb->sheet_count].name   = str_dup(name);
-    wb->sheets[wb->sheet_count].rel_id = str_dup(rid);
-    wb->sheets[wb->sheet_count].target = NULL;
+    wb->sheets[wb->sheet_count].name       = str_dup(name);
+    wb->sheets[wb->sheet_count].rel_id     = str_dup(rid);
+    wb->sheets[wb->sheet_count].target     = NULL;
+    wb->sheets[wb->sheet_count].visibility = (int)vis;
     wb->sheet_count++;
     return 0;
 }
@@ -165,8 +167,35 @@ static lxr_error find_workbook_path(lxr_zip *zip, char **out_path)
 
 typedef struct {
     lxr_workbook *wb;
-    int in_sheets;
+    int  in_sheets;
+    int  in_defined_names;
+    int  in_defined_name;       /* inside a single <definedName> */
+    char *dn_name;              /* current entry's name attr */
+    int   dn_local_sheet;       /* localSheetId or -1 */
+    int   dn_hidden;
+    char *dn_text;              /* accumulated formula body */
+    size_t dn_text_len;
+    size_t dn_text_cap;
 } wb_ctx;
+
+static int dn_array_push(lxr_workbook *wb, const char *name, const char *formula,
+                         int scope_sheet_index, int hidden)
+{
+    if (wb->defined_name_count >= wb->defined_name_cap) {
+        size_t cap = wb->defined_name_cap ? wb->defined_name_cap * 2 : 4;
+        lxr_defined_name_entry *nb = (lxr_defined_name_entry *)realloc(
+            wb->defined_names, cap * sizeof(*nb));
+        if (!nb) return -1;
+        wb->defined_names    = nb;
+        wb->defined_name_cap = cap;
+    }
+    wb->defined_names[wb->defined_name_count].name              = str_dup(name);
+    wb->defined_names[wb->defined_name_count].formula           = str_dup(formula);
+    wb->defined_names[wb->defined_name_count].scope_sheet_index = scope_sheet_index;
+    wb->defined_names[wb->defined_name_count].hidden            = hidden;
+    wb->defined_name_count++;
+    return 0;
+}
 
 static void wb_on_start(void *ud, const char *name, const char **attrs)
 {
@@ -183,9 +212,28 @@ static void wb_on_start(void *ud, const char *name, const char **attrs)
         c->in_sheets = 1;
         return;
     }
+    if (lxr_xml_name_eq(name, "definedNames")) {
+        c->in_defined_names = 1;
+        return;
+    }
+    if (c->in_defined_names && lxr_xml_name_eq(name, "definedName")) {
+        const char *nm  = lxr_xml_attr(attrs, "name");
+        const char *lsi = lxr_xml_attr(attrs, "localSheetId");
+        const char *hd  = lxr_xml_attr(attrs, "hidden");
+        c->in_defined_name = 1;
+        free(c->dn_name);
+        c->dn_name = nm ? strdup(nm) : NULL;
+        c->dn_local_sheet = lsi ? (int)strtol(lsi, NULL, 10) : -1;
+        c->dn_hidden = (hd && (strcmp(hd, "1") == 0 || strcmp(hd, "true") == 0)) ? 1 : 0;
+        c->dn_text_len = 0;
+        if (c->dn_text) c->dn_text[0] = 0;
+        return;
+    }
     if (c->in_sheets && lxr_xml_name_eq(name, "sheet")) {
-        const char *sn  = lxr_xml_attr(attrs, "name");
-        const char *rid = lxr_xml_attr(attrs, "id");
+        const char *sn    = lxr_xml_attr(attrs, "name");
+        const char *rid   = lxr_xml_attr(attrs, "id");
+        const char *state = lxr_xml_attr(attrs, "state");
+        lxr_sheet_visibility vis = LXR_SHEET_VISIBLE;
         /* attr name in workbook.xml is "r:id" — namespace-stripping needed.
          * Walk attrs explicitly to find any id=*. */
         if (!rid) {
@@ -195,7 +243,32 @@ static void wb_on_start(void *ud, const char *name, const char **attrs)
                 a += 2;
             }
         }
-        if (sn && rid) sheet_array_push(c->wb, sn, rid);
+        if (state) {
+            if (strcmp(state, "hidden") == 0)           vis = LXR_SHEET_HIDDEN;
+            else if (strcmp(state, "veryHidden") == 0)  vis = LXR_SHEET_VERY_HIDDEN;
+        }
+        if (sn && rid) sheet_array_push(c->wb, sn, rid, vis);
+    }
+}
+
+static void wb_on_text(void *ud, const char *text, int len)
+{
+    wb_ctx *c = (wb_ctx *)ud;
+    if (!c->in_defined_name || len <= 0) return;
+    {
+        size_t need = c->dn_text_len + (size_t)len + 1;
+        if (need > c->dn_text_cap) {
+            size_t nc = c->dn_text_cap ? c->dn_text_cap : 64;
+            char *nb;
+            while (nc < need) nc *= 2;
+            nb = (char *)realloc(c->dn_text, nc);
+            if (!nb) return;
+            c->dn_text = nb;
+            c->dn_text_cap = nc;
+        }
+        memcpy(c->dn_text + c->dn_text_len, text, (size_t)len);
+        c->dn_text_len += (size_t)len;
+        c->dn_text[c->dn_text_len] = 0;
     }
 }
 
@@ -203,6 +276,19 @@ static void wb_on_end(void *ud, const char *name)
 {
     wb_ctx *c = (wb_ctx *)ud;
     if (lxr_xml_name_eq(name, "sheets")) c->in_sheets = 0;
+    if (lxr_xml_name_eq(name, "definedNames")) c->in_defined_names = 0;
+    if (c->in_defined_name && lxr_xml_name_eq(name, "definedName")) {
+        if (c->dn_name) {
+            dn_array_push(c->wb, c->dn_name,
+                          c->dn_text_len > 0 ? c->dn_text : "",
+                          c->dn_local_sheet, c->dn_hidden);
+        }
+        c->in_defined_name = 0;
+        free(c->dn_name); c->dn_name = NULL;
+        c->dn_text_len = 0;
+        c->dn_local_sheet = -1;
+        c->dn_hidden = 0;
+    }
 }
 
 static lxr_error parse_workbook_xml(lxr_workbook *wb)
@@ -218,11 +304,14 @@ static lxr_error parse_workbook_xml(lxr_workbook *wb)
     pump = lxr_xml_pump_create_zip_file(zf);
     if (!pump) { lxr_zip_close_entry(zf); return LXR_ERROR_MEMORY_MALLOC_FAILED; }
 
+    memset(&ctx, 0, sizeof(ctx));
     ctx.wb = wb;
-    ctx.in_sheets = 0;
-    lxr_xml_pump_set_handlers(pump, wb_on_start, wb_on_end, NULL, &ctx);
+    ctx.dn_local_sheet = -1;
+    lxr_xml_pump_set_handlers(pump, wb_on_start, wb_on_end, wb_on_text, &ctx);
     rc = lxr_xml_pump_run(pump);
 
+    free(ctx.dn_name);
+    free(ctx.dn_text);
     lxr_xml_pump_destroy(pump);
     lxr_zip_close_entry(zf);
     return rc;
@@ -414,6 +503,11 @@ void lxr_workbook_close(lxr_workbook *wb)
         free(wb->sheets[i].rel_id);
         free(wb->sheets[i].target);
     }
+    for (i = 0; i < wb->defined_name_count; i++) {
+        free(wb->defined_names[i].name);
+        free(wb->defined_names[i].formula);
+    }
+    free(wb->defined_names);
     free(wb->sheets);
     free(wb->workbook_path);
     free(wb->base_path);
@@ -436,6 +530,30 @@ const char *lxr_workbook_sheet_name(const lxr_workbook *wb, size_t index)
 {
     if (!wb || index >= wb->sheet_count) return NULL;
     return wb->sheets[index].name;
+}
+
+lxr_sheet_visibility lxr_workbook_sheet_visibility(const lxr_workbook *wb, size_t index)
+{
+    if (!wb || index >= wb->sheet_count) return LXR_SHEET_VISIBLE;
+    return (lxr_sheet_visibility)wb->sheets[index].visibility;
+}
+
+size_t lxr_workbook_defined_name_count(const lxr_workbook *wb)
+{
+    return wb ? wb->defined_name_count : 0;
+}
+
+int lxr_workbook_defined_name_get(const lxr_workbook *wb, size_t idx,
+                                  lxr_defined_name *out)
+{
+    const lxr_defined_name_entry *e;
+    if (!wb || !out || idx >= wb->defined_name_count) return 0;
+    e = &wb->defined_names[idx];
+    out->name              = e->name;
+    out->formula           = e->formula;
+    out->scope_sheet_index = e->scope_sheet_index;
+    out->hidden            = e->hidden;
+    return 1;
 }
 
 int lxr_workbook_uses_1904_dates(const lxr_workbook *wb)

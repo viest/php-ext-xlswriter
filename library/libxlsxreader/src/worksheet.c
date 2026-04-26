@@ -433,6 +433,7 @@ static lxr_error open_internal(lxr_workbook *wb, const char *target,
                                uint32_t flags, lxr_worksheet **out)
 {
     lxr_worksheet *ws;
+    lxr_error      rc;
     if (!wb || !target || !out) return LXR_ERROR_NULL_PARAMETER;
 
     ws = (lxr_worksheet *)calloc(1, sizeof(*ws));
@@ -444,12 +445,30 @@ static lxr_error open_internal(lxr_workbook *wb, const char *target,
     ws->target_path = strdup(target);
     if (!ws->target_path) { free(ws); return LXR_ERROR_MEMORY_MALLOC_FAILED; }
 
+    /* Eagerly scan worksheet-level metadata before opening the streaming
+     * pump. Only one minizip entry can be open at a time, so the meta pass
+     * uses its own open/close cycle. */
+    rc = lxr_worksheet_meta_load(ws);
+    if (rc != LXR_NO_ERROR) {
+        lxr_worksheet_meta_free(&ws->meta);
+        free(ws->target_path);
+        free(ws);
+        return rc;
+    }
+
     ws->zf = lxr_zip_open_entry(wb->zip, target);
-    if (!ws->zf) { free(ws->target_path); free(ws); return LXR_ERROR_ZIP_ENTRY_NOT_FOUND; }
+    if (!ws->zf) {
+        lxr_worksheet_meta_free(&ws->meta);
+        free(ws->target_path);
+        free(ws);
+        return LXR_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
 
     ws->pump = lxr_xml_pump_create_zip_file(ws->zf);
     if (!ws->pump) {
         lxr_zip_close_entry(ws->zf);
+        lxr_worksheet_meta_free(&ws->meta);
+        free(ws->target_path);
         free(ws);
         return LXR_ERROR_MEMORY_MALLOC_FAILED;
     }
@@ -470,6 +489,7 @@ void lxr_worksheet_close(lxr_worksheet *ws)
     if (!ws) return;
     if (ws->pump) lxr_xml_pump_destroy(ws->pump);
     if (ws->zf)   lxr_zip_close_entry(ws->zf);
+    lxr_worksheet_meta_free(&ws->meta);
     free(ws->cell_value);
     free(ws->cell_formula);
     free(ws->cell_inline);

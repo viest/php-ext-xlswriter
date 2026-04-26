@@ -27,6 +27,7 @@ void data_to_null(zval *zv_result_t);
 int  sheet_read_row(lxr_worksheet *ws);
 
 void           sheet_list(lxr_workbook *wb, zval *zv_result_t);
+void           sheet_list_with_meta(lxr_workbook *wb, zval *zv_result_t);
 lxr_workbook  *file_open (const char *directory, const char *file_name);
 lxr_worksheet *sheet_open(lxr_workbook *wb, const zend_string *zs_sheet_name_t, const zend_long zl_flag);
 

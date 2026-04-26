@@ -453,11 +453,14 @@ PHP_METHOD(vtiful_validation, valueList)
                 break;
             }
 
-            efree(obj->ptr.validation->value_list[index]);
+            /* libxlsxwriter declares value_list as `const char **`, but the
+             * strings were allocated by us via ecalloc — cast away the const
+             * so efree's signature accepts them. */
+            efree((void *)obj->ptr.validation->value_list[index]);
             index++;
         } while (1);
 
-        efree(obj->ptr.validation->value_list);
+        efree((void *)obj->ptr.validation->value_list);
         obj->ptr.validation->value_list = NULL;
     }
 
@@ -487,7 +490,10 @@ PHP_METHOD(vtiful_validation, valueList)
 
     list[index] = NULL;
 
-    obj->ptr.validation->value_list = list;
+    /* `value_list` is declared `const char **` in libxlsxwriter; the cast
+     * is required on Alpine/musl gcc where -Wincompatible-pointer-types is
+     * promoted to an error. */
+    obj->ptr.validation->value_list = (const char **)list;
 }
 /* }}} */
 

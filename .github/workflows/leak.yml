@@ -1,0 +1,46 @@
+name: leak-check
+
+on: [push, pull_request]
+
+jobs:
+  valgrind:
+    name: Valgrind leak check
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zlib1g-dev valgrind
+
+      - name: Build extension
+        run: |
+          phpize
+          ./configure --enable-reader
+          make clean
+          make -j2
+
+      - name: Run leak_stress under valgrind
+        # USE_ZEND_ALLOC=0 is mandatory: Zend MM's per-request arena bulk-free
+        # masks every emalloc/efree mismatch. See CLAUDE.md for the incident
+        # that originally motivated this job.
+        run: |
+          USE_ZEND_ALLOC=0 valgrind \
+              --leak-check=full \
+              --show-leak-kinds=definite,indirect \
+              --error-exitcode=1 \
+              --suppressions=tests/valgrind.supp \
+              php -n -d extension=$(pwd)/modules/xlswriter.so \
+              tests/leak_stress.php
+        env:
+          LEAK_STRESS_ITER: 100

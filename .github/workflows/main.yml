@@ -3,40 +3,71 @@ name: php-ext-xlswriter
 on: [push, pull_request]
 
 jobs:
-  run:
+  build-test:
+    name: PHP ${{ matrix.php-versions }} on ${{ matrix.operating-system }}
     runs-on: ${{ matrix.operating-system }}
     strategy:
+      fail-fast: false
       matrix:
-        operating-system: [ubuntu-latest]
-        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2']
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
+        operating-system: [ubuntu-22.04, macos-14]
+        php-versions: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
 
-      - name: Setup Dependencies
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
         run: |
-          sudo apt-get --fix-broken install
           sudo apt-get update
-          sudo apt-get install zlib1g-dev valgrind -y
+          sudo apt-get install -y zlib1g-dev
 
-      - name: Setup Submodule
-        run: git submodule update --init
-
-      - name: Build Extension And Execute Tests
+      - name: Build extension
         run: |
           php -m
-          phpize && ./configure --enable-reader
-          make clean && make && make test
+          phpize
+          ./configure --enable-reader
+          make clean
+          make -j2
 
-      - name: Build Extension And Execute Valgrind Tests
-        if: contains('7.0,7.1,7.2', matrix.php-versions)
+      - name: Run PHPT tests
+        run: make test TESTS="--show-diff -q"
+
+      - name: Run leak_stress (smoke)
         run: |
-          phpize && ./configure --enable-reader
-          make clean && make && make test
-          REPORT_EXIT_STATUS=1 php -n run-tests.php -m -n -d extension_dir=./modules/ -d extension=xlswriter.so -P --show-all --set-timeout 120
+          USE_ZEND_ALLOC=0 php -d extension=$(pwd)/modules/xlswriter.so \
+              -n tests/leak_stress.php
+        env:
+          LEAK_STRESS_ITER: 50
+
+  alpine-musl:
+    name: Alpine musl (PHP 8.3)
+    runs-on: ubuntu-22.04
+    container:
+      image: php:8.3-cli-alpine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Toolchain
+        run: |
+          apk add --no-cache build-base autoconf re2c zlib-dev linux-headers
+
+      - name: Build extension
+        run: |
+          phpize
+          ./configure --enable-reader
+          make clean
+          make -j2
+
+      - name: Run PHPT tests
+        run: make test TESTS="-q"

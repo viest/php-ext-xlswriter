@@ -1,12 +1,13 @@
 --TEST--
-Check for vtiful presence
+insertImage round-trip: PNG inserted at (3,0) is recoverable via iterateImages with the right MIME and position
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
-$config = [
-    'path' => './tests'
-];
+$config = ['path' => './tests'];
 
 $fileObject = new \Vtiful\Kernel\Excel($config);
 $fileObject = $fileObject->fileName('image_no_styles.xlsx');
@@ -20,6 +21,21 @@ $filePath = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: assert image MIME and anchor position. */
+$reader = new \Vtiful\Kernel\Excel($config);
+$reader->openFile('image_no_styles.xlsx')->openSheet();
+
+$imgs = [];
+$reader->iterateImages(function (array $img) use (&$imgs) {
+    $imgs[] = $img;
+});
+
+var_dump(count($imgs));
+var_dump($imgs[0]['mime']);
+var_dump($imgs[0]['from_row']);
+var_dump($imgs[0]['from_col']);
+var_dump(strlen($imgs[0]['data']) > 0);
 ?>
 --CLEAN--
 <?php
@@ -27,3 +43,8 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(28) "./tests/image_no_styles.xlsx"
+int(1)
+string(9) "image/png"
+int(3)
+int(0)
+bool(true)

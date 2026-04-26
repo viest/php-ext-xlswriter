@@ -1,7 +1,14 @@
 --TEST--
-Check for vtiful presence
+insertRichText round-trip: per-run text concatenates correctly when read back as a plain string
+
+NOTE: per-run *style* verification (font colour for "red " vs "orange")
+is a Phase 4 dependency — the reader currently flattens SST `<r>` runs.
+See plans/upgrade.md §8.2.2 (`Excel::nextRowRich`).
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 $config = ['path' => './tests'];

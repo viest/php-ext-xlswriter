@@ -26,6 +26,14 @@ $reader = (new \Vtiful\Kernel\Excel(['path' => $dir]))
     ->openFile($name)
     ->openSheet();
 
+$fmt_font = static function (?array $font): string {
+    if (!$font) return 'default';
+    return sprintf('%s %dpt color=%s%s%s',
+        $font['name'], $font['size'], $font['color'],
+        !empty($font['bold'])   ? ' bold'   : '',
+        !empty($font['italic']) ? ' italic' : '');
+};
+
 while (($row = $reader->nextRowWithFormula()) !== null) {
     foreach ($row as $cell) {
         $sid = $cell['style_id'];
@@ -33,7 +41,7 @@ while (($row = $reader->nextRowWithFormula()) !== null) {
         printf("%-12s sid=%d  font=%s\n",
             var_export($cell['value'], true),
             $sid,
-            $fmt ? json_encode($fmt['font']) : 'default');
+            $fmt_font($fmt['font'] ?? null));
     }
 }
 

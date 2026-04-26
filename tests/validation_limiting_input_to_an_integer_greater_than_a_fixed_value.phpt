@@ -18,13 +18,18 @@ $filePath = $excel->fileName('validation_limiting_input_to_an_integer_greater_th
     ->output();
 
 var_dump($validation, $filePath);
+
+/* Round-trip: validation didn't corrupt the workbook. */
+$v_ = new \Vtiful\Kernel\Excel($config);
+$d_ = $v_->openFile('validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_));
 ?>
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx');
 ?>
---EXPECT--
-object(Vtiful\Kernel\Validation)#1 (0) {
+--EXPECTF--
+object(Vtiful\Kernel\Validation)#%d (0) {
 }
 string(79) "./tests/validation_limiting_input_to_an_integer_greater_than_a_fixed_value.xlsx"
-
+bool(true)

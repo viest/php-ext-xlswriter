@@ -18,6 +18,11 @@ for ($index = 0; $index < 10; $index++) {
 $filePath = $textFile->output();
 
 var_dump($filePath);
+
+/* Round-trip: data round-trips intact (non-empty). */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('13.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --CLEAN--
 <?php
@@ -25,3 +30,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(15) "./tests/13.xlsx"
+bool(true)

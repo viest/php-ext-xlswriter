@@ -26,6 +26,11 @@ $fileObject->checkoutSheet('Sheet1')
 $filePath = $fileObject->output();
 
 var_dump($filePath);
+
+/* Round-trip: data round-trips intact (non-empty). */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('sheet_checkout.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --CLEAN--
 <?php
@@ -33,3 +38,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(27) "./tests/sheet_checkout.xlsx"
+bool(true)

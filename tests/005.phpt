@@ -10,6 +10,11 @@ $filePath = $excel->fileName('005.xlsx')
     ->header(['Item', 'Cost'])
     ->output();
 var_dump($filePath);
+
+/* Round-trip: data round-trips intact (non-empty). */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('005.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --CLEAN--
 <?php
@@ -17,3 +22,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(16) "./tests/005.xlsx"
+bool(true)

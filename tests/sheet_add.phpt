@@ -19,6 +19,11 @@ $fileObject->addSheet('twoSheet')
 $filePath = $fileObject->output();
 
 var_dump($filePath);
+
+/* Round-trip: data round-trips intact (non-empty). */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('sheet_add.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --CLEAN--
 <?php
@@ -26,3 +31,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(22) "./tests/sheet_add.xlsx"
+bool(true)

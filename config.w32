@@ -4,15 +4,15 @@ ARG_WITH("xlswriter", "xlswriter support", "no");
 
 if (PHP_XLSWRITER != "no") {
     if (
-        CHECK_HEADER_ADD_INCLUDE("minizip/zip.h", "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\third_party;" + PHP_EXTRA_INCLUDES) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h",  "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\include;" + PHP_EXTRA_INCLUDES) &&
-        CHECK_HEADER_ADD_INCLUDE("expat.h",       "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libexpat\\expat\\lib;" + PHP_EXTRA_INCLUDES) &&
-        CHECK_HEADER_ADD_INCLUDE("xlsxio_read.h", "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxio\\include;" + PHP_EXTRA_INCLUDES) &&
-        CHECK_HEADER_ADD_INCLUDE("xlswriter.h",   "CFLAGS_XLSWRITER", configure_module_dirname + "\\include;" + PHP_EXTRA_INCLUDES)
+        CHECK_HEADER_ADD_INCLUDE("minizip/zip.h",   "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\third_party;" + PHP_EXTRA_INCLUDES) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxwriter.h",    "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxwriter\\include;" + PHP_EXTRA_INCLUDES) &&
+        CHECK_HEADER_ADD_INCLUDE("expat.h",         "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libexpat\\expat\\lib;" + PHP_EXTRA_INCLUDES) &&
+        CHECK_HEADER_ADD_INCLUDE("xlsxreader.h",    "CFLAGS_XLSWRITER", configure_module_dirname + "\\library\\libxlsxreader\\include;" + PHP_EXTRA_INCLUDES) &&
+        CHECK_HEADER_ADD_INCLUDE("xlswriter.h",     "CFLAGS_XLSWRITER", configure_module_dirname + "\\include;" + PHP_EXTRA_INCLUDES)
     ) {
         EXTENSION("xlswriter", "xlswriter.c")
 
-        ADD_FLAG("CFLAGS_XLSWRITER", ' /D ENABLE_READER /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /I "' + configure_module_dirname + '" ');
+        ADD_FLAG("CFLAGS_XLSWRITER", ' /D ENABLE_READER /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /D NOCRYPT /D NOUNCRYPT /I "' + configure_module_dirname + '" /I "' + configure_module_dirname + '\\library\\libxlsxreader\\src" ');
 
         AC_DEFINE("HAVE_LXW_VERSION", 1, "lxw_version available in 0.7.7");
 
@@ -80,10 +80,17 @@ if (PHP_XLSWRITER != "no") {
                 xmltok_ns.c \
                 ", "xlswriter", "libexpat");
 
-        ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxio\\lib", "\
-                xlsxio_read.c \
-                xlsxio_read_sharedstrings.c \
-                ", "xlswriter", "libxlsxio");
+        ADD_SOURCES(configure_module_dirname + "\\library\\libxlsxreader\\src", "\
+                common.c \
+                zip_io.c \
+                xml_pump.c \
+                sst.c \
+                styles.c \
+                numfmt.c \
+                workbook.c \
+                worksheet.c \
+                drawing.c \
+                ", "xlswriter", "libxlsxreader");
     } else {
         WARNING("xlswriter not enabled, xlsxwriter.lib or headers not found");
     }

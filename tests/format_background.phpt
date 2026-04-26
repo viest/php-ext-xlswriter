@@ -28,6 +28,16 @@ $filePath = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('format_background.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['fill']['pattern_type']);
 ?>
 --CLEAN--
 <?php
@@ -35,3 +45,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(30) "./tests/format_background.xlsx"
+string(7) "lightUp"

@@ -23,6 +23,11 @@ $freeFile->insertFormula(13, 1, '=SUM(B2:B11)', null);
 $filePath = $freeFile->output();
 
 var_dump($filePath);
+
+/* Round-trip: data round-trips intact (non-empty). */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('14.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --CLEAN--
 <?php
@@ -30,3 +35,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(15) "./tests/14.xlsx"
+bool(true)

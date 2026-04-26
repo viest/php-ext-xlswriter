@@ -13,6 +13,11 @@ $filePath = $excel->fileName('insert_comment.xlsx')
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('insert_comment.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_));
 ?>
 --CLEAN--
 <?php
@@ -20,3 +25,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(27) "./tests/insert_comment.xlsx"
+bool(true)

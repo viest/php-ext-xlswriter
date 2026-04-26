@@ -66,6 +66,11 @@ $filePath = $excel
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('outline_level_row_const_memory.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_));
 ?>
 --CLEAN--
 <?php
@@ -73,3 +78,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(43) "./tests/outline_level_row_const_memory.xlsx"
+bool(true)

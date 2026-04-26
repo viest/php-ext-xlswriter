@@ -25,6 +25,16 @@ $filePath = $fileObject->header(['name', 'balance'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('format_number.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['category'], $fmt['num_fmt_id'] >= 164);
 ?>
 --CLEAN--
 <?php
@@ -32,3 +42,5 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(26) "./tests/format_number.xlsx"
+string(6) "number"
+bool(true)

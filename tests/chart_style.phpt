@@ -25,5 +25,5 @@ var_dump($chartResource);
 <?php
 @unlink(__DIR__ . '/chart_style.xlsx');
 ?>
---EXPECT--
-resource(5) of type (xlsx)
+--EXPECTF--
+resource(%d) of type (xlsx)

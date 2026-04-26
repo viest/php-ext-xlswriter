@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2024-11-10</date>
+ <date>2026-04-25</date>
  <time>00:00:00</time>
  <version>
-  <release>1.5.8</release>
-  <api>1.5.8</api>
+  <release>1.6.0</release>
+  <api>1.6.0</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,8 +45,10 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Fix: insertDate format.
-- Feat: format rotation.
+- Refactor: replaced libxlsxio dependency with the in-tree libxlsxreader (PHP-agnostic C library, lives under library/libxlsxreader/).
+- Reader: shared-strings table now supports both FULL and STREAMING modes.
+- Reader: explicit FSM-driven worksheet parser with 64KB XML buffer; honors 1900 vs 1904 date systems via workbook.xml.
+- Reader: PHP API (openFile/openSheet/nextRow/nextCellCallback/getSheetData/setType/setGlobalType/setSkipRows/putCSV/putCSVCallback) is fully backward compatible.
  </notes>
  <contents>
   <dir name="/">
@@ -164,13 +166,25 @@
    <file md5sum="8fa5658f138c3fde9c72320a82e92817" name="library/libexpat/expat/lib/xmltok_impl.c" role="src" />
    <file md5sum="d0104fa5078dbd1d9a479699fb792e99" name="library/libexpat/expat/lib/xmltok_ns.c" role="src" />
    <file md5sum="5b8620d98e49772d95fc1d291c26aa79" name="library/libexpat/expat/COPYING" role="doc" />
-   <file md5sum="5b75b9cd20f4218de1e34fe054cdb618" name="library/libxlsxio/include/xlsxio_read.h" role="src" />
-   <file md5sum="553368a7efde46a5f1dec3d27b49b427" name="library/libxlsxio/include/xlsxio_version.h" role="src" />
-   <file md5sum="2ca0f632da8358ccf8bc85ca0961142f" name="library/libxlsxio/lib/xlsxio_private.h" role="src" />
-   <file md5sum="305da62a3c44f5a4b02bb9b0d8eef4a7" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.h" role="src" />
-   <file md5sum="9945a35b195d25744598e4dff36075e4" name="library/libxlsxio/lib/xlsxio_read.c" role="src" />
-   <file md5sum="834dc4698adc79cf033d005c5ea67428" name="library/libxlsxio/lib/xlsxio_read_sharedstrings.c" role="src" />
-   <file md5sum="e59b06b20921a3ca95e1473a89c1ab3c" name="library/libxlsxio/LICENSE.txt" role="doc" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/common.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/workbook.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/worksheet.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/include/xlsxreader/styles.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_internal.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_zip.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_xml_pump.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_sst.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_styles_priv.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/lxr_numfmt.h" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/common.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/zip_io.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/xml_pump.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/sst.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/styles.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/numfmt.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/workbook.c" role="src" />
+   <file md5sum="" name="library/libxlsxreader/src/worksheet.c" role="src" />
    <file md5sum="57a70a14faab4cc6f169ff95eb20c65f" name="resource/chart_area1.png" role="src" />
    <file md5sum="242b1dcf124660314a3cbf5dc892669b" name="resource/chart_simple.png" role="src" />
    <file md5sum="f27a98466d7df8685391e3b152b729e2" name="resource/logo.png" role="src" />

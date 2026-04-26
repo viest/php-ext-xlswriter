@@ -23,6 +23,12 @@ $fileObject->addSheet('twoSheet')
 var_dump($fileObject->activateSheet('twoSheet'));
 
 $fileObject->output();
+
+/* Round-trip: both sheets present in the workbook. */
+$v_      = new \Vtiful\Kernel\Excel($config);
+$sheets_ = $v_->openFile('activate_sheet.xlsx')->sheetList();
+sort($sheets_);
+var_dump($sheets_);
 ?>
 --CLEAN--
 <?php
@@ -30,3 +36,9 @@ $fileObject->output();
 ?>
 --EXPECT--
 bool(true)
+array(2) {
+  [0]=>
+  string(6) "Sheet1"
+  [1]=>
+  string(8) "twoSheet"
+}

@@ -11,13 +11,6 @@ PHP_ARG_WITH([libxlsxwriter],
     [no],
     [no])
 
-PHP_ARG_WITH([libxlsxio],
-    [system libxlsxio],
-    [AS_HELP_STRING([[--with-libxlsxio[=DIR]]],
-        [Use system libxlsxio])],
-    [no],
-    [no])
-
 PHP_ARG_WITH([openssl],
     [openssl MD5],
     [AS_HELP_STRING([[--with-openssl[=DIR]]],
@@ -96,9 +89,16 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libexpat/expat/lib/xmltok_ns.c \
     "
 
-    libxlsxio="
-    library/libxlsxio/lib/xlsxio_read.c \
-    library/libxlsxio/lib/xlsxio_read_sharedstrings.c \
+    libxlsxreader_sources="
+    library/libxlsxreader/src/common.c \
+    library/libxlsxreader/src/zip_io.c \
+    library/libxlsxreader/src/xml_pump.c \
+    library/libxlsxreader/src/sst.c \
+    library/libxlsxreader/src/styles.c \
+    library/libxlsxreader/src/numfmt.c \
+    library/libxlsxreader/src/workbook.c \
+    library/libxlsxreader/src/worksheet.c \
+    library/libxlsxreader/src/drawing.c \
     "
 
     AC_MSG_CHECKING([Check libxlsxwriter library])
@@ -180,52 +180,24 @@ if test "$PHP_XLSWRITER" != "no"; then
     fi
 
     if test "$PHP_READER" = "yes"; then
-        AC_MSG_CHECKING([Check libxlsxwriter library])
-        if test "$PHP_LIBXLSXIO" != "no"; then
+        AC_MSG_RESULT([building bundled libxlsxreader])
 
-            for i in $PHP_LIBXLSXIO /usr/local /usr; do
-                if test -r $i/include/xlsxio_read.h; then
-                    XLSXIO_DIR=$i
-                    AC_MSG_RESULT([found in $i])
-                    break
-                fi
-            done
+        xls_writer_sources="$xls_writer_sources $libexpat"
+        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
+        PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
+        LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
 
-            if test -z "$XLSXIO_DIR"; then
-                AC_MSG_ERROR([libxlsxio library not found])
-            else
-                PHP_ADD_INCLUDE($XLSXIO_DIR/include)
-                PHP_CHECK_LIBRARY(xlsxio_read, xlsxioread_sheet_open,
-                [
-                    PHP_ADD_LIBRARY_WITH_PATH(xlsxio_read, $i/$PHP_LIBDIR, XLSWRITER_SHARED_LIBADD)
-                ],[
-                    AC_MSG_ERROR([Wrong libxlsxio version or library not found])
-                ],[
-                    -L$XLSXWRITER_DIR/$PHP_LIBDIR -lm
-                ])
-            fi
-
-            AC_DEFINE(HAVE_LIBXLSXIO, 1, [ use system libxlsxwriter ])
-        else
-            AC_MSG_RESULT([use the bundled library])
-
-            xls_writer_sources="$xls_writer_sources $libexpat"
-            PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
-            PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
-            LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
-
-            xls_writer_sources="$xls_writer_sources $libxlsxio"
-            PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxio/include])
-            PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxio/lib])
-            LIBOPT="$LIBOPT -DUSE_MINIZIP"
-
-        fi
+        xls_writer_sources="$xls_writer_sources $libxlsxreader_sources"
+        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxreader/include])
+        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxreader/src])
+        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsxwriter/third_party/minizip])
+        PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxreader/src])
 
         xls_writer_sources="$xls_writer_sources $xls_read_sources"
         AC_DEFINE(ENABLE_READER, 1, [enable reader])
     fi
 
-    if test "$PHP_LIBXLSXIO" = "no" || test "$PHP_LIBXLSXWRITER" = "no"; then
+    if test "$PHP_LIBXLSXWRITER" = "no"; then
         xls_writer_sources="$xls_writer_sources $minizip_sources"
     fi
 
@@ -247,5 +219,5 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxwriter/third_party/md5])
 
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
-    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxio/lib])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsxreader/src])
 fi

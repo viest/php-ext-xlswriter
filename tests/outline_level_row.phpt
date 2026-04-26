@@ -41,6 +41,11 @@ $filePath = $excel
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('outline_level_row.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_));
 ?>
 --CLEAN--
 <?php
@@ -48,3 +53,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(30) "./tests/outline_level_row.xlsx"
+bool(true)

@@ -22,5 +22,5 @@ var_dump($chartResource);
 <?php
 //
 ?>
---EXPECT--
-resource(5) of type (xlsx)
+--EXPECTF--
+resource(%d) of type (xlsx)

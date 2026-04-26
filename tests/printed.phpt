@@ -47,10 +47,10 @@ var_dump($excel);
 @unlink(__DIR__ . '/printed_landscape.xlsx');
 @unlink(__DIR__ . '/printed_scale.xlsx');
 ?>
---EXPECT--
+--EXPECTF--
 int(130)
 string(51) "Please create a file first, use the filename method"
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -61,7 +61,7 @@ object(Vtiful\Kernel\Excel)#3 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
-object(Vtiful\Kernel\Excel)#1 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -72,7 +72,7 @@ object(Vtiful\Kernel\Excel)#1 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>

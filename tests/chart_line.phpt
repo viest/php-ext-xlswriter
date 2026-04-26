@@ -29,6 +29,15 @@ $filePath = $fileObject->header(['number'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: chart's underlying data sheet reads back the 6 numbers. */
+$v_ = new \Vtiful\Kernel\Excel($config);
+$d_ = $v_->openFile('chart_line.xlsx')->openSheet()->getSheetData();
+$nums = [];
+foreach ($d_ as $row) { foreach ($row as $cell) { $nums[] = (int)$cell; } }
+$nums = array_slice($nums, 1);
+sort($nums);
+var_dump($nums);
 ?>
 --CLEAN--
 <?php
@@ -36,3 +45,17 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(23) "./tests/chart_line.xlsx"
+array(6) {
+  [0]=>
+  int(10)
+  [1]=>
+  int(10)
+  [2]=>
+  int(20)
+  [3]=>
+  int(40)
+  [4]=>
+  int(50)
+  [5]=>
+  int(50)
+}

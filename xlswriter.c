@@ -19,8 +19,7 @@
 #include "xlswriter.h"
 
 #if ENABLE_READER
-#include <xlsxio_version.h>
-#include <xlsxio_read.h>
+#include <xlsxreader.h>
 #endif
 
 int le_xls_writer;
@@ -112,14 +111,7 @@ PHP_MINFO_FUNCTION(xlswriter)
 #endif
 
 #if ENABLE_READER
-#if HAVE_LIBXLSXIO
-    /* Build time */
-    php_info_print_table_row(2, "libxlsxio headers version", XLSXIO_VERSION_STRING);
-    /* Run time */
-    php_info_print_table_row(2, "libxlsxio library version", xlsxioread_get_version_string());
-#else
-    php_info_print_table_row(2, "bundled libxlsxio version", XLSXIO_VERSION_STRING);
-#endif
+    php_info_print_table_row(2, "bundled libxlsxreader", "self-maintained");
 #endif
 
 	php_info_print_table_end();

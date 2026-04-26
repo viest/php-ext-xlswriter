@@ -28,10 +28,10 @@ var_dump($excel);
 <?php
 @unlink(__DIR__ . '/hide.xlsx');
 ?>
---EXPECT--
+--EXPECTF--
 int(130)
 string(51) "Please create a file first, use the filename method"
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>

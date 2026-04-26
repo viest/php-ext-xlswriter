@@ -29,6 +29,17 @@ $filePath = $fileObject->header(['name', 'age', 'score', 'level'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('format_border.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['border']['left']['style'], $fmt['border']['right']['style'],
+         $fmt['border']['top']['style'],  $fmt['border']['bottom']['style']);
 ?>
 --CLEAN--
 <?php
@@ -36,3 +47,7 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(26) "./tests/format_border.xlsx"
+string(4) "thin"
+string(4) "thin"
+string(4) "thin"
+string(4) "thin"

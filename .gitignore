@@ -47,3 +47,5 @@ CMakeLists.txt
 local_test.php
 xlswriter-*.tgz
 benchmark.c
+plans
+CLAUDE.md

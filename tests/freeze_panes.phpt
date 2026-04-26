@@ -22,6 +22,11 @@ for ($index = 0; $index < 100; $index++) {
 }
 
 var_dump($fileObject->output());
+
+/* Round-trip: file opens, sheet contains the inserted rows. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('freeze_panes.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) === 101);
 ?>
 --CLEAN--
 <?php
@@ -29,3 +34,4 @@ var_dump($fileObject->output());
 ?>
 --EXPECT--
 string(25) "./tests/freeze_panes.xlsx"
+bool(true)

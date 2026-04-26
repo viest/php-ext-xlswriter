@@ -21,6 +21,11 @@ $filePath = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('paper.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_));
 ?>
 --CLEAN--
 <?php
@@ -28,3 +33,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(18) "./tests/paper.xlsx"
+bool(true)

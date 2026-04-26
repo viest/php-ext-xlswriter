@@ -285,6 +285,18 @@ ZEND_BEGIN_ARG_INFO_EX(xls_next_cell_callback_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, sheet_name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_next_row_with_formula_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_get_style_format_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, style_id)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_iterate_images_arginfo, 0, 0, 1)
+                ZEND_ARG_INFO(0, callback)
+                ZEND_ARG_INFO(0, sheet_name)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_index_to_string, 0, 0, 1)
                 ZEND_ARG_INFO(0, index)
 ZEND_END_ARG_INFO()
@@ -1497,12 +1509,12 @@ PHP_METHOD(vtiful_xls, openFile)
     xls_object* obj = Z_XLS_P(getThis());
 
     if (obj->read_ptr.sheet_t != NULL) {
-        xlsxioread_sheet_close(obj->read_ptr.sheet_t);
+        lxr_worksheet_close(obj->read_ptr.sheet_t);
         obj->read_ptr.sheet_t = NULL;
     }
 
     if (obj->read_ptr.file_t != NULL) {
-        xlsxioread_close(obj->read_ptr.file_t);
+        lxr_workbook_close(obj->read_ptr.file_t);
         obj->read_ptr.file_t = NULL;
     }
 
@@ -1514,7 +1526,7 @@ PHP_METHOD(vtiful_xls, openFile)
  */
 PHP_METHOD(vtiful_xls, openSheet)
 {
-    zend_long zl_flag = XLSXIOREAD_SKIP_NONE;
+    zend_long zl_flag = LXR_SKIP_NONE;
     zend_string *zs_sheet_name = NULL;
 
     ZEND_PARSE_PARAMETERS_START(0, 2)
@@ -1532,8 +1544,18 @@ PHP_METHOD(vtiful_xls, openSheet)
     }
 
     if (obj->read_ptr.sheet_t != NULL) {
-        xlsxioread_sheet_close(obj->read_ptr.sheet_t);
+        lxr_worksheet_close(obj->read_ptr.sheet_t);
+        obj->read_ptr.sheet_t = NULL;
     }
+
+    /* Reset per-sheet reader bookkeeping (synth state, row counter). */
+    if (Z_TYPE(obj->read_ptr.pending_real_row) == IS_ARRAY) {
+        zval_ptr_dtor(&obj->read_ptr.pending_real_row);
+    }
+    ZVAL_NULL(&obj->read_ptr.pending_real_row);
+    obj->read_ptr.cols               = 0;
+    obj->read_ptr.expected_row_nr    = 1;
+    obj->read_ptr.pending_synth_rows = 0;
 
     obj->read_ptr.sheet_flag = zl_flag;
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
@@ -1615,7 +1637,7 @@ PHP_METHOD(vtiful_xls, setSkipRows)
         RETURN_FALSE;
     }
 
-    skip_rows(obj->read_ptr.sheet_t, NULL, obj->read_ptr.data_type_default, zl_skip);
+    skip_rows(&obj->read_ptr, NULL, obj->read_ptr.data_type_default, zl_skip);
 }
 /* }}} */
 
@@ -1645,7 +1667,7 @@ PHP_METHOD(vtiful_xls, putCSV)
 
     if (xlsx_to_csv(
             fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
-            obj->read_ptr.sheet_t, zv_type, obj->read_ptr.data_type_default, READ_SKIP_ROW, NULL, NULL
+            &obj->read_ptr, zv_type, obj->read_ptr.data_type_default, READ_SKIP_ROW, NULL, NULL
             ) == XLSWRITER_TRUE) {
         RETURN_TRUE;
     }
@@ -1683,7 +1705,7 @@ PHP_METHOD(vtiful_xls, putCSVCallback)
 
     if (xlsx_to_csv(
             fp, delimiter_str, delimiter_str_len, enclosure_str, enclosure_str_len, escape_str, escape_str_len,
-            obj->read_ptr.sheet_t, zv_type, obj->read_ptr.data_type_default, READ_SKIP_ROW, &fci, &fci_cache
+            &obj->read_ptr, zv_type, obj->read_ptr.data_type_default, READ_SKIP_ROW, &fci, &fci_cache
             ) == XLSWRITER_TRUE) {
         RETURN_TRUE;
     }
@@ -1698,19 +1720,22 @@ PHP_METHOD(vtiful_xls, getSheetData)
 {
     xls_object *obj = Z_XLS_P(getThis());
 
+    /* Match libxlsxio behaviour: an unopened or not-found sheet yields an
+     * empty array rather than false, so callers can iterate uniformly. */
     if (!obj->read_ptr.sheet_t) {
-        RETURN_FALSE;
+        array_init(return_value);
+        return;
     }
 
     zval *zv_type = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
 
     if (zv_type != NULL && Z_TYPE_P(zv_type) == IS_ARRAY) {
-        load_sheet_all_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, zv_type, obj->read_ptr.data_type_default, return_value);
+        load_sheet_all_data(&obj->read_ptr, obj->read_ptr.sheet_flag, zv_type, obj->read_ptr.data_type_default, return_value);
 
         return;
     }
 
-    load_sheet_all_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, NULL, obj->read_ptr.data_type_default, return_value);
+    load_sheet_all_data(&obj->read_ptr, obj->read_ptr.sheet_flag, NULL, obj->read_ptr.data_type_default, return_value);
 }
 /* }}} */
 
@@ -1735,7 +1760,7 @@ PHP_METHOD(vtiful_xls, nextRow)
         zv_type_t = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_TYPE), 0, NULL);
     }
 
-    load_sheet_row_data(obj->read_ptr.sheet_t, obj->read_ptr.sheet_flag, zv_type_t, obj->read_ptr.data_type_default, return_value);
+    load_sheet_row_data(&obj->read_ptr, obj->read_ptr.sheet_flag, zv_type_t, obj->read_ptr.data_type_default, return_value);
 }
 /* }}} */
 
@@ -1768,6 +1793,341 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
     callback_data.fci_cache = &fci_cache;
 
     load_sheet_current_row_data_callback(zs_sheet_name, obj->read_ptr.file_t, &callback_data);
+}
+/* }}} */
+
+/* ----------------------------------------------------------------------- */
+/* Phase 7 helpers: rich-cell zval builder                                  */
+/* ----------------------------------------------------------------------- */
+
+static const char *cell_type_name(lxr_cell_type t) {
+    switch (t) {
+    case LXR_CELL_NUMBER:        return "number";
+    case LXR_CELL_DATETIME:      return "datetime";
+    case LXR_CELL_STRING:        return "string";
+    case LXR_CELL_INLINE_STRING: return "inline_string";
+    case LXR_CELL_BOOLEAN:       return "boolean";
+    case LXR_CELL_FORMULA:       return "formula";
+    case LXR_CELL_ERROR:         return "error";
+    case LXR_CELL_BLANK:         return "blank";
+    default:                     return "unknown";
+    }
+}
+
+static void cell_value_to_zval(zval *out, const lxr_cell *c) {
+    switch (c->type) {
+    case LXR_CELL_NUMBER:
+        if (c->value.number == (double)(zend_long)c->value.number) {
+            ZVAL_LONG(out, (zend_long)c->value.number);
+        } else {
+            ZVAL_DOUBLE(out, c->value.number);
+        }
+        return;
+    case LXR_CELL_DATETIME:
+        ZVAL_LONG(out, c->value.unix_timestamp);
+        return;
+    case LXR_CELL_STRING:
+    case LXR_CELL_INLINE_STRING:
+        if (c->value.string.ptr) {
+            ZVAL_STRINGL(out, c->value.string.ptr, c->value.string.len);
+        } else {
+            ZVAL_EMPTY_STRING(out);
+        }
+        return;
+    case LXR_CELL_BOOLEAN:
+        ZVAL_BOOL(out, c->value.boolean);
+        return;
+    case LXR_CELL_FORMULA:
+        if (c->value.formula.cached.ptr && c->value.formula.cached.len > 0) {
+            zend_long _l = 0; double _d = 0;
+            int kind = is_numeric_string(c->value.formula.cached.ptr,
+                                         c->value.formula.cached.len, &_l, &_d, 0);
+            if (kind == IS_LONG)        ZVAL_LONG(out, _l);
+            else if (kind == IS_DOUBLE) ZVAL_DOUBLE(out, _d);
+            else                        ZVAL_STRINGL(out, c->value.formula.cached.ptr,
+                                                          c->value.formula.cached.len);
+        } else {
+            ZVAL_NULL(out);
+        }
+        return;
+    case LXR_CELL_ERROR:
+        ZVAL_STRING(out, c->value.error_code);
+        return;
+    case LXR_CELL_BLANK:
+    default:
+        ZVAL_NULL(out);
+        return;
+    }
+}
+
+static void build_rich_cell(zval *out, const lxr_cell *c) {
+    zval value;
+    array_init(out);
+
+    cell_value_to_zval(&value, c);
+    add_assoc_zval(out, "value", &value);
+    add_assoc_string(out, "type", cell_type_name(c->type));
+    add_assoc_long(out, "style_id", (zend_long)c->style_id);
+
+    if (c->type == LXR_CELL_FORMULA && c->value.formula.formula.ptr) {
+        add_assoc_stringl(out, "formula",
+                          c->value.formula.formula.ptr,
+                          c->value.formula.formula.len);
+    }
+}
+
+/** {{{ \Vtiful\Kernel\Excel::nextRowWithFormula()
+ */
+PHP_METHOD(vtiful_xls, nextRowWithFormula)
+{
+    xls_object *obj = Z_XLS_P(getThis());
+    lxr_cell    cell;
+
+    if (!obj->read_ptr.sheet_t) {
+        RETURN_NULL();
+    }
+
+    if (!sheet_read_row(obj->read_ptr.sheet_t)) {
+        RETURN_NULL();
+    }
+
+    array_init(return_value);
+    while (lxr_worksheet_next_cell(obj->read_ptr.sheet_t, &cell) == LXR_NO_ERROR) {
+        zval rich;
+        build_rich_cell(&rich, &cell);
+        zend_ulong idx = cell.col > 0 ? (zend_ulong)(cell.col - 1) : 0;
+        add_index_zval(return_value, idx, &rich);
+    }
+}
+/* }}} */
+
+/* Helpers for getStyleFormat — convert internal enums/struct fields to
+ * stable, plain-PHP shapes so userland can match by string/value. */
+
+static const char *xf_category_name(lxr_fmt_category cat) {
+    switch (cat) {
+    case LXR_FMT_CATEGORY_NUMBER:   return "number";
+    case LXR_FMT_CATEGORY_PERCENT:  return "percent";
+    case LXR_FMT_CATEGORY_DATE:     return "date";
+    case LXR_FMT_CATEGORY_TIME:     return "time";
+    case LXR_FMT_CATEGORY_DATETIME: return "datetime";
+    case LXR_FMT_CATEGORY_CURRENCY: return "currency";
+    case LXR_FMT_CATEGORY_TEXT:     return "text";
+    case LXR_FMT_CATEGORY_CUSTOM:   return "custom";
+    case LXR_FMT_CATEGORY_GENERAL:
+    default:                        return "general";
+    }
+}
+
+static void font_to_zval(zval *out, const lxr_font *f) {
+    array_init(out);
+    if (f->name) add_assoc_string(out, "name", (char *)f->name);
+    else         add_assoc_null  (out, "name");
+    add_assoc_double(out, "size",   f->size);
+    add_assoc_string(out, "color",  (char *)f->color);   /* "" if unset */
+    add_assoc_bool  (out, "bold",   f->bold);
+    add_assoc_bool  (out, "italic", f->italic);
+    add_assoc_bool  (out, "strike", f->strike);
+    add_assoc_long  (out, "underline", (zend_long)f->underline);
+}
+
+static void fill_to_zval(zval *out, const lxr_fill *fl) {
+    array_init(out);
+    add_assoc_string(out, "pattern_type", (char *)(fl->pattern_type ? fl->pattern_type : ""));
+    add_assoc_string(out, "fg_color",     (char *)fl->fg_color);
+    add_assoc_string(out, "bg_color",     (char *)fl->bg_color);
+}
+
+static void border_side_to_zval(zval *out, const lxr_border_side *side) {
+    array_init(out);
+    add_assoc_string(out, "style", (char *)(side->style ? side->style : ""));
+    add_assoc_string(out, "color", (char *)side->color);
+}
+
+static void border_to_zval(zval *out, const lxr_border *b) {
+    zval l, r, t, bot;
+    array_init(out);
+    border_side_to_zval(&l,   &b->left);
+    border_side_to_zval(&r,   &b->right);
+    border_side_to_zval(&t,   &b->top);
+    border_side_to_zval(&bot, &b->bottom);
+    add_assoc_zval(out, "left",   &l);
+    add_assoc_zval(out, "right",  &r);
+    add_assoc_zval(out, "top",    &t);
+    add_assoc_zval(out, "bottom", &bot);
+}
+
+static void alignment_to_zval(zval *out, const lxr_xf *xf) {
+    array_init(out);
+    if (xf->alignment.horizontal)
+         add_assoc_string(out, "horizontal", (char *)xf->alignment.horizontal);
+    else add_assoc_null  (out, "horizontal");
+    if (xf->alignment.vertical)
+         add_assoc_string(out, "vertical",   (char *)xf->alignment.vertical);
+    else add_assoc_null  (out, "vertical");
+    add_assoc_bool(out, "wrap_text", xf->alignment.wrap_text);
+    add_assoc_long(out, "indent",    (zend_long)xf->alignment.indent);
+    add_assoc_long(out, "rotation",  (zend_long)xf->alignment.rotation);
+}
+
+/** {{{ \Vtiful\Kernel\Excel::getStyleFormat(int $style_id)
+ *  Returns a rich associative array describing the style. Always contains
+ *  num_fmt_id / category / format_string. When the workbook has the
+ *  corresponding records, also returns alignment / protection /
+ *  font / fill / border subarrays.
+ */
+PHP_METHOD(vtiful_xls, getStyleFormat)
+{
+    zend_long style_id = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+            Z_PARAM_LONG(style_id)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+    if (!obj->read_ptr.file_t) RETURN_NULL();
+
+    const lxr_styles *st = lxr_workbook_get_styles(obj->read_ptr.file_t);
+    const lxr_xf     *xf = st ? lxr_styles_get_xf(st, (uint32_t)style_id) : NULL;
+    if (!xf) RETURN_NULL();
+
+    array_init(return_value);
+    add_assoc_long  (return_value, "num_fmt_id",   (zend_long)xf->num_fmt_id);
+    add_assoc_string(return_value, "category",     (char *)xf_category_name(xf->category));
+    if (xf->format_string) add_assoc_string(return_value, "format_string", (char *)xf->format_string);
+    else                   add_assoc_null  (return_value, "format_string");
+
+    add_assoc_long(return_value, "font_id",   (zend_long)xf->font_id);
+    add_assoc_long(return_value, "fill_id",   (zend_long)xf->fill_id);
+    add_assoc_long(return_value, "border_id", (zend_long)xf->border_id);
+
+    {
+        zval align;
+        alignment_to_zval(&align, xf);
+        add_assoc_zval(return_value, "alignment", &align);
+    }
+
+    {
+        zval prot;
+        array_init(&prot);
+        add_assoc_bool(&prot, "locked", xf->locked);
+        add_assoc_bool(&prot, "hidden", xf->hidden);
+        add_assoc_zval(return_value, "protection", &prot);
+    }
+
+    {
+        const lxr_font *f = lxr_styles_get_font(st, xf->font_id);
+        if (f) {
+            zval fz;
+            font_to_zval(&fz, f);
+            add_assoc_zval(return_value, "font", &fz);
+        } else {
+            add_assoc_null(return_value, "font");
+        }
+    }
+    {
+        const lxr_fill *fl = lxr_styles_get_fill(st, xf->fill_id);
+        if (fl) {
+            zval flz;
+            fill_to_zval(&flz, fl);
+            add_assoc_zval(return_value, "fill", &flz);
+        } else {
+            add_assoc_null(return_value, "fill");
+        }
+    }
+    {
+        const lxr_border *b = lxr_styles_get_border(st, xf->border_id);
+        if (b) {
+            zval bz;
+            border_to_zval(&bz, b);
+            add_assoc_zval(return_value, "border", &bz);
+        } else {
+            add_assoc_null(return_value, "border");
+        }
+    }
+}
+/* }}} */
+
+/* {{{ image iteration callback bridge */
+typedef struct {
+    zend_fcall_info       *fci;
+    zend_fcall_info_cache *fci_cache;
+} php_image_cb_data;
+
+static int php_image_cb(const lxr_image *img, void *ud)
+{
+    php_image_cb_data *cd = (php_image_cb_data *)ud;
+    zval               info, retval;
+    int                stop = 0;
+
+    array_init(&info);
+    add_assoc_long  (&info, "from_row", (zend_long)img->from_row);
+    add_assoc_long  (&info, "from_col", (zend_long)img->from_col);
+    add_assoc_long  (&info, "to_row",   (zend_long)img->to_row);
+    add_assoc_long  (&info, "to_col",   (zend_long)img->to_col);
+    add_assoc_string(&info, "mime",     (char *)img->mime_type);
+    add_assoc_stringl(&info, "data",    (char *)img->data, img->data_len);
+    add_assoc_string(&info, "name",     (char *)(img->name ? img->name : ""));
+
+    cd->fci->retval      = &retval;
+    cd->fci->params      = &info;
+    cd->fci->param_count = 1;
+
+    zend_call_function(cd->fci, cd->fci_cache);
+    if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+
+    zval_ptr_dtor(&info);
+    zval_ptr_dtor(&retval);
+    return stop;
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::iterateImages($callback, ?string $sheet_name = null)
+ *  Calls $callback once per image found in the sheet's drawing. The callback
+ *  receives an associative array {from_row, from_col, to_row, to_col, mime,
+ *  data, name}. Returning false from the callback stops iteration.
+ */
+PHP_METHOD(vtiful_xls, iterateImages)
+{
+    zend_fcall_info       fci        = empty_fcall_info;
+    zend_fcall_info_cache fci_cache  = empty_fcall_info_cache;
+    zend_string          *sheet_name = NULL;
+    lxr_worksheet        *ws         = NULL;
+    int                   we_opened  = 0;
+    php_image_cb_data     cd;
+
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+            Z_PARAM_FUNC(fci, fci_cache)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR_OR_NULL(sheet_name)
+    ZEND_PARSE_PARAMETERS_END();
+
+    xls_object *obj = Z_XLS_P(getThis());
+    if (!obj->read_ptr.file_t) RETURN_FALSE;
+
+    if (sheet_name) {
+        if (lxr_workbook_get_worksheet_by_name(obj->read_ptr.file_t, ZSTR_VAL(sheet_name),
+                                                LXR_SKIP_NONE, &ws) != LXR_NO_ERROR || !ws) {
+            RETURN_FALSE;
+        }
+        we_opened = 1;
+    } else {
+        ws = obj->read_ptr.sheet_t;
+        if (!ws) {
+            if (lxr_workbook_get_worksheet_by_index(obj->read_ptr.file_t, 0,
+                                                     LXR_SKIP_NONE, &ws) != LXR_NO_ERROR || !ws) {
+                RETURN_FALSE;
+            }
+            we_opened = 1;
+        }
+    }
+
+    cd.fci       = &fci;
+    cd.fci_cache = &fci_cache;
+    lxr_worksheet_iterate_images(ws, php_image_cb, &cd);
+
+    if (we_opened) lxr_worksheet_close(ws);
+    RETURN_TRUE;
 }
 /* }}} */
 
@@ -1836,9 +2196,12 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, setType,          xls_set_type_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setGlobalType,    xls_set_global_type_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setSkipRows,      xls_set_skip_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, getSheetData,     xls_get_sheet_data_arginfo,     ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, nextRow,          xls_next_row_arginfo,           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, nextCellCallback, xls_next_cell_callback_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getSheetData,       xls_get_sheet_data_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextRow,            xls_next_row_arginfo,             ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextRowWithFormula, xls_next_row_with_formula_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, getStyleFormat,     xls_get_style_format_arginfo,     ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, iterateImages,      xls_iterate_images_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, nextCellCallback,   xls_next_cell_callback_arginfo,   ZEND_ACC_PUBLIC)
 #endif
 
         PHP_FE_END
@@ -1863,10 +2226,10 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_TYPE, ZEND_ACC_PRIVATE);
 
 #ifdef ENABLE_READER
-    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_NONE,        XLSXIOREAD_SKIP_NONE);
-    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_ROW,   XLSXIOREAD_SKIP_EMPTY_ROWS);
-    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_HIDDEN_ROW,  XLSXIOREAD_SKIP_HIDDEN_ROWS);
-    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, XLSXIOREAD_SKIP_EMPTY_CELLS);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_NONE,        LXR_SKIP_NONE);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_ROW,   LXR_SKIP_EMPTY_ROWS);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_HIDDEN_ROW,  LXR_SKIP_HIDDEN_ROWS);
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_CELLS, LXR_SKIP_EMPTY_CELLS);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_VALUE, SKIP_EMPTY_VALUE);
 #endif
 

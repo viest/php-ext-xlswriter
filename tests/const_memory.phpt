@@ -16,6 +16,11 @@ $path = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($path);
+
+/* Round-trip: const-memory writer produces a readable file with our data. */
+$v_ = new \Vtiful\Kernel\Excel(['path' => './tests']);
+$d_ = $v_->openFile('const_memory.xlsx')->openSheet()->getSheetData();
+var_dump(is_array($d_) && count($d_) === 2);
 ?>
 --CLEAN--
 <?php
@@ -23,3 +28,4 @@ var_dump($path);
 ?>
 --EXPECT--
 string(25) "./tests/const_memory.xlsx"
+bool(true)

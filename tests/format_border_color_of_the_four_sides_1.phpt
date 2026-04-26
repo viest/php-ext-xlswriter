@@ -37,6 +37,17 @@ $filePath = $fileObject->header(['name', 'age', 'score', 'level'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('format_border_color_of_the_four_side_1.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['border']['left']['color'],   $fmt['border']['right']['color'],
+         $fmt['border']['top']['color'],    $fmt['border']['bottom']['color']);
 ?>
 --CLEAN--
 <?php
@@ -44,3 +55,7 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(51) "./tests/format_border_color_of_the_four_side_1.xlsx"
+string(8) "FFFFFF00"
+string(8) "FF008000"
+string(8) "FFFF6600"
+string(8) "FFFF0000"

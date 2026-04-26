@@ -41,15 +41,26 @@
 #include "help.h"
 
 #ifdef ENABLE_READER
-#include "xlsxio_read.h"
+#include "xlsxreader.h"
 #include "read.h"
 #include "csv.h"
 
-typedef struct {
-    xlsxioreader      file_t;
-    xlsxioreadersheet sheet_t;
-    zend_long         data_type_default;
-    zend_long         sheet_flag;
+typedef struct xls_resource_read_t {
+    lxr_workbook  *file_t;
+    lxr_worksheet *sheet_t;
+    zend_long      data_type_default;
+    zend_long      sheet_flag;
+
+    /* Synthesised-blanks bookkeeping (matches libxlsxio's compatibility shape):
+     *   cols              max column from first non-empty row (trailing fill)
+     *   expected_row_nr   next row number we expect to emit (1-based)
+     *   pending_synth_rows  empty rows still to yield from a row gap (nextRow)
+     *   pending_real_row    real row data buffered while emitting synth rows
+     */
+    size_t         cols;
+    size_t         expected_row_nr;
+    size_t         pending_synth_rows;
+    zval           pending_real_row;
 } xls_resource_read_t;
 
 typedef struct {
@@ -302,6 +313,11 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
 
     if (intern->formats_cache_ptr.maps != NULL) {
         zend_hash_destroy(intern->formats_cache_ptr.maps);
+        /* The HashTable struct was emalloc'd in vtiful_xls_objects_new;
+         * zend_hash_destroy only releases the table's contents, the struct
+         * itself must be efree'd separately. */
+        efree(intern->formats_cache_ptr.maps);
+        intern->formats_cache_ptr.maps = NULL;
     }
 
     if (intern->row_options != NULL) {
@@ -311,14 +327,22 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
 
 #ifdef ENABLE_READER
     if (intern->read_ptr.sheet_t != NULL) {
-        xlsxioread_sheet_close(intern->read_ptr.sheet_t);
+        lxr_worksheet_close(intern->read_ptr.sheet_t);
         intern->read_ptr.sheet_t = NULL;
     }
 
     if (intern->read_ptr.file_t != NULL) {
-        xlsxioread_close(intern->read_ptr.file_t);
+        lxr_workbook_close(intern->read_ptr.file_t);
         intern->read_ptr.file_t = NULL;
     }
+
+    if (Z_TYPE(intern->read_ptr.pending_real_row) == IS_ARRAY) {
+        zval_ptr_dtor(&intern->read_ptr.pending_real_row);
+    }
+    ZVAL_NULL(&intern->read_ptr.pending_real_row);
+    intern->read_ptr.cols               = 0;
+    intern->read_ptr.expected_row_nr    = 0;
+    intern->read_ptr.pending_synth_rows = 0;
 #endif
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;

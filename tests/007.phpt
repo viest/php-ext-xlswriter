@@ -14,5 +14,9 @@ $boldFormat = $format->bold()->toResource();
 
 var_dump($boldFormat);
 ?>
---EXPECT--
-resource(5) of type (xlsx)
+--CLEAN--
+<?php
+@unlink(__DIR__ . "/tutorial01.xlsx");
+?>
+--EXPECTF--
+resource(%d) of type (xlsx)

@@ -61,6 +61,12 @@ static void vtiful_xls_objects_free(zend_object *object)
 
     php_vtiful_close_resource(object);
 
+    if (intern->formats_cache_ptr.maps) {
+        zend_hash_destroy(intern->formats_cache_ptr.maps);
+        efree(intern->formats_cache_ptr.maps);
+        intern->formats_cache_ptr.maps = NULL;
+    }
+
     zend_object_std_dtor(&intern->zo);
 }
 /* }}} */

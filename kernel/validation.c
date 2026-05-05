@@ -788,7 +788,7 @@ VTIFUL_STARTUP_FUNCTION(validation) {
     vtiful_validation_ce = zend_register_internal_class(&ce);
 
     memcpy(&validation_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    validation_handlers.offset   = XtOffsetOf(validation_object, zo);
+    validation_handlers.offset   = offsetof(validation_object, zo);
     validation_handlers.free_obj = validation_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_validation_ce, "TYPE_INTEGER",         LXW_VALIDATION_TYPE_INTEGER)

@@ -247,7 +247,7 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
+    return (xls_object *)((char *)(obj) - offsetof(xls_object, zo));
 }
 
 static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
@@ -255,7 +255,7 @@ static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
+    return (format_object *)((char *)(obj) - offsetof(format_object, zo));
 }
 
 static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
@@ -263,7 +263,7 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
+    return (chart_object *)((char *)(obj) - offsetof(chart_object, zo));
 }
 
 static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
@@ -271,7 +271,7 @@ static inline validation_object *php_vtiful_validation_fetch_object(zend_object 
         return NULL;
     }
 
-    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+    return (validation_object *)((char *)(obj) - offsetof(validation_object, zo));
 }
 
 static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_object *obj) {
@@ -279,7 +279,7 @@ static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_objec
         return NULL;
     }
 
-    return (rich_string_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+    return (rich_string_object *)((char *)(obj) - offsetof(validation_object, zo));
 }
 
 static inline void php_vtiful_close_resource(zend_object *obj) {

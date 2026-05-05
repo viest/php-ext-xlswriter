@@ -117,7 +117,7 @@ VTIFUL_STARTUP_FUNCTION(rich_string) {
         vtiful_rich_string_ce = zend_register_internal_class(&ce);
 
         memcpy(&rich_string_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-        rich_string_handlers.offset   = XtOffsetOf(rich_string_object, zo);
+        rich_string_handlers.offset   = offsetof(rich_string_object, zo);
         rich_string_handlers.free_obj = rich_string_objects_free;
 
         return SUCCESS;

@@ -574,7 +574,7 @@ VTIFUL_STARTUP_FUNCTION(format) {
     vtiful_format_ce = zend_register_internal_class(&ce);
 
     memcpy(&format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    format_handlers.offset   = XtOffsetOf(format_object, zo);
+    format_handlers.offset   = offsetof(format_object, zo);
     format_handlers.free_obj = format_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE",            LXW_UNDERLINE_SINGLE)

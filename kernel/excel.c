@@ -1855,7 +1855,7 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     vtiful_xls_ce = zend_register_internal_class(&ce);
 
     memcpy(&vtiful_xls_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    vtiful_xls_handlers.offset   = XtOffsetOf(xls_object, zo);
+    vtiful_xls_handlers.offset   = offsetof(xls_object, zo);
     vtiful_xls_handlers.free_obj = vtiful_xls_objects_free;
 
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_COF,  ZEND_ACC_PRIVATE);

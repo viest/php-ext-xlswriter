@@ -21,7 +21,7 @@ var_dump($validation, $filePath);
 /* Round-trip: validation didn't corrupt the workbook. */
 $v_ = new \Vtiful\Kernel\Excel($config);
 $d_ = $v_->openFile('tutorial.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_));
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -31,4 +31,5 @@ var_dump(is_array($d_));
 object(Vtiful\Kernel\Validation)#%d (0) {
 }
 string(21) "./tests/tutorial.xlsx"
-bool(true)
+array(0) {
+}

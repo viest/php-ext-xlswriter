@@ -1,7 +1,10 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 $config = ['path' => './tests'];
@@ -25,6 +28,26 @@ var_dump($filePath);
 $v_   = new \Vtiful\Kernel\Excel($config);
 $d_   = $v_->openFile('11.xlsx')->openSheet()->getSheetData();
 var_dump($d_);
+
+/* Round-trip the column metadata: both columns share width 200, but only
+ * column A has the bold style attached. The reader exposes the width via
+ * getColumnOptions() and the cell-level style via nextRowWithFormula() +
+ * getStyleFormat(). */
+$r   = (new \Vtiful\Kernel\Excel($config))->openFile('11.xlsx')->openSheet();
+$colA = $r->getColumnOptions('A');
+$colB = $r->getColumnOptions('B');
+echo "colA.width: " . $colA['width'] . "\n";
+echo "colB.width: " . $colB['width'] . "\n";
+echo "widths_equal: " . var_export($colA['width'] === $colB['width'], true) . "\n";
+
+$row0 = $r->nextRowWithFormula();
+$row1 = $r->nextRowWithFormula();
+echo "A.styleId: " . $row0[0]['style_id'] . "\n";
+echo "B.styleId: " . $row0[1]['style_id'] . "\n";
+echo "A.bold: " . var_export($r->getStyleFormat($row0[0]['style_id'])['font']['bold'], true) . "\n";
+echo "rows_styles_consistent: " . var_export(
+    $row0[0]['style_id'] === $row1[0]['style_id'] && $row0[1]['style_id'] === $row1[1]['style_id'], true
+) . "\n";
 ?>
 --CLEAN--
 <?php
@@ -48,3 +71,10 @@ array(2) {
     int(21)
   }
 }
+colA.width: 200.7109375
+colB.width: 200.7109375
+widths_equal: true
+A.styleId: 1
+B.styleId: 0
+A.bold: true
+rows_styles_consistent: true

@@ -17,7 +17,7 @@ var_dump($filePath);
 /* Round-trip: file is intact after close() and openable on a new instance. */
 $v_ = new \Vtiful\Kernel\Excel($config);
 $d_ = $v_->openFile('close.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_));
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -25,4 +25,12 @@ var_dump(is_array($d_));
 ?>
 --EXPECT--
 string(18) "./tests/close.xlsx"
-bool(true)
+array(1) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "Item"
+    [1]=>
+    string(4) "Cost"
+  }
+}

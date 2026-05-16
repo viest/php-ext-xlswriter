@@ -1,5 +1,5 @@
 --TEST--
-setBackgroundImage / setBackgroundImageBuffer
+Check for vtiful presence
 --SKIPIF--
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
@@ -23,6 +23,18 @@ file_put_contents($tmp, $png);
 
 var_dump(is_file('./tests/set_background_image.xlsx'));
 @unlink($tmp);
+
+/* Round-trip: each sheet has <picture r:id="..."/> after pageMargins AND the
+ * referenced media is actually bundled at xl/media/imageN.png. No reader API
+ * for the worksheet background; probe the raw OOXML. */
+$path = './tests/set_background_image.xlsx';
+foreach (['sheet1', 'sheet2'] as $s) {
+    $xml = shell_exec('unzip -p ' . escapeshellarg($path) . ' xl/worksheets/' . $s . '.xml');
+    $has = (bool)preg_match('/<picture[^>]*r:id="rId\d+"\s*\/>/', $xml);
+    echo "$s hasPicture: " . var_export($has, true) . "\n";
+}
+$mediaCount = trim(shell_exec('unzip -l ' . escapeshellarg($path) . ' 2>&1 | grep -c "xl/media/image"'));
+echo "mediaCount: " . $mediaCount . "\n";
 ?>
 --CLEAN--
 <?php
@@ -31,3 +43,6 @@ var_dump(is_file('./tests/set_background_image.xlsx'));
 ?>
 --EXPECT--
 bool(true)
+sheet1 hasPicture: true
+sheet2 hasPicture: true
+mediaCount: 2

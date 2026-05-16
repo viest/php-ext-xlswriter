@@ -1,7 +1,10 @@
 --TEST--
-setHeader / setFooter (with image options)
+Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 $config = ['path' => './tests'];
@@ -35,6 +38,21 @@ file_put_contents($tmp, $png);
 var_dump(is_file('./tests/set_header_footer.xlsx'));
 var_dump(is_file('./tests/set_header_footer_imgs.xlsx'));
 @unlink($tmp);
+
+/* Round-trip: header / footer strings come back via getPageSetup. */
+$ps = (new \Vtiful\Kernel\Excel($config))
+    ->openFile('set_header_footer.xlsx')->openSheet()->getPageSetup();
+echo "odd_header: " . $ps['odd_header'] . "\n";
+echo "odd_footer: " . $ps['odd_footer'] . "\n";
+
+/* Round-trip: the image variant emits &G tokens in the header/footer strings
+ * and bundles the referenced media inside the zip. */
+$ps2 = (new \Vtiful\Kernel\Excel($config))
+    ->openFile('set_header_footer_imgs.xlsx')->openSheet()->getPageSetup();
+echo "imgs.odd_header_hasG: " . var_export(strpos((string)$ps2['odd_header'], '&G') !== false, true) . "\n";
+echo "imgs.odd_footer_hasG: " . var_export(strpos((string)$ps2['odd_footer'], '&G') !== false, true) . "\n";
+$mediaCount = trim(shell_exec('unzip -l ./tests/set_header_footer_imgs.xlsx 2>&1 | grep -c "xl/media/image"'));
+echo "imgs.mediaCount: " . $mediaCount . "\n";
 ?>
 --CLEAN--
 <?php
@@ -45,3 +63,8 @@ var_dump(is_file('./tests/set_header_footer_imgs.xlsx'));
 --EXPECT--
 bool(true)
 bool(true)
+odd_header: &L&\"Calibri,Bold\"&14Hello&R&P/&N
+odd_footer: &L&D&R&T
+imgs.odd_header_hasG: true
+imgs.odd_footer_hasG: true
+imgs.mediaCount: 2

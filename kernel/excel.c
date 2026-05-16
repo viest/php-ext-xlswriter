@@ -3914,6 +3914,13 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_GERMAN_STD_FANFOLD",   40)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "PAPER_GERMAN_LEGAL_FANFOLD", 41)
 
+    /* Comment visibility — values match libxlsxwriter's lxw_comment_display
+     * enum so insertCommentOpt(['visible' => …]) callers don't have to guess
+     * that 0/1 mean hidden and 2 means visible. */
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_DEFAULT", LXW_COMMENT_DISPLAY_DEFAULT)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_HIDDEN",  LXW_COMMENT_DISPLAY_HIDDEN)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_VISIBLE", LXW_COMMENT_DISPLAY_VISIBLE)
+
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_STRING,   READ_TYPE_STRING);

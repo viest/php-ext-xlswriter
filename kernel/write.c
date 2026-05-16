@@ -786,6 +786,7 @@ _prepare_vml(lxw_workbook *self)
     uint32_t comment_id = 0;
     uint32_t vml_drawing_id = 0;
     uint32_t vml_data_id = 1;
+    uint32_t vml_header_id = 0;
     uint32_t vml_shape_id = 1024;
     uint32_t comment_count = 0;
 
@@ -817,6 +818,17 @@ _prepare_vml(lxw_workbook *self)
             /* Each VML should start with a shape id incremented by 1024. */
             vml_data_id += 1 * ((1024 + comment_count) / 1024);
             vml_shape_id += 1024 * ((1024 + comment_count) / 1024);
+        }
+
+        /* Header/footer image VML — required for setHeader([image_*=>...])
+         * to produce a valid xlsx. Mirrors upstream _prepare_vml(). */
+        if (worksheet->has_header_vml) {
+            self->has_vml = LXW_TRUE;
+            vml_drawing_id += 1;
+            vml_header_id += 1;
+            lxw_worksheet_prepare_header_vml_objects(worksheet,
+                                                     vml_header_id,
+                                                     vml_drawing_id);
         }
     }
 }
@@ -964,49 +976,93 @@ _prepare_defined_names(lxw_workbook *self)
 }
 
 /*
- * Iterate through the worksheets and set up any chart or image drawings.
+ * Track which image types the workbook contains so the packager can emit the
+ * right MIME entries in [Content_Types].xml.
+ */
+STATIC void
+_store_image_type(lxw_workbook *self, uint8_t image_type)
+{
+    if (image_type == LXW_IMAGE_PNG)  self->has_png  = LXW_TRUE;
+    if (image_type == LXW_IMAGE_JPEG) self->has_jpeg = LXW_TRUE;
+    if (image_type == LXW_IMAGE_BMP)  self->has_bmp  = LXW_TRUE;
+    if (image_type == LXW_IMAGE_GIF)  self->has_gif  = LXW_TRUE;
+}
+
+/*
+ * Iterate through the worksheets and set up chart, image, background, and
+ * header/footer image drawings. Mirrors libxlsxwriter's static
+ * _prepare_drawings() — without the background/header passes our previous
+ * version skipped image_type bookkeeping and never called
+ * lxw_worksheet_prepare_{background,header_image}, which produced malformed
+ * xlsx files (missing media + Content_Types entries) when callers used
+ * setBackgroundImage / setHeader([image_left|center|right]).
  */
 STATIC void
 _prepare_drawings(lxw_workbook *self)
 {
+    lxw_sheet *sheet;
     lxw_worksheet *worksheet;
-    lxw_object_properties *image_options;
-    uint16_t chart_ref_id = 0;
-    uint16_t image_ref_id = 0;
-    uint16_t drawing_id = 0;
+    lxw_object_properties *object_props;
+    uint32_t chart_ref_id = 0;
+    uint32_t image_ref_id = 0;
+    uint32_t ref_id = 0;
+    uint32_t drawing_id = 0;
+    uint8_t i;
 
-    STAILQ_FOREACH(worksheet, self->worksheets, list_pointers) {
+    STAILQ_FOREACH(sheet, self->sheets, list_pointers) {
+        if (sheet->is_chartsheet)
+            worksheet = sheet->u.chartsheet->worksheet;
+        else
+            worksheet = sheet->u.worksheet;
 
         if (STAILQ_EMPTY(worksheet->image_props)
-            && STAILQ_EMPTY(worksheet->chart_data))
+            && STAILQ_EMPTY(worksheet->chart_data)
+            && !worksheet->has_header_vml
+            && !worksheet->has_background_image) {
             continue;
+        }
 
         drawing_id++;
 
-        STAILQ_FOREACH(image_options, worksheet->chart_data, list_pointers) {
+        /* Background image (no drawing_id; sheetBackground relationship). */
+        if (worksheet->has_background_image) {
+            object_props = worksheet->background_image;
+            _store_image_type(self, object_props->image_type);
+            image_ref_id++;
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_background(worksheet, ref_id, object_props);
+        }
+
+        /* Regular sheet images. */
+        STAILQ_FOREACH(object_props, worksheet->image_props, list_pointers) {
+            if (object_props->is_background)
+                continue;
+            _store_image_type(self, object_props->image_type);
+            image_ref_id++;
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_image(worksheet, ref_id, drawing_id,
+                                        object_props);
+        }
+
+        /* Charts. */
+        STAILQ_FOREACH(object_props, worksheet->chart_data, list_pointers) {
             chart_ref_id++;
             lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
-                                        image_options, 0);
-            if (image_options->chart)
-                STAILQ_INSERT_TAIL(self->ordered_charts, image_options->chart,
+                                        object_props, sheet->is_chartsheet);
+            if (object_props->chart)
+                STAILQ_INSERT_TAIL(self->ordered_charts, object_props->chart,
                                    ordered_list_pointers);
         }
 
-        STAILQ_FOREACH(image_options, worksheet->image_props, list_pointers) {
-
-            if (image_options->image_type == LXW_IMAGE_PNG)
-                self->has_png = LXW_TRUE;
-
-            if (image_options->image_type == LXW_IMAGE_JPEG)
-                self->has_jpeg = LXW_TRUE;
-
-            if (image_options->image_type == LXW_IMAGE_BMP)
-                self->has_bmp = LXW_TRUE;
-
+        /* Header/footer images — &G tokens in setHeader/setFooter strings. */
+        for (i = 0; i < LXW_HEADER_FOOTER_OBJS_MAX; i++) {
+            object_props = *worksheet->header_footer_objs[i];
+            if (!object_props)
+                continue;
+            _store_image_type(self, object_props->image_type);
             image_ref_id++;
-
-            lxw_worksheet_prepare_image(worksheet, image_ref_id, drawing_id,
-                                        image_options);
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_header_image(worksheet, ref_id, object_props);
         }
     }
 

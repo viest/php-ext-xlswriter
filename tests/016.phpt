@@ -14,10 +14,11 @@ $filePath = $excel->fileName("16.xlsx")
 
 var_dump($filePath);
 
-/* Round-trip: data round-trips intact (non-empty). */
+/* Round-trip: merged cells expose the anchor value (top-left), the rest
+   of the merged range stays empty in the underlying XML. */
 $v_   = new \Vtiful\Kernel\Excel($config);
 $d_   = $v_->openFile('16.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_) && count($d_) > 0);
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -25,4 +26,15 @@ var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --EXPECT--
 string(15) "./tests/16.xlsx"
-bool(true)
+array(2) {
+  [0]=>
+  array(1) {
+    [0]=>
+    string(11) "Merge cells"
+  }
+  [1]=>
+  array(1) {
+    [0]=>
+    string(43) "Merge cells, explicit null (default) format"
+  }
+}

@@ -20,10 +20,11 @@ $filePath = $fileObject->output();
 
 var_dump($filePath);
 
-/* Round-trip: data round-trips intact (non-empty). */
+/* Round-trip: both sheets carry their own header + row. */
 $v_   = new \Vtiful\Kernel\Excel($config);
-$d_   = $v_->openFile('sheet_add.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_) && count($d_) > 0);
+$v_->openFile('sheet_add.xlsx');
+var_dump($v_->openSheet('Sheet1')->getSheetData());
+var_dump($v_->openSheet('twoSheet')->getSheetData());
 ?>
 --CLEAN--
 <?php
@@ -31,4 +32,35 @@ var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --EXPECT--
 string(22) "./tests/sheet_add.xlsx"
-bool(true)
+array(2) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "viest"
+    [1]=>
+    int(21)
+  }
+}
+array(2) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "vikin"
+    [1]=>
+    int(22)
+  }
+}

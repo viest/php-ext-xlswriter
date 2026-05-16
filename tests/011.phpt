@@ -21,10 +21,10 @@ $filePath = $fileObject->header(['name', 'age'])
 
 var_dump($filePath);
 
-/* Round-trip: data round-trips intact (non-empty). */
+/* Round-trip: header + single data row read back exactly. */
 $v_   = new \Vtiful\Kernel\Excel($config);
 $d_   = $v_->openFile('11.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_) && count($d_) > 0);
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -32,4 +32,19 @@ var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --EXPECT--
 string(15) "./tests/11.xlsx"
-bool(true)
+array(2) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "viest"
+    [1]=>
+    int(21)
+  }
+}

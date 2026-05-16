@@ -113,7 +113,7 @@ PHP_MINFO_FUNCTION(xlswriter)
 #endif
 
 #if ENABLE_READER
-    php_info_print_table_row(2, "bundled libxlsxreader", "self-maintained");
+    php_info_print_table_row(2, "bundled libxlsxreader version", "self-maintained");
 #endif
 
 	php_info_print_table_end();

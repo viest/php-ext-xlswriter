@@ -19,10 +19,13 @@ $filePath = $textFile->output();
 
 var_dump($filePath);
 
-/* Round-trip: data round-trips intact (non-empty). */
+/* Round-trip: 10 rows of insertText (with #,##0 format) read back as ints. */
 $v_   = new \Vtiful\Kernel\Excel($config);
 $d_   = $v_->openFile('13.xlsx')->openSheet()->getSheetData();
-var_dump(is_array($d_) && count($d_) > 0);
+var_dump(count($d_));
+var_dump($d_[0]);
+var_dump($d_[1]);
+var_dump($d_[10]);
 ?>
 --CLEAN--
 <?php
@@ -30,4 +33,22 @@ var_dump(is_array($d_) && count($d_) > 0);
 ?>
 --EXPECT--
 string(15) "./tests/13.xlsx"
-bool(true)
+int(11)
+array(2) {
+  [0]=>
+  string(4) "name"
+  [1]=>
+  string(3) "age"
+}
+array(2) {
+  [0]=>
+  string(5) "vikin"
+  [1]=>
+  int(1000)
+}
+array(2) {
+  [0]=>
+  string(5) "vikin"
+  [1]=>
+  int(1000)
+}

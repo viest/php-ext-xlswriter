@@ -1,5 +1,5 @@
 --TEST--
-Every script under examples/ runs without errors and exits cleanly
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

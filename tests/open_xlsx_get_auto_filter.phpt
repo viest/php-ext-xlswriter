@@ -1,5 +1,5 @@
 --TEST--
-getAutoFilter: writer.autoFilter range round-trip + fixture column criteria
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

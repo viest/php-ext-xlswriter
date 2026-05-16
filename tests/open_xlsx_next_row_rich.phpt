@@ -1,5 +1,5 @@
 --TEST--
-nextRowRich: SST rich-text runs round-trip via writer's RichString
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

@@ -1,5 +1,5 @@
 --TEST--
-nextRowWithFormula adds 'url' key for hyperlink cells; SKIP_MERGED_FOLLOW nulls follow positions
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

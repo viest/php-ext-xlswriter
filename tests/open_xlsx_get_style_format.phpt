@@ -1,5 +1,5 @@
 --TEST--
-getStyleFormat returns numFmt metadata for a style
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

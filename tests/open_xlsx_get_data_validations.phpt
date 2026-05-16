@@ -1,5 +1,5 @@
 --TEST--
-getDataValidations: round-trip writer.validation() + fixture variants
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

@@ -1,5 +1,5 @@
 --TEST--
-insertImage with width/height: anchor cell is preserved through round-trip
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

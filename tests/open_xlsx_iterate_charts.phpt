@@ -1,5 +1,5 @@
 --TEST--
-iterateCharts: writer's chart -> reader's iterateCharts callback (shallow metadata)
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

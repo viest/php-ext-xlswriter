@@ -1,5 +1,5 @@
 --TEST--
-iterateComments: threaded comments (with author GUIDs and parent linkage)
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

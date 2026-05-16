@@ -1,5 +1,5 @@
 --TEST--
-iterateImages extracts embedded image binaries
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

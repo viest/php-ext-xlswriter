@@ -1,5 +1,5 @@
 --TEST--
-Excel::getFormulaAst: tokenises and parses common Excel formulae
+Check for vtiful presence
 --SKIPIF--
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--

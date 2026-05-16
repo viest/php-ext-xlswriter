@@ -1,5 +1,5 @@
 --TEST--
-Format::locked() / hidden() round-trip via reader's getStyleFormat
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

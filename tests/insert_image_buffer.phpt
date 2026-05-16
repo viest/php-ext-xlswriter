@@ -1,5 +1,5 @@
 --TEST--
-insertImageBuffer: round-trip a 1x1 PNG via in-memory buffer
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

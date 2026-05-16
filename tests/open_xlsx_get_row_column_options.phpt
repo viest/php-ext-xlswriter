@@ -1,5 +1,5 @@
 --TEST--
-getRowOptions / getColumnOptions / getDefaultRowHeight via fixture
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

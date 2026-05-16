@@ -1,5 +1,5 @@
 --TEST--
-getMergedCells round-trip: writer mergeCells -> reader returns ranges
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

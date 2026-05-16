@@ -1,5 +1,5 @@
 --TEST--
-getConditionalFormats: writer's conditionalFormatRange -> reader's getConditionalFormats
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

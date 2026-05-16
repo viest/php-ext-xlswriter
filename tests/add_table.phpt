@@ -1,5 +1,5 @@
 --TEST--
-addTable: builds an Excel Table with named columns and a SUM total row
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

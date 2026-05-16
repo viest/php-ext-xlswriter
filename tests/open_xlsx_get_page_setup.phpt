@@ -1,5 +1,5 @@
 --TEST--
-getPageSetup: round-trip writer's setMargins / setHeader / setFooter / setPaper
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

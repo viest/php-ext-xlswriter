@@ -1,5 +1,5 @@
 --TEST--
-getHyperlinks round-trip: writer insertUrl -> reader returns url + range
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

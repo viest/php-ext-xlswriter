@@ -1,5 +1,5 @@
 --TEST--
-defineName: writer-emitted defined names readable via getDefinedNames
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

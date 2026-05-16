@@ -1,5 +1,5 @@
 --TEST--
-insertImage round-trip: PNG inserted at (3,0) is recoverable via iterateImages with the right MIME and position
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

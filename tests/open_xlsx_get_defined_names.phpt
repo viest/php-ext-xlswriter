@@ -1,5 +1,5 @@
 --TEST--
-getDefinedNames returns workbook-level and sheet-scoped names with hidden flag
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

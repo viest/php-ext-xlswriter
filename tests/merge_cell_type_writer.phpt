@@ -1,9 +1,5 @@
 --TEST--
-mergeCells round-trip: anchor cells preserve typed values (int/string/float)
-
-NOTE: this test verifies the *master cell value* survives round-trip.
-Verifying the merged *region geometry* (first/last row/col) is a Phase 1
-dependency — see plans/upgrade.md §5.2.1 (`getMergedCells`).
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

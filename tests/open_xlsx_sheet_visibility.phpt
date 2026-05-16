@@ -1,5 +1,5 @@
 --TEST--
-sheetListWithMeta returns visibility state for each sheet
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

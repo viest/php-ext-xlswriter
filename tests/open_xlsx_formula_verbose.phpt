@@ -1,5 +1,5 @@
 --TEST--
-nextRowWithFormula verbose mode: full {type,text,ref,si,is_dynamic,cached_value} shape
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

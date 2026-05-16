@@ -1,5 +1,5 @@
 --TEST--
-SKIP_MERGED_FOLLOW: non-master cells inside merges read back as null
+Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';

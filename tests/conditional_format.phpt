@@ -1,7 +1,10 @@
 --TEST--
-conditionalFormatCell/Range — covers all 6 main rule families
+Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 $config = ['path' => './tests'];
@@ -68,6 +71,21 @@ $path2 = (new \Vtiful\Kernel\Excel($config))
     ->conditionalFormatCell('A1', $cf)
     ->output();
 var_dump(is_file($path2));
+
+/* Round-trip: the 6 rules are recoverable through the reader. */
+$cfs = (new \Vtiful\Kernel\Excel($config))
+    ->openFile('conditional_format.xlsx')->openSheet()->getConditionalFormats();
+$ranges = array_column($cfs, 'range');
+sort($ranges);
+echo "ranges: " . implode(',', $ranges) . "\n";
+echo "ruleTypes: " . implode(',', array_map(function($cf) { return $cf['rules'][0]['type']; }, $cfs)) . "\n";
+
+/* Round-trip the single-cell variant: TYPE_CELL/CRITERIA_EQUAL_TO/"hot" preserved. */
+$cf2 = (new \Vtiful\Kernel\Excel($config))
+    ->openFile('conditional_format_cell.xlsx')->openSheet()->getConditionalFormats();
+echo "cellRange: " . $cf2[0]['range'] . "\n";
+echo "cellRuleType: " . $cf2[0]['rules'][0]['type'] . "\n";
+echo "cellOperator: " . $cf2[0]['rules'][0]['operator'] . "\n";
 ?>
 --CLEAN--
 <?php
@@ -77,3 +95,8 @@ var_dump(is_file($path2));
 --EXPECT--
 bool(true)
 bool(true)
+ranges: B2:B10,C2:C10,D2:D10,E2:E10,F2:F10,G2:G10
+ruleTypes: cellIs,containsText,aboveAverage,top10,colorScale,dataBar
+cellRange: A1
+cellRuleType: cellIs
+cellOperator: equal

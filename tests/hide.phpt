@@ -1,7 +1,10 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 try {
@@ -23,6 +26,12 @@ $excel->fileName('hide.xlsx', 'sheet1')
     ->output();
 
 var_dump($excel);
+
+/* Round-trip: sheet2 (the current sheet when setCurrentSheetHide ran) is hidden. */
+$meta = (new \Vtiful\Kernel\Excel($config))->openFile('hide.xlsx')->sheetListWithMeta();
+foreach ($meta as $m) {
+    echo $m['name'] . ': ' . $m['state'] . "\n";
+}
 ?>
 --CLEAN--
 <?php
@@ -42,3 +51,5 @@ object(Vtiful\Kernel\Excel)#%d (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
+sheet1: visible
+sheet2: hidden

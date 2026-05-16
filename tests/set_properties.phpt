@@ -1,5 +1,5 @@
 --TEST--
-setProperties + setCustomProperty: all 4 custom-property types accepted
+Check for vtiful presence
 --SKIPIF--
 <?php if (!extension_loaded("xlswriter")) print "skip"; ?>
 --FILE--
@@ -28,6 +28,28 @@ $path = (new \Vtiful\Kernel\Excel($config))
     ->output();
 
 var_dump(is_file($path));
+
+/* Round-trip: setProperties values land in docProps/core.xml + app.xml, and
+ * setCustomProperty values land in docProps/custom.xml. No reader API; probe
+ * the raw OOXML. */
+$core   = shell_exec('unzip -p ' . escapeshellarg($path) . ' docProps/core.xml');
+$app    = shell_exec('unzip -p ' . escapeshellarg($path) . ' docProps/app.xml');
+$custom = shell_exec('unzip -p ' . escapeshellarg($path) . ' docProps/custom.xml');
+
+function tag($xml, $tag) {
+    return preg_match('#<' . preg_quote($tag, '#') . '[^>]*>([^<]*)</#', $xml, $m) ? $m[1] : '';
+}
+echo "core.title: "    . tag($core, 'dc:title')        . "\n";
+echo "core.author: "   . tag($core, 'dc:creator')      . "\n";
+echo "core.subject: "  . tag($core, 'dc:subject')      . "\n";
+echo "core.keywords: " . tag($core, 'cp:keywords')     . "\n";
+echo "core.status: "   . tag($core, 'cp:contentStatus'). "\n";
+echo "app.manager: "   . tag($app,  'Manager')         . "\n";
+echo "app.company: "   . tag($app,  'Company')         . "\n";
+
+/* Custom properties (4 of them) preserve names AND values per spec type. */
+preg_match_all('/<property[^>]*\sname="([^"]+)"[^>]*>(.*?)<\/property>/', $custom, $m);
+foreach ($m[1] as $i => $n) echo "custom.$n: " . strip_tags($m[2][$i]) . "\n";
 ?>
 --CLEAN--
 <?php
@@ -35,3 +57,14 @@ var_dump(is_file($path));
 ?>
 --EXPECT--
 bool(true)
+core.title: Quarterly Report
+core.author: A. Tester
+core.subject: Subj
+core.keywords: q1,q2
+core.status: Draft
+app.manager: Manager
+app.company: Acme
+custom.Reviewed by: Eve
+custom.Doc number: 12345
+custom.Has Review: true
+custom.Created at: 2023-11-14T22:13:20Z

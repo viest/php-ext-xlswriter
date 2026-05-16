@@ -20,6 +20,11 @@ $filePath = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('insert_url_no_format.xlsx')->openSheet()->getSheetData();
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -27,3 +32,33 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(33) "./tests/insert_url_no_format.xlsx"
+array(4) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "viest"
+    [1]=>
+    int(21)
+  }
+  [2]=>
+  array(2) {
+    [0]=>
+    string(3) "wjx"
+    [1]=>
+    int(21)
+  }
+  [3]=>
+  array(2) {
+    [0]=>
+    string(18) "https://github.com"
+    [1]=>
+    string(0) ""
+  }
+}

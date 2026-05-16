@@ -10,5 +10,9 @@ $handle = $excel->fileName('tutorial01.xlsx')
     ->getHandle();
 var_dump($handle);
 ?>
---EXPECT--
-resource(4) of type (xlsx)
+--CLEAN--
+<?php
+@unlink(__DIR__ . "/tutorial01.xlsx");
+?>
+--EXPECTF--
+resource(%d) of type (xlsx)

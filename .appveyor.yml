@@ -1,9 +1,6 @@
 version: "{branch}.build.{build}"
 
-branches:
-  only:
-    - master
-    - dev
+# Branch filter intentionally omitted — every push and PR triggers CI.
 
 clone_folder:  c:\projects\xlswriter
 
@@ -14,6 +11,8 @@ install:
     }
     $bname = 'php-sdk-' + $env:BIN_SDK_VER + '.zip'
     if (-not (Test-Path c:\build-cache\$bname)) {
+      # OSTC redirects to microsoft/php-sdk-binary-tools today; the tag
+      # archive layout is unchanged so the URL still works.
       Invoke-WebRequest "https://github.com/OSTC/php-sdk-binary-tools/archive/$bname" -OutFile "c:\build-cache\$bname"
     }
     $dname0 = 'php-sdk-binary-tools-php-sdk-' + $env:BIN_SDK_VER
@@ -35,200 +34,84 @@ install:
 cache:
   c:\build-cache -> .appveyor.yml
 
+# Matrix mirrors .github/workflows/main.yml as far as the SDK allows:
+# PHP 7.4-8.3, x64, NTS + TS. x86 was dropped — small share of Windows
+# PHP installs and doubling the matrix is expensive on free tier.
+#
+# VC mapping follows windows.php.net's official builds:
+#   PHP 7.4        -> vc15  (Visual Studio 2017)
+#   PHP 8.0 - 8.3  -> vs16  (Visual Studio 2019)
+#
+# PHP 8.4 (vs17 / Visual Studio 2022) is intentionally absent: the
+# pinned php-sdk-binary-tools 2.2.0 does not ship a phpsdk-vs17-*.bat
+# runner, so no `nmake` build is possible from within phpsdk's shell.
+# Reinstate once a 2.3.x release with vs17 support is tagged.
+#
+# NB: VC value MUST be lowercase — windows.php.net's archive URLs are
+# case-sensitive (`/php-devel-pack-…-Win32-vc15-x64.zip` 200,
+# `…-VC15-…` 404).
 environment:
   BIN_SDK_VER: 2.2.0
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x64
-      VC: VC14
-      PHP_VER: 7.0.28
-      ZLIB_VER: 1.2.8
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x64
-      VC: VC14
-      PHP_VER: 7.0.28
-      ZLIB_VER: 1.2.8
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x86
-      VC: VC14
-      PHP_VER: 7.0.28
-      ZLIB_VER: 1.2.8
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x86
-      VC: VC14
-      PHP_VER: 7.0.28
-      ZLIB_VER: 1.2.8
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x64
-      VC: VC14
-      PHP_VER: 7.1.15
-      ZLIB_VER: 1.2.8
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x64
-      VC: VC14
-      PHP_VER: 7.1.15
-      ZLIB_VER: 1.2.8
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x86
-      VC: VC14
-      PHP_VER: 7.1.15
-      ZLIB_VER: 1.2.8
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: x86
-      VC: VC14
-      PHP_VER: 7.1.15
-      ZLIB_VER: 1.2.8
-      TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: VC15
-      PHP_VER: 7.2.3
+      VC: vc15
+      PHP_VER: 7.4.33
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x64
-      VC: VC15
-      PHP_VER: 7.2.3
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.2.3
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.2.3
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x64
-      VC: VC15
-      PHP_VER: 7.3.0
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x64
-      VC: VC15
-      PHP_VER: 7.3.0
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.3.0
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.3.0
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x64
-      VC: VC15
-      PHP_VER: 7.4.0
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x64
-      VC: VC15
-      PHP_VER: 7.4.0
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.4.0
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: x86
-      VC: VC15
-      PHP_VER: 7.4.0
+      VC: vc15
+      PHP_VER: 7.4.33
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.0.0
+      PHP_VER: 8.0.30
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.0.0
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
-      VC: vs16
-      PHP_VER: 8.0.0
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
-      VC: vs16
-      PHP_VER: 8.0.0
+      PHP_VER: 8.0.30
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.1.9
+      PHP_VER: 8.1.31
       ZLIB_VER: 1.2.11
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.1.9
-      ZLIB_VER: 1.2.11
-      TS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
-      VC: vs16
-      PHP_VER: 8.1.9
-      ZLIB_VER: 1.2.11
-      TS: 0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
-      VC: vs16
-      PHP_VER: 8.1.9
+      PHP_VER: 8.1.31
       ZLIB_VER: 1.2.11
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.2.5
-      ZLIB_VER: 1.2.11
+      PHP_VER: 8.2.26
+      ZLIB_VER: 1.2.12
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       ARCH: x64
       VC: vs16
-      PHP_VER: 8.2.5
-      ZLIB_VER: 1.2.11
+      PHP_VER: 8.2.26
+      ZLIB_VER: 1.2.12
       TS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
+      ARCH: x64
       VC: vs16
-      PHP_VER: 8.2.5
-      ZLIB_VER: 1.2.11
+      PHP_VER: 8.3.14
+      ZLIB_VER: 1.2.12
       TS: 0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      ARCH: x86
+      ARCH: x64
       VC: vs16
-      PHP_VER: 8.2.5
-      ZLIB_VER: 1.2.11
+      PHP_VER: 8.3.14
+      ZLIB_VER: 1.2.12
       TS: 1
 
 build_script:
@@ -253,8 +136,6 @@ build_script:
     }
     cd c:\projects\xlswriter
     $env:PATH = 'c:\build-cache\' + $dname1 + ';' + $env:PATH
-    #echo "@echo off" | Out-File -Encoding "ASCII" task.bat
-    #echo "" | Out-File -Encoding "ASCII" -Append task.bat
     echo "" | Out-File -Encoding "ASCII" task.bat
     echo "php -m 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
     echo "call git submodule update --init 2>&1" | Out-File -Encoding "ASCII" -Append task.bat

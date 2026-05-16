@@ -75,6 +75,12 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(format_unlocked_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(format_locked_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(format_hidden_arginfo, 0, 0, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(format_align_arginfo, 0, 0, 1)
                 ZEND_ARG_VARIADIC_INFO(0, style)
 ZEND_END_ARG_INFO()
@@ -218,6 +224,41 @@ PHP_METHOD(vtiful_format, unlocked)
 
     if (obj->ptr.format) {
         format_set_unlocked(obj->ptr.format);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::locked()
+ *  Mark the cell as locked. The locked attribute only takes effect when the
+ *  worksheet is itself protected (see Excel::protection).
+ */
+PHP_METHOD(vtiful_format, locked)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    /* libxlsxwriter has no format_set_locked() — locked is the default and
+     * format_set_unlocked() flips it to LXW_FALSE. Provide the symmetric
+     * setter by writing the field directly. */
+    if (obj->ptr.format) {
+        obj->ptr.format->locked = LXW_TRUE;
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Format::hidden()
+ *  Hide the cell's formula from view. Like locked, only effective when the
+ *  worksheet is protected.
+ */
+PHP_METHOD(vtiful_format, hidden)
+{
+    ZVAL_COPY(return_value, getThis());
+
+    format_object *obj = Z_FORMAT_P(getThis());
+
+    if (obj->ptr.format) {
+        format_set_hidden(obj->ptr.format);
     }
 }
 /* }}} */
@@ -556,6 +597,8 @@ zend_function_entry format_methods[] = {
         PHP_ME(vtiful_format, strikeout,                 format_strikeout_arginfo,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, underline,                 format_underline_arginfo,                      ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, unlocked,                  format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, locked,                    format_locked_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, hidden,                    format_hidden_arginfo,                         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, rotation,                  format_rotation_arginfo,                       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, indent,                    format_indent_arginfo,                         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_format, toResource,                format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)

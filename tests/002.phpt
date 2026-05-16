@@ -8,8 +8,8 @@ $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
 var_dump($excel);
 ?>
---EXPECT--
-object(Vtiful\Kernel\Excel)#1 (3) {
+--EXPECTF--
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>

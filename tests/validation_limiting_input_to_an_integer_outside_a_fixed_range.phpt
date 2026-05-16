@@ -20,13 +20,28 @@ $filePath = $excel->fileName('validation_limiting_input_to_an_integer_outside_a_
     ->output();
 
 var_dump($validation, $filePath);
+
+/* Round-trip: validation didn't corrupt the workbook. */
+$v_ = new \Vtiful\Kernel\Excel($config);
+$d_ = $v_->openFile('validation_limiting_input_to_an_integer_outside_a_fixed_range.xlsx')->openSheet()->getSheetData();
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/validation_limiting_input_to_an_integer_outside_a_fixed_range.xlsx');
 ?>
---EXPECT--
-object(Vtiful\Kernel\Validation)#1 (0) {
+--EXPECTF--
+object(Vtiful\Kernel\Validation)#%d (0) {
 }
 string(74) "./tests/validation_limiting_input_to_an_integer_outside_a_fixed_range.xlsx"
-
+array(1) {
+  [0]=>
+  array(3) {
+    [0]=>
+    int(1)
+    [1]=>
+    int(10)
+    [2]=>
+    int(20)
+  }
+}

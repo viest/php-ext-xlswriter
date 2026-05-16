@@ -24,6 +24,16 @@ $setHeader = $fileObject
     ->output();
 
 var_dump($setHeader);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('header_format.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['alignment']['horizontal'], $fmt['alignment']['vertical']);
 ?>
 --CLEAN--
 <?php
@@ -31,3 +41,5 @@ var_dump($setHeader);
 ?>
 --EXPECT--
 string(26) "./tests/header_format.xlsx"
+string(6) "center"
+string(6) "center"

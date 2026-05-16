@@ -6,7 +6,7 @@
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
-  | Author: viest <dev@service.viest.me>                                 |
+  | Author: viest <wjx@php.net>                                          |
   +----------------------------------------------------------------------+
 */
 
@@ -38,18 +38,31 @@
 #include "format.h"
 #include "chart.h"
 #include "rich_string.h"
+#include "conditional_format.h"
+#include "table.h"
 #include "help.h"
 
 #ifdef ENABLE_READER
-#include "xlsxio_read.h"
+#include "xlsxreader.h"
 #include "read.h"
 #include "csv.h"
 
-typedef struct {
-    xlsxioreader      file_t;
-    xlsxioreadersheet sheet_t;
-    zend_long         data_type_default;
-    zend_long         sheet_flag;
+typedef struct xls_resource_read_t {
+    lxr_workbook  *file_t;
+    lxr_worksheet *sheet_t;
+    zend_long      data_type_default;
+    zend_long      sheet_flag;
+
+    /* Synthesised-blanks bookkeeping (matches libxlsxio's compatibility shape):
+     *   cols              max column from first non-empty row (trailing fill)
+     *   expected_row_nr   next row number we expect to emit (1-based)
+     *   pending_synth_rows  empty rows still to yield from a row gap (nextRow)
+     *   pending_real_row    real row data buffered while emitting synth rows
+     */
+    size_t         cols;
+    size_t         expected_row_nr;
+    size_t         pending_synth_rows;
+    zval           pending_real_row;
 } xls_resource_read_t;
 
 typedef struct {
@@ -135,6 +148,39 @@ typedef struct _vtiful_rich_string_object {
     zend_object zo;
 } rich_string_object;
 
+/* Phase 2: ConditionalFormat builder object.
+ * Owns the lxw_conditional_format struct itself (pointers inside reference
+ * zend_string buffers held alongside, so we can free them on dtor). */
+typedef struct {
+    lxw_conditional_format *cf;
+    /* Heap copies of any string fields the user supplied. Freed in the dtor. */
+    char *value_string;
+    char *min_value_string;
+    char *mid_value_string;
+    char *max_value_string;
+    char *multi_range;
+} xls_resource_cond_format_t;
+
+typedef struct _vtiful_cond_format_object {
+    xls_resource_cond_format_t ptr;
+    zend_object zo;
+} cond_format_object;
+
+/* Phase 2: Excel Table builder object. */
+typedef struct {
+    lxw_table_options *opts;
+    /* Owned string buffers for opts->name and any per-column header /
+     * formula / total_string. Freed on dtor. */
+    char *name;
+    /* Owned columns array (NULL-terminated). columns[i] is calloc'd. */
+    lxw_table_column **columns;
+} xls_resource_table_t;
+
+typedef struct _vtiful_table_object {
+    xls_resource_table_t ptr;
+    zend_object zo;
+} table_object;
+
 #define REGISTER_CLASS_CONST_LONG(class_name, const_name, value) \
     zend_declare_class_constant_long(class_name, const_name, sizeof(const_name)-1, (zend_long)value);
 
@@ -146,6 +192,8 @@ typedef struct _vtiful_rich_string_object {
 #define Z_FORMAT_P(zv)      php_vtiful_format_fetch_object(Z_OBJ_P(zv));
 #define Z_VALIDATION_P(zv)  php_vtiful_validation_fetch_object(Z_OBJ_P(zv));
 #define Z_RICH_STR_P(zv)    php_vtiful_rich_string_fetch_object(Z_OBJ_P(zv));
+#define Z_COND_FMT_P(zv)    php_vtiful_cond_format_fetch_object(Z_OBJ_P(zv));
+#define Z_TABLE_P(zv)       php_vtiful_table_fetch_object(Z_OBJ_P(zv));
 
 #define WORKBOOK_NOT_INITIALIZED(xls_object_t)                                                                       \
     do {                                                                                                             \
@@ -282,6 +330,20 @@ static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_objec
     return (rich_string_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
 }
 
+static inline cond_format_object *php_vtiful_cond_format_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+    return (cond_format_object *)((char *)(obj) - XtOffsetOf(cond_format_object, zo));
+}
+
+static inline table_object *php_vtiful_table_fetch_object(zend_object *obj) {
+    if (obj == NULL) {
+        return NULL;
+    }
+    return (table_object *)((char *)(obj) - XtOffsetOf(table_object, zo));
+}
+
 static inline void php_vtiful_close_resource(zend_object *obj) {
     if (obj == NULL) {
         return;
@@ -302,6 +364,11 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
 
     if (intern->formats_cache_ptr.maps != NULL) {
         zend_hash_destroy(intern->formats_cache_ptr.maps);
+        /* The HashTable struct was emalloc'd in vtiful_xls_objects_new;
+         * zend_hash_destroy only releases the table's contents, the struct
+         * itself must be efree'd separately. */
+        efree(intern->formats_cache_ptr.maps);
+        intern->formats_cache_ptr.maps = NULL;
     }
 
     if (intern->row_options != NULL) {
@@ -311,14 +378,22 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
 
 #ifdef ENABLE_READER
     if (intern->read_ptr.sheet_t != NULL) {
-        xlsxioread_sheet_close(intern->read_ptr.sheet_t);
+        lxr_worksheet_close(intern->read_ptr.sheet_t);
         intern->read_ptr.sheet_t = NULL;
     }
 
     if (intern->read_ptr.file_t != NULL) {
-        xlsxioread_close(intern->read_ptr.file_t);
+        lxr_workbook_close(intern->read_ptr.file_t);
         intern->read_ptr.file_t = NULL;
     }
+
+    if (Z_TYPE(intern->read_ptr.pending_real_row) == IS_ARRAY) {
+        zval_ptr_dtor(&intern->read_ptr.pending_real_row);
+    }
+    ZVAL_NULL(&intern->read_ptr.pending_real_row);
+    intern->read_ptr.cols               = 0;
+    intern->read_ptr.expected_row_nr    = 0;
+    intern->read_ptr.pending_synth_rows = 0;
 #endif
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;
@@ -338,6 +413,7 @@ STATIC void _prepare_drawings(lxw_workbook *self);
 STATIC void _add_chart_cache_data(lxw_workbook *self);
 STATIC void _prepare_vml(lxw_workbook *self);
 STATIC void _prepare_defined_names(lxw_workbook *self);
+STATIC void _prepare_tables(lxw_workbook *self);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 
@@ -370,7 +446,44 @@ void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *
 void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxw_format *format_handle);
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, zend_string *text, zend_string *tool_tip, lxw_format *format);
 
+/* Phase 2 writer helpers */
+void comment_opt_writer(zend_string *comment, zend_long row, zend_long columns,
+                        lxw_comment_options *options, xls_resource_write_t *res);
+void image_buffer_writer(zend_long row, zend_long columns,
+                         const unsigned char *bytes, size_t size,
+                         lxw_image_options *options,
+                         xls_resource_write_t *res);
+void header_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options);
+void footer_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options);
+void repeat_rows_writer   (xls_resource_write_t *res, zend_long first_row, zend_long last_row);
+void repeat_columns_writer(xls_resource_write_t *res, zend_long first_col, zend_long last_col);
+void print_area_writer    (xls_resource_write_t *res,
+                           zend_long first_row, zend_long first_col,
+                           zend_long last_row,  zend_long last_col);
+void h_pagebreaks_writer  (xls_resource_write_t *res, lxw_row_t *breaks);
+void v_pagebreaks_writer  (xls_resource_write_t *res, lxw_col_t *breaks);
+void fit_to_pages_writer  (xls_resource_write_t *res, zend_long width, zend_long height);
+void tab_color_writer     (xls_resource_write_t *res, zend_long rgb);
+void background_image_writer(xls_resource_write_t *res, const char *path);
+void background_image_buffer_writer(xls_resource_write_t *res,
+                                    const unsigned char *bytes, size_t size);
+void workbook_properties_writer(xls_resource_write_t *res, lxw_doc_properties *props);
+void define_name_writer(xls_resource_write_t *res, const char *name, const char *formula);
+void conditional_format_writer(xls_resource_write_t *res,
+                               zend_long first_row, zend_long first_col,
+                               zend_long last_row,  zend_long last_col,
+                               lxw_conditional_format *cf);
+void add_table_writer(xls_resource_write_t *res,
+                      zend_long first_row, zend_long first_col,
+                      zend_long last_row,  zend_long last_col,
+                      lxw_table_options *opts);
+
 lxw_error workbook_file(xls_resource_write_t *self);
+
+/* Phase 3 — formula AST */
+void formula_ast_parse(const char *src, size_t n, zval *return_value);
 
 lxw_datetime timestamp_to_datetime(zend_long timestamp);
 zend_string* char_join_to_zend_str(const char *left, const char *right);

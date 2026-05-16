@@ -1,7 +1,10 @@
 --TEST--
 Check for vtiful presence
 --SKIPIF--
-<?php if (!extension_loaded("xlswriter")) print "skip"; ?>
+<?php
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
+?>
 --FILE--
 <?php
 try {
@@ -40,6 +43,16 @@ $excel->fileName('printed_scale.xlsx', 'sheet1')
     ->output();
 
 var_dump($excel);
+
+/* Round-trip: each printed-* writer setting is recoverable via getPageSetup. */
+foreach (['printed_landscape' => 'landscape', 'printed_scale' => null] as $name => $expectedOrient) {
+    $ps = (new \Vtiful\Kernel\Excel($config))->openFile($name . '.xlsx')->openSheet()->getPageSetup();
+    if ($name === 'printed_landscape') {
+        echo "landscape.orientation: " . $ps['orientation'] . "\n";
+    } else {
+        echo "scale.scale: " . $ps['scale'] . "\n";
+    }
+}
 ?>
 --CLEAN--
 <?php
@@ -47,10 +60,10 @@ var_dump($excel);
 @unlink(__DIR__ . '/printed_landscape.xlsx');
 @unlink(__DIR__ . '/printed_scale.xlsx');
 ?>
---EXPECT--
+--EXPECTF--
 int(130)
 string(51) "Please create a file first, use the filename method"
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -61,7 +74,7 @@ object(Vtiful\Kernel\Excel)#3 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
-object(Vtiful\Kernel\Excel)#1 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -72,7 +85,7 @@ object(Vtiful\Kernel\Excel)#1 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -83,4 +96,5 @@ object(Vtiful\Kernel\Excel)#3 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
-
+landscape.orientation: landscape
+scale.scale: 180

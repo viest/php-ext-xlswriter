@@ -41,6 +41,11 @@ $filePath = $excel
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('outline_level_row.xlsx')->openSheet()->getSheetData();
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -48,3 +53,96 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(30) "./tests/outline_level_row.xlsx"
+array(13) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(6) "Region"
+    [1]=>
+    string(5) "Sales"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "North"
+    [1]=>
+    int(1000)
+  }
+  [2]=>
+  array(2) {
+    [0]=>
+    string(5) "North"
+    [1]=>
+    int(1200)
+  }
+  [3]=>
+  array(2) {
+    [0]=>
+    string(5) "North"
+    [1]=>
+    int(900)
+  }
+  [4]=>
+  array(2) {
+    [0]=>
+    string(5) "North"
+    [1]=>
+    int(1200)
+  }
+  [5]=>
+  array(2) {
+    [0]=>
+    string(11) "North Total"
+    [1]=>
+    int(4300)
+  }
+  [6]=>
+  array(2) {
+    [0]=>
+    string(5) "South"
+    [1]=>
+    int(400)
+  }
+  [7]=>
+  array(2) {
+    [0]=>
+    string(5) "South"
+    [1]=>
+    int(600)
+  }
+  [8]=>
+  array(2) {
+    [0]=>
+    string(5) "South"
+    [1]=>
+    int(500)
+  }
+  [9]=>
+  array(2) {
+    [0]=>
+    string(5) "South"
+    [1]=>
+    int(600)
+  }
+  [10]=>
+  array(2) {
+    [0]=>
+    string(11) "South Total"
+    [1]=>
+    int(2100)
+  }
+  [11]=>
+  array(2) {
+    [0]=>
+    string(11) "Grand Total"
+    [1]=>
+    int(6400)
+  }
+  [12]=>
+  array(2) {
+    [0]=>
+    string(10) "hidden row"
+    [1]=>
+    string(1) "0"
+  }
+}

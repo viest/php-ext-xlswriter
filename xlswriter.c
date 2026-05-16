@@ -19,8 +19,7 @@
 #include "xlswriter.h"
 
 #if ENABLE_READER
-#include <xlsxio_version.h>
-#include <xlsxio_read.h>
+#include <xlsxreader.h>
 #endif
 
 int le_xls_writer;
@@ -57,6 +56,8 @@ PHP_MINIT_FUNCTION(xlswriter)
 	VTIFUL_STARTUP_MODULE(chart);
     VTIFUL_STARTUP_MODULE(validation);
     VTIFUL_STARTUP_MODULE(rich_string);
+    VTIFUL_STARTUP_MODULE(conditional_format);
+    VTIFUL_STARTUP_MODULE(table);
 
 	le_xls_writer = zend_register_list_destructors_ex(_php_vtiful_xls_close, NULL, VTIFUL_RESOURCE_NAME, module_number);
 
@@ -112,14 +113,7 @@ PHP_MINFO_FUNCTION(xlswriter)
 #endif
 
 #if ENABLE_READER
-#if HAVE_LIBXLSXIO
-    /* Build time */
-    php_info_print_table_row(2, "libxlsxio headers version", XLSXIO_VERSION_STRING);
-    /* Run time */
-    php_info_print_table_row(2, "libxlsxio library version", xlsxioread_get_version_string());
-#else
-    php_info_print_table_row(2, "bundled libxlsxio version", XLSXIO_VERSION_STRING);
-#endif
+    php_info_print_table_row(2, "bundled libxlsxreader version", "self-maintained");
 #endif
 
 	php_info_print_table_end();

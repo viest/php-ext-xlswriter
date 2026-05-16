@@ -15,7 +15,6 @@ $filePath = $excel->fileName('open_xlsx_sheet_list.xlsx', 'TestSheet1')
 
 $sheetList = $excel->openFile('open_xlsx_sheet_list.xlsx')->sheetList();
 
-var_dump(is_array($sheetList));
 var_dump($sheetList);
 ?>
 --CLEAN--
@@ -23,7 +22,6 @@ var_dump($sheetList);
 @unlink(__DIR__ . '/open_xlsx_sheet_list.xlsx');
 ?>
 --EXPECT--
-bool(true)
 array(1) {
   [0]=>
   string(10) "TestSheet1"

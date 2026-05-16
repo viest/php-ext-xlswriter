@@ -1,0 +1,6 @@
+build/
+test/vendor/
+*.o
+*.a
+*.so
+*.dylib

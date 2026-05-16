@@ -33,6 +33,11 @@ for ($index = 0; $index < 100; $index++) {
 }
 
 var_dump($lastFilePath);
+
+/* Round-trip: the last written file actually exists and is a valid xlsx. */
+$v_ = new \Vtiful\Kernel\Excel($config);
+$d_ = $v_->openFile('multiple_file99.xlsx')->openSheet()->getSheetData();
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -42,3 +47,26 @@ for ($index = 0; $index < 100; $index++) {
 ?>
 --EXPECT--
 string(28) "./tests/multiple_file99.xlsx"
+array(3) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "viest"
+    [1]=>
+    int(21)
+  }
+  [2]=>
+  array(2) {
+    [0]=>
+    string(3) "wjx"
+    [1]=>
+    int(21)
+  }
+}

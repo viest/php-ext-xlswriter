@@ -450,6 +450,175 @@ void margins(xls_resource_write_t *res, double left, double right, double top, d
     worksheet_set_margins(res->worksheet, left, right, top, bottom);
 }
 
+/* ------------------------------------------------------------------------ */
+/* Phase 2 writer helpers                                                    */
+/* ------------------------------------------------------------------------ */
+
+/* Comment with full options. Caller fills out the lxw_comment_options
+ * struct (zero-init for defaults). */
+void comment_opt_writer(zend_string *comment, zend_long row, zend_long columns,
+                        lxw_comment_options *options, xls_resource_write_t *res)
+{
+    int error = worksheet_write_comment_opt(res->worksheet,
+                                            (lxw_row_t)row, (lxw_col_t)columns,
+                                            ZSTR_VAL(comment), options);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Image from in-memory buffer. */
+void image_buffer_writer(zend_long row, zend_long columns,
+                         const unsigned char *bytes, size_t size,
+                         lxw_image_options *options,
+                         xls_resource_write_t *res)
+{
+    int error;
+    if (options) {
+        error = worksheet_insert_image_buffer_opt(res->worksheet,
+                                                  (lxw_row_t)row, (lxw_col_t)columns,
+                                                  bytes, size, options);
+    } else {
+        error = worksheet_insert_image_buffer(res->worksheet,
+                                              (lxw_row_t)row, (lxw_col_t)columns,
+                                              bytes, size);
+    }
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Header / footer (with optional image filenames). */
+void header_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options)
+{
+    int error = options
+        ? worksheet_set_header_opt(res->worksheet, value, options)
+        : worksheet_set_header(res->worksheet, value);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void footer_writer(xls_resource_write_t *res, const char *value,
+                   lxw_header_footer_options *options)
+{
+    int error = options
+        ? worksheet_set_footer_opt(res->worksheet, value, options)
+        : worksheet_set_footer(res->worksheet, value);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Print: repeat rows / columns / area. Inputs are 0-based. */
+void repeat_rows_writer(xls_resource_write_t *res,
+                        zend_long first_row, zend_long last_row)
+{
+    int error = worksheet_repeat_rows(res->worksheet,
+                                      (lxw_row_t)first_row, (lxw_row_t)last_row);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void repeat_columns_writer(xls_resource_write_t *res,
+                           zend_long first_col, zend_long last_col)
+{
+    int error = worksheet_repeat_columns(res->worksheet,
+                                         (lxw_col_t)first_col, (lxw_col_t)last_col);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void print_area_writer(xls_resource_write_t *res,
+                       zend_long first_row, zend_long first_col,
+                       zend_long last_row,  zend_long last_col)
+{
+    int error = worksheet_print_area(res->worksheet,
+                                     (lxw_row_t)first_row, (lxw_col_t)first_col,
+                                     (lxw_row_t)last_row,  (lxw_col_t)last_col);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Page breaks. The libxlsxwriter API expects a 0-terminated array. */
+void h_pagebreaks_writer(xls_resource_write_t *res, lxw_row_t *breaks)
+{
+    int error = worksheet_set_h_pagebreaks(res->worksheet, breaks);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void v_pagebreaks_writer(xls_resource_write_t *res, lxw_col_t *breaks)
+{
+    int error = worksheet_set_v_pagebreaks(res->worksheet, breaks);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void fit_to_pages_writer(xls_resource_write_t *res,
+                         zend_long width, zend_long height)
+{
+    worksheet_fit_to_pages(res->worksheet, (uint16_t)width, (uint16_t)height);
+}
+
+/* Sheet tab color. */
+void tab_color_writer(xls_resource_write_t *res, zend_long rgb)
+{
+    worksheet_set_tab_color(res->worksheet, (lxw_color_t)rgb);
+}
+
+/* Background image (file or buffer). */
+void background_image_writer(xls_resource_write_t *res, const char *path)
+{
+    int error = worksheet_set_background(res->worksheet, path);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+void background_image_buffer_writer(xls_resource_write_t *res,
+                                    const unsigned char *bytes, size_t size)
+{
+    int error = worksheet_set_background_buffer(res->worksheet, bytes, size);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Document properties (workbook-level). */
+void workbook_properties_writer(xls_resource_write_t *res,
+                                lxw_doc_properties *props)
+{
+    int error = workbook_set_properties(res->workbook, props);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Defined names (workbook-level or sheet-scoped via "Sheet!Name"). */
+void define_name_writer(xls_resource_write_t *res,
+                        const char *name, const char *formula)
+{
+    int error = workbook_define_name(res->workbook, name, formula);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Conditional format (cell or range). */
+void conditional_format_writer(xls_resource_write_t *res,
+                               zend_long first_row, zend_long first_col,
+                               zend_long last_row,  zend_long last_col,
+                               lxw_conditional_format *cf)
+{
+    int error;
+    if (first_row == last_row && first_col == last_col) {
+        error = worksheet_conditional_format_cell(res->worksheet,
+                                                  (lxw_row_t)first_row,
+                                                  (lxw_col_t)first_col, cf);
+    } else {
+        error = worksheet_conditional_format_range(res->worksheet,
+                                                   (lxw_row_t)first_row,
+                                                   (lxw_col_t)first_col,
+                                                   (lxw_row_t)last_row,
+                                                   (lxw_col_t)last_col, cf);
+    }
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/* Excel Table. */
+void add_table_writer(xls_resource_write_t *res,
+                      zend_long first_row, zend_long first_col,
+                      zend_long last_row,  zend_long last_col,
+                      lxw_table_options *opts)
+{
+    int error = worksheet_add_table(res->worksheet,
+                                    (lxw_row_t)first_row, (lxw_col_t)first_col,
+                                    (lxw_row_t)last_row,  (lxw_col_t)last_col,
+                                    opts);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
 /*
  * Call finalization code and close file.
  */
@@ -521,6 +690,9 @@ workbook_file(xls_resource_write_t *self)
 
     /* Add cached data to charts. */
     _add_chart_cache_data(self->workbook);
+
+    /* Set the table ids for the worksheet tables. */
+    _prepare_tables(self->workbook);
 
     /* Create a packager object to assemble sub-elements into a zip file. */
     packager = lxw_packager_new(self->workbook->filename,
@@ -614,6 +786,7 @@ _prepare_vml(lxw_workbook *self)
     uint32_t comment_id = 0;
     uint32_t vml_drawing_id = 0;
     uint32_t vml_data_id = 1;
+    uint32_t vml_header_id = 0;
     uint32_t vml_shape_id = 1024;
     uint32_t comment_count = 0;
 
@@ -645,6 +818,17 @@ _prepare_vml(lxw_workbook *self)
             /* Each VML should start with a shape id incremented by 1024. */
             vml_data_id += 1 * ((1024 + comment_count) / 1024);
             vml_shape_id += 1024 * ((1024 + comment_count) / 1024);
+        }
+
+        /* Header/footer image VML — required for setHeader([image_*=>...])
+         * to produce a valid xlsx. Mirrors upstream _prepare_vml(). */
+        if (worksheet->has_header_vml) {
+            self->has_vml = LXW_TRUE;
+            vml_drawing_id += 1;
+            vml_header_id += 1;
+            lxw_worksheet_prepare_header_vml_objects(worksheet,
+                                                     vml_header_id,
+                                                     vml_drawing_id);
         }
     }
 }
@@ -792,49 +976,93 @@ _prepare_defined_names(lxw_workbook *self)
 }
 
 /*
- * Iterate through the worksheets and set up any chart or image drawings.
+ * Track which image types the workbook contains so the packager can emit the
+ * right MIME entries in [Content_Types].xml.
+ */
+STATIC void
+_store_image_type(lxw_workbook *self, uint8_t image_type)
+{
+    if (image_type == LXW_IMAGE_PNG)  self->has_png  = LXW_TRUE;
+    if (image_type == LXW_IMAGE_JPEG) self->has_jpeg = LXW_TRUE;
+    if (image_type == LXW_IMAGE_BMP)  self->has_bmp  = LXW_TRUE;
+    if (image_type == LXW_IMAGE_GIF)  self->has_gif  = LXW_TRUE;
+}
+
+/*
+ * Iterate through the worksheets and set up chart, image, background, and
+ * header/footer image drawings. Mirrors libxlsxwriter's static
+ * _prepare_drawings() — without the background/header passes our previous
+ * version skipped image_type bookkeeping and never called
+ * lxw_worksheet_prepare_{background,header_image}, which produced malformed
+ * xlsx files (missing media + Content_Types entries) when callers used
+ * setBackgroundImage / setHeader([image_left|center|right]).
  */
 STATIC void
 _prepare_drawings(lxw_workbook *self)
 {
+    lxw_sheet *sheet;
     lxw_worksheet *worksheet;
-    lxw_object_properties *image_options;
-    uint16_t chart_ref_id = 0;
-    uint16_t image_ref_id = 0;
-    uint16_t drawing_id = 0;
+    lxw_object_properties *object_props;
+    uint32_t chart_ref_id = 0;
+    uint32_t image_ref_id = 0;
+    uint32_t ref_id = 0;
+    uint32_t drawing_id = 0;
+    uint8_t i;
 
-    STAILQ_FOREACH(worksheet, self->worksheets, list_pointers) {
+    STAILQ_FOREACH(sheet, self->sheets, list_pointers) {
+        if (sheet->is_chartsheet)
+            worksheet = sheet->u.chartsheet->worksheet;
+        else
+            worksheet = sheet->u.worksheet;
 
         if (STAILQ_EMPTY(worksheet->image_props)
-            && STAILQ_EMPTY(worksheet->chart_data))
+            && STAILQ_EMPTY(worksheet->chart_data)
+            && !worksheet->has_header_vml
+            && !worksheet->has_background_image) {
             continue;
+        }
 
         drawing_id++;
 
-        STAILQ_FOREACH(image_options, worksheet->chart_data, list_pointers) {
+        /* Background image (no drawing_id; sheetBackground relationship). */
+        if (worksheet->has_background_image) {
+            object_props = worksheet->background_image;
+            _store_image_type(self, object_props->image_type);
+            image_ref_id++;
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_background(worksheet, ref_id, object_props);
+        }
+
+        /* Regular sheet images. */
+        STAILQ_FOREACH(object_props, worksheet->image_props, list_pointers) {
+            if (object_props->is_background)
+                continue;
+            _store_image_type(self, object_props->image_type);
+            image_ref_id++;
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_image(worksheet, ref_id, drawing_id,
+                                        object_props);
+        }
+
+        /* Charts. */
+        STAILQ_FOREACH(object_props, worksheet->chart_data, list_pointers) {
             chart_ref_id++;
             lxw_worksheet_prepare_chart(worksheet, chart_ref_id, drawing_id,
-                                        image_options, 0);
-            if (image_options->chart)
-                STAILQ_INSERT_TAIL(self->ordered_charts, image_options->chart,
+                                        object_props, sheet->is_chartsheet);
+            if (object_props->chart)
+                STAILQ_INSERT_TAIL(self->ordered_charts, object_props->chart,
                                    ordered_list_pointers);
         }
 
-        STAILQ_FOREACH(image_options, worksheet->image_props, list_pointers) {
-
-            if (image_options->image_type == LXW_IMAGE_PNG)
-                self->has_png = LXW_TRUE;
-
-            if (image_options->image_type == LXW_IMAGE_JPEG)
-                self->has_jpeg = LXW_TRUE;
-
-            if (image_options->image_type == LXW_IMAGE_BMP)
-                self->has_bmp = LXW_TRUE;
-
+        /* Header/footer images — &G tokens in setHeader/setFooter strings. */
+        for (i = 0; i < LXW_HEADER_FOOTER_OBJS_MAX; i++) {
+            object_props = *worksheet->header_footer_objs[i];
+            if (!object_props)
+                continue;
+            _store_image_type(self, object_props->image_type);
             image_ref_id++;
-
-            lxw_worksheet_prepare_image(worksheet, image_ref_id, drawing_id,
-                                        image_options);
+            ref_id = image_ref_id;
+            lxw_worksheet_prepare_header_image(worksheet, ref_id, object_props);
         }
     }
 
@@ -865,6 +1093,34 @@ _add_chart_cache_data(lxw_workbook *self)
             _populate_range(self, series->values);
             _populate_range(self, series->title.range);
         }
+    }
+}
+
+/*
+ * Iterate through the worksheets and assign 1-based ids to each table object,
+ * mirroring libxlsxwriter's static _prepare_tables(). Without this, every
+ * <table> element is written with id="0", which OnlyOffice / Numbers reject
+ * when resolving structured references like [Sales] in total-row formulas.
+ */
+STATIC void
+_prepare_tables(lxw_workbook *self)
+{
+    lxw_sheet *sheet;
+    lxw_worksheet *worksheet;
+    uint32_t table_id = 0;
+    uint32_t table_count = 0;
+
+    STAILQ_FOREACH(sheet, self->sheets, list_pointers) {
+        if (sheet->is_chartsheet)
+            continue;
+        worksheet = sheet->u.worksheet;
+
+        table_count = worksheet->table_count;
+        if (table_count == 0)
+            continue;
+
+        lxw_worksheet_prepare_tables(worksheet, table_id + 1);
+        table_id += table_count;
     }
 }
 

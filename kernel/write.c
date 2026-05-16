@@ -691,6 +691,9 @@ workbook_file(xls_resource_write_t *self)
     /* Add cached data to charts. */
     _add_chart_cache_data(self->workbook);
 
+    /* Set the table ids for the worksheet tables. */
+    _prepare_tables(self->workbook);
+
     /* Create a packager object to assemble sub-elements into a zip file. */
     packager = lxw_packager_new(self->workbook->filename,
                                 self->workbook->options.tmpdir,
@@ -1034,6 +1037,34 @@ _add_chart_cache_data(lxw_workbook *self)
             _populate_range(self, series->values);
             _populate_range(self, series->title.range);
         }
+    }
+}
+
+/*
+ * Iterate through the worksheets and assign 1-based ids to each table object,
+ * mirroring libxlsxwriter's static _prepare_tables(). Without this, every
+ * <table> element is written with id="0", which OnlyOffice / Numbers reject
+ * when resolving structured references like [Sales] in total-row formulas.
+ */
+STATIC void
+_prepare_tables(lxw_workbook *self)
+{
+    lxw_sheet *sheet;
+    lxw_worksheet *worksheet;
+    uint32_t table_id = 0;
+    uint32_t table_count = 0;
+
+    STAILQ_FOREACH(sheet, self->sheets, list_pointers) {
+        if (sheet->is_chartsheet)
+            continue;
+        worksheet = sheet->u.worksheet;
+
+        table_count = worksheet->table_count;
+        if (table_count == 0)
+            continue;
+
+        lxw_worksheet_prepare_tables(worksheet, table_id + 1);
+        table_id += table_count;
     }
 }
 

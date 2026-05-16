@@ -40,6 +40,24 @@ echo "rowCount: " . count($rows) . "\n";
 echo "header[0]: " . $rows[0][0] . "\n";
 echo "header[1]: " . $rows[0][1] . "\n";
 echo "totalLabel[0]: " . $rows[3][0] . "\n";
+
+/* The total row carries a SUBTOTAL formula with a structured reference; cached
+ * value is 0 because libxlsxwriter doesn't evaluate formulas. */
+$f = (new \Vtiful\Kernel\Excel($config))->openFile('add_table.xlsx')->openSheet();
+$last = null;
+while (($row = $f->nextRowWithFormula()) !== null) { $last = $row; }
+echo "totalCellType: " . $last[1]['type'] . "\n";
+echo "totalCellFormula: " . $last[1]['formula'] . "\n";
+echo "totalCellCached: " . var_export($last[1]['value'], true) . "\n";
+
+/* OnlyOffice / Numbers / spec-strict readers reject <table id="0"> and the
+ * [Sales] structured reference fails. Pull the embedded table1.xml via unzip
+ * and assert the table element has a positive id so the regression doesn't
+ * sneak back. */
+$tableXml = shell_exec('unzip -p ' . escapeshellarg($path) . ' xl/tables/table1.xml');
+preg_match('/<table[^>]*\sid="(\d+)"/', $tableXml, $m);
+echo "tableId: " . $m[1] . "\n";
+echo "tableIdValid: " . var_export((int)$m[1] >= 1, true) . "\n";
 ?>
 --CLEAN--
 <?php
@@ -51,3 +69,8 @@ rowCount: 4
 header[0]: Region
 header[1]: Sales
 totalLabel[0]: Total
+totalCellType: formula
+totalCellFormula: SUBTOTAL(109,[Sales])
+totalCellCached: 0
+tableId: 1
+tableIdValid: true

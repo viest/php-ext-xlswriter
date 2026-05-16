@@ -413,6 +413,7 @@ STATIC void _prepare_drawings(lxw_workbook *self);
 STATIC void _add_chart_cache_data(lxw_workbook *self);
 STATIC void _prepare_vml(lxw_workbook *self);
 STATIC void _prepare_defined_names(lxw_workbook *self);
+STATIC void _prepare_tables(lxw_workbook *self);
 STATIC void _populate_range(lxw_workbook *self, lxw_series_range *range);
 STATIC void _populate_range_dimensions(lxw_workbook *self, lxw_series_range *range);
 

@@ -20,13 +20,17 @@ $fileTwo = $excel_two->fileName('010-2.xlsx')
     ->output();
 var_dump($fileOne, $fileTwo);
 
-/* Round-trip: each file is independently readable and holds its own header+data. */
-foreach (['010-1' => ['test1', 'data1'], '010-2' => ['test2', 'data2']] as $name => $expected) {
-    $rows = (new \Vtiful\Kernel\Excel($config))
+/* Round-trip: each file's full sheet content is recovered byte-for-byte. */
+$expected = [
+    '010-1' => [['test1'], ['data1']],
+    '010-2' => [['test2'], ['data2']],
+];
+foreach ($expected as $name => $want) {
+    $got = (new \Vtiful\Kernel\Excel($config))
         ->openFile($name . '.xlsx')->openSheet()->getSheetData();
-    echo "$name header: " . $rows[0][0] . "\n";
-    echo "$name data:   " . $rows[1][0] . "\n";
-    echo "$name match:  " . var_export($rows[0][0] === $expected[0] && $rows[1][0] === $expected[1], true) . "\n";
+    echo "$name rows: ";
+    var_dump($got);
+    echo "$name match: " . var_export($got === $want, true) . "\n";
 }
 ?>
 --CLEAN--
@@ -37,9 +41,29 @@ foreach (['010-1' => ['test1', 'data1'], '010-2' => ['test2', 'data2']] as $name
 --EXPECT--
 string(18) "./tests/010-1.xlsx"
 string(18) "./tests/010-2.xlsx"
-010-1 header: test1
-010-1 data:   data1
-010-1 match:  true
-010-2 header: test2
-010-2 data:   data2
-010-2 match:  true
+010-1 rows: array(2) {
+  [0]=>
+  array(1) {
+    [0]=>
+    string(5) "test1"
+  }
+  [1]=>
+  array(1) {
+    [0]=>
+    string(5) "data1"
+  }
+}
+010-1 match: true
+010-2 rows: array(2) {
+  [0]=>
+  array(1) {
+    [0]=>
+    string(5) "test2"
+  }
+  [1]=>
+  array(1) {
+    [0]=>
+    string(5) "data2"
+  }
+}
+010-2 match: true

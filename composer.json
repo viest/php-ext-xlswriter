@@ -10,8 +10,8 @@
     "extension-name": "xlswriter",
     "configure-options": [
       {
-        "name": "enable-reader",
-        "description": "Enable reader support"
+        "name": "disable-reader",
+        "description": "Disable reader support"
       }
     ]
   }

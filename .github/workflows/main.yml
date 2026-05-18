@@ -11,6 +11,19 @@ jobs:
       matrix:
         operating-system: [ubuntu-22.04, macos-14]
         php-versions: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+        include:
+          # Older PHP only on Linux — setup-php's macOS bottles for 7.0-7.3
+          # are flaky on macos-14 (ARM64) and we don't ship binaries for
+          # those combos anyway. Linux coverage is the one that matters for
+          # downstream distros still on 7.x (EPEL etc.).
+          - operating-system: ubuntu-22.04
+            php-versions: '7.0'
+          - operating-system: ubuntu-22.04
+            php-versions: '7.1'
+          - operating-system: ubuntu-22.04
+            php-versions: '7.2'
+          - operating-system: ubuntu-22.04
+            php-versions: '7.3'
 
     steps:
       - name: Checkout

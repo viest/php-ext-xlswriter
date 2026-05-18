@@ -53,7 +53,10 @@ $rules = [
 ];
 
 $excel->insertText(0, 0, 'cf');
-foreach ($rules as [$range, $cf]) {
+/* Plain list() destructuring instead of `as [$range, $cf]` so the test
+ * parses on PHP 7.0 (short-list destructuring is a 7.1 feature). */
+foreach ($rules as $rule) {
+    list($range, $cf) = $rule;
     $excel->conditionalFormatRange($range, $cf);
 }
 $path = $excel->output();

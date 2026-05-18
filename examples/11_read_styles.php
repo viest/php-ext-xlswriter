@@ -26,7 +26,8 @@ $reader = (new \Vtiful\Kernel\Excel(['path' => $dir]))
     ->openFile($name)
     ->openSheet();
 
-$fmt_font = static function (?array $font): string {
+/* No `?array` nullable-type — that would require PHP 7.1. */
+$fmt_font = static function ($font) {
     if (!$font) return 'default';
     return sprintf('%s %dpt color=%s%s%s',
         $font['name'], $font['size'], $font['color'],

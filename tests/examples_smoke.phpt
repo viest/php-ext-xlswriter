@@ -17,8 +17,9 @@ if (empty($files)) {
 }
 
 /* Run each example in an isolated scope (closure) so they don't bleed
- * variables into each other, while still keeping the loaded extension. */
-$run = static function (string $file): void {
+ * variables into each other, while still keeping the loaded extension.
+ * No `: void` return type — that would require PHP 7.1. */
+$run = static function ($file) {
     /* The example writes to stdout — capture it so the smoke test only
      * cares about whether the script ran without a fatal. */
     ob_start();

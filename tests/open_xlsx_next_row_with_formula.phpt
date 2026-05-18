@@ -47,11 +47,11 @@ var_dump($excel->nextRowWithFormula());
 <?php
 @unlink(__DIR__ . '/open_xlsx_next_row_with_formula.xlsx');
 ?>
---EXPECT--
+--EXPECTF--
 [0] type=string value='n' style_id=0
 [1] type=string value='s' style_id=0
 [0] type=number value=42
 [1] type=string value='hello'
-[0] type=number value=3.14
+[0] type=number value=%f
 [1] type=string value='world'
 NULL

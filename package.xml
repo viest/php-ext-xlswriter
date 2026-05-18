@@ -265,6 +265,7 @@
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
    <file md5sum="acc88ab104ba7558c5a52a96f7fdf099" name="tests/conditional_format.phpt" role="test" />
    <file md5sum="1d69470e233f21417f33d3a9c09546fa" name="tests/const_memory.phpt" role="test" />
+   <file md5sum="" name="tests/empty_sheet_name.phpt" role="test" />
    <file md5sum="d73f6524f34f3866e1c4319cf41c2415" name="tests/const_memory_index_out_range.phpt" role="test" />
    <file md5sum="74e8db9f2df629c0c37da35a2b248c13" name="tests/data_reference.phpt" role="test" />
    <file md5sum="8e299927c2e92e8c5dd90182732565d8" name="tests/data_string_key.phpt" role="test" />

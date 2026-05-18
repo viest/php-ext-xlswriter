@@ -518,6 +518,19 @@ PHP_METHOD(vtiful_xls, close)
 }
 /* }}} */
 
+/* libxlsxwriter accepts "" as a sheet name but Excel then refuses to open
+ * the workbook ("We found a problem with some content"). Guard the three
+ * entry points (fileName / addSheet / constMemory) at the PHP boundary. */
+static int reject_empty_sheet_name(zend_string *zs_sheet_name)
+{
+    if (zs_sheet_name != NULL && ZSTR_LEN(zs_sheet_name) == 0) {
+        zend_throw_exception(vtiful_exception_ce,
+            "Sheet name must not be an empty string; pass null to auto-generate one", 131);
+        return 1;
+    }
+    return 0;
+}
+
 /** {{{ \Vtiful\Kernel\Excel::filename(string $fileName [, string $sheetName])
  */
 PHP_METHOD(vtiful_xls, fileName)
@@ -531,6 +544,8 @@ PHP_METHOD(vtiful_xls, fileName)
             Z_PARAM_OPTIONAL
             Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
+
+    if (reject_empty_sheet_name(zs_sheet_name)) return;
 
     ZVAL_COPY(return_value, getThis());
 
@@ -571,6 +586,8 @@ PHP_METHOD(vtiful_xls, addSheet)
             Z_PARAM_OPTIONAL
             Z_PARAM_STR_OR_NULL(zs_sheet_name)
     ZEND_PARSE_PARAMETERS_END();
+
+    if (reject_empty_sheet_name(zs_sheet_name)) return;
 
     ZVAL_COPY(return_value, getThis());
 
@@ -690,6 +707,8 @@ PHP_METHOD(vtiful_xls, constMemory)
             Z_PARAM_STR_OR_NULL(zs_sheet_name)
             Z_PARAM_BOOL_OR_NULL(use_zip64, _dummy)
     ZEND_PARSE_PARAMETERS_END();
+
+    if (reject_empty_sheet_name(zs_sheet_name)) return;
 
     ZVAL_COPY(return_value, getThis());
 

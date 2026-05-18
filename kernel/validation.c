@@ -468,16 +468,39 @@ PHP_METHOD(vtiful_validation, valueList)
 
     zend_array *za_value_list = Z_ARR_P(zv_value_list);
 
-    ZEND_HASH_FOREACH_VAL(za_value_list, data) {
+    /* Excel caps the inline data-validation list formula at 255 characters,
+     * including the surrounding quotes and comma separators. libxlsxwriter's
+     * _validation_list_to_csv() uses a fixed `255*4+3` byte buffer and
+     * strcat()s into it without bounds checks (see #486 / #530 / #546), so
+     * exceeding the limit overflows the buffer and corrupts the heap. Reject
+     * the input here with a clear exception and a pointer at the workaround
+     * (write the items into a hidden range and use a formula reference). */
+    {
+        size_t csv_chars = 2; /* opening + closing quote */
+        size_t n = 0;
+        ZEND_HASH_FOREACH_VAL(za_value_list, data) {
             if (Z_TYPE_P(data) != IS_STRING) {
                 zend_throw_exception(vtiful_exception_ce, "Arrays can only consist of strings.", 300);
                 return;
             }
-            if (Z_STRLEN_P(data) == 0 ) {
+            if (Z_STRLEN_P(data) == 0) {
                 zend_throw_exception(vtiful_exception_ce, "Array value is empty string.", 301);
                 return;
             }
-    } ZEND_HASH_FOREACH_END();
+            csv_chars += lxw_utf8_strlen(Z_STRVAL_P(data));
+            n++;
+        } ZEND_HASH_FOREACH_END();
+        if (n > 1) csv_chars += (n - 1); /* commas between items */
+
+        if (csv_chars > 255) {
+            zend_throw_exception_ex(vtiful_exception_ce, 302,
+                "Inline data-validation list is %zu characters; Excel limits it to 255. "
+                "Write the values to a hidden range/column and pass a formula reference "
+                "(e.g. valueList not supported for this many items; use a range formula).",
+                csv_chars);
+            return;
+        }
+    }
 
     index = 0;
     list = ecalloc(za_value_list->nNumOfElements + 1, sizeof(char *));

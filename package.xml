@@ -349,6 +349,7 @@
    <file md5sum="8501d9ebf079fc0e278da9e494a2322c" name="tests/validation_limiting_input_to_an_integer_in_a_fixed_range.phpt" role="test" />
    <file md5sum="5343c1c2e949a18fa2e0c9d0e40e183c" name="tests/validation_limiting_input_to_an_integer_outside_a_fixed_range.phpt" role="test" />
    <file md5sum="252eea94c24934d60058cf2509b8bf9b" name="tests/validation_limiting_to_a_single_or_range_cell.phpt" role="test" />
+   <file md5sum="" name="tests/validation_list_too_long.phpt" role="test" />
    <file md5sum="379436234629d661ea18704b596ea5c5" name="tests/version.phpt" role="test" />
    <file md5sum="1bb368eb6670aa92483f3aac89caa8ed" name="tests/writer_exception.phpt" role="test" />
    <file md5sum="8af121e2b617b9490fb4c7ea2115b335" name="tests/xlsx_to_csv.phpt" role="test" />

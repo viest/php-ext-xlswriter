@@ -792,6 +792,17 @@ PHP_METHOD(vtiful_xls, header)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
+    /* header() always writes to row 0. If data() (or anything else that bumped
+     * write_line above 0) has already run, calling header() now would silently
+     * overwrite the first data row. Reported as #535. Throw a clear exception
+     * instead, pointing at the documented order (header first, then data). */
+    if (obj->write_line > 0) {
+        zend_throw_exception(vtiful_exception_ce,
+            "header() must be called before data(); calling it after writes the "
+            "header to row 0 and silently overwrites the first data row", 132);
+        return;
+    }
+
     if (zv_format_handle == NULL) {
         format_handle = obj->format_ptr.format;
     } else {

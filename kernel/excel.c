@@ -1242,7 +1242,7 @@ PHP_METHOD(vtiful_xls, setColumn)
     ZVAL_COPY(return_value, getThis());
 
     if (level < 0 || level > 7) {
-        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%d' given.", level);
+        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%ld' given.", (long)level);
         level = 0;
     }
 
@@ -1287,7 +1287,7 @@ PHP_METHOD(vtiful_xls, setRow)
     ZVAL_COPY(return_value, getThis());
 
     if (level < 0 || level > 7) {
-        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%d' given.", level);
+        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%ld' given.", (long)level);
         level = 0;
     }
 
@@ -1384,7 +1384,7 @@ PHP_METHOD(vtiful_xls, defaultRowOptions)
     ZVAL_COPY(return_value, getThis());
 
     if (level < 0 || level > 7) {
-        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%d' given.", level);
+        LXW_WARN_FORMAT1("outline level must be in 0..7 range, '%ld' given.", (long)level);
         level = 0;
     }
 

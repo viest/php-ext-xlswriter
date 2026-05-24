@@ -300,6 +300,7 @@
    <file md5sum="e425d6570c75fba279eed883934b2130" name="tests/gridlines.phpt" role="test" />
    <file md5sum="f49a5532b966dc9dd46c518df8cd1246" name="tests/header_format.phpt" role="test" />
    <file md5sum="" name="tests/header_after_data.phpt" role="test" />
+   <file md5sum="" name="tests/insert_date_format_cache.phpt" role="test" />
    <file md5sum="bb53e80f57de9a08393ba204547225f3" name="tests/hide.phpt" role="test" />
    <file md5sum="5b9ca162d072ae7425233a2d23084962" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="63bb7dea1beb740d491211da88cdb4a6" name="tests/image_width_height_styles.phpt" role="test" />

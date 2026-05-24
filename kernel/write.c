@@ -119,6 +119,16 @@ void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *
 
 void format_copy(lxw_format *new_format, lxw_format *other_format)
 {
+    /* Font-family string: previously skipped, causing every clone to fall
+     * back to the workbook default (Calibri). Reported as #545 / #472:
+     * insertText() with both a num-format string and a format resource
+     * dropped the caller's font(). num_format/font_scheme/has_font flags
+     * are in the same boat — copy them all. */
+    memcpy(new_format->font_name,   other_format->font_name,   LXW_FORMAT_FIELD_LEN);
+    memcpy(new_format->font_scheme, other_format->font_scheme, LXW_FORMAT_FIELD_LEN);
+    new_format->has_font     = other_format->has_font;
+    new_format->has_dxf_font = other_format->has_dxf_font;
+
     new_format->bold = other_format->bold;
     new_format->bg_color = other_format->bg_color;
     new_format->border_count = other_format->border_count;

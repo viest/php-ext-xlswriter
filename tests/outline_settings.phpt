@@ -42,10 +42,40 @@ $filePath = $excel
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: outlineSettings(visible=true, below=false, right=false,
+ * autoStyle=false) emits <sheetPr><outlinePr summaryBelow="0"
+ * summaryRight="0"/></sheetPr> in xl/worksheets/sheet1.xml (visible=true
+ * is the worksheet-view default and so isn't serialised). No reader API
+ * for these flags; probe the raw OOXML. */
+$xml = shell_exec('unzip -p ' . escapeshellarg($filePath) . ' xl/worksheets/sheet1.xml');
+preg_match('/<outlinePr([^\/>]*)\/>/', $xml, $m);
+$attrs = $m[1] ?? '';
+echo "outlinePr present: " . var_export(isset($m[0]), true) . "\n";
+echo "summaryBelow=0: "    . var_export(strpos($attrs, 'summaryBelow="0"') !== false, true) . "\n";
+echo "summaryRight=0: "    . var_export(strpos($attrs, 'summaryRight="0"') !== false, true) . "\n";
+echo "no applyStyles: "    . var_export(strpos($attrs, 'applyStyles') === false, true) . "\n";
+
+/* Flipping autoStyle adds the applyStyles attribute. */
+$path2 = (new \Vtiful\Kernel\Excel($config))
+    ->fileName('outline_settings_auto.xlsx')
+    ->outlineSettings(true, true, true, true)
+    ->insertText(0, 0, 'x')
+    ->output();
+$xml2 = shell_exec('unzip -p ' . escapeshellarg($path2) . ' xl/worksheets/sheet1.xml');
+preg_match('/<outlinePr([^\/>]*)\/>/', $xml2, $m2);
+echo "autoStyle.applyStyles=1: " . var_export(strpos($m2[1] ?? '', 'applyStyles="1"') !== false, true) . "\n";
+@unlink($path2);
 ?>
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/outline_settings.xlsx');
+@unlink(__DIR__ . '/outline_settings_auto.xlsx');
 ?>
 --EXPECT--
 string(29) "./tests/outline_settings.xlsx"
+outlinePr present: true
+summaryBelow=0: true
+summaryRight=0: true
+no applyStyles: true
+autoStyle.applyStyles=1: true

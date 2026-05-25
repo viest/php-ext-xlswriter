@@ -378,6 +378,7 @@
    <file md5sum="f211ed5fc14c2ae3ca321fac678d7367" name="tests/outline_level_column_const_memory.phpt" role="test" />
    <file md5sum="1f7f9e2ba7eb1da96ae4a814caf15190" name="tests/outline_level_row.phpt" role="test" />
    <file md5sum="97059f894a83768cf7039bc7770b4d45" name="tests/outline_level_row_const_memory.phpt" role="test" />
+   <file md5sum="" name="tests/outline_settings.phpt" role="test" />
    <file md5sum="fb107b0089c2aa55fc305884813e8966" name="tests/page_setup.phpt" role="test" />
    <file md5sum="22cb5ed6c568ab6287d520153c51250d" name="tests/set_background_image.phpt" role="test" />
    <file md5sum="86a15a9fa144f64ae4afaf644bd0d2b5" name="tests/set_header_footer.phpt" role="test" />

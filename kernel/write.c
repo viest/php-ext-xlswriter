@@ -630,6 +630,14 @@ void add_table_writer(xls_resource_write_t *res,
 }
 
 /*
+ * Set outline settings
+ */
+void outline_settings(xls_resource_write_t *res, uint8_t visible, uint8_t symbols_below, uint8_t symbols_right, uint8_t auto_style)
+{
+    worksheet_outline_settings(res->worksheet, visible, symbols_below, symbols_right, auto_style);
+}
+
+/*
  * Call finalization code and close file.
  */
 lxw_error

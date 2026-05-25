@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2026-05-16</date>
- <time>10:05:55</time>
+ <date>2026-05-25</date>
+ <time>00:00:00</time>
  <version>
-  <release>2.0.0</release>
-  <api>2.0.0</api>
+  <release>2.0.1</release>
+  <api>2.0.1</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,25 +45,14 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Refactor: replaced libxlsxio dependency with the in-tree libxlsxreader (PHP-agnostic C library, lives under library/libxlsxreader/).
-- Reader: shared-strings table now supports both FULL and STREAMING modes; FSM-driven worksheet parser with 64KB XML buffer; honors 1900 vs 1904 date systems via workbook.xml.
-- Reader: PHP API (openFile/openSheet/nextRow/nextCellCallback/getSheetData/setType/setGlobalType/setSkipRows/putCSV/putCSVCallback) is fully backward compatible.
-- Reader: surface sheet-level metadata — getMergedCells, getHyperlinks, getSheetProtection, getRowOptions/getColumnOptions, getDefaultRowHeight/getDefaultColumnWidth, getDefinedNames, sheetListWithMeta.
-- Reader: surface page setup, rich-text runs, comments, charts, and conditional formats — getPageSetup, nextRowRich, iterateImages, iterateComments, iterateCharts, getConditionalFormats.
-- Reader: full formula attributes (next-row-with-formula), data validations (getDataValidations), autofilter (getAutoFilter); new static helper Excel::getFormulaAst() for tokenizing formulas without evaluation.
-- Reader: getStyleFormat resolves a style id to a rich array of font/fill/border/alignment/protection.
-- Writer: conditional formats (Vtiful\Kernel\ConditionalFormat + conditionalFormatCell/Range).
-- Writer: Excel tables (Vtiful\Kernel\Table + addTable).
-- Writer: page setup — setHeader/setFooter, repeatRows/repeatColumns, printArea, horizontalPageBreaks/verticalPageBreaks, fitToPages, setTabColor.
-- Writer: workbook properties — setProperties, setCustomProperty.
-- Writer: defined names — defineName (workbook- and sheet-scoped).
-- Writer: insertCommentOpt, insertImageBuffer, setBackgroundImage/Buffer, insertRichText.
-- Format: borderColorOfTheFourSides, borderOfTheFourSides, indent, rotation, locked/unlocked/hidden cell protection.
-- Fix: setBackgroundImage / setBackgroundImageBuffer now bundle the referenced media inside the xlsx (the sheet's picture relationship pointed at a media file that was never written).
-- Fix: setHeader/setFooter with image_left/image_center/image_right options now produces a valid xlsx (header VML drawing and content-type registration were missing, making the output unopenable).
-- New constants: Excel::COMMENT_DISPLAY_DEFAULT / HIDDEN / VISIBLE so insertCommentOpt(['visible' => …]) callers don't have to guess libxlsxwriter's lxw_comment_display enum.
-- Build: feature-flagged reader (--disable-reader produces a write-only build); minizip is shared between writer and reader.
-- Update libxlsxwriter from 1.1.3 to 1.1.6.
+- Fix: insertDate / insertText with $format string now caches each distinct format on its own cache slot; previously ZEND_STRL on a zend_string flexible-array key collapsed every format into one entry, so the first format won and every subsequent call returned the wrong cached format (#552 / #548 / #544).
+- Fix: format_copy() now carries font_name (and font_scheme / has_font / has_dxf_font), so a Format resource passed alongside a num-format string keeps the caller's font() instead of falling back to Calibri (#545 / #472).
+- Fix: data-validation inline list now rejects with an exception when the joined CSV exceeds Excel's 255-character spec limit, instead of overflowing libxlsxwriter's fixed-size buffer (#486 / #530 / #546).
+- Fix: header() called after data() throws instead of silently overwriting the first data row (#535).
+- Fix: empty-string sheet name is rejected up-front instead of producing an xlsx that Excel can't open (#528).
+- Fix: outline-level warnings in setColumn / setRow / defaultRowOptions use %ld instead of %d so the build no longer fails on Alpine 3.22 + gcc 14 hardening defaults (#556).
+- Build: tests + examples now parse on PHP 7.0 (the declared minimum); CI matrix expanded to PHP 7.0-7.3 on ubuntu-22.04 (#565).
+- Build: composer.json declares download-url-method=pre-packaged-source so `pie install viest/xlswriter` fetches the self-contained xlswriter-(version).tgz attached to the GitHub release instead of the submodule-less packagist zipball.
  </notes>
  <contents>
   <dir name="/">
@@ -424,6 +413,29 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2026-05-16</date>
+   <time>00:00:00</time>
+   <version>
+    <release>2.0.0</release>
+    <api>2.0.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- Refactor: replaced libxlsxio dependency with the in-tree libxlsxreader (PHP-agnostic C library).
+- Reader: streaming + full shared-strings; FSM-driven worksheet parser; honors 1900/1904 date systems.
+- Reader new APIs: getMergedCells, getHyperlinks, getSheetProtection, getRowOptions/getColumnOptions, getDefinedNames, sheetListWithMeta, getPageSetup, nextRowRich, nextRowWithFormula, iterateImages, iterateComments, iterateCharts, getConditionalFormats, getDataValidations, getAutoFilter, getStyleFormat, getFormulaAst.
+- Writer new APIs: conditional formats, Excel tables, page setup (setHeader/setFooter, repeatRows/Columns, printArea, page breaks, fitToPages, setTabColor), workbook + custom properties, defined names, insertCommentOpt, insertImageBuffer, setBackgroundImage(Buffer), insertRichText.
+- Format: borderColorOfTheFourSides, borderOfTheFourSides, indent, rotation, locked/unlocked/hidden cell protection.
+- Fixes: setBackgroundImage now bundles media; setHeader/setFooter with image_* options produces a valid xlsx; table elements get a positive 1-based id.
+- New constants: Excel::COMMENT_DISPLAY_DEFAULT/HIDDEN/VISIBLE.
+- Build: feature-flagged reader (--disable-reader); libxlsxwriter updated from 1.1.3 to 1.1.6.
+   </notes>
+  </release>
   <release>
    <date>2024-11-10</date>
    <time>00:00:00</time>

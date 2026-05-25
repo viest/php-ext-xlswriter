@@ -8,6 +8,7 @@
   },
   "php-ext": {
     "extension-name": "xlswriter",
+    "download-url-method": "pre-packaged-source",
     "configure-options": [
       {
         "name": "disable-reader",

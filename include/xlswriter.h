@@ -441,6 +441,7 @@ void call_object_method(zval *object, const char *function_name, uint32_t param_
 void chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *chart_resource, xls_resource_write_t *res);
 void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resource_write_t *res, lxw_format *format, lxw_row_col_options *user_options);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
+void image_opt_writer(zval *value, zend_long row, zend_long columns, lxw_image_options *options, xls_resource_write_t *res);
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
 void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zval *rich_strings, lxw_format *format);

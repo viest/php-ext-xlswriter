@@ -229,6 +229,17 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 }
 
 /*
+ * Write the image with full options struct (insertImageOpt).
+ */
+void image_opt_writer(zval *value, zend_long row, zend_long columns,
+                     lxw_image_options *options, xls_resource_write_t *res)
+{
+    int error = worksheet_insert_image_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns,
+                                           ZSTR_VAL(zval_get_string(value)), options);
+    WORKSHEET_WRITER_EXCEPTION(error);
+}
+
+/*
  * Write the image to the file
  */
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format)

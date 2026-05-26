@@ -354,6 +354,7 @@
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="a96403ed905f2a69fab573ffae8e7a66" name="tests/insert_comment_opt.phpt" role="test" />
    <file md5sum="0dd62c99919852aa7b4a1efe15fdc5c5" name="tests/insert_image_buffer.phpt" role="test" />
+   <file md5sum="" name="tests/insert_image_opt.phpt" role="test" />
    <file md5sum="2bd0e2004ecb25cf75d807aa6716b682" name="tests/open_xlsx_formula_verbose.phpt" role="test" />
    <file md5sum="92ffd1f4078e747031dfdda6be79ed47" name="tests/open_xlsx_get_auto_filter.phpt" role="test" />
    <file md5sum="62f5d862b9bb50e43956294765bb7f4d" name="tests/open_xlsx_get_conditional_formats.phpt" role="test" />

@@ -16,6 +16,12 @@ zend_class_entry *vtiful_xls_ce;
 
 static zend_object_handlers vtiful_xls_handlers;
 
+/* Forward declarations for the assoc-array option readers used by several
+ * method bodies above the helpers' actual definitions. */
+static const char *zarr_str(zval *arr, const char *key, size_t key_len);
+static zend_long   zarr_long(zval *arr, const char *key, size_t key_len, zend_long dflt);
+static double      zarr_double(zval *arr, const char *key, size_t key_len, double dflt);
+
 static zend_always_inline void *vtiful_object_alloc(size_t obj_size, zend_class_entry *ce) {
     void *obj = emalloc(obj_size + zend_object_properties_size(ce));
     memset(obj, 0, obj_size);
@@ -160,6 +166,13 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_image_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, image)
                 ZEND_ARG_INFO(0, width)
                 ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_image_opt_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, image)
+                ZEND_ARG_ARRAY_INFO(0, options, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_formula_arginfo, 0, 0, 3)
@@ -1103,6 +1116,49 @@ PHP_METHOD(vtiful_xls, insertImage)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     image_writer(image, row, column, width, height,  &obj->write_ptr);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertImageOpt(int $row, int $column, string $imagePath, array $options)
+ *
+ * Options array keys (all optional):
+ *   x_offset / y_offset  (int, pixels from the top-left of the anchor cell)
+ *   x_scale  / y_scale   (float, scale factor; 1.0 = original size)
+ *   description          (string, alt text; "" suppresses)
+ *   decorative           (bool, mark as decorative for screen readers)
+ *   url / tip            (string, optional hyperlink + mouseover tip)
+ *   object_position      (int, Excel::OBJECT_POSITION_* constant)
+ */
+PHP_METHOD(vtiful_xls, insertImageOpt)
+{
+    zval *image = NULL, *options = NULL;
+    zend_long row = 0, column = 0;
+    const char *s;
+    lxw_image_options o;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_ZVAL(image)
+            Z_PARAM_ARRAY(options)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+    xls_object *obj = Z_XLS_P(getThis());
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    memset(&o, 0, sizeof(o));
+    o.x_offset        = (int32_t)zarr_long(options, "x_offset",      sizeof("x_offset") - 1, 0);
+    o.y_offset        = (int32_t)zarr_long(options, "y_offset",      sizeof("y_offset") - 1, 0);
+    o.x_scale         = zarr_double      (options, "x_scale",        sizeof("x_scale") - 1, 1.0);
+    o.y_scale         = zarr_double      (options, "y_scale",        sizeof("y_scale") - 1, 1.0);
+    o.object_position = (uint8_t)zarr_long(options, "object_position", sizeof("object_position") - 1, 0);
+    o.decorative      = (uint8_t)zarr_long(options, "decorative",    sizeof("decorative") - 1, 0);
+    if ((s = zarr_str(options, "description", sizeof("description") - 1))) o.description = s;
+    if ((s = zarr_str(options, "url",         sizeof("url") - 1)))         o.url         = s;
+    if ((s = zarr_str(options, "tip",         sizeof("tip") - 1)))         o.tip         = s;
+
+    image_opt_writer(image, row, column, &o, &obj->write_ptr);
 }
 /* }}} */
 
@@ -3812,6 +3868,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, insertChart,       xls_insert_chart_arginfo,            ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertUrl,         xls_insert_url_arginfo,              ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImage,       xls_insert_image_arginfo,            ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertImageOpt,    xls_insert_image_opt_arginfo,        ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertFormula,     xls_insert_formula_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertComment,     xls_insert_comment_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, showComment,       xls_show_comment_arginfo,            ZEND_ACC_PUBLIC)
@@ -3983,6 +4040,14 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_DEFAULT", LXW_COMMENT_DISPLAY_DEFAULT)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_HIDDEN",  LXW_COMMENT_DISPLAY_HIDDEN)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "COMMENT_DISPLAY_VISIBLE", LXW_COMMENT_DISPLAY_VISIBLE)
+
+    /* object_position values for insertImageOpt — control how the image
+     * behaves when the underlying cells are resized/moved. */
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "OBJECT_POSITION_DEFAULT",            LXW_OBJECT_POSITION_DEFAULT)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "OBJECT_MOVE_AND_SIZE",               LXW_OBJECT_MOVE_AND_SIZE)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "OBJECT_MOVE_DONT_SIZE",              LXW_OBJECT_MOVE_DONT_SIZE)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "OBJECT_DONT_MOVE_DONT_SIZE",         LXW_OBJECT_DONT_MOVE_DONT_SIZE)
+    REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "OBJECT_MOVE_AND_SIZE_AFTER",         LXW_OBJECT_MOVE_AND_SIZE_AFTER)
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_INT,      READ_TYPE_INT);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_TYPE_DOUBLE,   READ_TYPE_DOUBLE);

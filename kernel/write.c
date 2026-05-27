@@ -247,6 +247,20 @@ void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_re
     worksheet_write_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(value), format);
 }
 
+void dynamic_formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format)
+{
+    worksheet_write_dynamic_formula(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(value), format);
+}
+
+void dynamic_array_formula_writer(zend_string *value, zend_long first_row, zend_long first_col,
+                                  zend_long last_row, zend_long last_col,
+                                  xls_resource_write_t *res, lxw_format *format)
+{
+    worksheet_write_dynamic_array_formula(res->worksheet, (lxw_row_t)first_row, (lxw_col_t)first_col,
+                                          (lxw_row_t)last_row, (lxw_col_t)last_col,
+                                          ZSTR_VAL(value), format);
+}
+
 /*
  * Write the chart to the file
  */

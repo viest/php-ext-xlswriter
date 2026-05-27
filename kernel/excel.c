@@ -182,6 +182,22 @@ ZEND_BEGIN_ARG_INFO_EX(xls_insert_formula_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, format_handle)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_dynamic_formula_arginfo, 0, 0, 3)
+                ZEND_ARG_INFO(0, row)
+                ZEND_ARG_INFO(0, column)
+                ZEND_ARG_INFO(0, formula)
+                ZEND_ARG_INFO(0, format_handle)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_insert_dynamic_array_formula_arginfo, 0, 0, 5)
+                ZEND_ARG_INFO(0, first_row)
+                ZEND_ARG_INFO(0, first_column)
+                ZEND_ARG_INFO(0, last_row)
+                ZEND_ARG_INFO(0, last_column)
+                ZEND_ARG_INFO(0, formula)
+                ZEND_ARG_INFO(0, format_handle)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_insert_comment_arginfo, 0, 0, 3)
                 ZEND_ARG_INFO(0, row)
                 ZEND_ARG_INFO(0, column)
@@ -1190,6 +1206,72 @@ PHP_METHOD(vtiful_xls, insertFormula)
         formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
     } else {
         formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertDynamicFormula(int $row, int $column, string $formula)
+ */
+PHP_METHOD(vtiful_xls, insertDynamicFormula)
+{
+    zval *format_handle = NULL;
+    zend_string *formula = NULL;
+    zend_long row = 0, column = 0;
+
+    int argc = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(3, 4)
+            Z_PARAM_LONG(row)
+            Z_PARAM_LONG(column)
+            Z_PARAM_STR(formula)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (argc == 4 && format_handle != NULL) {
+        dynamic_formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(format_handle));
+    } else {
+        dynamic_formula_writer(formula, row, column, &obj->write_ptr, obj->format_ptr.format);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::insertDynamicArrayFormula(int $first_row, int $first_column, int $last_row, int $last_column, string $formula)
+ */
+PHP_METHOD(vtiful_xls, insertDynamicArrayFormula)
+{
+    zval *format_handle = NULL;
+    zend_string *formula = NULL;
+    zend_long first_row = 0, first_column = 0, last_row = 0, last_column = 0;
+
+    int argc = ZEND_NUM_ARGS();
+
+    ZEND_PARSE_PARAMETERS_START(5, 6)
+            Z_PARAM_LONG(first_row)
+            Z_PARAM_LONG(first_column)
+            Z_PARAM_LONG(last_row)
+            Z_PARAM_LONG(last_column)
+            Z_PARAM_STR(formula)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_RESOURCE_OR_NULL(format_handle)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    if (argc == 6 && format_handle != NULL) {
+        dynamic_array_formula_writer(formula, first_row, first_column, last_row, last_column, &obj->write_ptr, zval_get_format(format_handle));
+    } else {
+        dynamic_array_formula_writer(formula, first_row, first_column, last_row, last_column, &obj->write_ptr, obj->format_ptr.format);
     }
 }
 /* }}} */
@@ -3869,7 +3951,9 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, insertUrl,         xls_insert_url_arginfo,              ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImage,       xls_insert_image_arginfo,            ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertImageOpt,    xls_insert_image_opt_arginfo,        ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_xls, insertFormula,     xls_insert_formula_arginfo,          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertFormula,              xls_insert_formula_arginfo,               ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertDynamicFormula,       xls_insert_dynamic_formula_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, insertDynamicArrayFormula,  xls_insert_dynamic_array_formula_arginfo, ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, insertComment,     xls_insert_comment_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, showComment,       xls_show_comment_arginfo,            ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, mergeCells,        xls_merge_cells_arginfo,             ZEND_ACC_PUBLIC)

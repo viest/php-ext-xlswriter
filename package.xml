@@ -370,6 +370,8 @@
    <file md5sum="194edcd1582bccb74e9a05787694cb93" name="tests/open_xlsx_iterate_comments.phpt" role="test" />
    <file md5sum="897bd0378390ad766fc163a3d5283eda" name="tests/open_xlsx_iterate_images.phpt" role="test" />
    <file md5sum="b652c0bb6fe15f57101be3d9a284cdb1" name="tests/open_xlsx_next_row_rich.phpt" role="test" />
+   <file md5sum="b6a989284bf17694973fb5877bf516ca" name="tests/insert_dynamic_formula.phpt" role="test" />
+   <file md5sum="ab528702b9cee807bbced1de4201d311" name="tests/insert_dynamic_array_formula.phpt" role="test" />
    <file md5sum="9372cae0ae4d80a1e62451f3df653a5f" name="tests/open_xlsx_next_row_with_formula.phpt" role="test" />
    <file md5sum="ed41926ecdeb09935da03baa127cb5f1" name="tests/open_xlsx_next_row_with_formula_url.phpt" role="test" />
    <file md5sum="936e4b849ec9af9224417b102adec1dc" name="tests/open_xlsx_sheet_visibility.phpt" role="test" />

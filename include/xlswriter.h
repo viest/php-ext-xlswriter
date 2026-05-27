@@ -443,6 +443,10 @@ void worksheet_set_rows(lxw_row_t start, lxw_row_t end, double height, xls_resou
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
 void image_opt_writer(zval *value, zend_long row, zend_long columns, lxw_image_options *options, xls_resource_write_t *res);
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
+void dynamic_formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxw_format *format);
+void dynamic_array_formula_writer(zend_string *value, zend_long first_row, zend_long first_col,
+                                  zend_long last_row, zend_long last_col,
+                                  xls_resource_write_t *res, lxw_format *format);
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxw_format *format_handle);
 void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zval *rich_strings, lxw_format *format);
 void datetime_writer(lxw_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxw_format *format_handle);

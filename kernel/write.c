@@ -74,7 +74,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
     }
 
     if (value_type == IS_TRUE || value_type == IS_FALSE) {
-        WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, lxw_row, lxw_col, zend_is_true(value), format_handle));
+        WORKSHEET_WRITER_EXCEPTION(worksheet_write_boolean(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, zend_is_true(value), format_handle));
         return;
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package packagerversion="1.10.12" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+<package packagerversion="1.10.15" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
  <name>xlswriter</name>
  <channel>pecl.php.net</channel>
  <summary>Efficient and fast xlsx file extension.</summary>
@@ -34,7 +34,7 @@
   <active>yes</active>
  </lead>
  <date>2026-06-03</date>
- <time>00:00:00</time>
+ <time>11:59:31</time>
  <version>
   <release>2.0.2</release>
   <api>2.0.2</api>
@@ -45,10 +45,10 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feature: insertImageOpt($row, $col, $path, $options) adds pixel-precise x_offset / y_offset within the anchor cell, scale via width/height, a "don't move or size with cells" anchor mode, plus mouseover tip, alt text (description / decorative) and a hyperlink overlay. Object positioning is exposed through new Excel::OBJECT_POSITION_* constants. The original insertImage() signature is untouched (#357 / #437 / #473 / #297 / #449).
-- Feature: insertDynamicFormula() and insertDynamicArrayFormula() emit the t="array" + ref-range XML that Excel 365 dynamic array functions (UNIQUE, FILTER, SORT, SEQUENCE, XLOOKUP, etc.) require, which insertFormula() does not produce (#503).
+- Feature: insertImageOpt($row, $col, $path, $options) adds pixel-precise x_offset / y_offset within the anchor cell, scale via width/height, a &quot;don&apos;t move or size with cells&quot; anchor mode, plus mouseover tip, alt text (description / decorative) and a hyperlink overlay. Object positioning is exposed through new Excel::OBJECT_POSITION_* constants. The original insertImage() signature is untouched (#357 / #437 / #473 / #297 / #449).
+- Feature: insertDynamicFormula() and insertDynamicArrayFormula() emit the t=&quot;array&quot; + ref-range XML that Excel 365 dynamic array functions (UNIQUE, FILTER, SORT, SEQUENCE, XLOOKUP, etc.) require, which insertFormula() does not produce (#503).
 - Feature: outlineSettings(bool $visible = true, bool $below = true, bool $right = true, bool $autoStyle = false) configures worksheet outline (grouping) display (#540).
-- Fix: PHP true/false passed to writeSheet / data now writes a real boolean cell (xlsx type="b") via worksheet_write_boolean; previously bool fell through type_writer() silently and the cell was emitted as blank (#543).
+- Fix: PHP true/false passed to writeSheet / data now writes a real boolean cell (xlsx type=&quot;b&quot;) via worksheet_write_boolean; previously bool fell through type_writer() silently and the cell was emitted as blank (#543).
  </notes>
  <contents>
   <dir name="/">
@@ -428,10 +428,10 @@
    <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
    <notes>
 - Fix: insertDate / insertText with $format string now caches each distinct format on its own cache slot; previously ZEND_STRL on a zend_string flexible-array key collapsed every format into one entry, so the first format won and every subsequent call returned the wrong cached format (#552 / #548 / #544).
-- Fix: format_copy() now carries font_name (and font_scheme / has_font / has_dxf_font), so a Format resource passed alongside a num-format string keeps the caller's font() instead of falling back to Calibri (#545 / #472).
-- Fix: data-validation inline list now rejects with an exception when the joined CSV exceeds Excel's 255-character spec limit, instead of overflowing libxlsxwriter's fixed-size buffer (#486 / #530 / #546).
+- Fix: format_copy() now carries font_name (and font_scheme / has_font / has_dxf_font), so a Format resource passed alongside a num-format string keeps the caller&apos;s font() instead of falling back to Calibri (#545 / #472).
+- Fix: data-validation inline list now rejects with an exception when the joined CSV exceeds Excel&apos;s 255-character spec limit, instead of overflowing libxlsxwriter&apos;s fixed-size buffer (#486 / #530 / #546).
 - Fix: header() called after data() throws instead of silently overwriting the first data row (#535).
-- Fix: empty-string sheet name is rejected up-front instead of producing an xlsx that Excel can't open (#528).
+- Fix: empty-string sheet name is rejected up-front instead of producing an xlsx that Excel can&apos;t open (#528).
 - Fix: outline-level warnings in setColumn / setRow / defaultRowOptions use %ld instead of %d so the build no longer fails on Alpine 3.22 + gcc 14 hardening defaults (#556).
 - Build: tests + examples now parse on PHP 7.0 (the declared minimum); CI matrix expanded to PHP 7.0-7.3 on ubuntu-22.04 (#565).
 - Build: composer.json declares download-url-method=pre-packaged-source so `pie install viest/xlswriter` fetches the self-contained xlswriter-(version).tgz attached to the GitHub release instead of the submodule-less packagist zipball.

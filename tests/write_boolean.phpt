@@ -2,8 +2,8 @@
 Check for vtiful presence
 --SKIPIF--
 <?php
-if (!extension_loaded("xlswriter")) print "skip";
-if (!extension_loaded("zip")) print "skip zip extension required to inspect the xlsx";
+require __DIR__ . '/include/skipif.inc';
+skip_disable_reader();
 ?>
 --FILE--
 <?php
@@ -20,18 +20,19 @@ $filePath = $excel->fileName("write_boolean.xlsx")
 
 var_dump($filePath);
 
-/* Inspect the generated XML: bool cells must be t="b" with 1/0, not the
- * silent fall-through we got before the worksheet_write_boolean call. */
-$zip = new ZipArchive();
-$zip->open($filePath);
-$xml = $zip->getFromName('xl/worksheets/sheet1.xml');
-$zip->close();
+/* Round-trip via the reader: before worksheet_write_boolean() the bool cell
+ * fell through type_writer() and was emitted as a blank cell, so it read back
+ * as "" instead of 1/0. The reader has no boolean type (true -> int(1),
+ * false -> string("0")), so normalise with (int) and explicitly reject the
+ * blank-cell regression with !== ''. */
+$reader = new \Vtiful\Kernel\Excel($config);
+$data   = $reader->openFile("write_boolean.xlsx")->openSheet()->getSheetData();
 
-var_dump(strpos($xml, 't="b"') !== false);
-preg_match('/<c r="C2"[^>]*t="b"[^>]*>\s*<v>(\d)<\/v>/', $xml, $m1);
-preg_match('/<c r="C3"[^>]*t="b"[^>]*>\s*<v>(\d)<\/v>/', $xml, $m2);
-var_dump($m1[1] ?? null);
-var_dump($m2[1] ?? null);
+$active_true  = $data[1][2]; // viest -> true
+$active_false = $data[2][2]; // wjx   -> false
+
+var_dump($active_true  !== '' && (int)$active_true  === 1);
+var_dump($active_false !== '' && (int)$active_false === 0);
 ?>
 --CLEAN--
 <?php
@@ -40,5 +41,4 @@ var_dump($m2[1] ?? null);
 --EXPECTF--
 string(%d) "%swrite_boolean.xlsx"
 bool(true)
-string(1) "1"
-string(1) "0"
+bool(true)

@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2026-05-25</date>
+ <date>2026-06-03</date>
  <time>00:00:00</time>
  <version>
-  <release>2.0.1</release>
-  <api>2.0.1</api>
+  <release>2.0.2</release>
+  <api>2.0.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,14 +45,10 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Fix: insertDate / insertText with $format string now caches each distinct format on its own cache slot; previously ZEND_STRL on a zend_string flexible-array key collapsed every format into one entry, so the first format won and every subsequent call returned the wrong cached format (#552 / #548 / #544).
-- Fix: format_copy() now carries font_name (and font_scheme / has_font / has_dxf_font), so a Format resource passed alongside a num-format string keeps the caller's font() instead of falling back to Calibri (#545 / #472).
-- Fix: data-validation inline list now rejects with an exception when the joined CSV exceeds Excel's 255-character spec limit, instead of overflowing libxlsxwriter's fixed-size buffer (#486 / #530 / #546).
-- Fix: header() called after data() throws instead of silently overwriting the first data row (#535).
-- Fix: empty-string sheet name is rejected up-front instead of producing an xlsx that Excel can't open (#528).
-- Fix: outline-level warnings in setColumn / setRow / defaultRowOptions use %ld instead of %d so the build no longer fails on Alpine 3.22 + gcc 14 hardening defaults (#556).
-- Build: tests + examples now parse on PHP 7.0 (the declared minimum); CI matrix expanded to PHP 7.0-7.3 on ubuntu-22.04 (#565).
-- Build: composer.json declares download-url-method=pre-packaged-source so `pie install viest/xlswriter` fetches the self-contained xlswriter-(version).tgz attached to the GitHub release instead of the submodule-less packagist zipball.
+- Feature: insertImageOpt($row, $col, $path, $options) adds pixel-precise x_offset / y_offset within the anchor cell, scale via width/height, a "don't move or size with cells" anchor mode, plus mouseover tip, alt text (description / decorative) and a hyperlink overlay. Object positioning is exposed through new Excel::OBJECT_POSITION_* constants. The original insertImage() signature is untouched (#357 / #437 / #473 / #297 / #449).
+- Feature: insertDynamicFormula() and insertDynamicArrayFormula() emit the t="array" + ref-range XML that Excel 365 dynamic array functions (UNIQUE, FILTER, SORT, SEQUENCE, XLOOKUP, etc.) require, which insertFormula() does not produce (#503).
+- Feature: outlineSettings(bool $visible = true, bool $below = true, bool $right = true, bool $autoStyle = false) configures worksheet outline (grouping) display (#540).
+- Fix: PHP true/false passed to writeSheet / data now writes a real boolean cell (xlsx type="b") via worksheet_write_boolean; previously bool fell through type_writer() silently and the cell was emitted as blank (#543).
  </notes>
  <contents>
   <dir name="/">
@@ -68,14 +64,14 @@
    <file md5sum="af7e6721a2328f8b9feb9d7f2523e23a" name="include/rich_string.h" role="src" />
    <file md5sum="171dfb294523df3de00a3159140ac2d5" name="include/table.h" role="src" />
    <file md5sum="0654817791a6f7eb06618a39f90d6c71" name="include/validation.h" role="src" />
-   <file md5sum="95cede5274ce3733c2918151b1b4eada" name="include/xlswriter.h" role="src" />
+   <file md5sum="7c2dd6b7097955bf309066b9899a97fd" name="include/xlswriter.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
    <file md5sum="f35a72543869ff6d2ad7fc35a6500569" name="kernel/chart.c" role="src" />
-   <file md5sum="0db20550dcc1802cdf6a5154c46c6676" name="kernel/common.c" role="src" />
+   <file md5sum="7a5a82a8ba673a0cf3d46bdd434a8de7" name="kernel/common.c" role="src" />
    <file md5sum="5865d1cd30ca8d67f1134ecb8dcd2d07" name="kernel/conditional_format.c" role="src" />
    <file md5sum="d5a10d0f063690d65dffae1e8d244a6c" name="kernel/csv.c" role="src" />
-   <file md5sum="d13f373ace81aed1c751a9e80a676822" name="kernel/excel.c" role="src" />
+   <file md5sum="c314096511406f308073be6d34320677" name="kernel/excel.c" role="src" />
    <file md5sum="30d0acb47f850c23d424d3df18da18f2" name="kernel/exception.c" role="src" />
    <file md5sum="6dd67b9dd954beff70f82c0825c65017" name="kernel/format.c" role="src" />
    <file md5sum="b9ac064adaedd7671a60167db3699592" name="kernel/formula_ast.c" role="src" />
@@ -84,8 +80,8 @@
    <file md5sum="a14b7fd29aebd899d043a0cd756073d7" name="kernel/resource.c" role="src" />
    <file md5sum="6abd601add9125a155f43731456024a0" name="kernel/rich_string.c" role="src" />
    <file md5sum="7f95462b4b1b04070614ff9d331ead62" name="kernel/table.c" role="src" />
-   <file md5sum="018611fe1090b956d99b1ec660f7a627" name="kernel/validation.c" role="src" />
-   <file md5sum="c315cb47ad9b8ee609b30938c9393f2c" name="kernel/write.c" role="src" />
+   <file md5sum="05c951fa2cbb0a149c7bf4e34da5688a" name="kernel/validation.c" role="src" />
+   <file md5sum="e94ed89d556810929d6afbdf6f82e462" name="kernel/write.c" role="src" />
    <file md5sum="418b9368e13d819a0b3111f9712cd175" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="9a78fb091fa245b64434692197e9b4f2" name="library/libxlsxwriter/include/xlsxwriter/third_party/md5.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
@@ -221,7 +217,7 @@
    <file md5sum="a455a38b6f0f862f708378fdd7508121" name="examples/08_chart.php" role="doc" />
    <file md5sum="ca0e84719adc655046705ede468b1014" name="examples/09_images_roundtrip.php" role="doc" />
    <file md5sum="c4a9aaca41d480993af0342c866e80e0" name="examples/10_data_validation.php" role="doc" />
-   <file md5sum="fc50b163659d24581d46da677bb82566" name="examples/11_read_styles.php" role="doc" />
+   <file md5sum="744d00128c84ae33f441c049dd48c262" name="examples/11_read_styles.php" role="doc" />
    <file md5sum="2d8267b782f25d9b82b2ac8e6632eccd" name="examples/README.md" role="doc" />
    <file md5sum="c5c73d50f16bf8b82ffba091921f0174" name="tests/001.phpt" role="test" />
    <file md5sum="0728f6aa286746c601d07774e257d091" name="tests/002.phpt" role="test" />
@@ -252,15 +248,15 @@
    <file md5sum="49892fb028971b85b76b5b09b11c4915" name="tests/chart_title.phpt" role="test" />
    <file md5sum="0ea5509771d0d55ca7cda5b874df989d" name="tests/close.phpt" role="test" />
    <file md5sum="9badb50b14bd81536bafcfefcb5677d6" name="tests/column_index_from_string.phpt" role="test" />
-   <file md5sum="acc88ab104ba7558c5a52a96f7fdf099" name="tests/conditional_format.phpt" role="test" />
+   <file md5sum="8932ae4ebf2349c540dfebec970ca14e" name="tests/conditional_format.phpt" role="test" />
    <file md5sum="1d69470e233f21417f33d3a9c09546fa" name="tests/const_memory.phpt" role="test" />
-   <file md5sum="" name="tests/empty_sheet_name.phpt" role="test" />
+   <file md5sum="df51cba59eca3dab801f61b43a9b8652" name="tests/empty_sheet_name.phpt" role="test" />
    <file md5sum="d73f6524f34f3866e1c4319cf41c2415" name="tests/const_memory_index_out_range.phpt" role="test" />
    <file md5sum="74e8db9f2df629c0c37da35a2b248c13" name="tests/data_reference.phpt" role="test" />
    <file md5sum="8e299927c2e92e8c5dd90182732565d8" name="tests/data_string_key.phpt" role="test" />
    <file md5sum="1a4f5c5187fd3e66f7f7da2696928cca" name="tests/default_format.phpt" role="test" />
    <file md5sum="c0f7253b6e88b50eda54861fc35318d9" name="tests/define_name_round_trip.phpt" role="test" />
-   <file md5sum="456375c029dbc0797225c667d0278a1d" name="tests/examples_smoke.phpt" role="test" />
+   <file md5sum="cde6760c2333b5a3da9c33cbee87c8f2" name="tests/examples_smoke.phpt" role="test" />
    <file md5sum="4de257360d57e624fdb2ad5f8acd97e3" name="tests/exist_sheet.phpt" role="test" />
    <file md5sum="8311c7a9720ff5294d5d2909b2b22ce3" name="tests/first.phpt" role="test" />
    <file md5sum="b317e61dd49792dee1539ebb410bf822" name="tests/fix-207.phpt" role="test" />
@@ -288,9 +284,9 @@
    <file md5sum="7c61027bec320149bda350ec05a41bb2" name="tests/get_set_current_line.phpt" role="test" />
    <file md5sum="e425d6570c75fba279eed883934b2130" name="tests/gridlines.phpt" role="test" />
    <file md5sum="f49a5532b966dc9dd46c518df8cd1246" name="tests/header_format.phpt" role="test" />
-   <file md5sum="" name="tests/header_after_data.phpt" role="test" />
-   <file md5sum="" name="tests/insert_date_format_cache.phpt" role="test" />
-   <file md5sum="" name="tests/insert_text_font_with_numfmt.phpt" role="test" />
+   <file md5sum="13141d968a16abfd4fd5107c4824f528" name="tests/header_after_data.phpt" role="test" />
+   <file md5sum="f615f8ac84b2c10851bca937b1e3d86f" name="tests/insert_date_format_cache.phpt" role="test" />
+   <file md5sum="d0e86653f7216ea939e3257c96cea51c" name="tests/insert_text_font_with_numfmt.phpt" role="test" />
    <file md5sum="bb53e80f57de9a08393ba204547225f3" name="tests/hide.phpt" role="test" />
    <file md5sum="5b9ca162d072ae7425233a2d23084962" name="tests/image_no_styles.phpt" role="test" />
    <file md5sum="63bb7dea1beb740d491211da88cdb4a6" name="tests/image_width_height_styles.phpt" role="test" />
@@ -341,7 +337,7 @@
    <file md5sum="8501d9ebf079fc0e278da9e494a2322c" name="tests/validation_limiting_input_to_an_integer_in_a_fixed_range.phpt" role="test" />
    <file md5sum="5343c1c2e949a18fa2e0c9d0e40e183c" name="tests/validation_limiting_input_to_an_integer_outside_a_fixed_range.phpt" role="test" />
    <file md5sum="252eea94c24934d60058cf2509b8bf9b" name="tests/validation_limiting_to_a_single_or_range_cell.phpt" role="test" />
-   <file md5sum="" name="tests/validation_list_too_long.phpt" role="test" />
+   <file md5sum="e67001fe3b8092c3cca08570ee91b0c0" name="tests/validation_list_too_long.phpt" role="test" />
    <file md5sum="379436234629d661ea18704b596ea5c5" name="tests/version.phpt" role="test" />
    <file md5sum="1bb368eb6670aa92483f3aac89caa8ed" name="tests/writer_exception.phpt" role="test" />
    <file md5sum="8af121e2b617b9490fb4c7ea2115b335" name="tests/xlsx_to_csv.phpt" role="test" />
@@ -354,7 +350,7 @@
    <file md5sum="f4a2d1a28ad1bf782502d698de0b1907" name="tests/include/skipif.inc" role="test" />
    <file md5sum="a96403ed905f2a69fab573ffae8e7a66" name="tests/insert_comment_opt.phpt" role="test" />
    <file md5sum="0dd62c99919852aa7b4a1efe15fdc5c5" name="tests/insert_image_buffer.phpt" role="test" />
-   <file md5sum="" name="tests/insert_image_opt.phpt" role="test" />
+   <file md5sum="86e2463d8f121b65c9fe1b25c945b682" name="tests/insert_image_opt.phpt" role="test" />
    <file md5sum="2bd0e2004ecb25cf75d807aa6716b682" name="tests/open_xlsx_formula_verbose.phpt" role="test" />
    <file md5sum="92ffd1f4078e747031dfdda6be79ed47" name="tests/open_xlsx_get_auto_filter.phpt" role="test" />
    <file md5sum="62f5d862b9bb50e43956294765bb7f4d" name="tests/open_xlsx_get_conditional_formats.phpt" role="test" />
@@ -372,7 +368,7 @@
    <file md5sum="b652c0bb6fe15f57101be3d9a284cdb1" name="tests/open_xlsx_next_row_rich.phpt" role="test" />
    <file md5sum="b6a989284bf17694973fb5877bf516ca" name="tests/insert_dynamic_formula.phpt" role="test" />
    <file md5sum="ab528702b9cee807bbced1de4201d311" name="tests/insert_dynamic_array_formula.phpt" role="test" />
-   <file md5sum="9372cae0ae4d80a1e62451f3df653a5f" name="tests/open_xlsx_next_row_with_formula.phpt" role="test" />
+   <file md5sum="3d23538299fd9cae04803ee20a6b76dd" name="tests/open_xlsx_next_row_with_formula.phpt" role="test" />
    <file md5sum="ed41926ecdeb09935da03baa127cb5f1" name="tests/open_xlsx_next_row_with_formula_url.phpt" role="test" />
    <file md5sum="936e4b849ec9af9224417b102adec1dc" name="tests/open_xlsx_sheet_visibility.phpt" role="test" />
    <file md5sum="17ba5c2e50a4e9b37f3860e815afde1b" name="tests/open_xlsx_skip_merged_follow.phpt" role="test" />
@@ -381,7 +377,8 @@
    <file md5sum="f211ed5fc14c2ae3ca321fac678d7367" name="tests/outline_level_column_const_memory.phpt" role="test" />
    <file md5sum="1f7f9e2ba7eb1da96ae4a814caf15190" name="tests/outline_level_row.phpt" role="test" />
    <file md5sum="97059f894a83768cf7039bc7770b4d45" name="tests/outline_level_row_const_memory.phpt" role="test" />
-   <file md5sum="" name="tests/outline_settings.phpt" role="test" />
+   <file md5sum="b051fbde4a5777f8a46e2cdb2e2a4738" name="tests/outline_settings.phpt" role="test" />
+   <file md5sum="902ead9f8fc278d99a84f3bb162e40d8" name="tests/write_boolean.phpt" role="test" />
    <file md5sum="fb107b0089c2aa55fc305884813e8966" name="tests/page_setup.phpt" role="test" />
    <file md5sum="22cb5ed6c568ab6287d520153c51250d" name="tests/set_background_image.phpt" role="test" />
    <file md5sum="86a15a9fa144f64ae4afaf644bd0d2b5" name="tests/set_header_footer.phpt" role="test" />
@@ -398,7 +395,7 @@
    <file md5sum="df057979071cf35f17a97ab1998ff834" name="config.m4" role="src" />
    <file md5sum="df131c05d22c84321e4fa597fdb5ff03" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="9e60969477065a2a746426f9a742dd2c" name="php_xlswriter.h" role="src" />
+   <file md5sum="62b60f34f0a0cb9e9528a71c60ea585e" name="php_xlswriter.h" role="src" />
    <file md5sum="16aba97c1bf259c9648a6622945f134d" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -417,6 +414,29 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2026-05-25</date>
+   <time>00:00:00</time>
+   <version>
+    <release>2.0.1</release>
+    <api>2.0.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- Fix: insertDate / insertText with $format string now caches each distinct format on its own cache slot; previously ZEND_STRL on a zend_string flexible-array key collapsed every format into one entry, so the first format won and every subsequent call returned the wrong cached format (#552 / #548 / #544).
+- Fix: format_copy() now carries font_name (and font_scheme / has_font / has_dxf_font), so a Format resource passed alongside a num-format string keeps the caller's font() instead of falling back to Calibri (#545 / #472).
+- Fix: data-validation inline list now rejects with an exception when the joined CSV exceeds Excel's 255-character spec limit, instead of overflowing libxlsxwriter's fixed-size buffer (#486 / #530 / #546).
+- Fix: header() called after data() throws instead of silently overwriting the first data row (#535).
+- Fix: empty-string sheet name is rejected up-front instead of producing an xlsx that Excel can't open (#528).
+- Fix: outline-level warnings in setColumn / setRow / defaultRowOptions use %ld instead of %d so the build no longer fails on Alpine 3.22 + gcc 14 hardening defaults (#556).
+- Build: tests + examples now parse on PHP 7.0 (the declared minimum); CI matrix expanded to PHP 7.0-7.3 on ubuntu-22.04 (#565).
+- Build: composer.json declares download-url-method=pre-packaged-source so `pie install viest/xlswriter` fetches the self-contained xlswriter-(version).tgz attached to the GitHub release instead of the submodule-less packagist zipball.
+   </notes>
+  </release>
   <release>
    <date>2026-05-16</date>
    <time>00:00:00</time>

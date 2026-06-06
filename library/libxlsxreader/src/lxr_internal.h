@@ -52,6 +52,24 @@ struct lxr_workbook {
     size_t                  defined_name_cap;
 };
 
+/* Conditional formats (§8.2.3): one owned cfRule entry. Defined at file scope
+ * (not nested in lxr_worksheet_meta) so the tag declaration has a declarator —
+ * a tagged-struct definition with no member trips -Wpedantic. */
+struct lxr_cf_rule_owned {
+    char  *type;
+    char  *operator_;
+    int    priority;
+    int    stop_if_true;
+    int    dxf_id;
+    int    percent;
+    int    bottom;
+    double rank;
+    char  *text;
+    char  *time_period;
+    char  *formula1;
+    char  *formula2;
+};
+
 /* Per-worksheet metadata cached at sheet open (mergeCells, hyperlinks, sheet
  * protection, row/col options, default sizes). Loaded eagerly via a
  * dedicated parsing pass that ignores <c> children inside <sheetData>. */
@@ -190,20 +208,6 @@ typedef struct {
     int    page_align_with_margins;
 
     /* Conditional formats (§8.2.3): per-block lists of cfRule entries. */
-    struct lxr_cf_rule_owned {
-        char  *type;
-        char  *operator_;
-        int    priority;
-        int    stop_if_true;
-        int    dxf_id;
-        int    percent;
-        int    bottom;
-        double rank;
-        char  *text;
-        char  *time_period;
-        char  *formula1;
-        char  *formula2;
-    };
     struct lxr_cf_block_owned {
         char                     *sqref;
         struct lxr_cf_rule_owned *rules;

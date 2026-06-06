@@ -53,11 +53,13 @@ static void validation_objects_free(zend_object *object)
                 break;
             }
 
-            efree(intern->ptr.validation->value_list[index]);
+            /* value_list is `const char **` in libxlsxwriter; we allocated the
+             * strings ourselves, so cast away const for efree (mirrors valueList). */
+            efree((void *)intern->ptr.validation->value_list[index]);
             index++;
         } while (1);
 
-        efree(intern->ptr.validation->value_list);
+        efree((void *)intern->ptr.validation->value_list);
     }
 
     if (intern->ptr.validation != NULL) {

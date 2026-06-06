@@ -58,6 +58,18 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 
 ###### Unix
 
+xlswriter requires the zlib development headers at build time. Install them
+first if they are missing (common on minimal images):
+
+```bash
+# Debian / Ubuntu
+apt-get install -y zlib1g-dev
+# Alpine
+apk add zlib-dev
+# RHEL / CentOS / Fedora
+yum install -y zlib-devel
+```
+
 ```bash
 pecl install xlswriter
 ```

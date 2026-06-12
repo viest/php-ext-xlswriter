@@ -1,0 +1,7 @@
+library/libxlsxreader/src/zip_io.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/zip_io.c \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxwriter/third_party/minizip/ioapi.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxwriter/third_party/minizip/unzip.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_compat.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_zip.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h

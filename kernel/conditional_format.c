@@ -456,7 +456,7 @@ VTIFUL_STARTUP_FUNCTION(conditional_format)
     vtiful_cond_format_ce  = zend_register_internal_class(&ce);
 
     memcpy(&cond_format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    cond_format_handlers.offset   = XtOffsetOf(cond_format_object, zo);
+    cond_format_handlers.offset   = offsetof(cond_format_object, zo);
     cond_format_handlers.free_obj = cond_format_objects_free;
 
     /* Type constants */

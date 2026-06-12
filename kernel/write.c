@@ -229,8 +229,10 @@ void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zen
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res)
 {
     lxw_image_options options = {.x_offset = 0, .y_offset = 0, .x_scale = width, .y_scale = height, .object_position = 2};
+    zend_string *path = zval_get_string(value);
 
-    worksheet_insert_image_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(zval_get_string(value)), &options);
+    worksheet_insert_image_opt(res->worksheet, (lxw_row_t)row, (lxw_col_t)columns, ZSTR_VAL(path), &options);
+    zend_string_release(path);
 }
 
 /*

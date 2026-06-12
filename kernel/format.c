@@ -100,7 +100,7 @@ ZEND_BEGIN_ARG_INFO_EX(format_number_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, pattern)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
@@ -617,7 +617,7 @@ VTIFUL_STARTUP_FUNCTION(format) {
     vtiful_format_ce = zend_register_internal_class(&ce);
 
     memcpy(&format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    format_handlers.offset   = XtOffsetOf(format_object, zo);
+    format_handlers.offset   = offsetof(format_object, zo);
     format_handlers.free_obj = format_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE",            LXW_UNDERLINE_SINGLE)

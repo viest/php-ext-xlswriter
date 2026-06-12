@@ -1,0 +1,8 @@
+library/libxlsxreader/src/xml_pump.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/xml_pump.c \
+  /Users/arshid/Downloads/xlsx-8/library/libexpat/expat/lib/expat.h \
+  /Users/arshid/Downloads/xlsx-8/library/libexpat/expat/lib/expat_external.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_xml_pump.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_compat.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_zip.h

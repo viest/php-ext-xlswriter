@@ -84,21 +84,22 @@ unsigned int xlsx_to_csv(
         if (fci != NULL && fci_cache != NULL) {
             zval retval;
 
+            ZVAL_UNDEF(&retval);
             fci->retval      = &retval;
             fci->params      = &_zv_tmp_row;
             fci->param_count = 1;
 
-            zend_call_function(fci, fci_cache);
-
-            if (Z_TYPE(retval) == IS_ARRAY) {
+            if (zend_call_function(fci, fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+                if (Z_TYPE(retval) == IS_ARRAY) {
 #if PHP_VERSION_ID >= 80100
-                ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char, NULL);
+                    ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char, NULL);
 #else
-                ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char);
+                    ret = php_fputcsv(_stream_t, &retval, delimiter, enclosure, escape_char);
 #endif
-            }
+                }
 
-            zval_ptr_dtor(&retval);
+                zval_ptr_dtor(&retval);
+            }
             goto CLEAN_UP_SCENE;
         }
 
@@ -112,9 +113,16 @@ unsigned int xlsx_to_csv(
 
         zend_hash_clean(Z_ARRVAL(_zv_tmp_row));
 
-        if (ret < 0) return XLSWRITER_FALSE;
+        if (ret < 0) {
+<<<<<<< HEAD
+            zval_ptr_dtor_nogc(&_zv_tmp_row);
+=======
+            zval_dtor(&_zv_tmp_row);
+>>>>>>> 792f053 (fix: harden callback cleanup and leak checks)
+            return XLSWRITER_FALSE;
+        }
     }
 
-    zval_dtor(&_zv_tmp_row);
+    zval_ptr_dtor_nogc(&_zv_tmp_row);
     return XLSWRITER_TRUE;
 }

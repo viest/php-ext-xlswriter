@@ -1,0 +1,12 @@
+library/libxlsxreader/src/chart_meta.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/chart_meta.c \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_internal.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/workbook.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/worksheet.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/styles.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_zip.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_compat.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_sst.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_styles_priv.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_xml_pump.h

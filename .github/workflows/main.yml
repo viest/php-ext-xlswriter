@@ -56,7 +56,7 @@ jobs:
       - name: Run leak_stress (smoke)
         run: |
           USE_ZEND_ALLOC=0 php -d extension=$(pwd)/modules/xlswriter.so \
-              -n tests/leak_stress.php
+              -n bench/leak_stress.php
         env:
           LEAK_STRESS_ITER: 50
 

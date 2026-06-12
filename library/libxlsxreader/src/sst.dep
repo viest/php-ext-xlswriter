@@ -1,0 +1,7 @@
+library/libxlsxreader/src/sst.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/sst.c \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_sst.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_zip.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_compat.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_xml_pump.h

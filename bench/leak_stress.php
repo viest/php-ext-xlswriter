@@ -7,12 +7,12 @@
  * after the warm-up window. Intended to be run under:
  *
  *   USE_ZEND_ALLOC=0 valgrind --leak-check=full \
- *       --show-leak-kinds=definite,indirect --error-exitcode=1 php tests/leak_stress.php
+ *       --show-leak-kinds=definite,indirect --error-exitcode=1 php bench/leak_stress.php
  *
  * or on macOS:
  *
  *   USE_ZEND_ALLOC=0 MallocStackLogging=1 leaks --atExit -- \
- *       php -n -d extension=./modules/xlswriter.so tests/leak_stress.php
+ *       php -n -d extension=./modules/xlswriter.so bench/leak_stress.php
  *
  * USE_ZEND_ALLOC=0 is mandatory: with Zend MM pools on, all emalloc/efree
  * mismatches are masked by the per-request arena bulk-free and leak tools

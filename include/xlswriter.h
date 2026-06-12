@@ -116,6 +116,7 @@ typedef struct {
 
 typedef struct {
     lxw_rich_string_tuple *tuple;
+    zend_string *text;
 } xls_resource_rich_string_t;
 
 typedef struct _vtiful_xls_object {
@@ -295,7 +296,7 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
+    return (xls_object *)((char *)(obj) - offsetof(xls_object, zo));
 }
 
 static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
@@ -303,7 +304,7 @@ static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
+    return (format_object *)((char *)(obj) - offsetof(format_object, zo));
 }
 
 static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
@@ -311,7 +312,7 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
+    return (chart_object *)((char *)(obj) - offsetof(chart_object, zo));
 }
 
 static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
@@ -319,7 +320,7 @@ static inline validation_object *php_vtiful_validation_fetch_object(zend_object 
         return NULL;
     }
 
-    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+    return (validation_object *)((char *)(obj) - offsetof(validation_object, zo));
 }
 
 static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_object *obj) {
@@ -327,22 +328,43 @@ static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_objec
         return NULL;
     }
 
-    return (rich_string_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+<<<<<<< HEAD
+    return (rich_string_object *)((char *)(obj) - offsetof(rich_string_object, zo));
+=======
+    return (rich_string_object *)((char *)(obj) - XtOffsetOf(rich_string_object, zo));
+>>>>>>> 792f053 (fix: harden callback cleanup and leak checks)
 }
 
 static inline cond_format_object *php_vtiful_cond_format_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (cond_format_object *)((char *)(obj) - XtOffsetOf(cond_format_object, zo));
+    return (cond_format_object *)((char *)(obj) - offsetof(cond_format_object, zo));
 }
 
 static inline table_object *php_vtiful_table_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (table_object *)((char *)(obj) - XtOffsetOf(table_object, zo));
+    return (table_object *)((char *)(obj) - offsetof(table_object, zo));
 }
+
+#ifdef ENABLE_READER
+static inline void php_vtiful_reset_reader_state(xls_resource_read_t *read_ptr) {
+    if (read_ptr == NULL) {
+        return;
+    }
+
+    if (Z_TYPE(read_ptr->pending_real_row) == IS_ARRAY) {
+        zval_ptr_dtor(&read_ptr->pending_real_row);
+    }
+
+    ZVAL_NULL(&read_ptr->pending_real_row);
+    read_ptr->cols               = 0;
+    read_ptr->expected_row_nr    = 1;
+    read_ptr->pending_synth_rows = 0;
+}
+#endif
 
 static inline void php_vtiful_close_resource(zend_object *obj) {
     if (obj == NULL) {
@@ -387,13 +409,7 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
         intern->read_ptr.file_t = NULL;
     }
 
-    if (Z_TYPE(intern->read_ptr.pending_real_row) == IS_ARRAY) {
-        zval_ptr_dtor(&intern->read_ptr.pending_real_row);
-    }
-    ZVAL_NULL(&intern->read_ptr.pending_real_row);
-    intern->read_ptr.cols               = 0;
-    intern->read_ptr.expected_row_nr    = 0;
-    intern->read_ptr.pending_synth_rows = 0;
+    php_vtiful_reset_reader_state(&intern->read_ptr);
 #endif
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;

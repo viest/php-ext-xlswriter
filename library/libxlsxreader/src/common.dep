@@ -1,0 +1,3 @@
+library/libxlsxreader/src/common.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/common.c \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h

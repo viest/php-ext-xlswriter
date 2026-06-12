@@ -1,0 +1,5 @@
+library/libxlsxreader/src/numfmt.lo: \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/numfmt.c \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/src/lxr_numfmt.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/styles.h \
+  /Users/arshid/Downloads/xlsx-8/library/libxlsxreader/include/xlsxreader/common.h

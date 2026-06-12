@@ -421,11 +421,21 @@ lxr_error lxr_worksheet_iterate_images(lxr_worksheet *ws, lxr_image_cb cb, void 
     }
     free(drawing_rels);
 
-    /* 4) Parse drawing.xml; emit images via callback */
+    /* 4) Parse drawing.xml; emit images via callback.
+     *
+     * The drawing.xml must be slurped fully into memory before parsing rather
+     * than streamed from the zip. minizip's unzFile permits only one open
+     * entry per handle, and the drawing_end callback opens each media entry
+     * (read_entry_full) on that same handle — which clobbers the drawing.xml
+     * read cursor. A streamed parse therefore dies at the first chunk refill
+     * (drawing.xml > LXR_PARSE_BUFFER_SIZE), silently truncating the image
+     * list to whatever fit in the first buffer. Reading drawing.xml into a
+     * private buffer first decouples the two. */
     drawing_base = base_dir(drawing_path);
     {
-        drawing_ctx   dc;
-        lxr_zip_file *zf;
+        drawing_ctx  dc;
+        void        *xml_data = NULL;
+        size_t       xml_len  = 0;
 
         memset(&dc, 0, sizeof(dc));
         dc.wb           = ws->wb;
@@ -434,15 +444,14 @@ lxr_error lxr_worksheet_iterate_images(lxr_worksheet *ws, lxr_image_cb cb, void 
         dc.cb           = cb;
         dc.userdata     = ud;
 
-        zf = lxr_zip_open_entry(ws->wb->zip, drawing_path);
-        if (zf) {
-            lxr_xml_pump *p = lxr_xml_pump_create_zip_file(zf);
+        if (read_entry_full(ws->wb->zip, drawing_path, &xml_data, &xml_len) == 0) {
+            lxr_xml_pump *p = lxr_xml_pump_create_buffer((const char *)xml_data, xml_len);
             if (p) {
                 lxr_xml_pump_set_handlers(p, drawing_start, drawing_end, drawing_text, &dc);
                 lxr_xml_pump_run(p);
                 lxr_xml_pump_destroy(p);
             }
-            lxr_zip_close_entry(zf);
+            free(xml_data);
         }
     }
 

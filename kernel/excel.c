@@ -46,6 +46,10 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 
     intern->read_ptr.file_t  = NULL;
     intern->read_ptr.sheet_t = NULL;
+#ifdef ENABLE_READER
+    ZVAL_NULL(&intern->read_ptr.pending_real_row);
+    php_vtiful_reset_reader_state(&intern->read_ptr);
+#endif
 
     intern->format_ptr.format  = NULL;
     intern->write_ptr.workbook = NULL;
@@ -601,8 +605,21 @@ PHP_METHOD(vtiful_xls, fileName)
             sheet_name = ZSTR_VAL(zs_sheet_name);
         }
 
-        obj->write_ptr.workbook  = workbook_new(Z_STRVAL(file_path));
+        obj->write_ptr.workbook = workbook_new(Z_STRVAL(file_path));
+        if (obj->write_ptr.workbook == NULL) {
+            zval_ptr_dtor(&file_path);
+            zend_throw_exception(vtiful_exception_ce, "Create workbook failed", 131);
+            return;
+        }
+
         obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
+        if (obj->write_ptr.worksheet == NULL) {
+            lxw_workbook_free(obj->write_ptr.workbook);
+            obj->write_ptr.workbook = NULL;
+            zval_ptr_dtor(&file_path);
+            zend_throw_exception(vtiful_exception_ce, "Create worksheet failed", 132);
+            return;
+        }
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 
@@ -765,8 +782,21 @@ PHP_METHOD(vtiful_xls, constMemory)
             sheet_name = ZSTR_VAL(zs_sheet_name);
         }
 
-        obj->write_ptr.workbook  = workbook_new_opt(Z_STRVAL(file_path), &options);
+        obj->write_ptr.workbook = workbook_new_opt(Z_STRVAL(file_path), &options);
+        if (obj->write_ptr.workbook == NULL) {
+            zval_ptr_dtor(&file_path);
+            zend_throw_exception(vtiful_exception_ce, "Create workbook failed", 131);
+            return;
+        }
+
         obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
+        if (obj->write_ptr.worksheet == NULL) {
+            lxw_workbook_free(obj->write_ptr.workbook);
+            obj->write_ptr.workbook = NULL;
+            zval_ptr_dtor(&file_path);
+            zend_throw_exception(vtiful_exception_ce, "Create worksheet failed", 132);
+            return;
+        }
 
         add_property_zval(return_value, V_XLS_FIL, &file_path);
 
@@ -2468,6 +2498,8 @@ PHP_METHOD(vtiful_xls, openFile)
         obj->read_ptr.sheet_t = NULL;
     }
 
+    php_vtiful_reset_reader_state(&obj->read_ptr);
+
     if (obj->read_ptr.file_t != NULL) {
         lxr_workbook_close(obj->read_ptr.file_t);
         obj->read_ptr.file_t = NULL;
@@ -2504,13 +2536,7 @@ PHP_METHOD(vtiful_xls, openSheet)
     }
 
     /* Reset per-sheet reader bookkeeping (synth state, row counter). */
-    if (Z_TYPE(obj->read_ptr.pending_real_row) == IS_ARRAY) {
-        zval_ptr_dtor(&obj->read_ptr.pending_real_row);
-    }
-    ZVAL_NULL(&obj->read_ptr.pending_real_row);
-    obj->read_ptr.cols               = 0;
-    obj->read_ptr.expected_row_nr    = 1;
-    obj->read_ptr.pending_synth_rows = 0;
+    php_vtiful_reset_reader_state(&obj->read_ptr);
 
     obj->read_ptr.sheet_flag = zl_flag;
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
@@ -3685,6 +3711,7 @@ static int php_image_cb(const lxr_image *img, void *ud)
     zval               info, retval;
     int                stop = 0;
 
+    ZVAL_UNDEF(&retval);
     array_init(&info);
     add_assoc_long  (&info, "from_row", (zend_long)img->from_row);
     add_assoc_long  (&info, "from_col", (zend_long)img->from_col);
@@ -3698,11 +3725,12 @@ static int php_image_cb(const lxr_image *img, void *ud)
     cd->fci->params      = &info;
     cd->fci->param_count = 1;
 
-    zend_call_function(cd->fci, cd->fci_cache);
-    if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+    if (zend_call_function(cd->fci, cd->fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+        if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+        zval_ptr_dtor(&retval);
+    }
 
     zval_ptr_dtor(&info);
-    zval_ptr_dtor(&retval);
     return stop;
 }
 /* }}} */
@@ -3768,6 +3796,7 @@ static int php_comment_cb(const lxr_comment_info *info, void *ud)
     zval out, retval;
     int  stop = 0;
 
+    ZVAL_UNDEF(&retval);
     array_init(&out);
     add_assoc_long  (&out, "row", (zend_long)info->row);
     add_assoc_long  (&out, "col", (zend_long)info->col);
@@ -3783,10 +3812,11 @@ static int php_comment_cb(const lxr_comment_info *info, void *ud)
     cd->fci->retval      = &retval;
     cd->fci->params      = &out;
     cd->fci->param_count = 1;
-    zend_call_function(cd->fci, cd->fci_cache);
-    if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+    if (zend_call_function(cd->fci, cd->fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+        if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+        zval_ptr_dtor(&retval);
+    }
     zval_ptr_dtor(&out);
-    zval_ptr_dtor(&retval);
     return stop;
 }
 /* }}} */
@@ -3846,6 +3876,7 @@ static int php_chart_cb(const lxr_chart_meta *info, void *ud)
     size_t i;
     int  stop = 0;
 
+    ZVAL_UNDEF(&retval);
     array_init(&out);
     if (info->type)  add_assoc_string(&out, "type",  (char *)info->type);
     else             add_assoc_null  (&out, "type");
@@ -3876,10 +3907,11 @@ static int php_chart_cb(const lxr_chart_meta *info, void *ud)
     cd->fci->retval      = &retval;
     cd->fci->params      = &out;
     cd->fci->param_count = 1;
-    zend_call_function(cd->fci, cd->fci_cache);
-    if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+    if (zend_call_function(cd->fci, cd->fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+        if (Z_TYPE(retval) == IS_FALSE) stop = 1;
+        zval_ptr_dtor(&retval);
+    }
     zval_ptr_dtor(&out);
-    zval_ptr_dtor(&retval);
     return stop;
 }
 /* }}} */

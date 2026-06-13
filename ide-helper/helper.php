@@ -318,6 +318,30 @@ class Excel
     }
 
     /**
+     * Auto-size columns to fit their content.
+     *
+     * Column widths are estimated from the content written so far (wide/CJK
+     * code points count as two columns) and applied to the active worksheet.
+     * The optional A1 range (e.g. "A:Z", "A1:J100") limits which columns are
+     * affected; omit it to size every column that received data. Estimates
+     * approximate Excel's own auto-fit, which depends on font metrics only
+     * the application knows.
+     *
+     * Call before output() and before switching sheets, since the per-sheet
+     * width tracking resets when the active worksheet changes.
+     *
+     * @param string|null $range
+     *
+     * @return Excel
+     *
+     * @author viest
+     */
+    public function autoSize(?string $range = NULL): self
+    {
+        return $this;
+    }
+
+    /**
      * Open xlsx file
      *
      * @param string $fileName

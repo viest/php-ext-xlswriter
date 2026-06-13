@@ -12,6 +12,140 @@
 
 #include "xlswriter.h"
 
+/* ------------------------------------------------------------------------- */
+/* Auto-size width estimation                                                */
+/* ------------------------------------------------------------------------- */
+
+/* Returns 1 when the Unicode codepoint is East-Asian Wide/Fullwidth (counts
+ * as 2 display columns), 0 otherwise. Covers the common CJK/Hangul/fullwidth
+ * and emoji ranges; not exhaustive but matches Excel's auto-fit closely
+ * enough for typical content. */
+static int xls_codepoint_is_wide(uint32_t cp)
+{
+    if (cp < 0x1100) return 0;
+    if (cp <= 0x115F) return 1;                       /* Hangul Jamo */
+    if (cp == 0x2329 || cp == 0x232A) return 1;
+    if (cp >= 0x2E80 && cp <= 0x303E) return 1;       /* CJK radicals */
+    if (cp >= 0x3041 && cp <= 0x33FF) return 1;       /* Hiragana/Katakana/CJK */
+    if (cp >= 0x3400 && cp <= 0x4DBF) return 1;       /* CJK Ext A */
+    if (cp >= 0x4E00 && cp <= 0x9FFF) return 1;       /* CJK Unified */
+    if (cp >= 0xA000 && cp <= 0xA4CF) return 1;       /* Yi */
+    if (cp >= 0xAC00 && cp <= 0xD7A3) return 1;       /* Hangul Syllables */
+    if (cp >= 0xF900 && cp <= 0xFAFF) return 1;       /* CJK Compat */
+    if (cp >= 0xFE10 && cp <= 0xFE19) return 1;       /* Vertical forms */
+    if (cp >= 0xFE30 && cp <= 0xFE6F) return 1;       /* CJK Compat Forms */
+    if (cp >= 0xFF00 && cp <= 0xFF60) return 1;       /* Fullwidth Forms */
+    if (cp >= 0xFFE0 && cp <= 0xFFE6) return 1;       /* Fullwidth signs */
+    if (cp >= 0x1F300 && cp <= 0x1FAFF) return 1;     /* Emoji / symbols */
+    if (cp >= 0x20000 && cp <= 0x3FFFD) return 1;     /* CJK Ext B+ */
+    return 0;
+}
+
+/* Decode one UTF-8 sequence from str[*pos]; advance *pos and store the
+ * codepoint. Returns 0 on success, -1 on invalid/truncated input. */
+static int utf8_next(const unsigned char *str, size_t len, size_t *pos, uint32_t *cp)
+{
+    size_t i = *pos;
+    unsigned char c = str[i];
+    if (c < 0x80) { *cp = c; *pos = i + 1; return 0; }
+    if ((c & 0xE0) == 0xC0 && i + 1 < len) {
+        *cp = ((uint32_t)(c & 0x1F) << 6) | (str[i + 1] & 0x3F);
+        *pos = i + 2; return 0;
+    }
+    if ((c & 0xF0) == 0xE0 && i + 2 < len) {
+        *cp = ((uint32_t)(c & 0x0F) << 12) | ((uint32_t)(str[i + 1] & 0x3F) << 6) | (str[i + 2] & 0x3F);
+        *pos = i + 3; return 0;
+    }
+    if ((c & 0xF8) == 0xF0 && i + 3 < len) {
+        *cp = ((uint32_t)(c & 0x07) << 18) | ((uint32_t)(str[i + 1] & 0x3F) << 12)
+            | ((uint32_t)(str[i + 2] & 0x3F) << 6) | (str[i + 3] & 0x3F);
+        *pos = i + 4; return 0;
+    }
+    /* Invalid/overlong/truncated: treat as a single narrow byte. */
+    *cp = c; *pos = i + 1; return -1;
+}
+
+/* Sum display columns over a UTF-8 string (wide codepoints count as 2). */
+static double utf8_display_width(const char *s, size_t len)
+{
+    const unsigned char *str = (const unsigned char *)s;
+    size_t pos = 0;
+    double width = 0;
+    while (pos < len) {
+        uint32_t cp;
+        utf8_next(str, len, &pos, &cp);
+        width += xls_codepoint_is_wide(cp) ? 2 : 1;
+    }
+    return width;
+}
+
+/* Estimate a cell's display width in Excel column-width units. Converts the
+ * value to its string form and measures it (wide/CJK codepoints count as 2).
+ * No extra margin is added: libxlsxwriter already bakes in Excel's standard
+ * column margin (~0.71) when the width is written, which matches what
+ * Excel's own auto-fit produces. */
+double xls_estimate_cell_width(zval *value)
+{
+    zend_string *s;
+    double width;
+
+    if (value == NULL || Z_TYPE_P(value) == IS_NULL) return 0.0;
+
+    s = zval_get_string(value);
+    width = utf8_display_width(ZSTR_VAL(s), ZSTR_LEN(s));
+    zend_string_release(s);
+
+    return width;
+}
+
+/* Grow the per-column width map to cover `col` and keep the max. */
+void xls_track_auto_width(xls_resource_write_t *res, lxw_col_t col, double width)
+{
+    size_t need, i;
+    double *grown;
+
+    if (res == NULL || col >= LXW_COL_MAX || width <= 0.0) return;
+
+    if (res->auto_widths == NULL) {
+        need = (size_t)col + 1;
+        if (need < 16) need = 16;
+        res->auto_widths = (double *)ecalloc(need, sizeof(double));
+        res->auto_widths_n = need;
+    } else if ((size_t)col >= res->auto_widths_n) {
+        need = res->auto_widths_n;
+        while (need <= (size_t)col) need *= 2;
+        grown = (double *)erealloc(res->auto_widths, need * sizeof(double));
+        for (i = res->auto_widths_n; i < need; i++) grown[i] = 0.0;
+        res->auto_widths = grown;
+        res->auto_widths_n = need;
+    }
+
+    if (width > res->auto_widths[col]) res->auto_widths[col] = width;
+}
+
+void xls_auto_widths_reset(xls_resource_write_t *res)
+{
+    if (res == NULL || res->auto_widths == NULL) return;
+    efree(res->auto_widths);
+    res->auto_widths = NULL;
+    res->auto_widths_n = 0;
+}
+
+/* Apply the tracked per-column widths to [first_col, last_col] on the active
+ * worksheet. Columns with no tracked content keep their existing width. */
+void xls_auto_widths_apply(xls_resource_write_t *res, lxw_col_t first_col, lxw_col_t last_col)
+{
+    lxw_col_t c;
+    if (res == NULL || res->auto_widths == NULL) return;
+    if (first_col > last_col) { lxw_col_t t = first_col; first_col = last_col; last_col = t; }
+    for (c = first_col; c <= last_col; c++) {
+        if (c >= res->auto_widths_n) break;
+        if (res->auto_widths[c] > 0.0) {
+            worksheet_set_column_opt(res->worksheet, c, c, res->auto_widths[c], NULL, NULL);
+        }
+    }
+}
+
 /*
  * According to the zval type written to the file
  */
@@ -23,6 +157,9 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
     lxw_row_t lxw_row = (lxw_row_t)row;
 
     zend_uchar value_type = Z_TYPE_P(value);
+
+    /* Track the cell's display width for autoSize(), independent of type. */
+    xls_track_auto_width(res, lxw_col, xls_estimate_cell_width(value));
 
     if (value_type == IS_STRING) {
         zend_string *_zs_value = zval_get_string(value);

@@ -243,6 +243,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_curr_line_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, row)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_auto_size_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_get_curr_line_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -653,6 +657,9 @@ PHP_METHOD(vtiful_xls, addSheet)
         sheet_name = ZSTR_VAL(zs_sheet_name);
     }
 
+    /* Per-sheet auto-size tracking starts fresh for the new sheet. */
+    xls_auto_widths_reset(&obj->write_ptr);
+
     obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
 }
 /* }}} */
@@ -714,6 +721,9 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
     }
 
     SHEET_LINE_SET(obj, line);
+
+    /* Per-sheet auto-size tracking starts fresh for the switched sheet. */
+    xls_auto_widths_reset(&obj->write_ptr);
 
     obj->write_ptr.worksheet = sheet_t;
 }
@@ -1480,6 +1490,47 @@ PHP_METHOD(vtiful_xls, setRow)
     } else {
         set_row(range, height, &obj->write_ptr, NULL, options);
     }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::autoSize([string $range])
+ *  Sizes columns to fit their content. While cells are written the extension
+ *  tracks the widest value per column; autoSize() applies those widths to the
+ *  current worksheet. The optional A1 range (e.g. "A:Z", "A1:J100") limits
+ *  which columns are affected — omit it to size every column that received
+ *  data. Widths are estimates from character counts (wide/CJK code points
+ *  count as 2); they approximate but cannot exactly match Excel's own
+ *  auto-fit, which depends on font metrics only the application knows.
+ *  Call before output() and before switching sheets, since the per-sheet
+ *  tracking resets when the active worksheet changes.
+ */
+PHP_METHOD(vtiful_xls, autoSize)
+{
+    zend_string *range = NULL;
+    lxw_col_t    first_col = 0, last_col = 0;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR_OR_NULL(range)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKSHEET_NOT_INITIALIZED(obj);
+
+    if (range != NULL && ZSTR_LEN(range) > 0) {
+        first_col = lxw_name_to_col(ZSTR_VAL(range));
+        last_col  = lxw_name_to_col_2(ZSTR_VAL(range));
+        if (last_col < first_col) last_col = first_col;
+        if (last_col >= LXW_COL_MAX) last_col = LXW_COL_MAX - 1;
+    } else {
+        first_col = 0;
+        last_col  = LXW_COL_MAX - 1;
+    }
+
+    xls_auto_widths_apply(&obj->write_ptr, first_col, last_col);
 }
 /* }}} */
 
@@ -3997,6 +4048,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,        xls_merge_cells_arginfo,             ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,         xls_set_column_arginfo,              ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,            xls_set_row_arginfo,                 ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, autoSize,          xls_auto_size_arginfo,               ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getCurrentLine,    xls_get_curr_line_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setCurrentLine,    xls_set_curr_line_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultFormat,     xls_set_global_format,               ZEND_ACC_PUBLIC)

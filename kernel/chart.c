@@ -297,7 +297,7 @@ VTIFUL_STARTUP_FUNCTION(chart)
     vtiful_chart_ce  = zend_register_internal_class(&ce);
 
     memcpy(&chart_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    chart_handlers.offset   = XtOffsetOf(chart_object, zo);
+    chart_handlers.offset   = offsetof(chart_object, zo);
     chart_handlers.free_obj = chart_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_chart_ce, "CHART_BAR",                           LXW_CHART_BAR)

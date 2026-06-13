@@ -292,7 +292,7 @@ VTIFUL_STARTUP_FUNCTION(table)
     vtiful_table_ce  = zend_register_internal_class(&ce);
 
     memcpy(&table_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    table_handlers.offset   = XtOffsetOf(table_object, zo);
+    table_handlers.offset   = offsetof(table_object, zo);
     table_handlers.free_obj = table_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_DEFAULT", LXW_TABLE_STYLE_TYPE_DEFAULT)

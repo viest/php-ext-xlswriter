@@ -159,7 +159,7 @@ ZEND_BEGIN_ARG_INFO_EX(validation_error_message_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, error_message)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(validation_to_resource_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(validation_to_resource_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
@@ -819,7 +819,7 @@ VTIFUL_STARTUP_FUNCTION(validation) {
     vtiful_validation_ce = zend_register_internal_class(&ce);
 
     memcpy(&validation_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    validation_handlers.offset   = XtOffsetOf(validation_object, zo);
+    validation_handlers.offset   = offsetof(validation_object, zo);
     validation_handlers.free_obj = validation_objects_free;
 
     REGISTER_CLASS_CONST_LONG(vtiful_validation_ce, "TYPE_INTEGER",         LXW_VALIDATION_TYPE_INTEGER)

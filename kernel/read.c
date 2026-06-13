@@ -247,7 +247,11 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
     lxr_cell      cell;
 
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
-        array_init(zv_result_t);
+        if (r->cols > 0) {
+            array_init_size(zv_result_t, (uint32_t)r->cols);
+        } else {
+            array_init(zv_result_t);
+        }
     }
 
     while (lxr_worksheet_next_cell(r->sheet_t, &cell) == LXR_NO_ERROR) {
@@ -328,6 +332,7 @@ static int lxr_row_end_bridge(size_t row, size_t max_col, void *callback_data)
 
     if (!_cd || !_cd->fci || !_cd->fci_cache) return 0;
 
+    ZVAL_UNDEF(&retval);
     _cd->fci->retval      = &retval;
     _cd->fci->params      = args;
     _cd->fci->param_count = 3;
@@ -336,9 +341,10 @@ static int lxr_row_end_bridge(size_t row, size_t max_col, void *callback_data)
     ZVAL_LONG(&args[1], (zend_long)(max_col - 1));
     ZVAL_STRING(&args[2], "XLSX_ROW_END");
 
-    zend_call_function(_cd->fci, _cd->fci_cache);
+    if (zend_call_function(_cd->fci, _cd->fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+        zval_ptr_dtor(&retval);
+    }
     zval_ptr_dtor(&args[2]);
-    zval_ptr_dtor(&retval);
     return 0;
 }
 
@@ -352,6 +358,7 @@ static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
     if (!_cd || !_cd->fci || !_cd->fci_cache) return 0;
     cell_text_view(c, &str, &str_len);
 
+    ZVAL_UNDEF(&retval);
     _cd->fci->retval      = &retval;
     _cd->fci->params      = args;
     _cd->fci->param_count = 3;
@@ -390,9 +397,10 @@ static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
 
     CALL:
 
-    zend_call_function(_cd->fci, _cd->fci_cache);
+    if (zend_call_function(_cd->fci, _cd->fci_cache) == SUCCESS && !Z_ISUNDEF(retval)) {
+        zval_ptr_dtor(&retval);
+    }
     zval_ptr_dtor(&args[2]);
-    zval_ptr_dtor(&retval);
     return 0;
 }
 
@@ -495,7 +503,11 @@ void load_sheet_all_data(struct xls_resource_read_t *r, zend_long sheet_flag, zv
         if (!(sheet_flag & LXR_SKIP_EMPTY_ROWS)) {
             while (r->expected_row_nr < cur_row) {
                 zval empty;
-                array_init(&empty);
+                if (r->cols > 0) {
+                    array_init_size(&empty, (uint32_t)r->cols);
+                } else {
+                    array_init(&empty);
+                }
                 add_next_index_zval(zv_result_t, &empty);
                 r->expected_row_nr++;
             }

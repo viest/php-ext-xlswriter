@@ -52,6 +52,6 @@ jobs:
               --error-exitcode=1 \
               --suppressions=tests/valgrind.supp \
               php -n -d extension=$(pwd)/modules/xlswriter.so \
-              tests/leak_stress.php
+              bench/leak_stress.php
         env:
           LEAK_STRESS_ITER: 100

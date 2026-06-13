@@ -623,6 +623,7 @@ void lxr_worksheet_close(lxr_worksheet *ws)
     if (ws->pump) lxr_xml_pump_destroy(ws->pump);
     if (ws->zf)   lxr_zip_close_entry(ws->zf);
     lxr_worksheet_meta_free(&ws->meta);
+    free(ws->merge_order);
     free(ws->cell_value);
     free(ws->cell_formula);
     free(ws->cell_inline);

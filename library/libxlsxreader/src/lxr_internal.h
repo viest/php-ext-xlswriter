@@ -341,6 +341,15 @@ struct lxr_worksheet {
 
     /* Phase 1 metadata cache (eager, populated at open time). */
     lxr_worksheet_meta meta;
+
+    /* Merge-follow index: merges re-indexed by last_row for amortised
+     * near-O(1) point-in-range queries during sequential row scans.
+     * Built lazily on the first in_merge_follow() call. merge_order[i]
+     * is an index into meta.merges, sorted by ascending last_row. */
+    size_t         *merge_order;
+    size_t          merge_cursor;
+    size_t          merge_last_row;
+    int             merge_index_built;
 };
 
 /* worksheet.c */

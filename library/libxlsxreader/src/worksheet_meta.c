@@ -1054,12 +1054,80 @@ int lxr_worksheet_merged_get(const lxr_worksheet *ws, size_t idx, lxr_range *out
     return 1;
 }
 
-int lxr_worksheet_in_merge_follow(const lxr_worksheet *ws, size_t row, size_t col)
+/* Comparator for the merge_key array used to build merge_order. */
+struct merge_key { size_t idx; size_t last_row; };
+static int merge_key_cmp(const void *a, const void *b)
 {
-    size_t i;
+    size_t la = ((const struct merge_key *)a)->last_row;
+    size_t lb = ((const struct merge_key *)b)->last_row;
+    if (la < lb) return -1;
+    if (la > lb) return 1;
+    return 0;
+}
+
+/* Build merge_order: indices into meta.merges sorted by ascending last_row.
+ * Uses a merge_key array so the qsort comparator is self-contained
+ * (qsort_r is not portable across glibc/BSD/MSVC). On OOM the index is left
+ * NULL and in_merge_follow falls back to a plain linear scan. */
+static void build_merge_index(lxr_worksheet *ws)
+{
+    size_t n = ws->meta.merges_count;
+
+    ws->merge_index_built = 1;
+    ws->merge_order       = NULL;
+    ws->merge_cursor      = 0;
+    ws->merge_last_row    = 0;
+    if (n == 0) return;
+
+    struct merge_key *keys = (struct merge_key *)malloc(n * sizeof(*keys));
+    if (!keys) return;
+    for (size_t i = 0; i < n; i++) {
+        keys[i].idx      = i;
+        keys[i].last_row = ws->meta.merges[i].last_row;
+    }
+    qsort(keys, n, sizeof(*keys), merge_key_cmp);
+
+    ws->merge_order = (size_t *)malloc(n * sizeof(size_t));
+    if (!ws->merge_order) { free(keys); return; }
+    for (size_t i = 0; i < n; i++) ws->merge_order[i] = keys[i].idx;
+    free(keys);
+}
+
+int lxr_worksheet_in_merge_follow(lxr_worksheet *ws, size_t row, size_t col)
+{
+    size_t i, n;
     if (!ws) return 0;
-    for (i = 0; i < ws->meta.merges_count; i++) {
-        const lxr_range *r = &ws->meta.merges[i];
+    n = ws->meta.merges_count;
+    if (n == 0) return 0;
+
+    if (!ws->merge_index_built) build_merge_index(ws);
+
+    /* Index build failed (OOM): fall back to a plain linear scan. */
+    if (!ws->merge_order) {
+        for (i = 0; i < n; i++) {
+            const lxr_range *r = &ws->meta.merges[i];
+            if (row >= r->first_row && row <= r->last_row &&
+                col >= r->first_col && col <= r->last_col) {
+                return (row == r->first_row && col == r->first_col) ? 0 : 1;
+            }
+        }
+        return 0;
+    }
+
+    /* Reset the cursor when access is not monotonically increasing in row,
+     * so out-of-order callers still get correct results. */
+    if (row < ws->merge_last_row) ws->merge_cursor = 0;
+    ws->merge_last_row = row;
+
+    /* Drop merges that end above this row — they can never match again. */
+    while (ws->merge_cursor < n &&
+           ws->meta.merges[ws->merge_order[ws->merge_cursor]].last_row < row) {
+        ws->merge_cursor++;
+    }
+
+    /* Check the remaining active merges (last_row >= row). */
+    for (i = ws->merge_cursor; i < n; i++) {
+        const lxr_range *r = &ws->meta.merges[ws->merge_order[i]];
         if (row >= r->first_row && row <= r->last_row &&
             col >= r->first_col && col <= r->last_col) {
             /* Inside this range. Master is (first_row, first_col). */

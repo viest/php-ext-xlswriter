@@ -38,7 +38,7 @@ int    lxr_worksheet_merged_get  (const lxr_worksheet *ws, size_t idx,
 /* Returns 1 when (row, col) (1-based) lies inside a merged range and is NOT
  * the merge's master cell; 0 otherwise. Useful for honoring
  * LXR_SKIP_MERGED_FOLLOW in row-shaped readers. */
-int lxr_worksheet_in_merge_follow(const lxr_worksheet *ws, size_t row, size_t col);
+int lxr_worksheet_in_merge_follow(lxr_worksheet *ws, size_t row, size_t col);
 
 /* Hyperlinks. The url/tooltip/display/location pointers (if non-NULL) are
  * owned by the worksheet and remain valid until lxr_worksheet_close().

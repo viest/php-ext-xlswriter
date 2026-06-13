@@ -14,5 +14,9 @@ $underlineStyle = $format->underline(\Vtiful\Kernel\Format::UNDERLINE_SINGLE)->t
 
 var_dump($underlineStyle);
 ?>
---EXPECT--
-resource(5) of type (xlsx)
+--CLEAN--
+<?php
+@unlink(__DIR__ . "/tutorial01.xlsx");
+?>
+--EXPECTF--
+resource(%d) of type (xlsx)

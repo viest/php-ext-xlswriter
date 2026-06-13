@@ -23,15 +23,21 @@ $excel->fileName('first.xlsx', 'sheet1')
     ->output();
 
 var_dump($excel);
-?>
+
+/* Round-trip: setCurrentSheetIsFirst sets workbookView/@firstSheet to the
+ * 0-based index of the current sheet. No reader API for this; probe the raw
+ * workbook.xml. */
+$xml = shell_exec('unzip -p ./tests/first.xlsx xl/workbook.xml');
+preg_match('/<workbookView[^>]*\sfirstSheet="(\d+)"/', $xml, $m);
+echo 'firstSheet: ' . ($m[1] ?? '(none)') . "\n";
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/first.xlsx');
 ?>
---EXPECT--
+--EXPECTF--
 int(130)
 string(51) "Please create a file first, use the filename method"
-object(Vtiful\Kernel\Excel)#3 (3) {
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>
@@ -42,3 +48,4 @@ object(Vtiful\Kernel\Excel)#3 (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
+firstSheet: 1

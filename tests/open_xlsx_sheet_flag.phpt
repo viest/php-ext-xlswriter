@@ -22,8 +22,8 @@ var_dump($data);
 <?php
 @unlink(__DIR__ . '/open_xlsx_sheet_flag.xlsx');
 ?>
---EXPECT--
-object(Vtiful\Kernel\Excel)#1 (3) {
+--EXPECTF--
+object(Vtiful\Kernel\Excel)#%d (3) {
   ["config":"Vtiful\Kernel\Excel":private]=>
   array(1) {
     ["path"]=>

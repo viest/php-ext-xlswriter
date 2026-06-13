@@ -22,6 +22,16 @@ $fileObject->insertText(0, 1, 'wjx');
 $filePath = $fileObject->output();
 
 var_dump($filePath);
+
+/* Round-trip: the written style records exact format values. */
+$verify = new \Vtiful\Kernel\Excel($config);
+$verify->openFile('format_rotation.xlsx')->openSheet();
+$sid = 0;
+while (($r = $verify->nextRowWithFormula()) !== null) {
+    foreach ($r as $cell) { if ($cell['style_id'] > 0) { $sid = $cell['style_id']; break 2; } }
+}
+$fmt = $verify->getStyleFormat($sid);
+var_dump($fmt['alignment']['rotation']);
 ?>
 --CLEAN--
 <?php
@@ -29,3 +39,4 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(28) "./tests/format_rotation.xlsx"
+int(30)

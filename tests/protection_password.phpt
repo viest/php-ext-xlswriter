@@ -20,6 +20,11 @@ $filePath = $fileObject->header(['name', 'age'])
     ->output();
 
 var_dump($filePath);
+
+/* Round-trip: file opens and data is readable. */
+$v_   = new \Vtiful\Kernel\Excel($config);
+$d_   = $v_->openFile('protection_password.xlsx')->openSheet()->getSheetData();
+var_dump($d_);
 ?>
 --CLEAN--
 <?php
@@ -27,3 +32,26 @@ var_dump($filePath);
 ?>
 --EXPECT--
 string(32) "./tests/protection_password.xlsx"
+array(3) {
+  [0]=>
+  array(2) {
+    [0]=>
+    string(4) "name"
+    [1]=>
+    string(3) "age"
+  }
+  [1]=>
+  array(2) {
+    [0]=>
+    string(5) "viest"
+    [1]=>
+    int(21)
+  }
+  [2]=>
+  array(2) {
+    [0]=>
+    string(3) "wjx"
+    [1]=>
+    int(21)
+  }
+}

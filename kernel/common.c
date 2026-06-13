@@ -113,14 +113,21 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
         return NULL;
     }
 
+    /* The cache keys below MUST use ZSTR_VAL+ZSTR_LEN, not ZEND_STRL(x->val).
+     * ZEND_STRL is for string literals — sizeof("...") - 1 — but applied to
+     * zend_string's flexible-array `val` it expands to sizeof(char[1]) - 1
+     * which is 0. That collapses every distinct format string into the same
+     * empty-string cache slot, and the first format wins for every
+     * subsequent insertDate / insertText call (reported as #552 / #548 /
+     * #544: "$format ignored; everything comes back as the first format"). */
     if (format != NULL && format_handle != NULL) {
         if (format->len <= 0) {
             return format_handle;
         }
 
-        zend_string *_format_key = strpprintf(0, "%p|%s", format_handle, format->val);
+        zend_string *_format_key = strpprintf(0, "%p|%s", format_handle, ZSTR_VAL(format));
 
-        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(_format_key->val));
+        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZSTR_VAL(_format_key), ZSTR_LEN(_format_key));
 
         if (exit_format != NULL) {
             zend_string_release(_format_key);
@@ -132,7 +139,7 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
         format_copy(new_format, format_handle);
         format_set_num_format(new_format, ZSTR_VAL(format));
 
-        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(_format_key->val), new_format);
+        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZSTR_VAL(_format_key), ZSTR_LEN(_format_key), new_format);
 
         zend_string_release(_format_key);
 
@@ -144,7 +151,7 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
             return NULL;
         }
 
-        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(format->val));
+        void *exit_format = zend_hash_str_find_ptr(obj->formats_cache_ptr.maps, ZSTR_VAL(format), ZSTR_LEN(format));
 
         if (exit_format != NULL) {
             return (lxw_format *)exit_format;
@@ -153,7 +160,7 @@ lxw_format* object_format(xls_object *obj, zend_string *format, lxw_format *form
         lxw_format *new_format = workbook_add_format((&obj->write_ptr)->workbook);
         format_set_num_format(new_format, ZSTR_VAL(format));
 
-        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZEND_STRL(format->val), new_format);
+        zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZSTR_VAL(format), ZSTR_LEN(format), new_format);
 
         return new_format;
     }

@@ -1,0 +1,57 @@
+name: leak-check
+
+on: [push, pull_request]
+
+jobs:
+  valgrind:
+    name: Valgrind leak check (PHP ${{ matrix.php-versions }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zlib1g-dev valgrind
+
+      - name: Build extension
+        run: |
+          phpize
+          ./configure --enable-reader
+          make clean
+          make -j2
+
+      - name: Run leak_stress under valgrind
+        # USE_ZEND_ALLOC=0 is mandatory: Zend MM's per-request arena bulk-free
+        # masks every emalloc/efree mismatch. See CLAUDE.md for the incident
+        # that originally motivated this job.
+        #
+        # --undef-value-errors=no: this job is a leak-only gate. Older PHP CLI
+        # binaries from shivammathur/setup-php (7.4, 8.0) trip valgrind's
+        # uninit-value checker inside zend_string_equal_val / zend_hash_find,
+        # which is unrelated to the extension and would otherwise flip the
+        # --error-exitcode=1 gate.
+        run: |
+          USE_ZEND_ALLOC=0 valgrind \
+              --leak-check=full \
+              --show-leak-kinds=definite,indirect \
+              --undef-value-errors=no \
+              --error-exitcode=1 \
+              --suppressions=tests/valgrind.supp \
+              php -n -d extension=$(pwd)/modules/xlswriter.so \
+              bench/leak_stress.php
+        env:
+          LEAK_STRESS_ITER: 100

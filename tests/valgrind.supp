@@ -1,0 +1,26 @@
+# Valgrind suppressions for php-ext-xlswriter leak-check job.
+#
+# Add entries here for *known* PHP / libc startup-shutdown noise that is
+# unrelated to the extension. Anything reaching xlsxwriter / xlsxreader /
+# kernel/* should NOT be suppressed — those are real bugs.
+#
+# Format: see http://valgrind.org/docs/manual/manual-core.html#manual-core.suppress
+#
+# Generate new entries by re-running the leak job with --gen-suppressions=all
+# and copy the relevant blocks here.
+
+{
+   php_ini_parse_quoted_strings_static
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:zend_register_ini_entries_ex
+}
+
+{
+   php_module_startup_one_time_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:php_module_startup
+}

@@ -6,7 +6,7 @@
   +----------------------------------------------------------------------+
   | http://www.viest.me                                                  |
   +----------------------------------------------------------------------+
-  | Author: viest <dev@service.viest.me>                                 |
+  | Author: viest <wjx@php.net>                                          |
   +----------------------------------------------------------------------+
 */
 
@@ -31,6 +31,8 @@
 #define V_XLS_CONST_READ_SKIP_HIDDEN_ROW  "SKIP_HIDDEN_ROW"
 #define V_XLS_CONST_READ_SKIP_EMPTY_CELLS "SKIP_EMPTY_CELLS"
 #define V_XLS_CONST_READ_SKIP_EMPTY_VALUE "SKIP_EMPTY_VALUE"
+#define V_XLS_CONST_READ_SKIP_MERGED_FOLLOW "SKIP_MERGED_FOLLOW"
+#define V_XLS_CONST_READ_FORMULA_VERBOSE    "FORMULA_VERBOSE"
 
 #define READ_TYPE_EMPTY    0x00
 #define READ_TYPE_STRING   0x01

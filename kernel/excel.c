@@ -66,12 +66,13 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 /* {{{ vtiful_xls_objects_free
  */
 static void vtiful_xls_objects_free(zend_object *object)
-{
+{   
     xls_object *intern = php_vtiful_xls_fetch_object(object);
-
+    
     php_vtiful_close_resource(object);
 
     zend_object_std_dtor(&intern->zo);
+    
 }
 /* }}} */
 
@@ -1435,6 +1436,7 @@ PHP_METHOD(vtiful_xls, setColumn)
     } else {
         set_column(range, width, &obj->write_ptr, NULL, options);
     }
+    efree(options);
 }
 /* }}} */
 
@@ -1480,6 +1482,7 @@ PHP_METHOD(vtiful_xls, setRow)
     } else {
         set_row(range, height, &obj->write_ptr, NULL, options);
     }
+    efree(options);
 }
 /* }}} */
 

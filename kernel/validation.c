@@ -159,7 +159,7 @@ ZEND_BEGIN_ARG_INFO_EX(validation_error_message_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, error_message)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(validation_to_resource_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(validation_to_resource_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 

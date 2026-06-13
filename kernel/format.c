@@ -100,7 +100,7 @@ ZEND_BEGIN_ARG_INFO_EX(format_number_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, pattern)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()

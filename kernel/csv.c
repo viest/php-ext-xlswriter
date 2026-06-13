@@ -114,11 +114,11 @@ unsigned int xlsx_to_csv(
         zend_hash_clean(Z_ARRVAL(_zv_tmp_row));
 
         if (ret < 0) {
-            zval_dtor(&_zv_tmp_row);
+            zval_ptr_dtor_nogc(&_zv_tmp_row);
             return XLSWRITER_FALSE;
         }
     }
 
-    zval_dtor(&_zv_tmp_row);
+    zval_ptr_dtor_nogc(&_zv_tmp_row);
     return XLSWRITER_TRUE;
 }

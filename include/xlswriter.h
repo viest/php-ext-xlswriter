@@ -328,21 +328,21 @@ static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_objec
         return NULL;
     }
 
-    return (rich_string_object *)((char *)(obj) - offsetof(validation_object, zo));
+    return (rich_string_object *)((char *)(obj) - offsetof(rich_string_object, zo));
 }
 
 static inline cond_format_object *php_vtiful_cond_format_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (cond_format_object *)((char *)(obj) - XtOffsetOf(cond_format_object, zo));
+    return (cond_format_object *)((char *)(obj) - offsetof(cond_format_object, zo));
 }
 
 static inline table_object *php_vtiful_table_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (table_object *)((char *)(obj) - XtOffsetOf(table_object, zo));
+    return (table_object *)((char *)(obj) - offsetof(table_object, zo));
 }
 
 #ifdef ENABLE_READER

@@ -1044,22 +1044,95 @@ void lxr_worksheet_meta_free(lxr_worksheet_meta *m)
 
 size_t lxr_worksheet_merged_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.merges_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.merges_count;
 }
 
 int lxr_worksheet_merged_get(const lxr_worksheet *ws, size_t idx, lxr_range *out)
 {
-    if (!ws || !out || idx >= ws->meta.merges_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.merges_count) return 0;
     *out = ws->meta.merges[idx];
     return 1;
 }
 
-int lxr_worksheet_in_merge_follow(const lxr_worksheet *ws, size_t row, size_t col)
+/* Comparator for the merge_key array used to build merge_order. */
+struct merge_key { size_t idx; size_t last_row; };
+static int merge_key_cmp(const void *a, const void *b)
 {
-    size_t i;
+    size_t la = ((const struct merge_key *)a)->last_row;
+    size_t lb = ((const struct merge_key *)b)->last_row;
+    if (la < lb) return -1;
+    if (la > lb) return 1;
+    return 0;
+}
+
+/* Build merge_order: indices into meta.merges sorted by ascending last_row.
+ * Uses a merge_key array so the qsort comparator is self-contained
+ * (qsort_r is not portable across glibc/BSD/MSVC). On OOM the index is left
+ * NULL and in_merge_follow falls back to a plain linear scan. */
+static void build_merge_index(lxr_worksheet *ws)
+{
+    size_t n = ws->meta.merges_count;
+
+    ws->merge_index_built = 1;
+    ws->merge_order       = NULL;
+    ws->merge_cursor      = 0;
+    ws->merge_last_row    = 0;
+    if (n == 0) return;
+
+    struct merge_key *keys = (struct merge_key *)malloc(n * sizeof(*keys));
+    if (!keys) return;
+    for (size_t i = 0; i < n; i++) {
+        keys[i].idx      = i;
+        keys[i].last_row = ws->meta.merges[i].last_row;
+    }
+    qsort(keys, n, sizeof(*keys), merge_key_cmp);
+
+    ws->merge_order = (size_t *)malloc(n * sizeof(size_t));
+    if (!ws->merge_order) { free(keys); return; }
+    for (size_t i = 0; i < n; i++) ws->merge_order[i] = keys[i].idx;
+    free(keys);
+}
+
+int lxr_worksheet_in_merge_follow(lxr_worksheet *ws, size_t row, size_t col)
+{
+    size_t i, n;
     if (!ws) return 0;
-    for (i = 0; i < ws->meta.merges_count; i++) {
-        const lxr_range *r = &ws->meta.merges[i];
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    n = ws->meta.merges_count;
+    if (n == 0) return 0;
+
+    if (!ws->merge_index_built) build_merge_index(ws);
+
+    /* Index build failed (OOM): fall back to a plain linear scan. */
+    if (!ws->merge_order) {
+        for (i = 0; i < n; i++) {
+            const lxr_range *r = &ws->meta.merges[i];
+            if (row >= r->first_row && row <= r->last_row &&
+                col >= r->first_col && col <= r->last_col) {
+                return (row == r->first_row && col == r->first_col) ? 0 : 1;
+            }
+        }
+        return 0;
+    }
+
+    /* Reset the cursor when access is not monotonically increasing in row,
+     * so out-of-order callers still get correct results. */
+    if (row < ws->merge_last_row) ws->merge_cursor = 0;
+    ws->merge_last_row = row;
+
+    /* Drop merges that end above this row — they can never match again. */
+    while (ws->merge_cursor < n &&
+           ws->meta.merges[ws->merge_order[ws->merge_cursor]].last_row < row) {
+        ws->merge_cursor++;
+    }
+
+    /* Check the remaining active merges (last_row >= row). */
+    for (i = ws->merge_cursor; i < n; i++) {
+        const lxr_range *r = &ws->meta.merges[ws->merge_order[i]];
         if (row >= r->first_row && row <= r->last_row &&
             col >= r->first_col && col <= r->last_col) {
             /* Inside this range. Master is (first_row, first_col). */
@@ -1071,14 +1144,18 @@ int lxr_worksheet_in_merge_follow(const lxr_worksheet *ws, size_t row, size_t co
 
 size_t lxr_worksheet_hyperlink_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.hyperlinks_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.hyperlinks_count;
 }
 
 int lxr_worksheet_hyperlink_get(const lxr_worksheet *ws, size_t idx,
                                 lxr_hyperlink *out)
 {
     const struct lxr_hyperlink_owned *h;
-    if (!ws || !out || idx >= ws->meta.hyperlinks_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.hyperlinks_count) return 0;
     h = &ws->meta.hyperlinks[idx];
     out->range    = h->range;
     out->url      = h->url;
@@ -1093,6 +1170,7 @@ const char *lxr_worksheet_hyperlink_url(const lxr_worksheet *ws,
 {
     size_t i;
     if (!ws) return NULL;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return NULL;
     for (i = 0; i < ws->meta.hyperlinks_count; i++) {
         const struct lxr_hyperlink_owned *h = &ws->meta.hyperlinks[i];
         if (row >= h->range.first_row && row <= h->range.last_row &&
@@ -1107,6 +1185,7 @@ int lxr_worksheet_protection(const lxr_worksheet *ws, lxr_protection *out)
 {
     const lxr_worksheet_meta *m;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = &ws->meta;
     out->is_present                = m->prot_present;
     {
@@ -1140,6 +1219,7 @@ int lxr_worksheet_row_options(const lxr_worksheet *ws, size_t row,
 {
     size_t i;
     if (!ws || !out || row == 0) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     for (i = 0; i < ws->meta.rows_count; i++) {
         const struct lxr_row_meta *r = &ws->meta.rows[i];
         if (r->row == row) {
@@ -1160,6 +1240,7 @@ int lxr_worksheet_col_options(const lxr_worksheet *ws, size_t col,
 {
     size_t i;
     if (!ws || !out || col == 0) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     for (i = 0; i < ws->meta.cols_count; i++) {
         const struct lxr_col_meta *c = &ws->meta.cols[i];
         if (col >= c->min && col <= c->max) {
@@ -1176,14 +1257,18 @@ int lxr_worksheet_col_options(const lxr_worksheet *ws, size_t col,
 
 int lxr_worksheet_default_row_height(const lxr_worksheet *ws, double *out)
 {
-    if (!ws || !out || !ws->meta.has_default_row_height) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (!ws->meta.has_default_row_height) return 0;
     *out = ws->meta.default_row_height;
     return 1;
 }
 
 int lxr_worksheet_default_col_width(const lxr_worksheet *ws, double *out)
 {
-    if (!ws || !out || !ws->meta.has_default_col_width) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (!ws->meta.has_default_col_width) return 0;
     *out = ws->meta.default_col_width;
     return 1;
 }
@@ -1192,14 +1277,18 @@ int lxr_worksheet_default_col_width(const lxr_worksheet *ws, double *out)
 
 size_t lxr_worksheet_data_validation_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.dvs_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.dvs_count;
 }
 
 int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
                                       lxr_data_validation *out)
 {
     const struct lxr_dv_owned *d;
-    if (!ws || !out || idx >= ws->meta.dvs_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.dvs_count) return 0;
     d = &ws->meta.dvs[idx];
     out->type               = d->type;
     out->operator_          = d->operator_;
@@ -1222,7 +1311,9 @@ int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
 
 size_t lxr_worksheet_cf_block_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.cf_blocks_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.cf_blocks_count;
 }
 
 int lxr_worksheet_cf_block_get(const lxr_worksheet *ws, size_t idx,
@@ -1232,6 +1323,7 @@ int lxr_worksheet_cf_block_get(const lxr_worksheet *ws, size_t idx,
     const struct lxr_cf_block_owned *bk;
     size_t i;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = (lxr_worksheet_meta *)&ws->meta;
     if (idx >= m->cf_blocks_count) return 0;
     bk = &m->cf_blocks[idx];
@@ -1337,6 +1429,7 @@ int lxr_worksheet_page_setup(const lxr_worksheet *ws, lxr_page_setup *out)
 {
     const lxr_worksheet_meta *m;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = &ws->meta;
     /* If nothing about the page was parsed, surface 0 so callers can return
      * an explicit "no page setup" sentinel. */
@@ -1392,6 +1485,7 @@ int lxr_worksheet_autofilter(const lxr_worksheet *ws, lxr_autofilter *out)
     lxr_worksheet_meta *m;
     size_t i;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = (lxr_worksheet_meta *)&ws->meta;  /* mutable for cache materialisation */
     if (!m->autofilter_present) return 0;
 

@@ -243,6 +243,10 @@ ZEND_BEGIN_ARG_INFO_EX(xls_set_curr_line_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, row)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_auto_size_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, range)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_get_curr_line_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -653,6 +657,11 @@ PHP_METHOD(vtiful_xls, addSheet)
         sheet_name = ZSTR_VAL(zs_sheet_name);
     }
 
+    /* Flush auto-size widths to the sheet being left, then reset tracking for
+     * the new sheet. */
+    xls_auto_widths_flush(&obj->write_ptr);
+    xls_auto_widths_reset(&obj->write_ptr);
+
     obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
 }
 /* }}} */
@@ -714,6 +723,10 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
     }
 
     SHEET_LINE_SET(obj, line);
+
+    /* Flush auto-size widths to the sheet being left, then reset tracking. */
+    xls_auto_widths_flush(&obj->write_ptr);
+    xls_auto_widths_reset(&obj->write_ptr);
 
     obj->write_ptr.worksheet = sheet_t;
 }
@@ -948,6 +961,9 @@ PHP_METHOD(vtiful_xls, output)
     xls_object *obj = Z_XLS_P(getThis());
 
     WORKBOOK_NOT_INITIALIZED(obj);
+
+    /* Apply any tracked auto-size widths before the workbook is packaged. */
+    xls_auto_widths_flush(&obj->write_ptr);
 
     workbook_file(&obj->write_ptr);
 
@@ -1479,6 +1495,47 @@ PHP_METHOD(vtiful_xls, setRow)
         set_row(range, height, &obj->write_ptr, zval_get_format(format_handle), options);
     } else {
         set_row(range, height, &obj->write_ptr, NULL, options);
+    }
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::autoSize([string $range])
+ *  Enables automatic column-width sizing for the active worksheet and
+ *  (optionally) restricts it to an A1 range such as "A:Z" or "A1:J100".
+ *  From this point on every written cell contributes its display width to a
+ *  per-column maximum; the tracked widths are applied to the worksheet at
+ *  output() time (and flushed when switching sheets). Call autoSize() BEFORE
+ *  writing the data it should size, otherwise the writes are not tracked.
+ *  Widths are estimates from character counts (wide/CJK code points count as
+ *  2); they approximate but cannot exactly match Excel's own auto-fit, which
+ *  depends on font metrics only the application knows.
+ */
+PHP_METHOD(vtiful_xls, autoSize)
+{
+    zend_string *range = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR_OR_NULL(range)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
+
+    obj->write_ptr.auto_size_enabled = 1;
+    if (range != NULL && ZSTR_LEN(range) > 0) {
+        obj->write_ptr.auto_size_first_col = lxw_name_to_col(ZSTR_VAL(range));
+        obj->write_ptr.auto_size_last_col  = lxw_name_to_col_2(ZSTR_VAL(range));
+        if (obj->write_ptr.auto_size_last_col < obj->write_ptr.auto_size_first_col)
+            obj->write_ptr.auto_size_last_col = obj->write_ptr.auto_size_first_col;
+        if (obj->write_ptr.auto_size_last_col >= LXW_COL_MAX)
+            obj->write_ptr.auto_size_last_col = LXW_COL_MAX - 1;
+    } else {
+        obj->write_ptr.auto_size_first_col = 0;
+        obj->write_ptr.auto_size_last_col  = LXW_COL_MAX - 1;
     }
 }
 /* }}} */
@@ -3530,6 +3587,12 @@ PHP_METHOD(vtiful_xls, nextRowWithFormula)
         RETURN_NULL();
     }
 
+    /* nextRowWithFormula surfaces per-cell hyperlink URLs, which live in
+     * sheet metadata. Trigger a lazy metadata load now, while the data zip
+     * entry is still closed (minizip allows only one open entry at a time,
+     * so loading mid-stream would be declined). */
+    lxr_worksheet_hyperlink_count(obj->read_ptr.sheet_t);
+
     if (!sheet_read_row(obj->read_ptr.sheet_t)) {
         RETURN_NULL();
     }
@@ -3991,6 +4054,7 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, mergeCells,        xls_merge_cells_arginfo,             ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setColumn,         xls_set_column_arginfo,              ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setRow,            xls_set_row_arginfo,                 ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, autoSize,          xls_auto_size_arginfo,               ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getCurrentLine,    xls_get_curr_line_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, setCurrentLine,    xls_set_curr_line_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, defaultFormat,     xls_set_global_format,               ZEND_ACC_PUBLIC)

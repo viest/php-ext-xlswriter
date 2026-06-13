@@ -318,6 +318,33 @@ class Excel
     }
 
     /**
+     * Enable automatic column-width sizing for the active worksheet.
+     *
+     * Once enabled, every subsequently written cell contributes its display
+     * width to a per-column maximum; the tracked widths are applied at
+     * output() time (and flushed when switching sheets). So call autoSize()
+     * BEFORE the writes it should track. Tracking is off by default, so
+     * scripts that never call autoSize() pay no per-cell cost.
+     *
+     * The optional A1 range (e.g. "A:Z", "A1:J100") restricts which columns
+     * are sized; omit it to size every column that received data. Widths are
+     * estimates from character counts (wide/CJK code points count as two);
+     * they approximate but cannot exactly match Excel's own auto-fit, which
+     * depends on font metrics only the application knows. Widths are clamped
+     * to Excel's maximum of 255.
+     *
+     * @param string|null $range
+     *
+     * @return Excel
+     *
+     * @author viest
+     */
+    public function autoSize(?string $range = NULL): self
+    {
+        return $this;
+    }
+
+    /**
      * Open xlsx file
      *
      * @param string $fileName

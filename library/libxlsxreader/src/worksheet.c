@@ -566,8 +566,14 @@ static lxr_error open_internal(lxr_workbook *wb, const char *target,
                                uint32_t flags, lxr_worksheet **out)
 {
     lxr_worksheet *ws;
-    lxr_error      rc;
     if (!wb || !target || !out) return LXR_ERROR_NULL_PARAMETER;
+
+    /* Validate the entry exists up front (cheap locate, no open) so that a
+     * bad path still fails at open time. The data stream and metadata are
+     * loaded lazily — see ensure_data_open / lxr_worksheet_ensure_meta. */
+    if (!lxr_zip_entry_exists(wb->zip, target)) {
+        return LXR_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
 
     ws = (lxr_worksheet *)calloc(1, sizeof(*ws));
     if (!ws) return LXR_ERROR_MEMORY_MALLOC_FAILED;
@@ -578,36 +584,69 @@ static lxr_error open_internal(lxr_workbook *wb, const char *target,
     ws->target_path = strdup(target);
     if (!ws->target_path) { free(ws); return LXR_ERROR_MEMORY_MALLOC_FAILED; }
 
-    /* Eagerly scan worksheet-level metadata before opening the streaming
-     * pump. Only one minizip entry can be open at a time, so the meta pass
-     * uses its own open/close cycle. */
-    rc = lxr_worksheet_meta_load(ws);
-    if (rc != LXR_NO_ERROR) {
-        lxr_worksheet_meta_free(&ws->meta);
-        free(ws->target_path);
-        free(ws);
-        return rc;
+    *out = ws;
+    return LXR_NO_ERROR;
+}
+
+/* Lazily load worksheet metadata. minizip allows only one open entry at a
+ * time, so the metadata pass cannot run while the data stream holds the
+ * entry. If data is mid-stream we leave metadata unloaded (accessors return
+ * empty); callers that need metadata during reads must trigger a load before
+ * the first data read. When the data pump has reached EOF we may safely
+ * reclaim the entry. */
+lxr_error lxr_worksheet_ensure_meta(const lxr_worksheet *ws_c)
+{
+    lxr_worksheet *ws = (lxr_worksheet *)ws_c;
+    lxr_error      rc;
+
+    if (!ws) return LXR_ERROR_NULL_PARAMETER;
+    if (ws->meta_loaded) return LXR_NO_ERROR;
+
+    /* Data stream active and not exhausted: loading now would require
+     * tearing down the pump mid-row, losing unread cells. Decline; metadata
+     * accessors will see an empty cache. */
+    if (ws->data_opened && ws->pump && !lxr_xml_pump_is_eof(ws->pump)) {
+        return LXR_NO_ERROR;
     }
 
-    ws->zf = lxr_zip_open_entry(wb->zip, target);
-    if (!ws->zf) {
-        lxr_worksheet_meta_free(&ws->meta);
-        free(ws->target_path);
-        free(ws);
-        return LXR_ERROR_ZIP_ENTRY_NOT_FOUND;
+    /* Reclaim the entry if the data pump is done (or never started). */
+    if (ws->data_opened) {
+        if (ws->pump) { lxr_xml_pump_destroy(ws->pump); ws->pump = NULL; }
+        if (ws->zf)   { lxr_zip_close_entry(ws->zf);    ws->zf = NULL; }
+        ws->data_opened = 0;
     }
+
+    rc = lxr_worksheet_meta_load(ws);
+    if (rc != LXR_NO_ERROR) return rc;
+    ws->meta_loaded = 1;
+    return LXR_NO_ERROR;
+}
+
+/* Open the data entry + pump on first use. Callers must route every data
+ * read through this so the entry is ready. */
+lxr_error lxr_worksheet_ensure_data_open(lxr_worksheet *ws)
+{
+    if (!ws) return LXR_ERROR_NULL_PARAMETER;
+    if (ws->data_opened) return LXR_NO_ERROR;
+
+    /* Merge-follow queries hit metadata during streaming; it must be loaded
+     * before the data entry opens (single minizip entry constraint). */
+    if (ws->flags & LXR_SKIP_MERGED_FOLLOW) {
+        lxr_error rc = lxr_worksheet_ensure_meta(ws);
+        if (rc != LXR_NO_ERROR) return rc;
+    }
+
+    ws->zf = lxr_zip_open_entry(ws->wb->zip, ws->target_path);
+    if (!ws->zf) return LXR_ERROR_ZIP_ENTRY_NOT_FOUND;
 
     ws->pump = lxr_xml_pump_create_zip_file(ws->zf);
     if (!ws->pump) {
         lxr_zip_close_entry(ws->zf);
-        lxr_worksheet_meta_free(&ws->meta);
-        free(ws->target_path);
-        free(ws);
+        ws->zf = NULL;
         return LXR_ERROR_MEMORY_MALLOC_FAILED;
     }
     lxr_xml_pump_set_handlers(ws->pump, on_start, on_end, on_text, ws);
-
-    *out = ws;
+    ws->data_opened = 1;
     return LXR_NO_ERROR;
 }
 
@@ -666,7 +705,11 @@ static lxr_error drive(lxr_worksheet *ws)
 
 lxr_error lxr_worksheet_next_row(lxr_worksheet *ws)
 {
+    lxr_error rc;
     if (!ws) return LXR_ERROR_NULL_PARAMETER;
+
+    rc = lxr_worksheet_ensure_data_open(ws);
+    if (rc != LXR_NO_ERROR) return rc;
 
     /* Drain anything left from a previous row by calling next_cell until it
      * returns END_OF_DATA. next_cell uses the suspend mechanism, so the pump
@@ -683,7 +726,7 @@ lxr_error lxr_worksheet_next_row(lxr_worksheet *ws)
     ws->pull_mode         = LXR_WS_PULL_ROW;
 
     while (!ws->pending_row_start && !ws->eof) {
-        lxr_error rc = drive(ws);
+        rc = drive(ws);
         if (rc != LXR_NO_ERROR) {
             ws->pull_mode = LXR_WS_PULL_NONE;
             return rc;
@@ -752,7 +795,11 @@ lxr_error lxr_worksheet_process(lxr_worksheet *ws,
                                 lxr_row_end_cb row_cb,
                                 void          *userdata)
 {
+    lxr_error rc;
     if (!ws) return LXR_ERROR_NULL_PARAMETER;
+
+    rc = lxr_worksheet_ensure_data_open(ws);
+    if (rc != LXR_NO_ERROR) return rc;
 
     ws->pull_mode      = LXR_WS_PULL_NONE;
     ws->user_cell_cb   = cell_cb;
@@ -761,7 +808,7 @@ lxr_error lxr_worksheet_process(lxr_worksheet *ws,
     ws->callback_stop  = 0;
 
     while (!ws->eof && !ws->callback_stop) {
-        lxr_error rc = drive(ws);
+        rc = drive(ws);
         if (rc != LXR_NO_ERROR) {
             ws->user_cell_cb = NULL;
             ws->user_row_cb  = NULL;

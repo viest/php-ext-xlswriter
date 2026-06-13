@@ -339,8 +339,10 @@ struct lxr_worksheet {
 
     int             eof;
 
-    /* Phase 1 metadata cache (eager, populated at open time). */
+    /* Phase 1 metadata cache (lazy, populated on first access). */
     lxr_worksheet_meta meta;
+    int                meta_loaded;
+    int                data_opened;
 
     /* Merge-follow index: merges re-indexed by last_row for amortised
      * near-O(1) point-in-range queries during sequential row scans.
@@ -357,6 +359,15 @@ lxr_error lxr_worksheet_open_internal(lxr_workbook *wb,
                                       const char *target_path,
                                       uint32_t flags,
                                       lxr_worksheet **out);
+
+/* Lazily load worksheet metadata on first access. Declared const because the
+ * metadata cache is logically a lazy memo: callers hold a const worksheet*,
+ * but the underlying object is heap-allocated and mutable. */
+lxr_error lxr_worksheet_ensure_meta(const lxr_worksheet *ws);
+
+/* Open the data zip entry + XML pump on first data read. If the worksheet
+ * uses merge-follow, metadata is loaded first (single-entry constraint). */
+lxr_error lxr_worksheet_ensure_data_open(lxr_worksheet *ws);
 
 /* worksheet_meta.c */
 lxr_error lxr_worksheet_meta_load(lxr_worksheet *ws);

@@ -1044,12 +1044,16 @@ void lxr_worksheet_meta_free(lxr_worksheet_meta *m)
 
 size_t lxr_worksheet_merged_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.merges_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.merges_count;
 }
 
 int lxr_worksheet_merged_get(const lxr_worksheet *ws, size_t idx, lxr_range *out)
 {
-    if (!ws || !out || idx >= ws->meta.merges_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.merges_count) return 0;
     *out = ws->meta.merges[idx];
     return 1;
 }
@@ -1097,6 +1101,7 @@ int lxr_worksheet_in_merge_follow(lxr_worksheet *ws, size_t row, size_t col)
 {
     size_t i, n;
     if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     n = ws->meta.merges_count;
     if (n == 0) return 0;
 
@@ -1139,14 +1144,18 @@ int lxr_worksheet_in_merge_follow(lxr_worksheet *ws, size_t row, size_t col)
 
 size_t lxr_worksheet_hyperlink_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.hyperlinks_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.hyperlinks_count;
 }
 
 int lxr_worksheet_hyperlink_get(const lxr_worksheet *ws, size_t idx,
                                 lxr_hyperlink *out)
 {
     const struct lxr_hyperlink_owned *h;
-    if (!ws || !out || idx >= ws->meta.hyperlinks_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.hyperlinks_count) return 0;
     h = &ws->meta.hyperlinks[idx];
     out->range    = h->range;
     out->url      = h->url;
@@ -1161,6 +1170,7 @@ const char *lxr_worksheet_hyperlink_url(const lxr_worksheet *ws,
 {
     size_t i;
     if (!ws) return NULL;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return NULL;
     for (i = 0; i < ws->meta.hyperlinks_count; i++) {
         const struct lxr_hyperlink_owned *h = &ws->meta.hyperlinks[i];
         if (row >= h->range.first_row && row <= h->range.last_row &&
@@ -1175,6 +1185,7 @@ int lxr_worksheet_protection(const lxr_worksheet *ws, lxr_protection *out)
 {
     const lxr_worksheet_meta *m;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = &ws->meta;
     out->is_present                = m->prot_present;
     {
@@ -1208,6 +1219,7 @@ int lxr_worksheet_row_options(const lxr_worksheet *ws, size_t row,
 {
     size_t i;
     if (!ws || !out || row == 0) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     for (i = 0; i < ws->meta.rows_count; i++) {
         const struct lxr_row_meta *r = &ws->meta.rows[i];
         if (r->row == row) {
@@ -1228,6 +1240,7 @@ int lxr_worksheet_col_options(const lxr_worksheet *ws, size_t col,
 {
     size_t i;
     if (!ws || !out || col == 0) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     for (i = 0; i < ws->meta.cols_count; i++) {
         const struct lxr_col_meta *c = &ws->meta.cols[i];
         if (col >= c->min && col <= c->max) {
@@ -1244,14 +1257,18 @@ int lxr_worksheet_col_options(const lxr_worksheet *ws, size_t col,
 
 int lxr_worksheet_default_row_height(const lxr_worksheet *ws, double *out)
 {
-    if (!ws || !out || !ws->meta.has_default_row_height) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (!ws->meta.has_default_row_height) return 0;
     *out = ws->meta.default_row_height;
     return 1;
 }
 
 int lxr_worksheet_default_col_width(const lxr_worksheet *ws, double *out)
 {
-    if (!ws || !out || !ws->meta.has_default_col_width) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (!ws->meta.has_default_col_width) return 0;
     *out = ws->meta.default_col_width;
     return 1;
 }
@@ -1260,14 +1277,18 @@ int lxr_worksheet_default_col_width(const lxr_worksheet *ws, double *out)
 
 size_t lxr_worksheet_data_validation_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.dvs_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.dvs_count;
 }
 
 int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
                                       lxr_data_validation *out)
 {
     const struct lxr_dv_owned *d;
-    if (!ws || !out || idx >= ws->meta.dvs_count) return 0;
+    if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    if (idx >= ws->meta.dvs_count) return 0;
     d = &ws->meta.dvs[idx];
     out->type               = d->type;
     out->operator_          = d->operator_;
@@ -1290,7 +1311,9 @@ int lxr_worksheet_data_validation_get(const lxr_worksheet *ws, size_t idx,
 
 size_t lxr_worksheet_cf_block_count(const lxr_worksheet *ws)
 {
-    return ws ? ws->meta.cf_blocks_count : 0;
+    if (!ws) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
+    return ws->meta.cf_blocks_count;
 }
 
 int lxr_worksheet_cf_block_get(const lxr_worksheet *ws, size_t idx,
@@ -1300,6 +1323,7 @@ int lxr_worksheet_cf_block_get(const lxr_worksheet *ws, size_t idx,
     const struct lxr_cf_block_owned *bk;
     size_t i;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = (lxr_worksheet_meta *)&ws->meta;
     if (idx >= m->cf_blocks_count) return 0;
     bk = &m->cf_blocks[idx];
@@ -1405,6 +1429,7 @@ int lxr_worksheet_page_setup(const lxr_worksheet *ws, lxr_page_setup *out)
 {
     const lxr_worksheet_meta *m;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = &ws->meta;
     /* If nothing about the page was parsed, surface 0 so callers can return
      * an explicit "no page setup" sentinel. */
@@ -1460,6 +1485,7 @@ int lxr_worksheet_autofilter(const lxr_worksheet *ws, lxr_autofilter *out)
     lxr_worksheet_meta *m;
     size_t i;
     if (!ws || !out) return 0;
+    if (lxr_worksheet_ensure_meta(ws) != LXR_NO_ERROR) return 0;
     m = (lxr_worksheet_meta *)&ws->meta;  /* mutable for cache materialisation */
     if (!m->autofilter_present) return 0;
 

@@ -3530,6 +3530,12 @@ PHP_METHOD(vtiful_xls, nextRowWithFormula)
         RETURN_NULL();
     }
 
+    /* nextRowWithFormula surfaces per-cell hyperlink URLs, which live in
+     * sheet metadata. Trigger a lazy metadata load now, while the data zip
+     * entry is still closed (minizip allows only one open entry at a time,
+     * so loading mid-stream would be declined). */
+    lxr_worksheet_hyperlink_count(obj->read_ptr.sheet_t);
+
     if (!sheet_read_row(obj->read_ptr.sheet_t)) {
         RETURN_NULL();
     }

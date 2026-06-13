@@ -657,7 +657,9 @@ PHP_METHOD(vtiful_xls, addSheet)
         sheet_name = ZSTR_VAL(zs_sheet_name);
     }
 
-    /* Per-sheet auto-size tracking starts fresh for the new sheet. */
+    /* Flush auto-size widths to the sheet being left, then reset tracking for
+     * the new sheet. */
+    xls_auto_widths_flush(&obj->write_ptr);
     xls_auto_widths_reset(&obj->write_ptr);
 
     obj->write_ptr.worksheet = workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
@@ -722,7 +724,8 @@ PHP_METHOD(vtiful_xls, checkoutSheet)
 
     SHEET_LINE_SET(obj, line);
 
-    /* Per-sheet auto-size tracking starts fresh for the switched sheet. */
+    /* Flush auto-size widths to the sheet being left, then reset tracking. */
+    xls_auto_widths_flush(&obj->write_ptr);
     xls_auto_widths_reset(&obj->write_ptr);
 
     obj->write_ptr.worksheet = sheet_t;
@@ -958,6 +961,9 @@ PHP_METHOD(vtiful_xls, output)
     xls_object *obj = Z_XLS_P(getThis());
 
     WORKBOOK_NOT_INITIALIZED(obj);
+
+    /* Apply any tracked auto-size widths before the workbook is packaged. */
+    xls_auto_widths_flush(&obj->write_ptr);
 
     workbook_file(&obj->write_ptr);
 
@@ -1494,20 +1500,19 @@ PHP_METHOD(vtiful_xls, setRow)
 /* }}} */
 
 /** {{{ \Vtiful\Kernel\Excel::autoSize([string $range])
- *  Sizes columns to fit their content. While cells are written the extension
- *  tracks the widest value per column; autoSize() applies those widths to the
- *  current worksheet. The optional A1 range (e.g. "A:Z", "A1:J100") limits
- *  which columns are affected — omit it to size every column that received
- *  data. Widths are estimates from character counts (wide/CJK code points
- *  count as 2); they approximate but cannot exactly match Excel's own
- *  auto-fit, which depends on font metrics only the application knows.
- *  Call before output() and before switching sheets, since the per-sheet
- *  tracking resets when the active worksheet changes.
+ *  Enables automatic column-width sizing for the active worksheet and
+ *  (optionally) restricts it to an A1 range such as "A:Z" or "A1:J100".
+ *  From this point on every written cell contributes its display width to a
+ *  per-column maximum; the tracked widths are applied to the worksheet at
+ *  output() time (and flushed when switching sheets). Call autoSize() BEFORE
+ *  writing the data it should size, otherwise the writes are not tracked.
+ *  Widths are estimates from character counts (wide/CJK code points count as
+ *  2); they approximate but cannot exactly match Excel's own auto-fit, which
+ *  depends on font metrics only the application knows.
  */
 PHP_METHOD(vtiful_xls, autoSize)
 {
     zend_string *range = NULL;
-    lxw_col_t    first_col = 0, last_col = 0;
 
     ZEND_PARSE_PARAMETERS_START(0, 1)
             Z_PARAM_OPTIONAL
@@ -1518,19 +1523,20 @@ PHP_METHOD(vtiful_xls, autoSize)
 
     xls_object *obj = Z_XLS_P(getThis());
 
-    WORKSHEET_NOT_INITIALIZED(obj);
+    WORKBOOK_NOT_INITIALIZED(obj);
 
+    obj->write_ptr.auto_size_enabled = 1;
     if (range != NULL && ZSTR_LEN(range) > 0) {
-        first_col = lxw_name_to_col(ZSTR_VAL(range));
-        last_col  = lxw_name_to_col_2(ZSTR_VAL(range));
-        if (last_col < first_col) last_col = first_col;
-        if (last_col >= LXW_COL_MAX) last_col = LXW_COL_MAX - 1;
+        obj->write_ptr.auto_size_first_col = lxw_name_to_col(ZSTR_VAL(range));
+        obj->write_ptr.auto_size_last_col  = lxw_name_to_col_2(ZSTR_VAL(range));
+        if (obj->write_ptr.auto_size_last_col < obj->write_ptr.auto_size_first_col)
+            obj->write_ptr.auto_size_last_col = obj->write_ptr.auto_size_first_col;
+        if (obj->write_ptr.auto_size_last_col >= LXW_COL_MAX)
+            obj->write_ptr.auto_size_last_col = LXW_COL_MAX - 1;
     } else {
-        first_col = 0;
-        last_col  = LXW_COL_MAX - 1;
+        obj->write_ptr.auto_size_first_col = 0;
+        obj->write_ptr.auto_size_last_col  = LXW_COL_MAX - 1;
     }
-
-    xls_auto_widths_apply(&obj->write_ptr, first_col, last_col);
 }
 /* }}} */
 

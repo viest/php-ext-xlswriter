@@ -81,9 +81,11 @@ static double utf8_display_width(const char *s, size_t len)
 
 /* Estimate a cell's display width in Excel column-width units. Converts the
  * value to its string form and measures it (wide/CJK codepoints count as 2).
- * No extra margin is added: libxlsxwriter already bakes in Excel's standard
- * column margin (~0.71) when the width is written, which matches what
- * Excel's own auto-fit produces. */
+ * Clamped to Excel's maximum column width (255). No extra margin is added:
+ * libxlsxwriter already bakes in Excel's standard column margin (~0.71) when
+ * the width is written, which matches what Excel's own auto-fit produces. */
+#define LXW_MAX_COL_WIDTH 255.0
+
 double xls_estimate_cell_width(zval *value)
 {
     zend_string *s;
@@ -95,6 +97,7 @@ double xls_estimate_cell_width(zval *value)
     width = utf8_display_width(ZSTR_VAL(s), ZSTR_LEN(s));
     zend_string_release(s);
 
+    if (width > LXW_MAX_COL_WIDTH) width = LXW_MAX_COL_WIDTH;
     return width;
 }
 
@@ -132,18 +135,36 @@ void xls_auto_widths_reset(xls_resource_write_t *res)
 }
 
 /* Apply the tracked per-column widths to [first_col, last_col] on the active
- * worksheet. Columns with no tracked content keep their existing width. */
+ * worksheet. Columns with no tracked content keep their existing width. A
+ * set_column failure (e.g. optimize-mode index conflict) is surfaced as a
+ * warning rather than silently dropped. */
 void xls_auto_widths_apply(xls_resource_write_t *res, lxw_col_t first_col, lxw_col_t last_col)
 {
     lxw_col_t c;
-    if (res == NULL || res->auto_widths == NULL) return;
+    if (res == NULL || res->auto_widths == NULL || res->worksheet == NULL) return;
     if (first_col > last_col) { lxw_col_t t = first_col; first_col = last_col; last_col = t; }
     for (c = first_col; c <= last_col; c++) {
         if (c >= res->auto_widths_n) break;
         if (res->auto_widths[c] > 0.0) {
-            worksheet_set_column_opt(res->worksheet, c, c, res->auto_widths[c], NULL, NULL);
+            lxw_error err = worksheet_set_column_opt(res->worksheet, c, c,
+                                                     res->auto_widths[c], NULL, NULL);
+            if (err != LXW_NO_ERROR) {
+                php_error_docref(NULL, E_WARNING,
+                    "autoSize: could not set column %u width (%s)",
+                    (unsigned)(c + 1), lxw_strerror(err));
+            }
         }
     }
+}
+
+/* Apply the tracked widths for the configured range to the active worksheet,
+ * then clear the per-column map (the enable flag survives so the next sheet
+ * keeps tracking). Called at output() and on sheet switch. */
+void xls_auto_widths_flush(xls_resource_write_t *res)
+{
+    if (res == NULL || !res->auto_size_enabled) return;
+    xls_auto_widths_apply(res, res->auto_size_first_col, res->auto_size_last_col);
+    xls_auto_widths_reset(res);
 }
 
 /*
@@ -158,8 +179,11 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
 
     zend_uchar value_type = Z_TYPE_P(value);
 
-    /* Track the cell's display width for autoSize(), independent of type. */
-    xls_track_auto_width(res, lxw_col, xls_estimate_cell_width(value));
+    /* Track the cell's display width for autoSize() — only when the user
+     * has opted in, so writes pay no cost otherwise. */
+    if (res->auto_size_enabled) {
+        xls_track_auto_width(res, lxw_col, xls_estimate_cell_width(value));
+    }
 
     if (value_type == IS_STRING) {
         zend_string *_zs_value = zval_get_string(value);

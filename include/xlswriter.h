@@ -96,10 +96,14 @@ typedef struct {
     lxw_workbook  *workbook;
     lxw_worksheet *worksheet;
     /* Auto-size tracking: per-column maximum estimated display width,
-     * accumulated during writes so Excel::autoSize() can apply them.
-     * Lazily allocated on first tracked write; reset on sheet switch. */
+     * accumulated during writes (only while auto_size_enabled) so the widths
+     * can be applied before the worksheet is packaged. Lazily allocated on
+     * first tracked write; reset on sheet switch. */
     double        *auto_widths;
     size_t         auto_widths_n;
+    int            auto_size_enabled;
+    lxw_col_t      auto_size_first_col;
+    lxw_col_t      auto_size_last_col;
 } xls_resource_write_t;
 
 /* Auto-size helpers (forward declarations — defined in kernel/write.c). */
@@ -107,6 +111,7 @@ double xls_estimate_cell_width(zval *value);
 void   xls_track_auto_width(xls_resource_write_t *res, lxw_col_t col, double width);
 void   xls_auto_widths_reset(xls_resource_write_t *res);
 void   xls_auto_widths_apply(xls_resource_write_t *res, lxw_col_t first_col, lxw_col_t last_col);
+void   xls_auto_widths_flush(xls_resource_write_t *res);
 
 typedef struct {
     lxw_format  *format;

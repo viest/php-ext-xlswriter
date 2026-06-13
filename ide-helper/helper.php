@@ -318,17 +318,20 @@ class Excel
     }
 
     /**
-     * Auto-size columns to fit their content.
+     * Enable automatic column-width sizing for the active worksheet.
      *
-     * Column widths are estimated from the content written so far (wide/CJK
-     * code points count as two columns) and applied to the active worksheet.
-     * The optional A1 range (e.g. "A:Z", "A1:J100") limits which columns are
-     * affected; omit it to size every column that received data. Estimates
-     * approximate Excel's own auto-fit, which depends on font metrics only
-     * the application knows.
+     * Once enabled, every subsequently written cell contributes its display
+     * width to a per-column maximum; the tracked widths are applied at
+     * output() time (and flushed when switching sheets). So call autoSize()
+     * BEFORE the writes it should track. Tracking is off by default, so
+     * scripts that never call autoSize() pay no per-cell cost.
      *
-     * Call before output() and before switching sheets, since the per-sheet
-     * width tracking resets when the active worksheet changes.
+     * The optional A1 range (e.g. "A:Z", "A1:J100") restricts which columns
+     * are sized; omit it to size every column that received data. Widths are
+     * estimates from character counts (wide/CJK code points count as two);
+     * they approximate but cannot exactly match Excel's own auto-fit, which
+     * depends on font metrics only the application knows. Widths are clamped
+     * to Excel's maximum of 255.
      *
      * @param string|null $range
      *

@@ -239,7 +239,7 @@
    <file md5sum="da217473da36f6b6f6928563171b77ef" name="tests/018.phpt" role="test" />
    <file md5sum="b9494ce1955051dce103015df06f70eb" name="tests/activate_sheet.phpt" role="test" />
    <file md5sum="9afd09472ad777e17ec5197e8efe6e84" name="tests/add_table.phpt" role="test" />
-   <file md5sum="6a8951677ae59b949335c8d4ca9444ad" name="tests/auto_size.phpt" role="test" />
+   <file md5sum="3017c89ac217c5e3385630721a329011" name="tests/auto_size.phpt" role="test" />
    <file md5sum="a68856d4a19b78edd1742ea4bb1f0a49" name="tests/chart_axis_name_x.phpt" role="test" />
    <file md5sum="61ee4f4db478bf31685b0193cd76b21b" name="tests/chart_axis_name_y.phpt" role="test" />
    <file md5sum="75086b73e6e5291bfb15b670d80de3af" name="tests/chart_line.phpt" role="test" />

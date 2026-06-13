@@ -312,7 +312,7 @@ static inline xls_object *php_vtiful_xls_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (xls_object *)((char *)(obj) - XtOffsetOf(xls_object, zo));
+    return (xls_object *)((char *)(obj) - offsetof(xls_object, zo));
 }
 
 static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
@@ -320,7 +320,7 @@ static inline format_object *php_vtiful_format_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (format_object *)((char *)(obj) - XtOffsetOf(format_object, zo));
+    return (format_object *)((char *)(obj) - offsetof(format_object, zo));
 }
 
 static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
@@ -328,7 +328,7 @@ static inline chart_object *php_vtiful_chart_fetch_object(zend_object *obj) {
         return NULL;
     }
 
-    return (chart_object *)((char *)(obj) - XtOffsetOf(chart_object, zo));
+    return (chart_object *)((char *)(obj) - offsetof(chart_object, zo));
 }
 
 static inline validation_object *php_vtiful_validation_fetch_object(zend_object *obj) {
@@ -336,7 +336,7 @@ static inline validation_object *php_vtiful_validation_fetch_object(zend_object 
         return NULL;
     }
 
-    return (validation_object *)((char *)(obj) - XtOffsetOf(validation_object, zo));
+    return (validation_object *)((char *)(obj) - offsetof(validation_object, zo));
 }
 
 static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_object *obj) {
@@ -344,21 +344,21 @@ static inline rich_string_object *php_vtiful_rich_string_fetch_object(zend_objec
         return NULL;
     }
 
-    return (rich_string_object *)((char *)(obj) - XtOffsetOf(rich_string_object, zo));
+    return (rich_string_object *)((char *)(obj) - offsetof(rich_string_object, zo));
 }
 
 static inline cond_format_object *php_vtiful_cond_format_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (cond_format_object *)((char *)(obj) - XtOffsetOf(cond_format_object, zo));
+    return (cond_format_object *)((char *)(obj) - offsetof(cond_format_object, zo));
 }
 
 static inline table_object *php_vtiful_table_fetch_object(zend_object *obj) {
     if (obj == NULL) {
         return NULL;
     }
-    return (table_object *)((char *)(obj) - XtOffsetOf(table_object, zo));
+    return (table_object *)((char *)(obj) - offsetof(table_object, zo));
 }
 
 #ifdef ENABLE_READER

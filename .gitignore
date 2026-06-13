@@ -1,6 +1,7 @@
 .deps
 *.lo
 *.la
+*.dep
 .libs
 .idea
 .DS_Store

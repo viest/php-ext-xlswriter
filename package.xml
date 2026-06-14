@@ -33,11 +33,11 @@
   <email>wjx@php.net</email>
   <active>yes</active>
  </lead>
- <date>2026-06-03</date>
+ <date>2026-06-14</date>
  <time>11:59:31</time>
  <version>
-  <release>2.0.2</release>
-  <api>2.0.2</api>
+  <release>2.0.3</release>
+  <api>2.0.3</api>
  </version>
  <stability>
   <release>stable</release>
@@ -45,11 +45,15 @@
  </stability>
  <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
  <notes>
-- Feature: insertImageOpt($row, $col, $path, $options) adds pixel-precise x_offset / y_offset within the anchor cell, scale via width/height, a &quot;don&apos;t move or size with cells&quot; anchor mode, plus mouseover tip, alt text (description / decorative) and a hyperlink overlay. Object positioning is exposed through new Excel::OBJECT_POSITION_* constants. The original insertImage() signature is untouched (#357 / #437 / #473 / #297 / #449).
-- Feature: insertDynamicFormula() and insertDynamicArrayFormula() emit the t=&quot;array&quot; + ref-range XML that Excel 365 dynamic array functions (UNIQUE, FILTER, SORT, SEQUENCE, XLOOKUP, etc.) require, which insertFormula() does not produce (#503).
-- Feature: outlineSettings(bool $visible = true, bool $below = true, bool $right = true, bool $autoStyle = false) configures worksheet outline (grouping) display (#540).
-- Fix: PHP true/false passed to writeSheet / data now writes a real boolean cell (xlsx type=&quot;b&quot;) via worksheet_write_boolean; previously bool fell through type_writer() silently and the cell was emitted as blank (#543).
-- Feature: autoSize(?string $range = null) sizes columns to fit their content. Column widths are estimated from the written cell values (wide/CJK code points count as two columns) and applied via the existing setColumn machinery. Widths approximate Excel&apos;s own auto-fit, which depends on font metrics only the application knows. Call before output() and before switching sheets (#305).
+- Feature: autoSize(?string $range = null) sizes columns to fit their content. Column widths are estimated from the written cell values (wide/CJK code points count as two columns) and applied at output() time. Tracking is opt-in (call autoSize() before the writes it should size), so writes that never use it pay no per-cell cost; widths are clamped to Excel&apos;s 255 max (#305 / #514).
+- Performance: worksheet metadata (merges, hyperlinks, protection, row/col options) is now loaded lazily instead of eagerly at openSheet(), so data-only reads (getSheetData / nextRow / nextCellCallback / putCSV) skip the second full XML pass — about 40% faster on large sheets.
+- Performance: merge-follow lookups (SKIP_MERGED_FOLLOW) are indexed by last_row with a forward cursor, turning the per-cell scan from O(cells × merges) into amortised near-O(1).
+- Fix: RichString leaked one zend_string per instance (the constructor&apos;s zend_string_copy was never released) and its fetch-object offset pointed at the wrong struct; both corrected.
+- Fix: the cell/row-end/image/comment/chart callback bridges no longer zval_ptr_dtor an uninitialised return value when a callback throws or the call fails.
+- Fix: xlsx_to_csv leaked its temp row on the write-failure path; openFile() now resets reader bookkeeping the way openSheet() and the dtor do; fileName()/constMemory() handle workbook/worksheet allocation failure instead of dereferencing NULL.
+- Fix: the reader now reads every image from drawing.xml instead of stopping after the first 64 KB.
+- Fix: PHP 8.6 compatibility — XtOffsetOf replaced with the standard offsetof, and zval_dtor with zval_ptr_dtor_nogc.
+- Fix: setColumn()/setRow() leaked the per-call row/col options struct, and insertImage() leaked the path zend_string (#573).
  </notes>
  <contents>
   <dir name="/">
@@ -65,24 +69,24 @@
    <file md5sum="af7e6721a2328f8b9feb9d7f2523e23a" name="include/rich_string.h" role="src" />
    <file md5sum="171dfb294523df3de00a3159140ac2d5" name="include/table.h" role="src" />
    <file md5sum="0654817791a6f7eb06618a39f90d6c71" name="include/validation.h" role="src" />
-   <file md5sum="7c2dd6b7097955bf309066b9899a97fd" name="include/xlswriter.h" role="src" />
+   <file md5sum="f55d8ccdbd5c4d9cf1cd0eace7518ef9" name="include/xlswriter.h" role="src" />
    <file md5sum="28447c52eaceb65ca212eeb694159ab7" name="include/minizip/ioapi.h" role="src" />
    <file md5sum="11ae6a9d654c95c47da55fe16772a1e5" name="include/minizip/unzip.h" role="src" />
-   <file md5sum="f35a72543869ff6d2ad7fc35a6500569" name="kernel/chart.c" role="src" />
+   <file md5sum="754bd53f685961309296ed275a309d37" name="kernel/chart.c" role="src" />
    <file md5sum="7a5a82a8ba673a0cf3d46bdd434a8de7" name="kernel/common.c" role="src" />
-   <file md5sum="5865d1cd30ca8d67f1134ecb8dcd2d07" name="kernel/conditional_format.c" role="src" />
-   <file md5sum="d5a10d0f063690d65dffae1e8d244a6c" name="kernel/csv.c" role="src" />
-   <file md5sum="c314096511406f308073be6d34320677" name="kernel/excel.c" role="src" />
+   <file md5sum="03db29950be582979d1856040c00cae6" name="kernel/conditional_format.c" role="src" />
+   <file md5sum="8b5506502769a29b45eea09ba2451ac6" name="kernel/csv.c" role="src" />
+   <file md5sum="690ae92f81152ee56766a5fc26919e45" name="kernel/excel.c" role="src" />
    <file md5sum="30d0acb47f850c23d424d3df18da18f2" name="kernel/exception.c" role="src" />
-   <file md5sum="6dd67b9dd954beff70f82c0825c65017" name="kernel/format.c" role="src" />
+   <file md5sum="2ba7a5004e4fe845b6c936c663845b59" name="kernel/format.c" role="src" />
    <file md5sum="b9ac064adaedd7671a60167db3699592" name="kernel/formula_ast.c" role="src" />
    <file md5sum="9ccc7fdc1ec0d10924457b64ab0b186c" name="kernel/help.c" role="src" />
-   <file md5sum="43553c3da866bf7eecbbe521b068a50f" name="kernel/read.c" role="src" />
+   <file md5sum="7e9db089d3d570a1d8c508397d6a6658" name="kernel/read.c" role="src" />
    <file md5sum="a14b7fd29aebd899d043a0cd756073d7" name="kernel/resource.c" role="src" />
-   <file md5sum="6abd601add9125a155f43731456024a0" name="kernel/rich_string.c" role="src" />
-   <file md5sum="7f95462b4b1b04070614ff9d331ead62" name="kernel/table.c" role="src" />
-   <file md5sum="05c951fa2cbb0a149c7bf4e34da5688a" name="kernel/validation.c" role="src" />
-   <file md5sum="e94ed89d556810929d6afbdf6f82e462" name="kernel/write.c" role="src" />
+   <file md5sum="943b489e55bd02011c9a3ed4db1cc0eb" name="kernel/rich_string.c" role="src" />
+   <file md5sum="7128075ab947221b07b890e5d807de5a" name="kernel/table.c" role="src" />
+   <file md5sum="5a7d3694a8a61311a000c1a3c1ceaca0" name="kernel/validation.c" role="src" />
+   <file md5sum="3724710046a4f1ca5e748e22213ce287" name="kernel/write.c" role="src" />
    <file md5sum="418b9368e13d819a0b3111f9712cd175" name="library/libxlsxwriter/include/xlsxwriter/third_party/ioapi.h" role="src" />
    <file md5sum="9a78fb091fa245b64434692197e9b4f2" name="library/libxlsxwriter/include/xlsxwriter/third_party/md5.h" role="src" />
    <file md5sum="e396c26d747f73186edf08d48c83996b" name="library/libxlsxwriter/include/xlsxwriter/third_party/queue.h" role="src" />
@@ -180,9 +184,9 @@
    <file md5sum="d8cbbeac84ade5b9df1a1eefd3ac07cc" name="library/libxlsxreader/include/xlsxreader/drawing.h" role="src" />
    <file md5sum="29207254abd2991401559384ba76d737" name="library/libxlsxreader/include/xlsxreader/styles.h" role="src" />
    <file md5sum="eac3da59634e008b64a870ac3022880d" name="library/libxlsxreader/include/xlsxreader/workbook.h" role="src" />
-   <file md5sum="80ca0ad5cd93a1594e344c774fa037fa" name="library/libxlsxreader/include/xlsxreader/worksheet.h" role="src" />
+   <file md5sum="dd71336670285110e1c6dcca2b432df5" name="library/libxlsxreader/include/xlsxreader/worksheet.h" role="src" />
    <file md5sum="3ff9699076ab7d45a5b12e135aa0a4a1" name="library/libxlsxreader/src/lxr_compat.h" role="src" />
-   <file md5sum="47c0f132e5f7702bb69e37854775299f" name="library/libxlsxreader/src/lxr_internal.h" role="src" />
+   <file md5sum="b976dccf27449282cf9c77bf96d268c9" name="library/libxlsxreader/src/lxr_internal.h" role="src" />
    <file md5sum="75d2e51d3c0254e4c69682647cd3cf56" name="library/libxlsxreader/src/lxr_numfmt.h" role="src" />
    <file md5sum="e65e815b59c4391985f355b016dc2612" name="library/libxlsxreader/src/lxr_sst.h" role="src" />
    <file md5sum="98190d502469911ff4a22a62b634f560" name="library/libxlsxreader/src/lxr_styles_priv.h" role="src" />
@@ -191,13 +195,13 @@
    <file md5sum="73e7ab897a91d3efeac2acf2316a3230" name="library/libxlsxreader/src/chart_meta.c" role="src" />
    <file md5sum="00a2ccafb36f07b7271566127e0cf4ae" name="library/libxlsxreader/src/comments.c" role="src" />
    <file md5sum="854631488501f6d15476a83859c41f7c" name="library/libxlsxreader/src/common.c" role="src" />
-   <file md5sum="16d1fff6ddae5c6739fef5065ac1d1e7" name="library/libxlsxreader/src/drawing.c" role="src" />
+   <file md5sum="761d7d8215feb8175c961c41e5802737" name="library/libxlsxreader/src/drawing.c" role="src" />
    <file md5sum="79aa608967e3ae4b0da6965742554635" name="library/libxlsxreader/src/numfmt.c" role="src" />
    <file md5sum="5421c035be00b3db5913276e36f11cb1" name="library/libxlsxreader/src/sst.c" role="src" />
    <file md5sum="6ea242d982a4f6d8b73511710b37d7f3" name="library/libxlsxreader/src/styles.c" role="src" />
    <file md5sum="fefe1584046bdb1ff121fe4d1863b70e" name="library/libxlsxreader/src/workbook.c" role="src" />
-   <file md5sum="0bad91d44746ece008be4b49091023e8" name="library/libxlsxreader/src/worksheet.c" role="src" />
-   <file md5sum="44969f4f97c9f68c97f712da00dcf13e" name="library/libxlsxreader/src/worksheet_meta.c" role="src" />
+   <file md5sum="1d87d6b4cdd5c05fdba364127a7e4ed4" name="library/libxlsxreader/src/worksheet.c" role="src" />
+   <file md5sum="1bb4e6e3bbea59788fb77c362475d27f" name="library/libxlsxreader/src/worksheet_meta.c" role="src" />
    <file md5sum="f02712b8fac0ebbedb606a555e3971c3" name="library/libxlsxreader/src/xml_pump.c" role="src" />
    <file md5sum="f299ff775d94df97d3d482d889af27e7" name="library/libxlsxreader/src/zip_io.c" role="src" />
    <file md5sum="fd6f0dc8462674bef9be5c0c85bffaa2" name="library/libxlsxwriter/third_party/dtoa/emyg_dtoa.c" role="src" />
@@ -391,13 +395,13 @@
    <file md5sum="c632d2b77bbd98f38a60694759a9685c" name="tests/xlsx/phase3.xlsx" role="test" />
    <file md5sum="ae6c269e649834f28fe0fcbd82ae0d29" name="tests/xlsx/phase4.xlsx" role="test" />
    <file md5sum="bb4256831dfd81f951bd6f4afbe1719f" name="CREDITS" role="doc" />
-   <file md5sum="b8c6adbbf75d5e1849dbbb4a677e3031" name="README.md" role="doc" />
-   <file md5sum="e2f01a5f4411c9f465751a58ca74e62c" name="README_zh.md" role="doc" />
+   <file md5sum="776427f0a7226912d0ed15845ee7f5a5" name="README.md" role="doc" />
+   <file md5sum="0884e8692f7fd4951a902eba8a3e9741" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
    <file md5sum="df057979071cf35f17a97ab1998ff834" name="config.m4" role="src" />
    <file md5sum="df131c05d22c84321e4fa597fdb5ff03" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
-   <file md5sum="62b60f34f0a0cb9e9528a71c60ea585e" name="php_xlswriter.h" role="src" />
+   <file md5sum="ba1c714558e7afe17f001fa8c82bc3e2" name="php_xlswriter.h" role="src" />
    <file md5sum="16aba97c1bf259c9648a6622945f134d" name="xlswriter.c" role="src" />
   </dir>
  </contents>
@@ -416,6 +420,25 @@
   <configureoption default="yes" name="enable-reader" prompt="enable reader supports?" />
  </extsrcrelease>
  <changelog>
+  <release>
+   <date>2026-06-03</date>
+   <time>00:00:00</time>
+   <version>
+    <release>2.0.2</release>
+    <api>2.0.2</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/viest/php-ext-excel-export/blob/master/LICENSE">BSD license</license>
+   <notes>
+- Feature: insertImageOpt($row, $col, $path, $options) adds pixel-precise x_offset / y_offset within the anchor cell, scale via width/height, a &quot;don&apos;t move or size with cells&quot; anchor mode, plus mouseover tip, alt text (description / decorative) and a hyperlink overlay. Object positioning is exposed through new Excel::OBJECT_POSITION_* constants. The original insertImage() signature is untouched (#357 / #437 / #473 / #297 / #449).
+- Feature: insertDynamicFormula() and insertDynamicArrayFormula() emit the t=&quot;array&quot; + ref-range XML that Excel 365 dynamic array functions (UNIQUE, FILTER, SORT, SEQUENCE, XLOOKUP, etc.) require, which insertFormula() does not produce (#503).
+- Feature: outlineSettings(bool $visible = true, bool $below = true, bool $right = true, bool $autoStyle = false) configures worksheet outline (grouping) display (#540).
+- Fix: PHP true/false passed to writeSheet / data now writes a real boolean cell (xlsx type=&quot;b&quot;) via worksheet_write_boolean; previously bool fell through type_writer() silently and the cell was emitted as blank (#543).
+   </notes>
+  </release>
   <release>
    <date>2026-05-25</date>
    <time>00:00:00</time>

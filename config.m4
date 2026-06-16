@@ -82,6 +82,10 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsxwriter/src/workbook.c \
     library/libxlsxwriter/src/worksheet.c \
     library/libxlsxwriter/src/xmlwriter.c \
+    library/libxlsxwriter/src/rich_value.c \
+    library/libxlsxwriter/src/rich_value_rel.c \
+    library/libxlsxwriter/src/rich_value_structure.c \
+    library/libxlsxwriter/src/rich_value_types.c \
     "
 
     libexpat="

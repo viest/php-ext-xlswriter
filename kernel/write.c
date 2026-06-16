@@ -865,8 +865,15 @@ workbook_file(xls_resource_write_t *self)
         if (worksheet->index == self->workbook->active_sheet)
             worksheet->active = 1;
 
-        if (worksheet->has_dynamic_arrays)
+        if (worksheet->has_dynamic_functions) {
             self->workbook->has_metadata = LXW_TRUE;
+            self->workbook->has_dynamic_functions = 1;
+        }
+
+        if (!STAILQ_EMPTY(worksheet->embedded_image_props)) {
+            self->workbook->has_metadata = LXW_TRUE;
+            self->workbook->has_embedded_images = 1;
+        }
     }
 
     /* Set workbook and worksheet VBA codenames if a macro has been added. */

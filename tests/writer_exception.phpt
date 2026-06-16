@@ -22,5 +22,5 @@ Check for vtiful presence
 @unlink(__DIR__ . '/writer_exception.xlsx');
 ?>
 --EXPECT--
-23
+25
 Worksheet row or column index out of range.

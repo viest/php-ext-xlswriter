@@ -73,6 +73,10 @@ if (PHP_XLSWRITER != "no") {
                 workbook.c \
                 worksheet.c \
                 xmlwriter.c \
+                rich_value.c \
+                rich_value_rel.c \
+                rich_value_structure.c \
+                rich_value_types.c \
                 ", "xlswriter", "libxlsxwriter");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libexpat\\expat\\lib", "\

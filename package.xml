@@ -108,6 +108,10 @@
    <file md5sum="6f0aeb1bf8f856cd3e5e373c9e24c0ff" name="library/libxlsxwriter/include/xlsxwriter/metadata.h" role="src" />
    <file md5sum="6e045122fb3e6529fd4cafb94316893b" name="library/libxlsxwriter/include/xlsxwriter/packager.h" role="src" />
    <file md5sum="b116a318e30cf8a486b81e8ab2f2fff9" name="library/libxlsxwriter/include/xlsxwriter/relationships.h" role="src" />
+   <file md5sum="e450c414bf40de71fea8c944bdfffc60" name="library/libxlsxwriter/include/xlsxwriter/rich_value.h" role="src" />
+   <file md5sum="16c1bb096b62e0a019fb42e7b8e1815f" name="library/libxlsxwriter/include/xlsxwriter/rich_value_rel.h" role="src" />
+   <file md5sum="77ef0be5bf546e1cc6a952237846c05a" name="library/libxlsxwriter/include/xlsxwriter/rich_value_structure.h" role="src" />
+   <file md5sum="5dc01a81c8427e8c93f0c2fb3494a736" name="library/libxlsxwriter/include/xlsxwriter/rich_value_types.h" role="src" />
    <file md5sum="e94d78abe914dbe732a13ea6672ad5c0" name="library/libxlsxwriter/include/xlsxwriter/shared_strings.h" role="src" />
    <file md5sum="fa8a02d461c250c655aa4c0cf39e92bd" name="library/libxlsxwriter/include/xlsxwriter/styles.h" role="src" />
    <file md5sum="90bd82018324493fe4ca5d2f6d123931" name="library/libxlsxwriter/include/xlsxwriter/table.h" role="src" />
@@ -148,6 +152,10 @@
    <file md5sum="719de339151177e6b16e292e77b1baff" name="library/libxlsxwriter/src/metadata.c" role="src" />
    <file md5sum="2f954a12bb9b6a9cf05004cc27ce7c01" name="library/libxlsxwriter/src/packager.c" role="src" />
    <file md5sum="1890e18cbffc1dd1debf143b192201d0" name="library/libxlsxwriter/src/relationships.c" role="src" />
+   <file md5sum="bc0012d97aa9e4ec373369ec1672a3b0" name="library/libxlsxwriter/src/rich_value.c" role="src" />
+   <file md5sum="26e123cff0699d480d50fca7063d1d72" name="library/libxlsxwriter/src/rich_value_rel.c" role="src" />
+   <file md5sum="7191ad4dd706ad8ed1b6f30aef666b45" name="library/libxlsxwriter/src/rich_value_structure.c" role="src" />
+   <file md5sum="439135117eae7d8d379e8f64f27e0321" name="library/libxlsxwriter/src/rich_value_types.c" role="src" />
    <file md5sum="7f54d7d1344eede97c07bec7ca11eeb4" name="library/libxlsxwriter/src/shared_strings.c" role="src" />
    <file md5sum="f1b0c3e9abefa3399c31c25ab82aa00e" name="library/libxlsxwriter/src/styles.c" role="src" />
    <file md5sum="185f6fce2cf96c9f3d22291306cfab4b" name="library/libxlsxwriter/src/table.c" role="src" />

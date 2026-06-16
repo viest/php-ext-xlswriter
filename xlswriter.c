@@ -27,7 +27,7 @@ int le_xls_writer;
 ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_version_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_auther_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_author_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 /* {{{ xlswriter_get_version
@@ -126,7 +126,7 @@ PHP_MINFO_FUNCTION(xlswriter)
  */
 const zend_function_entry xlswriter_functions[] = {
     PHP_FE(xlswriter_get_version, xlswriter_get_version_arginfo)
-    PHP_FE(xlswriter_get_author,  xlswriter_get_auther_arginfo)
+    PHP_FE(xlswriter_get_author,  xlswriter_get_author_arginfo)
 	PHP_FE_END
 };
 /* }}} */

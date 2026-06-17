@@ -16,6 +16,8 @@ static const char *SOURCE_XLSX = "fixtures/edit_source.xlsx";
 static const char *NOOP_XLSX = "fixtures/edit_noop.xlsx";
 static const char *NUMBER_XLSX = "fixtures/edit_number.xlsx";
 static const char *SNAPSHOT_XLSX = "fixtures/edit_snapshot.xlsx";
+static const char *CUSTOM_TARGET_XLSX = "fixtures/edit_custom_target.xlsx";
+static const char *NORMALIZED_TARGET_XLSX = "fixtures/edit_normalized_target.xlsx";
 
 static void assert_ok(lxlsx_error err)
 {
@@ -44,7 +46,7 @@ static void write_edit_workbook(const char *path, double a1, double d1)
 
     assert_ok(lxlsx_worksheet_set_column(worksheet, 0, 0, 20.0, NULL));
     assert_ok(lxlsx_worksheet_set_row_opt(worksheet, 0, 18.0, NULL, &row_opts));
-    assert_ok(lxlsx_worksheet_write_number(worksheet, 0, 0, a1, NULL));
+    assert_ok(lxlsx_worksheet_write_number(worksheet, 0, 0, a1, blank_format));
     assert_ok(lxlsx_worksheet_write_formula_str(worksheet, 0, 1,
                                                 "=\"O\"&\"K\"", NULL, "OK"));
     assert_ok(lxlsx_worksheet_write_blank(worksheet, 0, 2, blank_format));
@@ -107,7 +109,8 @@ static void assert_xml_contains(const unsigned char *xml, const char *needle)
     TEST_ASSERT_NOT_NULL_MESSAGE(strstr((const char *)xml, needle), needle);
 }
 
-static void assert_number_cell(const char *path, size_t row, size_t col, double expected)
+static void assert_number_cell_in_sheet(const char *path, const char *sheet_name,
+                                        size_t row, size_t col, double expected)
 {
     lxlsx_reader_workbook *workbook = NULL;
     lxlsx_reader_worksheet *worksheet = NULL;
@@ -118,7 +121,7 @@ static void assert_number_cell(const char *path, size_t row, size_t col, double 
                           lxlsx_reader_workbook_open(path, &workbook));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
                           lxlsx_reader_workbook_get_worksheet_by_name(
-                              workbook, "Edit", LXLSX_READER_SKIP_NONE,
+                              workbook, sheet_name, LXLSX_READER_SKIP_NONE,
                               &worksheet));
 
     while (lxlsx_reader_worksheet_next_row(worksheet) == LXLSX_READER_NO_ERROR) {
@@ -135,6 +138,11 @@ static void assert_number_cell(const char *path, size_t row, size_t col, double 
     TEST_ASSERT_TRUE(found);
     lxlsx_reader_worksheet_close(worksheet);
     lxlsx_reader_workbook_close(workbook);
+}
+
+static void assert_number_cell(const char *path, size_t row, size_t col, double expected)
+{
+    assert_number_cell_in_sheet(path, "Edit", row, col, expected);
 }
 
 static void assert_formula_cell(const char *path, size_t row, size_t col,
@@ -212,10 +220,31 @@ static void test_number_edit_preserves_worksheet_state(void)
     assert_xml_contains(xml, "<sheetProtection");
     assert_xml_contains(xml, "<mergeCells");
     assert_xml_contains(xml, "<hyperlinks>");
+    assert_xml_contains(xml, "<c r=\"A1\" s=\"");
     assert_xml_contains(xml, "<c r=\"C1\" s=\"");
     assert_xml_contains(xml, "t=\"str\"");
     assert_xml_contains(xml, "<v>OK</v>");
     lxlsx_source_package_free_buffer(xml);
+}
+
+static void assert_relationship_target_edit(const char *source_path)
+{
+    lxlsx_edit_session *session;
+
+    remove(NUMBER_XLSX);
+    session = lxlsx_edit_open(source_path);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_number(session, "Custom", 0, 0, 17.0));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_number_cell_in_sheet(NUMBER_XLSX, "Custom", 1, 1, 17.0);
+}
+
+static void test_relationship_targets_locate_custom_worksheet_parts(void)
+{
+    assert_relationship_target_edit(CUSTOM_TARGET_XLSX);
+    assert_relationship_target_edit(NORMALIZED_TARGET_XLSX);
 }
 
 static void test_formula_edit_roundtrips(void)
@@ -259,6 +288,7 @@ int main(void)
     UNITY_BEGIN();
     RUN_TEST(test_noop_edit_save_is_byte_identical);
     RUN_TEST(test_number_edit_preserves_worksheet_state);
+    RUN_TEST(test_relationship_targets_locate_custom_worksheet_parts);
     RUN_TEST(test_formula_edit_roundtrips);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();

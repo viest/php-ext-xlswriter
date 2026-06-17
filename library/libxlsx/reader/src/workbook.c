@@ -30,9 +30,71 @@ static char *str_dup(const char *s)
     return strdup(s);
 }
 
+static char *normalize_zip_path(char *path)
+{
+    char **segments;
+    char *p;
+    size_t count = 0;
+    size_t i;
+    size_t len;
+    size_t out_len = 0;
+    char *out;
+    char *write;
+
+    if (!path) return NULL;
+    len = strlen(path);
+    segments = (char **)calloc(len + 1, sizeof(*segments));
+    if (!segments) {
+        free(path);
+        return NULL;
+    }
+
+    p = path;
+    while (*p) {
+        char *seg;
+        while (*p == '/') p++;
+        if (!*p) break;
+        seg = p;
+        while (*p && *p != '/') p++;
+        if (*p == '/') *p++ = 0;
+
+        if (strcmp(seg, ".") == 0 || seg[0] == 0) {
+            continue;
+        } else if (strcmp(seg, "..") == 0) {
+            if (count > 0) count--;
+        } else {
+            segments[count++] = seg;
+        }
+    }
+
+    for (i = 0; i < count; i++)
+        out_len += strlen(segments[i]) + (i ? 1 : 0);
+
+    out = (char *)malloc(out_len + 1);
+    if (!out) {
+        free(segments);
+        free(path);
+        return NULL;
+    }
+
+    write = out;
+    for (i = 0; i < count; i++) {
+        size_t seg_len = strlen(segments[i]);
+        if (i) *write++ = '/';
+        memcpy(write, segments[i], seg_len);
+        write += seg_len;
+    }
+    *write = 0;
+
+    free(segments);
+    free(path);
+    return out;
+}
+
 /* Normalize a workbook-relative path to a zip-absolute path.
  * Examples:
  *   base="xl/", target="worksheets/sheet1.xml" -> "xl/worksheets/sheet1.xml"
+ *   base="xl/", target="./worksheets/../worksheets/custom.xml" -> "xl/worksheets/custom.xml"
  *   base="xl/", target="/xl/sharedStrings.xml" -> "xl/sharedStrings.xml"
  */
 static char *join_base(const char *base, const char *target)
@@ -40,7 +102,7 @@ static char *join_base(const char *base, const char *target)
     size_t bl, tl;
     char  *out;
     if (!target) return NULL;
-    if (target[0] == '/') return str_dup(target + 1);
+    if (target[0] == '/') return normalize_zip_path(str_dup(target + 1));
     bl = base ? strlen(base) : 0;
     tl = strlen(target);
     out = (char *)malloc(bl + tl + 1);
@@ -48,7 +110,7 @@ static char *join_base(const char *base, const char *target)
     if (bl) memcpy(out, base, bl);
     memcpy(out + bl, target, tl);
     out[bl + tl] = 0;
-    return out;
+    return normalize_zip_path(out);
 }
 
 static char *base_path_of(const char *path)

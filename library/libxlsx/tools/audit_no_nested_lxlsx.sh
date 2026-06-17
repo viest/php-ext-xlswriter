@@ -1,7 +1,9 @@
 #!/bin/sh
 set -eu
 
-if [ -d "library/libxlsx/lxlsx" ]; then
-    printf '%s\n' "unexpected nested library/libxlsx/lxlsx directory" >&2
+nested_dir="library/libxlsx/"'lxlsx'
+
+if [ -d "$nested_dir" ]; then
+    printf '%s\n' "unexpected nested %s directory" "$nested_dir" >&2
     exit 1
 fi

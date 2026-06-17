@@ -57,7 +57,12 @@ EDIT_OUTPUTS := \
 	$(FIXTURES_DIR)/edit_noop.xlsx \
 	$(FIXTURES_DIR)/edit_number.xlsx \
 	$(FIXTURES_DIR)/edit_snapshot.xlsx \
-	$(FIXTURES_DIR)/edit_raw_copy.xlsx
+	$(FIXTURES_DIR)/edit_raw_copy.xlsx \
+	$(FIXTURES_DIR)/edit_duplicate.zip \
+	$(FIXTURES_DIR)/edit_duplicate_noop.zip
+EDIT_FIXTURES := \
+	$(FIXTURES_DIR)/edit_custom_target.xlsx \
+	$(FIXTURES_DIR)/edit_normalized_target.xlsx
 READER_FIXTURES := \
 	$(FIXTURES_DIR)/types.xlsx \
 	$(FIXTURES_DIR)/phase1.xlsx \
@@ -70,7 +75,7 @@ PUBLIC_HEADERS := $(patsubst $(INC_DIR)/%,%, \
 	$(wildcard $(INC_DIR)/lxlsx/reader/*.h))
 HEADER_TEST_STAMPS := $(patsubst %.h,$(OBJ_DIR)/headers/%.ok,$(PUBLIC_HEADERS))
 
-.PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test header-test
+.PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test edit-fixtures header-test
 
 all: $(LIB_TEST)
 
@@ -88,8 +93,10 @@ reader-test: reader-fixtures $(READER_TEST_BINS)
 integration-test: $(INTEGRATION_TEST_BINS)
 	$(Q)set -e; for test_bin in $(INTEGRATION_TEST_BINS); do ./$$test_bin; done
 
-edit-test: $(EDIT_TEST_BINS)
+edit-test: edit-fixtures $(EDIT_TEST_BINS)
 	$(Q)set -e; for test_bin in $(EDIT_TEST_BINS); do ./$$test_bin; done
+
+edit-fixtures: $(EDIT_FIXTURES)
 
 header-test: $(HEADER_TEST_STAMPS)
 
@@ -146,6 +153,12 @@ $(FIXTURES_DIR)/phase3.xlsx: $(FIXTURES_DIR)/gen_phase3_xlsx.py
 $(FIXTURES_DIR)/phase4.xlsx: $(FIXTURES_DIR)/gen_phase4_xlsx.py
 	$(Q)$(PYTHON) $< $@
 
+$(FIXTURES_DIR)/edit_custom_target.xlsx: $(FIXTURES_DIR)/gen_edit_relationship_xlsx.py
+	$(Q)$(PYTHON) $< $@ "worksheets/custom.xml"
+
+$(FIXTURES_DIR)/edit_normalized_target.xlsx: $(FIXTURES_DIR)/gen_edit_relationship_xlsx.py
+	$(Q)$(PYTHON) $< $@ "./worksheets/../worksheets/custom.xml"
+
 clean:
 	$(Q)$(MAKE) -C writer clean \
 		LIBS_A="$(abspath $(LIB_TEST))" \
@@ -154,4 +167,4 @@ clean:
 	$(Q)rm -rf $(OBJ_DIR) $(LIB_TEST) $(READER_TEST_BINS) $(READER_FIXTURES) \
 		$(READER_TEST_DIR)/*.dSYM $(INTEGRATION_TEST_BINS) $(INTEGRATION_TEST_DIR)/*.dSYM \
 		$(EDIT_TEST_BINS) $(EDIT_TEST_DIR)/*.dSYM \
-		$(INTEGRATION_OUTPUTS) $(EDIT_OUTPUTS)
+		$(INTEGRATION_OUTPUTS) $(EDIT_OUTPUTS) $(EDIT_FIXTURES)

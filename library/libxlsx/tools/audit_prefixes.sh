@@ -37,4 +37,22 @@ check '^[A-Za-z_][A-Za-z0-9_ *]+[[:space:]]+(workbook|worksheet|format|chart|cha
     library/libxlsx/include/lxlsx.h \
     library/libxlsx/include/lxlsx
 
+check '(^|[^A-Za-z0-9_])lxr_' \
+    library/libxlsx/include/lxlsx/reader.h \
+    library/libxlsx/include/lxlsx/reader \
+    library/libxlsx/reader/src \
+    library/libxlsx/test/reader
+
+check '(^|[^A-Za-z0-9_])LXR_' \
+    library/libxlsx/include/lxlsx/reader.h \
+    library/libxlsx/include/lxlsx/reader \
+    library/libxlsx/reader/src \
+    library/libxlsx/test/reader
+
+check 'libxlsxreader|xlsxreader' \
+    library/libxlsx/include/lxlsx/reader.h \
+    library/libxlsx/include/lxlsx/reader \
+    library/libxlsx/reader/src \
+    library/libxlsx/test/reader
+
 exit "$status"

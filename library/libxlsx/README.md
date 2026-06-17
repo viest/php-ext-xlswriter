@@ -5,6 +5,6 @@ repository.
 
 Public C symbols exported by this library use the `lxlsx_*` prefix. The writer
 and reader implementations are internal modules of this library, not separate
-`libxlsxwriter` or `libxlsxreader` libraries.
+split libraries.
 
 PHP and Zend extension glue is intentionally kept outside this directory.

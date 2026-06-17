@@ -7,10 +7,19 @@
  *
  * - ssize_t: POSIX-only on Linux/macOS; on MSVC use SSIZE_T from BaseTsd.h.
  * - read / lseek wrappers: POSIX on Unix, _read / _lseeki64 on MSVC.
+ * - binary fd mode: required on Windows when reading ZIP data from a caller fd.
  * - off_t: synthesised on MSVC where the type is not declared in this scope.
  */
 
 #include <stddef.h>
+
+#if defined(_WIN32)
+#  include <fcntl.h>
+#  include <io.h>
+#  define lxlsx_reader_set_binary(fd) _setmode((fd), _O_BINARY)
+#else
+#  define lxlsx_reader_set_binary(fd) 0
+#endif
 
 #if defined(_MSC_VER)
 #  include <io.h>

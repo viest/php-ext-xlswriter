@@ -218,6 +218,7 @@ lxlsx_reader_zip *lxlsx_reader_zip_open_fd(int fd)
     lxlsx_reader_zip          *z;
 
     if (fd < 0) return NULL;
+    if (lxlsx_reader_set_binary(fd) < 0) return NULL;
 
     stream = (lxlsx_reader_fd_stream *)calloc(1, sizeof(*stream));
     if (!stream) return NULL;

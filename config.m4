@@ -11,13 +11,6 @@ PHP_ARG_WITH([openssl],
     [no],
     [no])
 
-PHP_ARG_ENABLE([reader],
-    [whether to enable the xlsx reader support],
-    [AS_HELP_STRING([--disable-reader],
-        [Disable xlsx reader])],
-    [yes],
-    [no])
-
 if test "$PHP_XLSWRITER" != "no"; then
     xlswriter_sources="
     xlswriter.c \
@@ -147,18 +140,13 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/tmpfileplus])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/md5])
 
-    if test "$PHP_READER" != "no"; then
-        AC_MSG_RESULT([building bundled libxlsx reader])
-
-        xlswriter_sources="$xlswriter_sources $reader_sources"
-        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
-        PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/reader/src])
-        PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
-        PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/reader/src])
-        LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
-
-        AC_DEFINE(ENABLE_READER, 1, [enable reader])
-    fi
+    AC_MSG_RESULT([building bundled libxlsx reader])
+    xlswriter_sources="$xlswriter_sources $reader_sources"
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/reader/src])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/reader/src])
+    LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
 
     if test -z "$PHP_DEBUG"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])

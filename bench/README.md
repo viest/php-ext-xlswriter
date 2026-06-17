@@ -7,7 +7,7 @@ workload and writes a JSON envelope to `bench/results/<git-sha>.json`.
 
 ```sh
 # Build the extension first:
-phpize && ./configure --enable-reader && make -j
+phpize && ./configure && make -j
 
 # Default (100k rows × 10 cols ≈ 1M cells):
 php -d extension=$(pwd)/modules/xlswriter.so bench/bench_write_1m_cells.php

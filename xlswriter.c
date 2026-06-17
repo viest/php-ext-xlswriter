@@ -18,9 +18,7 @@
 #include "ext/standard/info.h"
 #include "xlswriter.h"
 
-#ifdef ENABLE_READER
 #include "lxlsx/reader.h"
-#endif
 
 int le_xls_writer;
 
@@ -106,9 +104,7 @@ PHP_MINFO_FUNCTION(xlswriter)
     php_info_print_table_row(2, "bundled libxlsx runtime version", lxlsx_version());
 #endif
 
-#ifdef ENABLE_READER
     php_info_print_table_row(2, "bundled libxlsx reader", "enabled");
-#endif
 
 	php_info_print_table_end();
 }

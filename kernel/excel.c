@@ -46,10 +46,8 @@ PHP_VTIFUL_API zend_object *vtiful_xls_objects_new(zend_class_entry *ce)
 
     intern->read_ptr.file_t  = NULL;
     intern->read_ptr.sheet_t = NULL;
-#ifdef ENABLE_READER
     ZVAL_NULL(&intern->read_ptr.pending_real_row);
     php_vtiful_reset_reader_state(&intern->read_ptr);
-#endif
 
     intern->lxlsx_format_ptr.format  = NULL;
     intern->write_ptr.workbook = NULL;
@@ -2533,8 +2531,6 @@ PHP_METHOD(vtiful_xls, validation)
 }
 /* }}} */
 
-#ifdef ENABLE_READER
-
 /** {{{ \Vtiful\Kernel\Excel::openFile()
  */
 PHP_METHOD(vtiful_xls, openFile)
@@ -4023,8 +4019,6 @@ PHP_METHOD(vtiful_xls, iterateCharts)
 }
 /* }}} */
 
-#endif
-
 /** {{{ xls_methods
 */
 zend_function_entry xls_methods[] = {
@@ -4105,7 +4099,6 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, stringFromColumnIndex,   xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
         PHP_ME(vtiful_xls, timestampFromDateDouble, xls_string_to_index, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 
-#ifdef ENABLE_READER
         PHP_ME(vtiful_xls, openFile,         xls_open_file_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, openSheet,        xls_open_sheet_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, putCSV,           xls_put_csv_arginfo,            ZEND_ACC_PUBLIC)
@@ -4137,7 +4130,6 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getStyleFormat,     xls_get_style_format_arginfo,     ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, iterateImages,      xls_iterate_images_arginfo,       ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextCellCallback,   xls_next_cell_callback_arginfo,   ZEND_ACC_PUBLIC)
-#endif
 
         PHP_FE_END
 };
@@ -4160,7 +4152,6 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_FIL,  ZEND_ACC_PRIVATE);
     REGISTER_CLASS_PROPERTY_NULL(vtiful_xls_ce, V_XLS_TYPE, ZEND_ACC_PRIVATE);
 
-#ifdef ENABLE_READER
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_NONE,        LXLSX_READER_SKIP_NONE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_ROW,   LXLSX_READER_SKIP_EMPTY_ROWS);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_HIDDEN_ROW,  LXLSX_READER_SKIP_HIDDEN_ROWS);
@@ -4168,7 +4159,6 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_EMPTY_VALUE, SKIP_EMPTY_VALUE);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_SKIP_MERGED_FOLLOW, LXLSX_READER_SKIP_MERGED_FOLLOW);
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, V_XLS_CONST_READ_FORMULA_VERBOSE,    LXLSX_READER_FORMULA_VERBOSE);
-#endif
 
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_HIDE_ALL",    LXLSX_HIDE_ALL_GRIDLINES)
     REGISTER_CLASS_CONST_LONG(vtiful_xls_ce, "GRIDLINES_SHOW_ALL",    LXLSX_SHOW_ALL_GRIDLINES)
@@ -4239,4 +4229,3 @@ VTIFUL_STARTUP_FUNCTION(excel) {
     return SUCCESS;
 }
 /* }}} */
-

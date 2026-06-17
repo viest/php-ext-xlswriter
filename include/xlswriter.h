@@ -42,7 +42,6 @@
 #include "table.h"
 #include "help.h"
 
-#ifdef ENABLE_READER
 #include "lxlsx/reader.h"
 #include "read.h"
 #include "csv.h"
@@ -71,16 +70,6 @@ typedef struct {
     zend_fcall_info       *fci;
     zend_fcall_info_cache *fci_cache;
 } xls_read_callback_data;
-#endif
-
-#ifndef ENABLE_READER
-typedef struct {
-    void      *file_t;
-    void      *sheet_t;
-    zend_long data_type_default;
-    zend_long sheet_flag;
-} xls_resource_read_t;
-#endif
 
 enum xlswriter_boolean {
     XLSWRITER_FALSE,
@@ -361,7 +350,6 @@ static inline table_object *php_vtiful_table_fetch_object(zend_object *obj) {
     return (table_object *)((char *)(obj) - offsetof(table_object, zo));
 }
 
-#ifdef ENABLE_READER
 static inline void php_vtiful_reset_reader_state(xls_resource_read_t *read_ptr) {
     if (read_ptr == NULL) {
         return;
@@ -376,7 +364,6 @@ static inline void php_vtiful_reset_reader_state(xls_resource_read_t *read_ptr) 
     read_ptr->expected_row_nr    = 1;
     read_ptr->pending_synth_rows = 0;
 }
-#endif
 
 static inline void php_vtiful_close_resource(zend_object *obj) {
     if (obj == NULL) {
@@ -412,7 +399,6 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
         intern->row_options = NULL;
     }
 
-#ifdef ENABLE_READER
     if (intern->read_ptr.sheet_t != NULL) {
         lxlsx_reader_worksheet_close(intern->read_ptr.sheet_t);
         intern->read_ptr.sheet_t = NULL;
@@ -424,7 +410,6 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
     }
 
     php_vtiful_reset_reader_state(&intern->read_ptr);
-#endif
 
     intern->read_ptr.data_type_default = READ_TYPE_EMPTY;
 }

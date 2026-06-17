@@ -11,6 +11,11 @@
 </div>
 
 <div align=center>
+<a href="https://gitee.com/viest/php-ext-xlswriter"><img alt="php-ext-xlswriter" src="https://gitee.com/viest/php-ext-xlswriter/badge/star.svg?theme=gvp"/></a>
+<a href="https://gitcode.com/viest/php-ext-xlsxwriter"><img alt="php-ext-xlswriter" src="https://gitcode.com/viest/php-ext-xlsxwriter/star/badge.svg"/></a>
+</div>
+
+<div align=center>
 <a href="https://github.com/viest/php-ext-xlswriter/actions"><img alt="php-ext-xlswriter" src="https://img.shields.io/github/actions/workflow/status/viest/php-ext-xlswriter/main.yml?branch=master&logo=github"></a>
 <a href="https://ci.appveyor.com/project/viest/php-ext-xlswriter/branch/master"><img alt="php-ext-xlswriter" src="https://ci.appveyor.com/api/projects/status/w4cfjo9e4gsrs6rn/branch/master?svg=true"/></a>
 <a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter?ref=badge_shield"><img alt="php-ext-xlswriter" src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fviest%2Fphp-ext-xlswriter.svg?type=shield"/></a>

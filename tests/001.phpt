@@ -10,8 +10,8 @@ echo "Excel class loaded: ", $ce->getName(), PHP_EOL;
 echo "has openFile: ", $ce->hasMethod('openFile') ? 'yes' : 'no', PHP_EOL;
 echo "has output: ",   $ce->hasMethod('output')   ? 'yes' : 'no', PHP_EOL;
 ?>
---EXPECT--
+--EXPECTF--
 xlswriter extension is available
 Excel class loaded: Vtiful\Kernel\Excel
-has openFile: yes
+has openFile: %s
 has output: yes

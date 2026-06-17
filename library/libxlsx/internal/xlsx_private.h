@@ -253,6 +253,7 @@ struct lxlsx_reader_worksheet {
     /* FSM state */
     lxlsx_reader_ws_state  state;
     lxlsx_reader_ws_state  state_before_skip;
+    lxlsx_reader_error     parse_error;
     int           skip_depth;
     char         *skip_tag;
 
@@ -368,6 +369,10 @@ lxlsx_reader_error lxlsx_reader_worksheet_ensure_meta(const lxlsx_reader_workshe
 /* Open the data zip entry + XML pump on first data read. If the worksheet
  * uses merge-follow, metadata is loaded first (single-entry constraint). */
 lxlsx_reader_error lxlsx_reader_worksheet_ensure_data_open(lxlsx_reader_worksheet *ws);
+
+lxlsx_reader_error lxlsx_reader_workbook_open_memory_borrowed(const void *data,
+                                      size_t len,
+                                      lxlsx_reader_workbook **out);
 
 /* worksheet_meta.c */
 lxlsx_reader_error lxlsx_reader_worksheet_meta_load(lxlsx_reader_worksheet *ws);

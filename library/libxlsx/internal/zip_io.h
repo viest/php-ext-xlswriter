@@ -12,6 +12,7 @@ typedef struct lxlsx_reader_zip_file lxlsx_reader_zip_file;
 lxlsx_reader_zip *lxlsx_reader_zip_open_path  (const char *path);
 lxlsx_reader_zip *lxlsx_reader_zip_open_fd    (int fd);
 lxlsx_reader_zip *lxlsx_reader_zip_open_memory(const void *data, size_t len);
+lxlsx_reader_zip *lxlsx_reader_zip_open_memory_borrowed(const void *data, size_t len);
 void     lxlsx_reader_zip_close      (lxlsx_reader_zip *zip);
 
 int           lxlsx_reader_zip_entry_exists(lxlsx_reader_zip *zip, const char *name);

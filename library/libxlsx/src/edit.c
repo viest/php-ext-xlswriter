@@ -425,7 +425,7 @@ static char *build_cell_xml(const lxlsx_edit_change *change,
         goto fail;
 
     if (change->type == LXLSX_EDIT_CHANGE_NUMBER) {
-        snprintf(number, sizeof(number), "%.15g", change->number);
+        snprintf(number, sizeof(number), "%.17g", change->number);
         if (buf_append_s(&buf, "<v>") != 0 ||
             buf_append_s(&buf, number) != 0 ||
             buf_append_s(&buf, "</v>") != 0)
@@ -708,7 +708,7 @@ lxlsx_edit_session *lxlsx_edit_open(const char *path)
     }
 
     data = lxlsx_source_package_data(session->package, &data_len);
-    if (lxlsx_reader_workbook_open_memory(data, data_len, &session->workbook)
+    if (lxlsx_reader_workbook_open_memory_borrowed(data, data_len, &session->workbook)
         != LXLSX_READER_NO_ERROR) {
         lxlsx_source_package_close(session->package);
         free(session);

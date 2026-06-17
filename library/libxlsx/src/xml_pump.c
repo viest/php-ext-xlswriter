@@ -159,9 +159,8 @@ void lxlsx_reader_xml_pump_set_handlers(lxlsx_reader_xml_pump    *p,
                                lxlsx_reader_xml_text_fn  t,
                                void            *ud)
 {
-    /* The bridge struct lives in user-data slot; we allocate it lazily and
-     * leak it by attaching to the parser. For simplicity, just keep one
-     * bridge per pump.  Reuse if already allocated. */
+    /* The bridge struct lives in the parser user-data slot. Keep one bridge
+     * per pump, reuse it across handler updates, and free it in destroy. */
     lxlsx_reader_xml_bridge *b;
     if (!p) return;
 

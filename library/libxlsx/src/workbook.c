@@ -2985,6 +2985,7 @@ lxlsx_workbook_set_size(lxlsx_workbook *workbook, uint16_t width, uint16_t heigh
  ****************************************************************************/
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -3012,6 +3013,7 @@ static const char *REL_TYPE_STYLES =
 static int sheet_array_push(lxlsx_reader_workbook *wb, const char *name, const char *rid,
                             lxlsx_reader_sheet_visibility vis)
 {
+    lxlsx_reader_sheet_info *sheet;
     if (wb->sheet_count >= wb->sheet_cap) {
         size_t cap = wb->sheet_cap ? wb->sheet_cap * 2 : 8;
         lxlsx_reader_sheet_info *nb = (lxlsx_reader_sheet_info *)realloc(
@@ -3020,10 +3022,17 @@ static int sheet_array_push(lxlsx_reader_workbook *wb, const char *name, const c
         wb->sheets    = nb;
         wb->sheet_cap = cap;
     }
-    wb->sheets[wb->sheet_count].name       = lxlsx_reader_strdup(name);
-    wb->sheets[wb->sheet_count].rel_id     = lxlsx_reader_strdup(rid);
-    wb->sheets[wb->sheet_count].target     = NULL;
-    wb->sheets[wb->sheet_count].visibility = (int)vis;
+    sheet = &wb->sheets[wb->sheet_count];
+    memset(sheet, 0, sizeof(*sheet));
+    sheet->name = lxlsx_reader_strdup(name);
+    sheet->rel_id = lxlsx_reader_strdup(rid);
+    if ((name && !sheet->name) || (rid && !sheet->rel_id)) {
+        free(sheet->name);
+        free(sheet->rel_id);
+        memset(sheet, 0, sizeof(*sheet));
+        return -1;
+    }
+    sheet->visibility = (int)vis;
     wb->sheet_count++;
     return 0;
 }
@@ -3093,6 +3102,8 @@ static lxlsx_reader_error find_workbook_path(lxlsx_reader_zip *zip, char **out_p
 
 typedef struct {
     lxlsx_reader_workbook *wb;
+    lxlsx_reader_xml_pump *pump;
+    lxlsx_reader_error error;
     int  in_sheets;
     int  in_defined_names;
     int  in_defined_name;       /* inside a single <definedName> */
@@ -3107,6 +3118,7 @@ typedef struct {
 static int dn_array_push(lxlsx_reader_workbook *wb, const char *name, const char *formula,
                          int scope_sheet_index, int hidden)
 {
+    lxlsx_reader_defined_name_entry *dn;
     if (wb->defined_name_count >= wb->defined_name_cap) {
         size_t cap = wb->defined_name_cap ? wb->defined_name_cap * 2 : 4;
         lxlsx_reader_defined_name_entry *nb = (lxlsx_reader_defined_name_entry *)realloc(
@@ -3115,17 +3127,55 @@ static int dn_array_push(lxlsx_reader_workbook *wb, const char *name, const char
         wb->defined_names    = nb;
         wb->defined_name_cap = cap;
     }
-    wb->defined_names[wb->defined_name_count].name              = lxlsx_reader_strdup(name);
-    wb->defined_names[wb->defined_name_count].formula           = lxlsx_reader_strdup(formula);
-    wb->defined_names[wb->defined_name_count].scope_sheet_index = scope_sheet_index;
-    wb->defined_names[wb->defined_name_count].hidden            = hidden;
+    dn = &wb->defined_names[wb->defined_name_count];
+    memset(dn, 0, sizeof(*dn));
+    dn->name = lxlsx_reader_strdup(name);
+    dn->formula = lxlsx_reader_strdup(formula);
+    if ((name && !dn->name) || (formula && !dn->formula)) {
+        free(dn->name);
+        free(dn->formula);
+        memset(dn, 0, sizeof(*dn));
+        return -1;
+    }
+    dn->scope_sheet_index = scope_sheet_index;
+    dn->hidden = hidden;
     wb->defined_name_count++;
+    return 0;
+}
+
+static void wb_fail(wb_ctx *c, lxlsx_reader_error err)
+{
+    if (!c->error)
+        c->error = err;
+    if (c->pump)
+        lxlsx_reader_xml_pump_suspend(c->pump);
+}
+
+static int parse_local_sheet_id(const char *value, int *out)
+{
+    char *end = NULL;
+    long parsed;
+
+    if (!value) {
+        *out = -1;
+        return 0;
+    }
+
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    if (errno || !end || *end || parsed < 0 || parsed > 2147483647L)
+        return -1;
+
+    *out = (int)parsed;
     return 0;
 }
 
 static void wb_on_start(void *ud, const char *name, const char **attrs)
 {
     wb_ctx *c = (wb_ctx *)ud;
+
+    if (c->error)
+        return;
 
     if (lxlsx_reader_xml_name_eq(name, "workbookPr")) {
         const char *d1904 = lxlsx_reader_xml_attr(attrs, "date1904");
@@ -3149,7 +3199,14 @@ static void wb_on_start(void *ud, const char *name, const char **attrs)
         c->in_defined_name = 1;
         free(c->dn_name);
         c->dn_name = lxlsx_reader_strdup(nm);
-        c->dn_local_sheet = lsi ? (int)strtol(lsi, NULL, 10) : -1;
+        if (nm && !c->dn_name) {
+            wb_fail(c, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
+        if (parse_local_sheet_id(lsi, &c->dn_local_sheet) != 0) {
+            wb_fail(c, LXLSX_READER_ERROR_FILE_CORRUPTED);
+            return;
+        }
         c->dn_hidden = (hd && (strcmp(hd, "1") == 0 || strcmp(hd, "true") == 0)) ? 1 : 0;
         c->dn_text_len = 0;
         if (c->dn_text) c->dn_text[0] = 0;
@@ -3173,30 +3230,39 @@ static void wb_on_start(void *ud, const char *name, const char **attrs)
             if (strcmp(state, "hidden") == 0)           vis = LXLSX_READER_SHEET_HIDDEN;
             else if (strcmp(state, "veryHidden") == 0)  vis = LXLSX_READER_SHEET_VERY_HIDDEN;
         }
-        if (sn && rid) sheet_array_push(c->wb, sn, rid, vis);
+        if (sn && rid && sheet_array_push(c->wb, sn, rid, vis) != 0)
+            wb_fail(c, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
     }
 }
 
 static void wb_on_text(void *ud, const char *text, int len)
 {
     wb_ctx *c = (wb_ctx *)ud;
-    if (!c->in_defined_name || len <= 0) return;
+    int rc;
+    if (c->error || !c->in_defined_name || len <= 0) return;
     {
-        (void)lxlsx_reader_buf_append(&c->dn_text, &c->dn_text_len,
-                                      &c->dn_text_cap, text, (size_t)len);
+        rc = lxlsx_reader_buf_append(&c->dn_text, &c->dn_text_len,
+                                     &c->dn_text_cap, text, (size_t)len);
+        if (rc != 0)
+            wb_fail(c, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
     }
 }
 
 static void wb_on_end(void *ud, const char *name)
 {
     wb_ctx *c = (wb_ctx *)ud;
+    if (c->error)
+        return;
     if (lxlsx_reader_xml_name_eq(name, "sheets")) c->in_sheets = 0;
     if (lxlsx_reader_xml_name_eq(name, "definedNames")) c->in_defined_names = 0;
     if (c->in_defined_name && lxlsx_reader_xml_name_eq(name, "definedName")) {
         if (c->dn_name) {
-            dn_array_push(c->wb, c->dn_name,
-                          c->dn_text_len > 0 ? c->dn_text : "",
-                          c->dn_local_sheet, c->dn_hidden);
+            if (dn_array_push(c->wb, c->dn_name,
+                              c->dn_text_len > 0 ? c->dn_text : "",
+                              c->dn_local_sheet, c->dn_hidden) != 0) {
+                wb_fail(c, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                return;
+            }
         }
         c->in_defined_name = 0;
         free(c->dn_name); c->dn_name = NULL;
@@ -3221,6 +3287,7 @@ static lxlsx_reader_error parse_workbook_xml(lxlsx_reader_workbook *wb)
 
     memset(&ctx, 0, sizeof(ctx));
     ctx.wb = wb;
+    ctx.pump = pump;
     ctx.dn_local_sheet = -1;
     lxlsx_reader_xml_pump_set_handlers(pump, wb_on_start, wb_on_end, wb_on_text, &ctx);
     rc = lxlsx_reader_xml_pump_run(pump);
@@ -3229,6 +3296,8 @@ static lxlsx_reader_error parse_workbook_xml(lxlsx_reader_workbook *wb)
     free(ctx.dn_text);
     lxlsx_reader_xml_pump_destroy(pump);
     lxlsx_reader_zip_close_entry(zf);
+    if (rc == LXLSX_READER_NO_ERROR && ctx.error != LXLSX_READER_NO_ERROR)
+        return ctx.error;
     return rc;
 }
 
@@ -3363,7 +3432,9 @@ lxlsx_reader_error lxlsx_reader_workbook_open_fd(int fd, lxlsx_reader_workbook *
     return LXLSX_READER_NO_ERROR;
 }
 
-lxlsx_reader_error lxlsx_reader_workbook_open_memory(const void *data, size_t len, lxlsx_reader_workbook **out)
+static lxlsx_reader_error workbook_open_memory_common(const void *data, size_t len,
+                                                      int take_copy,
+                                                      lxlsx_reader_workbook **out)
 {
     lxlsx_reader_workbook *wb;
     lxlsx_reader_open_options opts = {0};
@@ -3374,7 +3445,9 @@ lxlsx_reader_error lxlsx_reader_workbook_open_memory(const void *data, size_t le
     if (!wb) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
     wb->opts = opts;
 
-    wb->zip = lxlsx_reader_zip_open_memory(data, len);
+    wb->zip = take_copy
+        ? lxlsx_reader_zip_open_memory(data, len)
+        : lxlsx_reader_zip_open_memory_borrowed(data, len);
     if (!wb->zip) { free(wb); return LXLSX_READER_ERROR_FILE_OPEN_FAILED; }
 
     rc = workbook_finalize_open(wb);
@@ -3385,6 +3458,16 @@ lxlsx_reader_error lxlsx_reader_workbook_open_memory(const void *data, size_t le
     }
     *out = wb;
     return LXLSX_READER_NO_ERROR;
+}
+
+lxlsx_reader_error lxlsx_reader_workbook_open_memory(const void *data, size_t len, lxlsx_reader_workbook **out)
+{
+    return workbook_open_memory_common(data, len, 1, out);
+}
+
+lxlsx_reader_error lxlsx_reader_workbook_open_memory_borrowed(const void *data, size_t len, lxlsx_reader_workbook **out)
+{
+    return workbook_open_memory_common(data, len, 0, out);
 }
 
 void lxlsx_reader_workbook_close(lxlsx_reader_workbook *wb)

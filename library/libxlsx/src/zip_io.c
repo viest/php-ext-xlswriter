@@ -10,9 +10,9 @@
 
 struct lxlsx_reader_zip {
     unzFile uf;
-    void   *mem_buf;
+    void   *stream;
+    unsigned char *owned_buf;
     size_t  mem_len;
-    int     owns_mem;
 };
 
 struct lxlsx_reader_zip_file {
@@ -156,26 +156,31 @@ lxlsx_reader_zip *lxlsx_reader_zip_open_path(const char *path)
     return z;
 }
 
-lxlsx_reader_zip *lxlsx_reader_zip_open_memory(const void *data, size_t len)
+static lxlsx_reader_zip *open_memory_common(const void *data, size_t len, int take_copy)
 {
     zlib_filefunc_def funcs;
     lxlsx_reader_mem_stream   *stream;
     lxlsx_reader_zip          *z;
-    void             *buf;
+    unsigned char    *buf = NULL;
+    const unsigned char *base;
 
     if (!data || len == 0) return NULL;
 
-    /* Take a private copy so the caller's buffer can be freed independently. */
-    buf = malloc(len);
-    if (!buf) return NULL;
-    memcpy(buf, data, len);
+    if (take_copy) {
+        buf = (unsigned char *)malloc(len);
+        if (!buf) return NULL;
+        memcpy(buf, data, len);
+        base = buf;
+    } else {
+        base = (const unsigned char *)data;
+    }
 
     stream = (lxlsx_reader_mem_stream *)calloc(1, sizeof(*stream));
     if (!stream) {
         free(buf);
         return NULL;
     }
-    stream->base = (const unsigned char *)buf;
+    stream->base = base;
     stream->size = len;
     stream->pos  = 0;
 
@@ -194,9 +199,9 @@ lxlsx_reader_zip *lxlsx_reader_zip_open_memory(const void *data, size_t len)
         free(buf);
         return NULL;
     }
-    z->mem_buf  = buf;
-    z->mem_len  = len;
-    z->owns_mem = 1;
+    z->stream = stream;
+    z->owned_buf = buf;
+    z->mem_len = len;
 
     z->uf = unzOpen2(NULL, &funcs);
     if (!z->uf) {
@@ -205,10 +210,18 @@ lxlsx_reader_zip *lxlsx_reader_zip_open_memory(const void *data, size_t len)
         free(buf);
         return NULL;
     }
-    /* stream is referenced by minizip via opaque; freed in lxlsx_reader_zip_close. */
-    z->mem_buf = stream;  /* stash for free; original buf already owned by stream */
-    /* preserve buf via stream->base; freed by us below */
     return z;
+}
+
+lxlsx_reader_zip *lxlsx_reader_zip_open_memory(const void *data, size_t len)
+{
+    /* Take a private copy so the caller's buffer can be freed independently. */
+    return open_memory_common(data, len, 1);
+}
+
+lxlsx_reader_zip *lxlsx_reader_zip_open_memory_borrowed(const void *data, size_t len)
+{
+    return open_memory_common(data, len, 0);
 }
 
 lxlsx_reader_zip *lxlsx_reader_zip_open_fd(int fd)
@@ -238,9 +251,8 @@ lxlsx_reader_zip *lxlsx_reader_zip_open_fd(int fd)
         free(stream);
         return NULL;
     }
-    z->mem_buf  = stream;
-    z->mem_len  = 0;
-    z->owns_mem = 0;
+    z->stream = stream;
+    z->mem_len = 0;
 
     z->uf = unzOpen2(NULL, &funcs);
     if (!z->uf) {
@@ -255,16 +267,8 @@ void lxlsx_reader_zip_close(lxlsx_reader_zip *z)
 {
     if (!z) return;
     if (z->uf) unzClose(z->uf);
-    if (z->mem_buf) {
-        if (z->owns_mem) {
-            /* mem_buf actually points to lxlsx_reader_mem_stream; free the underlying base too */
-            lxlsx_reader_mem_stream *s = (lxlsx_reader_mem_stream *)z->mem_buf;
-            free((void *)s->base);
-            free(s);
-        } else {
-            free(z->mem_buf);
-        }
-    }
+    free(z->owned_buf);
+    free(z->stream);
     free(z);
 }
 
@@ -313,13 +317,35 @@ lxlsx_reader_error lxlsx_reader_zip_iterate_entries(lxlsx_reader_zip *z, lxlsx_r
 
     rc = unzGoToFirstFile(z->uf);
     while (rc == UNZ_OK) {
-        char name[1024];
+        char *name;
         unz_file_info64 info;
-        rc = unzGetCurrentFileInfo64(z->uf, &info, name, sizeof(name) - 1, NULL, 0, NULL, 0);
-        if (rc != UNZ_OK) break;
-        name[sizeof(name) - 1] = 0;
-        if (fn(name, ud) != 0) return LXLSX_READER_NO_ERROR;  /* iteration stop requested */
+        rc = unzGetCurrentFileInfo64(z->uf, &info, NULL, 0, NULL, 0, NULL, 0);
+        if (rc != UNZ_OK)
+            return LXLSX_READER_ERROR_FILE_CORRUPTED;
+
+        if (info.size_filename > ((size_t)-1) - 1)
+            return LXLSX_READER_ERROR_FILE_CORRUPTED;
+
+        name = (char *)malloc((size_t)info.size_filename + 1);
+        if (!name)
+            return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+
+        rc = unzGetCurrentFileInfo64(z->uf, &info, name,
+                                     (uLong)info.size_filename + 1,
+                                     NULL, 0, NULL, 0);
+        if (rc != UNZ_OK) {
+            free(name);
+            return LXLSX_READER_ERROR_FILE_CORRUPTED;
+        }
+        name[info.size_filename] = 0;
+        if (fn(name, ud) != 0) {
+            free(name);
+            return LXLSX_READER_NO_ERROR;  /* iteration stop requested */
+        }
+        free(name);
         rc = unzGoToNextFile(z->uf);
     }
-    return LXLSX_READER_NO_ERROR;
+    return rc == UNZ_END_OF_LIST_OF_FILE
+        ? LXLSX_READER_NO_ERROR
+        : LXLSX_READER_ERROR_FILE_CORRUPTED;
 }

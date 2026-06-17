@@ -27,6 +27,7 @@ struct lxlsx_reader_sst {
     lxlsx_reader_zip      *zip;
     lxlsx_reader_zip_file *zf;
     lxlsx_reader_xml_pump *pump;
+    lxlsx_reader_error error;
     int           eof;
 
     /* SAX parse state */
@@ -51,6 +52,14 @@ struct lxlsx_reader_sst {
     /* Runs collected for the current <si>. */
     lxlsx_reader_run_list  cur_runs;
 };
+
+static void sst_fail(lxlsx_reader_sst *s, lxlsx_reader_error err)
+{
+    if (!s->error)
+        s->error = err;
+    if (s->pump)
+        lxlsx_reader_xml_pump_suspend(s->pump);
+}
 
 /* --- buffer helpers ------------------------------------------------------ */
 
@@ -140,25 +149,18 @@ static int commit_string(lxlsx_reader_sst *s)
     }
     str = s->cur_buf ? strdup(s->cur_buf) : strdup("");
     if (!str) return -1;
-    s->strings[s->loaded_count] = str;
 
     /* Migrate any collected runs into the parallel runs[] table. */
     if (s->cur_runs.count > 0) {
-        if (sst_runs_ensure(s, s->loaded_count + 1) == 0) {
-            s->runs[s->loaded_count] = s->cur_runs;
-        } else {
-            /* OOM — drop the runs but keep the string. */
-            size_t i;
-            for (i = 0; i < s->cur_runs.count; i++) {
-                free(s->cur_runs.items[i].text);
-                free(s->cur_runs.items[i].font_name);
-                free(s->cur_runs.items[i].color);
-            }
-            free(s->cur_runs.items);
+        if (sst_runs_ensure(s, s->loaded_count + 1) != 0) {
+            free(str);
+            return -1;
         }
+        s->runs[s->loaded_count] = s->cur_runs;
         memset(&s->cur_runs, 0, sizeof(s->cur_runs));
     }
 
+    s->strings[s->loaded_count] = str;
     s->loaded_count++;
 
     /* reset accumulator (keep the buffer for reuse) */
@@ -173,6 +175,9 @@ static void on_start(void *ud, const char *name, const char **attrs)
 {
     lxlsx_reader_sst *s = (lxlsx_reader_sst *)ud;
 
+    if (s->error)
+        return;
+
     if (s->skip_depth > 0) {
         s->skip_depth++;
         return;
@@ -180,6 +185,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
     if (lxlsx_reader_xml_name_eq(name, "rPh") || lxlsx_reader_xml_name_eq(name, "phoneticPr")) {
         free(s->skip_tag);
         s->skip_tag   = strdup(name);
+        if (!s->skip_tag) {
+            sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
         s->skip_depth = 1;
         return;
     }
@@ -204,6 +213,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 if ((v = lxlsx_reader_xml_attr(attrs, "val"))) {
                     free(s->pending.font_name);
                     s->pending.font_name = strdup(v);
+                    if (!s->pending.font_name) {
+                        sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                        return;
+                    }
                 }
             } else if (lxlsx_reader_xml_name_eq(name, "sz")) {
                 if ((v = lxlsx_reader_xml_attr(attrs, "val"))) s->pending.font_size = strtod(v, NULL);
@@ -226,6 +239,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 if ((v = lxlsx_reader_xml_attr(attrs, "rgb"))) {
                     free(s->pending.color);
                     s->pending.color = strdup(v);
+                    if (!s->pending.color) {
+                        sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                        return;
+                    }
                 }
             }
             return;
@@ -254,6 +271,9 @@ static void on_end(void *ud, const char *name)
 {
     lxlsx_reader_sst *s = (lxlsx_reader_sst *)ud;
 
+    if (s->error)
+        return;
+
     if (s->skip_depth > 0) {
         s->skip_depth--;
         if (s->skip_depth == 0) {
@@ -270,13 +290,19 @@ static void on_end(void *ud, const char *name)
     } else if (lxlsx_reader_xml_name_eq(name, "r") && s->in_r) {
         /* Commit the run. */
         s->pending.text = s->run_text_len > 0 ? strdup(s->run_text_buf) : strdup("");
-        run_list_push(&s->cur_runs, s->pending);
+        if (!s->pending.text || run_list_push(&s->cur_runs, s->pending) != 0) {
+            sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
         memset(&s->pending, 0, sizeof(s->pending));
         s->in_r = 0;
         s->run_text_len = 0;
         if (s->run_text_buf) s->run_text_buf[0] = 0;
     } else if (lxlsx_reader_xml_name_eq(name, "si") && s->in_si) {
-        commit_string(s);
+        if (commit_string(s) != 0) {
+            sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
         s->in_si = 0;
         if (s->mode == LXLSX_READER_SST_MODE_STREAMING) {
             lxlsx_reader_xml_pump_suspend(s->pump);
@@ -289,12 +315,18 @@ static void on_end(void *ud, const char *name)
 static void on_text(void *ud, const char *text, int len)
 {
     lxlsx_reader_sst *s = (lxlsx_reader_sst *)ud;
-    if (s->skip_depth || len <= 0) return;
+    if (s->error || s->skip_depth || len <= 0) return;
     if (s->in_t) {
-        append_text(s, text, (size_t)len);
+        if (append_text(s, text, (size_t)len) != 0) {
+            sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
     }
     if (s->in_run_t) {
-        append_run_text(s, text, (size_t)len);
+        if (append_run_text(s, text, (size_t)len) != 0) {
+            sst_fail(s, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
     }
 }
 
@@ -328,6 +360,11 @@ lxlsx_reader_error lxlsx_reader_sst_open(lxlsx_reader_zip *zip, const char *path
             lxlsx_reader_sst_close(s);
             return rc;
         }
+        if (s->error != LXLSX_READER_NO_ERROR) {
+            rc = s->error;
+            lxlsx_reader_sst_close(s);
+            return rc;
+        }
     } else {
         /* For STREAMING we do not pre-parse; SAX will run on demand. */
     }
@@ -339,6 +376,7 @@ lxlsx_reader_error lxlsx_reader_sst_open(lxlsx_reader_zip *zip, const char *path
 const char *lxlsx_reader_sst_get(lxlsx_reader_sst *s, uint32_t index)
 {
     if (!s) return NULL;
+    if (s->error) return NULL;
     if (index < s->loaded_count) return s->strings[index];
 
     if (s->mode == LXLSX_READER_SST_MODE_FULL || s->eof) return NULL;
@@ -347,6 +385,7 @@ const char *lxlsx_reader_sst_get(lxlsx_reader_sst *s, uint32_t index)
     while ((uint32_t)s->loaded_count <= index && !s->eof) {
         lxlsx_reader_error rc = lxlsx_reader_xml_pump_resume(s->pump);
         if (rc != LXLSX_READER_NO_ERROR) return NULL;
+        if (s->error) return NULL;
         if (!lxlsx_reader_xml_pump_is_suspended(s->pump)) break;
     }
     if (index < s->loaded_count) return s->strings[index];
@@ -371,10 +410,12 @@ const lxlsx_reader_sst_run *lxlsx_reader_sst_get_runs(lxlsx_reader_sst *s, uint3
 {
     if (out_count) *out_count = 0;
     if (!s) return NULL;
+    if (s->error) return NULL;
     /* Drive the pump if needed (STREAMING mode) — same logic as lxlsx_reader_sst_get. */
     if (index >= s->loaded_count && s->mode == LXLSX_READER_SST_MODE_STREAMING && !s->eof) {
         while ((uint32_t)s->loaded_count <= index && !s->eof) {
             if (lxlsx_reader_xml_pump_resume(s->pump) != LXLSX_READER_NO_ERROR) return NULL;
+            if (s->error) return NULL;
             if (!lxlsx_reader_xml_pump_is_suspended(s->pump)) break;
         }
     }

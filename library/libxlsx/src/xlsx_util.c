@@ -56,18 +56,22 @@ void lxlsx_reader_buf_reset(char *buf, size_t *len)
     if (buf) buf[0] = 0;
 }
 
-void lxlsx_reader_copy_attr(char *dst, size_t cap, const char *src)
+int lxlsx_reader_copy_attr(char *dst, size_t cap, const char *src)
 {
     size_t n;
-    if (!dst || cap == 0) return;
+    if (!dst || cap == 0) return -1;
     if (!src) {
         dst[0] = 0;
-        return;
+        return 0;
     }
     n = strlen(src);
-    if (n >= cap) n = cap - 1;
+    if (n >= cap) {
+        dst[0] = 0;
+        return -1;
+    }
     memcpy(dst, src, n);
     dst[n] = 0;
+    return 0;
 }
 
 char *lxlsx_reader_zip_normalize_path(const char *path)
@@ -223,7 +227,8 @@ int lxlsx_reader_ascii_case_eq(const char *a, const char *b)
     return *a == 0 && *b == 0;
 }
 
-void lxlsx_reader_parse_a1_ref(const char *ref, size_t *out_row, size_t *out_col)
+static void parse_a1_ref_until(const char *ref, const char *end,
+                               size_t *out_row, size_t *out_col)
 {
     size_t row = 0;
     size_t col = 0;
@@ -232,19 +237,25 @@ void lxlsx_reader_parse_a1_ref(const char *ref, size_t *out_row, size_t *out_col
     if (out_col) *out_col = 0;
     if (!ref) return;
 
-    while (*ref == '$') ref++;
-    while ((*ref >= 'A' && *ref <= 'Z') || (*ref >= 'a' && *ref <= 'z')) {
+    while ((!end || ref < end) && *ref == '$') ref++;
+    while ((!end || ref < end) &&
+           ((*ref >= 'A' && *ref <= 'Z') || (*ref >= 'a' && *ref <= 'z'))) {
         col = col * 26 + (size_t)(toupper((unsigned char)*ref) - 'A' + 1);
         ref++;
     }
-    while (*ref == '$') ref++;
-    while (*ref >= '0' && *ref <= '9') {
+    while ((!end || ref < end) && *ref == '$') ref++;
+    while ((!end || ref < end) && *ref >= '0' && *ref <= '9') {
         row = row * 10 + (size_t)(*ref - '0');
         ref++;
     }
 
     if (out_row) *out_row = row;
     if (out_col) *out_col = col;
+}
+
+void lxlsx_reader_parse_a1_ref(const char *ref, size_t *out_row, size_t *out_col)
+{
+    parse_a1_ref_until(ref, NULL, out_row, out_col);
 }
 
 void lxlsx_reader_parse_a1_range(const char *ref, lxlsx_reader_range *out)
@@ -257,12 +268,7 @@ void lxlsx_reader_parse_a1_range(const char *ref, lxlsx_reader_range *out)
 
     colon = strchr(ref, ':');
     if (colon) {
-        char head[64];
-        size_t n = (size_t)(colon - ref);
-        if (n >= sizeof(head)) n = sizeof(head) - 1;
-        memcpy(head, ref, n);
-        head[n] = 0;
-        lxlsx_reader_parse_a1_ref(head, &r1, &c1);
+        parse_a1_ref_until(ref, colon, &r1, &c1);
         lxlsx_reader_parse_a1_ref(colon + 1, &r2, &c2);
     } else {
         lxlsx_reader_parse_a1_ref(ref, &r1, &c1);

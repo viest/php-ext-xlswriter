@@ -12103,9 +12103,20 @@ static void deliver_row_end(lxlsx_reader_worksheet *ws)
     }
 }
 
+static void fail_parse(lxlsx_reader_worksheet *ws, lxlsx_reader_error err)
+{
+    if (!ws->parse_error)
+        ws->parse_error = err;
+    if (ws->pump)
+        lxlsx_reader_xml_pump_suspend(ws->pump);
+}
+
 static void on_start(void *ud, const char *name, const char **attrs)
 {
     lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
+
+    if (ws->parse_error)
+        return;
 
     if (ws->state == LXLSX_READER_WS_SKIP) {
         ws->skip_depth++;
@@ -12167,8 +12178,14 @@ static void on_start(void *ud, const char *name, const char **attrs)
             const char *s_attr = lxlsx_reader_xml_attr(attrs, "s");
 
             reset_cell(ws);
-            lxlsx_reader_copy_attr(ws->cell_ref, sizeof(ws->cell_ref), r_attr);
-            lxlsx_reader_copy_attr(ws->cell_t,   sizeof(ws->cell_t),   t_attr);
+            if (lxlsx_reader_copy_attr(ws->cell_ref, sizeof(ws->cell_ref), r_attr) != 0) {
+                fail_parse(ws, LXLSX_READER_ERROR_INVALID_CELL_REF);
+                return;
+            }
+            if (lxlsx_reader_copy_attr(ws->cell_t, sizeof(ws->cell_t), t_attr) != 0) {
+                fail_parse(ws, LXLSX_READER_ERROR_FILE_CORRUPTED);
+                return;
+            }
             ws->cell_style_id = s_attr ? (uint32_t)strtoul(s_attr, NULL, 10) : 0;
             if (r_attr) lxlsx_reader_parse_a1_ref(r_attr, &ws->cell_row, &ws->cell_col);
             else { ws->cell_row = ws->row_nr; ws->cell_col = 0; }
@@ -12193,8 +12210,12 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXLSX_FORMULA_SHARED;
                 else                                        ws->cell_formula_kind = LXLSX_FORMULA_NORMAL;
             }
-            if (ref_attr) lxlsx_reader_copy_attr(ws->cell_formula_ref,
-                                                 sizeof(ws->cell_formula_ref), ref_attr);
+            if (ref_attr &&
+                lxlsx_reader_copy_attr(ws->cell_formula_ref,
+                                       sizeof(ws->cell_formula_ref), ref_attr) != 0) {
+                fail_parse(ws, LXLSX_READER_ERROR_INVALID_CELL_REF);
+                return;
+            }
             if (si_attr) ws->cell_formula_si = (int)strtol(si_attr, NULL, 10);
             if (aca_attr && (strcmp(aca_attr, "1") == 0 ||
                              strcmp(aca_attr, "true") == 0))
@@ -12255,6 +12276,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 if ((v = lxlsx_reader_xml_attr(attrs, "val"))) {
                     free(ws->inline_pending_font_name);
                     ws->inline_pending_font_name = strdup(v);
+                    if (!ws->inline_pending_font_name) {
+                        fail_parse(ws, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                        return;
+                    }
                 }
             } else if (lxlsx_reader_xml_name_eq(name, "sz")) {
                 if ((v = lxlsx_reader_xml_attr(attrs, "val"))) ws->inline_pending_font_size = strtod(v, NULL);
@@ -12277,6 +12302,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 if ((v = lxlsx_reader_xml_attr(attrs, "rgb"))) {
                     free(ws->inline_pending_color);
                     ws->inline_pending_color = strdup(v);
+                    if (!ws->inline_pending_color) {
+                        fail_parse(ws, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                        return;
+                    }
                 }
             }
         } else if (lxlsx_reader_xml_name_eq(name, "t")) {
@@ -12288,37 +12317,43 @@ static void on_start(void *ud, const char *name, const char **attrs)
 static void on_text(void *ud, const char *text, int len)
 {
     lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
-    if (len <= 0) return;
+    int rc = 0;
+    if (ws->parse_error || len <= 0) return;
 
     switch (ws->state) {
     case LXLSX_READER_WS_IN_VALUE:
-        lxlsx_reader_buf_append(&ws->cell_value, &ws->cell_value_len,
-                                &ws->cell_value_cap, text, (size_t)len);
+        rc = lxlsx_reader_buf_append(&ws->cell_value, &ws->cell_value_len,
+                                     &ws->cell_value_cap, text, (size_t)len);
         break;
     case LXLSX_READER_WS_IN_FORMULA:
-        lxlsx_reader_buf_append(&ws->cell_formula, &ws->cell_formula_len,
-                                &ws->cell_formula_cap, text, (size_t)len);
+        rc = lxlsx_reader_buf_append(&ws->cell_formula, &ws->cell_formula_len,
+                                     &ws->cell_formula_cap, text, (size_t)len);
         break;
     case LXLSX_READER_WS_IN_INLINE_STR_T:
-        lxlsx_reader_buf_append(&ws->cell_inline, &ws->cell_inline_len,
-                                &ws->cell_inline_cap, text, (size_t)len);
+        rc = lxlsx_reader_buf_append(&ws->cell_inline, &ws->cell_inline_len,
+                                     &ws->cell_inline_cap, text, (size_t)len);
         /* Fall-through-style: when this <t> sits inside an <r>, also feed
          * the per-run text accumulator. */
-        if (ws->inline_in_run_t) {
-            lxlsx_reader_buf_append(&ws->inline_run_text_buf,
-                                    &ws->inline_run_text_len,
-                                    &ws->inline_run_text_cap,
-                                    text, (size_t)len);
+        if (rc == 0 && ws->inline_in_run_t) {
+            rc = lxlsx_reader_buf_append(&ws->inline_run_text_buf,
+                                         &ws->inline_run_text_len,
+                                         &ws->inline_run_text_cap,
+                                         text, (size_t)len);
         }
         break;
     default:
         break;
     }
+    if (rc != 0)
+        fail_parse(ws, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
 }
 
 static void on_end(void *ud, const char *name)
 {
     lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
+
+    if (ws->parse_error)
+        return;
 
     if (ws->state == LXLSX_READER_WS_SKIP) {
         ws->skip_depth--;
@@ -12346,11 +12381,18 @@ static void on_end(void *ud, const char *name)
             if (nb) {
                 ws->inline_runs = nb;
                 ws->inline_runs_cap = nc;
+            } else {
+                fail_parse(ws, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                return;
             }
         }
         if (ws->inline_runs_count < ws->inline_runs_cap) {
             ws->inline_runs[ws->inline_runs_count].text =
                 ws->inline_run_text_len > 0 ? strdup(ws->inline_run_text_buf) : strdup("");
+            if (!ws->inline_runs[ws->inline_runs_count].text) {
+                fail_parse(ws, LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED);
+                return;
+            }
             ws->inline_runs[ws->inline_runs_count].font_name = ws->inline_pending_font_name;
             ws->inline_runs[ws->inline_runs_count].color     = ws->inline_pending_color;
             ws->inline_runs[ws->inline_runs_count].font_size = ws->inline_pending_font_size;
@@ -12544,6 +12586,8 @@ void lxlsx_reader_worksheet_close(lxlsx_reader_worksheet *ws)
 static lxlsx_reader_error drive(lxlsx_reader_worksheet *ws)
 {
     lxlsx_reader_error rc;
+    if (ws->parse_error)
+        return ws->parse_error;
     if (lxlsx_reader_xml_pump_is_eof(ws->pump) && !lxlsx_reader_xml_pump_is_suspended(ws->pump)) {
         return LXLSX_READER_ERROR_END_OF_DATA;
     }
@@ -12552,6 +12596,8 @@ static lxlsx_reader_error drive(lxlsx_reader_worksheet *ws)
     } else {
         rc = lxlsx_reader_xml_pump_run(ws->pump);
     }
+    if (ws->parse_error)
+        return ws->parse_error;
     return rc;
 }
 
@@ -12569,7 +12615,16 @@ lxlsx_reader_error lxlsx_reader_worksheet_next_row(lxlsx_reader_worksheet *ws)
      * row (which would steal it from this consumer). */
     if (ws->row_in_progress) {
         lxlsx_cell dummy;
-        while (lxlsx_reader_worksheet_next_cell(ws, &dummy) == LXLSX_READER_NO_ERROR) ;
+        for (;;) {
+            rc = lxlsx_reader_worksheet_next_cell(ws, &dummy);
+            if (rc == LXLSX_READER_NO_ERROR)
+                continue;
+            if (rc != LXLSX_READER_ERROR_END_OF_DATA) {
+                ws->pull_mode = LXLSX_READER_WS_PULL_NONE;
+                return rc;
+            }
+            break;
+        }
     }
 
     ws->pending_row_start = 0;

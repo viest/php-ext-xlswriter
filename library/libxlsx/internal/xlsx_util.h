@@ -25,7 +25,7 @@ char *lxlsx_reader_strndup(const char *s, size_t len);
 int  lxlsx_reader_buf_append(char **buf, size_t *len, size_t *cap,
                              const char *src, size_t n);
 void lxlsx_reader_buf_reset(char *buf, size_t *len);
-void lxlsx_reader_copy_attr(char *dst, size_t cap, const char *src);
+int  lxlsx_reader_copy_attr(char *dst, size_t cap, const char *src);
 
 char *lxlsx_reader_zip_normalize_path(const char *path);
 char *lxlsx_reader_zip_base_path(const char *path);

@@ -22,6 +22,14 @@
 
 /* Defines. */
 #define LXLSX_MAX_ENCODED_ATTRIBUTE_LENGTH (LXLSX_MAX_ATTRIBUTE_LENGTH*6)
+#define LXLSX_XML_FILE_WRITE_BUFFER_SIZE 8192
+
+typedef struct {
+    FILE *file;
+    char buffer[LXLSX_XML_FILE_WRITE_BUFFER_SIZE];
+    size_t len;
+    int error;
+} lxlsx_xml_file_write_buffer;
 
 /* Forward declarations. */
 STATIC char *_escape_attributes(struct lxlsx_xml_attribute *attribute);
@@ -33,7 +41,9 @@ STATIC void _fprint_escaped_attributes(FILE *xmlfile,
 
 STATIC void _fprint_escaped_data(FILE *xmlfile, const char *data);
 
-STATIC int _file_write_callback(void *userdata, const char *data, size_t len);
+STATIC int _file_write_buffer_flush(lxlsx_xml_file_write_buffer *buffer);
+
+STATIC int _fwrite_escaped_data(FILE *xmlfile, const char *data);
 
 /*
  * Write the XML declaration.
@@ -442,6 +452,67 @@ _fprint_escaped_attributes(FILE *xmlfile,
     }
 }
 
+STATIC int
+_file_write_buffer_flush(lxlsx_xml_file_write_buffer *buffer)
+{
+    if (buffer->len == 0)
+        return buffer->error ? -1 : 0;
+
+    if (fwrite(buffer->buffer, 1, buffer->len, buffer->file) != buffer->len) {
+        buffer->len = 0;
+        buffer->error = 1;
+        return -1;
+    }
+
+    buffer->len = 0;
+    return 0;
+}
+
+STATIC int
+_fwrite_escaped_data(FILE *xmlfile, const char *data)
+{
+    lxlsx_xml_file_write_buffer buffer;
+
+    buffer.file = xmlfile;
+    buffer.len = 0;
+    buffer.error = 0;
+
+    while (*data) {
+        const char *escaped = NULL;
+        size_t write_len = 1;
+
+        switch (*data) {
+            case '&':
+                escaped = LXLSX_AMP;
+                write_len = sizeof(LXLSX_AMP) - 1;
+                break;
+            case '<':
+                escaped = LXLSX_LT;
+                write_len = sizeof(LXLSX_LT) - 1;
+                break;
+            case '>':
+                escaped = LXLSX_GT;
+                write_len = sizeof(LXLSX_GT) - 1;
+                break;
+            default:
+                break;
+        }
+
+        if (sizeof(buffer.buffer) - buffer.len < write_len &&
+            _file_write_buffer_flush(&buffer) != 0)
+            return -1;
+
+        if (escaped)
+            memcpy(buffer.buffer + buffer.len, escaped, write_len);
+        else
+            buffer.buffer[buffer.len] = *data;
+        buffer.len += write_len;
+        data++;
+    }
+
+    return _file_write_buffer_flush(&buffer);
+}
+
 /* Write out escaped XML data. */
 STATIC void
 _fprint_escaped_data(FILE *xmlfile, const char *data)
@@ -451,14 +522,8 @@ _fprint_escaped_data(FILE *xmlfile, const char *data)
         fprintf(xmlfile, "%s", data);
     }
     else {
-        lxlsx_xml_escape_data_write(data, _file_write_callback, xmlfile);
+        _fwrite_escaped_data(xmlfile, data);
     }
-}
-
-STATIC int
-_file_write_callback(void *userdata, const char *data, size_t len)
-{
-    return fwrite(data, 1, len, (FILE *)userdata) == len ? 0 : -1;
 }
 
 /* Create a new string XML attribute. */

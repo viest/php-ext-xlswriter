@@ -400,6 +400,32 @@ static lxlsx_error slurp_file(const char *path, unsigned char **out, size_t *out
     return LXLSX_NO_ERROR;
 }
 
+static lxlsx_error source_package_open_memory_owned(unsigned char *data,
+                                                    size_t len,
+                                                    lxlsx_source_package **out)
+{
+    lxlsx_source_package *package;
+    lxlsx_error err;
+
+    package = (lxlsx_source_package *)calloc(1, sizeof(*package));
+    if (!package) {
+        free(data);
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+
+    package->data = data;
+    package->size = len;
+
+    err = parse_package(package);
+    if (err != LXLSX_NO_ERROR) {
+        lxlsx_source_package_close(package);
+        return err;
+    }
+
+    *out = package;
+    return LXLSX_NO_ERROR;
+}
+
 lxlsx_error lxlsx_source_package_open(const char *path,
                                       lxlsx_source_package **out)
 {
@@ -415,41 +441,25 @@ lxlsx_error lxlsx_source_package_open(const char *path,
     if (err != LXLSX_NO_ERROR)
         return err;
 
-    err = lxlsx_source_package_open_memory(buf, len, out);
-    free(buf);
-    return err;
+    return source_package_open_memory_owned(buf, len, out);
 }
 
 lxlsx_error lxlsx_source_package_open_memory(const void *data, size_t len,
                                              lxlsx_source_package **out)
 {
-    lxlsx_source_package *package;
-    lxlsx_error err;
+    unsigned char *copy;
 
     if (!data || !out)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
     *out = NULL;
 
-    package = (lxlsx_source_package *)calloc(1, sizeof(*package));
-    if (!package)
+    copy = (unsigned char *)malloc(len);
+    if (!copy && len != 0)
         return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    if (len != 0)
+        memcpy(copy, data, len);
 
-    package->data = (unsigned char *)malloc(len);
-    if (!package->data && len != 0) {
-        free(package);
-        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-    }
-    memcpy(package->data, data, len);
-    package->size = len;
-
-    err = parse_package(package);
-    if (err != LXLSX_NO_ERROR) {
-        lxlsx_source_package_close(package);
-        return err;
-    }
-
-    *out = package;
-    return LXLSX_NO_ERROR;
+    return source_package_open_memory_owned(copy, len, out);
 }
 
 void lxlsx_source_package_close(lxlsx_source_package *package)

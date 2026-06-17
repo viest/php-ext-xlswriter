@@ -593,79 +593,75 @@ static int looks_numeric(const char *str)
     return end && *end == 0;
 }
 
-static char *build_cell_xml(const lxlsx_edit_change *change,
-                            const char *ref,
-                            const char *style)
+static lxlsx_error append_cell_xml(lxlsx_edit_buf *buf,
+                                   const lxlsx_edit_change *change,
+                                   const char *ref,
+                                   const char *style)
 {
-    lxlsx_edit_buf buf = {0};
     char number[64];
 
-    if (buf_appendf(&buf, "<c r=\"%s\"", ref) != 0)
-        goto fail;
+    if (buf_appendf(buf, "<c r=\"%s\"", ref) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     if (style && *style) {
-        if (buf_appendf(&buf, " s=\"%s\"", style) != 0)
-            goto fail;
+        if (buf_appendf(buf, " s=\"%s\"", style) != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
     if (change->type == LXLSX_EDIT_CHANGE_STRING) {
-        if (buf_append_s(&buf, " t=\"inlineStr\"") != 0)
-            goto fail;
+        if (buf_append_s(buf, " t=\"inlineStr\"") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     } else if (change->type == LXLSX_EDIT_CHANGE_BOOLEAN) {
-        if (buf_append_s(&buf, " t=\"b\"") != 0)
-            goto fail;
+        if (buf_append_s(buf, " t=\"b\"") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
     if (change->type == LXLSX_EDIT_CHANGE_FORMULA &&
         change->cached_result && !looks_numeric(change->cached_result)) {
-        if (buf_append_s(&buf, " t=\"str\"") != 0)
-            goto fail;
+        if (buf_append_s(buf, " t=\"str\"") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
-    if (buf_append_s(&buf, ">") != 0)
-        goto fail;
+    if (buf_append_s(buf, ">") != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
     if (change->type == LXLSX_EDIT_CHANGE_NUMBER) {
         snprintf(number, sizeof(number), "%.17g", change->number);
-        if (buf_append_s(&buf, "<v>") != 0 ||
-            buf_append_s(&buf, number) != 0 ||
-            buf_append_s(&buf, "</v>") != 0)
-            goto fail;
+        if (buf_append_s(buf, "<v>") != 0 ||
+            buf_append_s(buf, number) != 0 ||
+            buf_append_s(buf, "</v>") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     } else if (change->type == LXLSX_EDIT_CHANGE_STRING) {
         const char *string = change->string ? change->string : "";
-        if (buf_append_s(&buf, "<is><t") != 0)
-            goto fail;
+        if (buf_append_s(buf, "<is><t") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         if (needs_xml_space_preserve(string) &&
-            buf_append_s(&buf, " xml:space=\"preserve\"") != 0) {
-            goto fail;
+            buf_append_s(buf, " xml:space=\"preserve\"") != 0) {
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         }
-        if (buf_append_s(&buf, ">") != 0 ||
-            append_xml_escaped(&buf, string) != 0 ||
-            buf_append_s(&buf, "</t></is>") != 0) {
-            goto fail;
+        if (buf_append_s(buf, ">") != 0 ||
+            append_xml_escaped(buf, string) != 0 ||
+            buf_append_s(buf, "</t></is>") != 0) {
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         }
     } else if (change->type == LXLSX_EDIT_CHANGE_BOOLEAN) {
-        if (buf_appendf(&buf, "<v>%d</v>", change->boolean ? 1 : 0) != 0)
-            goto fail;
+        if (buf_appendf(buf, "<v>%d</v>", change->boolean ? 1 : 0) != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     } else {
         const char *formula = change->formula;
         const char *cached = change->cached_result ? change->cached_result : "0";
         if (formula && formula[0] == '=')
             formula++;
-        if (buf_append_s(&buf, "<f>") != 0 ||
-            append_xml_escaped(&buf, formula ? formula : "") != 0 ||
-            buf_append_s(&buf, "</f><v>") != 0 ||
-            append_xml_escaped(&buf, cached) != 0 ||
-            buf_append_s(&buf, "</v>") != 0)
-            goto fail;
+        if (buf_append_s(buf, "<f>") != 0 ||
+            append_xml_escaped(buf, formula ? formula : "") != 0 ||
+            buf_append_s(buf, "</f><v>") != 0 ||
+            append_xml_escaped(buf, cached) != 0 ||
+            buf_append_s(buf, "</v>") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
-    if (buf_append_s(&buf, LXLSX_EDIT_CELL_CLOSE) != 0)
-        goto fail;
-    return buf.data;
-
-fail:
-    free(buf.data);
-    return NULL;
+    if (buf_append_s(buf, LXLSX_EDIT_CELL_CLOSE) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    return LXLSX_NO_ERROR;
 }
 
 static int prepared_change_cmp(const void *a, const void *b)
@@ -789,14 +785,10 @@ static lxlsx_error append_cells(lxlsx_edit_buf *buf,
     size_t i;
 
     for (i = 0; i < count; i++) {
-        char *cell_xml = build_cell_xml(changes[i].change, changes[i].ref, NULL);
-        if (!cell_xml)
-            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        if (buf_append_s(buf, cell_xml) != 0) {
-            free(cell_xml);
-            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        }
-        free(cell_xml);
+        lxlsx_error err = append_cell_xml(buf, changes[i].change,
+                                          changes[i].ref, NULL);
+        if (err != LXLSX_NO_ERROR)
+            return err;
     }
 
     return LXLSX_NO_ERROR;
@@ -806,15 +798,7 @@ static lxlsx_error append_change_cell(lxlsx_edit_buf *buf,
                                       const lxlsx_edit_prepared_change *change,
                                       const char *style)
 {
-    char *cell_xml = build_cell_xml(change->change, change->ref, style);
-    if (!cell_xml)
-        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-    if (buf_append_s(buf, cell_xml) != 0) {
-        free(cell_xml);
-        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-    }
-    free(cell_xml);
-    return LXLSX_NO_ERROR;
+    return append_cell_xml(buf, change->change, change->ref, style);
 }
 
 static lxlsx_error append_cells_before_col(
@@ -850,46 +834,42 @@ static lxlsx_error append_remaining_cells(
     return LXLSX_NO_ERROR;
 }
 
-static char *build_new_row_xml(const char *row_ref,
-                               const lxlsx_edit_prepared_change *changes,
-                               size_t count)
+static lxlsx_error append_new_row_xml(lxlsx_edit_buf *buf,
+                                      const char *row_ref,
+                                      const lxlsx_edit_prepared_change *changes,
+                                      size_t count)
 {
-    lxlsx_edit_buf row = {0};
+    if (buf_appendf(buf, "<row r=\"%s\">", row_ref) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    if (append_cells(buf, changes, count) != LXLSX_NO_ERROR)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    if (buf_append_s(buf, LXLSX_EDIT_ROW_CLOSE) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-    if (buf_appendf(&row, "<row r=\"%s\">", row_ref) != 0)
-        goto fail;
-    if (append_cells(&row, changes, count) != LXLSX_NO_ERROR)
-        goto fail;
-    if (buf_append_s(&row, LXLSX_EDIT_ROW_CLOSE) != 0)
-        goto fail;
-
-    return row.data;
-
-fail:
-    free(row.data);
-    return NULL;
+    return LXLSX_NO_ERROR;
 }
 
-static char *build_existing_row_xml(const char *row_start,
-                                    const char *row_end,
-                                    const char *row_tag_end,
-                                    const char *row_close_start,
-                                    const lxlsx_edit_prepared_change *changes,
-                                    size_t count)
+static lxlsx_error append_existing_row_xml(
+    lxlsx_edit_buf *row,
+    const char *row_start,
+    const char *row_end,
+    const char *row_tag_end,
+    const char *row_close_start,
+    const lxlsx_edit_prepared_change *changes,
+    size_t count)
 {
-    lxlsx_edit_buf row = {0};
     size_t change_index = 0;
 
     if (!row_close_start) {
         const char *prefix_end = self_closing_prefix_end(row_start, row_tag_end);
-        if (buf_append(&row, row_start, (size_t)(prefix_end - row_start)) != 0 ||
-            buf_append_s(&row, ">") != 0)
-            goto fail;
-        if (append_remaining_cells(&row, changes, count, &change_index)
+        if (buf_append(row, row_start, (size_t)(prefix_end - row_start)) != 0 ||
+            buf_append_s(row, ">") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        if (append_remaining_cells(row, changes, count, &change_index)
             != LXLSX_NO_ERROR)
-            goto fail;
-        if (buf_append_matching_end_tag(&row, row_start, row_tag_end) != 0)
-            goto fail;
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        if (buf_append_matching_end_tag(row, row_start, row_tag_end) != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     } else {
         const char *pos = row_start;
         const char *p = row_tag_end + 1;
@@ -913,7 +893,7 @@ static char *build_existing_row_xml(const char *row_start,
                 lxlsx_edit_xml_tag close_tag;
                 if (!find_matching_end_tag(tag.end + 1, row_close_start,
                                            "c", &close_tag))
-                    goto fail;
+                    return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
                 cell_end = close_tag.end + 1;
             }
 
@@ -926,49 +906,45 @@ static char *build_existing_row_xml(const char *row_start,
                 continue;
             }
 
-            if (buf_append(&row, pos, (size_t)(tag.start - pos)) != 0)
-                goto fail;
+            if (buf_append(row, pos, (size_t)(tag.start - pos)) != 0)
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-            if (append_cells_before_col(&row, changes, count, &change_index,
+            if (append_cells_before_col(row, changes, count, &change_index,
                                         cell_col) != LXLSX_NO_ERROR)
-                goto fail;
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
             if (change_index < count &&
                 changes[change_index].change->col == cell_col) {
                 char *style = extract_attr(tag.start, tag.end, "s");
                 lxlsx_error err = append_change_cell(
-                    &row, &changes[change_index], style);
+                    row, &changes[change_index], style);
                 free(style);
                 if (err != LXLSX_NO_ERROR)
-                    goto fail;
+                    return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
                 change_index++;
             } else {
-                if (buf_append(&row, tag.start,
+                if (buf_append(row, tag.start,
                                (size_t)(cell_end - tag.start)) != 0)
-                    goto fail;
+                    return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             }
 
             pos = cell_end;
             p = cell_end;
         }
 
-        if (buf_append(&row, pos, (size_t)(row_close_start - pos)) != 0)
-            goto fail;
+        if (buf_append(row, pos, (size_t)(row_close_start - pos)) != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-        if (append_remaining_cells(&row, changes, count, &change_index)
+        if (append_remaining_cells(row, changes, count, &change_index)
             != LXLSX_NO_ERROR)
-            goto fail;
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-        if (buf_append(&row, row_close_start,
+        if (buf_append(row, row_close_start,
                        (size_t)(row_end - row_close_start)) != 0)
-            goto fail;
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
-    return row.data;
-
-fail:
-    free(row.data);
-    return NULL;
+    return LXLSX_NO_ERROR;
 }
 
 static lxlsx_error append_missing_rows_until(
@@ -983,21 +959,16 @@ static lxlsx_error append_missing_rows_until(
            (!bounded || prepared[*index].change->row < before_row)) {
         lxlsx_row_t row = prepared[*index].change->row;
         const char *row_ref = prepared[*index].row_ref;
-        char *row_xml;
         size_t next = *index + 1;
+        lxlsx_error err;
 
         while (next < prepared_count && prepared[next].change->row == row)
             next++;
 
-        row_xml = build_new_row_xml(row_ref, prepared + *index,
-                                    next - *index);
-        if (!row_xml)
-            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        if (buf_append_s(out, row_xml) != 0) {
-            free(row_xml);
-            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        }
-        free(row_xml);
+        err = append_new_row_xml(out, row_ref, prepared + *index,
+                                 next - *index);
+        if (err != LXLSX_NO_ERROR)
+            return err;
         *index = next;
     }
 
@@ -1100,26 +1071,20 @@ static lxlsx_error patch_xml_with_changes(unsigned char **xml, size_t *xml_len,
 
             if (change_index < prepared_count &&
                 prepared[change_index].change->row == xml_row) {
-                char *row_xml;
                 size_t next = change_index + 1;
+                lxlsx_error row_err;
                 while (next < prepared_count &&
                        prepared[next].change->row == xml_row)
                     next++;
 
-                row_xml = build_existing_row_xml(tag.start, row_end, tag.end,
-                                                 row_close_start,
-                                                 prepared + change_index,
-                                                 next - change_index);
-                if (!row_xml) {
-                    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+                row_err = append_existing_row_xml(&out, tag.start, row_end,
+                                                  tag.end, row_close_start,
+                                                  prepared + change_index,
+                                                  next - change_index);
+                if (row_err != LXLSX_NO_ERROR) {
+                    err = row_err;
                     goto done;
                 }
-                if (buf_append_s(&out, row_xml) != 0) {
-                    free(row_xml);
-                    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                    goto done;
-                }
-                free(row_xml);
                 change_index = next;
             } else if (buf_append(&out, tag.start,
                                   (size_t)(row_end - tag.start)) != 0) {

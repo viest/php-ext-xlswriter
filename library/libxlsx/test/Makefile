@@ -17,6 +17,7 @@ LIB_TEST := $(SRC_DIR)/libxlsx_test.a
 
 READER_TEST_DIR := reader
 INTEGRATION_TEST_DIR := integration
+EDIT_TEST_DIR := edit
 FIXTURES_DIR := fixtures
 
 CFLAGS += -DTESTING -DCOLOR_OK -DXML_POOR_ENTROPY -DNOCRYPT -DNOUNCRYPT -g -Wall -Wextra -Wno-unused-parameter
@@ -48,7 +49,15 @@ READER_TEST_SRCS := $(wildcard $(READER_TEST_DIR)/test_*.c)
 READER_TEST_BINS := $(patsubst $(READER_TEST_DIR)/%.c,$(READER_TEST_DIR)/%,$(READER_TEST_SRCS))
 INTEGRATION_TEST_SRCS := $(wildcard $(INTEGRATION_TEST_DIR)/test_*.c)
 INTEGRATION_TEST_BINS := $(patsubst $(INTEGRATION_TEST_DIR)/%.c,$(INTEGRATION_TEST_DIR)/%,$(INTEGRATION_TEST_SRCS))
+EDIT_TEST_SRCS := $(wildcard $(EDIT_TEST_DIR)/test_*.c)
+EDIT_TEST_BINS := $(patsubst $(EDIT_TEST_DIR)/%.c,$(EDIT_TEST_DIR)/%,$(EDIT_TEST_SRCS))
 INTEGRATION_OUTPUTS := $(FIXTURES_DIR)/integration_roundtrip.xlsx
+EDIT_OUTPUTS := \
+	$(FIXTURES_DIR)/edit_source.xlsx \
+	$(FIXTURES_DIR)/edit_noop.xlsx \
+	$(FIXTURES_DIR)/edit_number.xlsx \
+	$(FIXTURES_DIR)/edit_snapshot.xlsx \
+	$(FIXTURES_DIR)/edit_raw_copy.xlsx
 READER_FIXTURES := \
 	$(FIXTURES_DIR)/types.xlsx \
 	$(FIXTURES_DIR)/phase1.xlsx \
@@ -61,11 +70,11 @@ PUBLIC_HEADERS := $(patsubst $(INC_DIR)/%,%, \
 	$(wildcard $(INC_DIR)/lxlsx/reader/*.h))
 HEADER_TEST_STAMPS := $(patsubst %.h,$(OBJ_DIR)/headers/%.ok,$(PUBLIC_HEADERS))
 
-.PHONY: all test clean writer-test reader-test reader-fixtures integration-test header-test
+.PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test header-test
 
 all: $(LIB_TEST)
 
-test: writer-test reader-test integration-test header-test
+test: writer-test reader-test integration-test edit-test header-test
 
 writer-test: $(LIB_TEST)
 	$(Q)$(MAKE) -C writer test \
@@ -78,6 +87,9 @@ reader-test: reader-fixtures $(READER_TEST_BINS)
 
 integration-test: $(INTEGRATION_TEST_BINS)
 	$(Q)set -e; for test_bin in $(INTEGRATION_TEST_BINS); do ./$$test_bin; done
+
+edit-test: $(EDIT_TEST_BINS)
+	$(Q)set -e; for test_bin in $(EDIT_TEST_BINS); do ./$$test_bin; done
 
 header-test: $(HEADER_TEST_STAMPS)
 
@@ -113,6 +125,9 @@ $(READER_TEST_DIR)/%: $(READER_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unit
 $(INTEGRATION_TEST_DIR)/%: $(INTEGRATION_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
 
+$(EDIT_TEST_DIR)/%: $(EDIT_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
+
 $(OBJ_DIR)/headers/%.ok: $(INC_DIR)/%.h
 	$(Q)mkdir -p $(@D)
 	$(Q)printf '#include "%s"\nint main(void) { return 0; }\n' "$*.h" > $(@:.ok=.c)
@@ -138,4 +153,5 @@ clean:
 		LIB_DIR="$(abspath $(SRC_DIR))"
 	$(Q)rm -rf $(OBJ_DIR) $(LIB_TEST) $(READER_TEST_BINS) $(READER_FIXTURES) \
 		$(READER_TEST_DIR)/*.dSYM $(INTEGRATION_TEST_BINS) $(INTEGRATION_TEST_DIR)/*.dSYM \
-		$(INTEGRATION_OUTPUTS)
+		$(EDIT_TEST_BINS) $(EDIT_TEST_DIR)/*.dSYM \
+		$(INTEGRATION_OUTPUTS) $(EDIT_OUTPUTS)

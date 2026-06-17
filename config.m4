@@ -90,6 +90,8 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsx/reader/src/comments.c \
     library/libxlsx/reader/src/chart_meta.c \
     library/libxlsx/reader/src/drawing.c \
+    library/libxlsx/src/source_package.c \
+    library/libxlsx/src/edit.c \
     "
 
     AC_MSG_CHECKING([Check libxlsx library])

@@ -19,6 +19,8 @@
 #include "lxlsx/worksheet.h"
 #include "lxlsx/format.h"
 #include "lxlsx/utility.h"
+#include "lxlsx/source_package.h"
+#include "lxlsx/edit.h"
 
 #define LXLSX_VERSION "1.2.4"
 #define LXLSX_VERSION_ID 124

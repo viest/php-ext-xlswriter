@@ -53,6 +53,7 @@
 #include "drawing.h"
 #include "common.h"
 #include "format.h"
+#include "cell.h"
 #include "styles.h"
 #include "utility.h"
 #include "relationships.h"
@@ -709,23 +710,6 @@ enum lxlsx_ignore_errors {
     LXLSX_IGNORE_TWO_DIGIT_TEXT_YEAR,
 
     LXLSX_IGNORE_LAST_OPTION
-};
-
-enum cell_types {
-    NUMBER_CELL = 1,
-    STRING_CELL,
-    INLINE_STRING_CELL,
-    INLINE_RICH_STRING_CELL,
-    FORMULA_CELL,
-    ARRAY_FORMULA_CELL,
-    DYNAMIC_ARRAY_FORMULA_CELL,
-    BLANK_CELL,
-    BOOLEAN_CELL,
-    ERROR_CELL,
-    COMMENT,
-    HYPERLINK_URL,
-    HYPERLINK_INTERNAL,
-    HYPERLINK_EXTERNAL
 };
 
 enum pane_types {
@@ -2341,29 +2325,6 @@ typedef struct lxlsx_row {
     /* tree management pointers for tree.h. */
     RB_ENTRY (lxlsx_row) tree_pointers;
 } lxlsx_row;
-
-/* Struct to represent a worksheet cell. */
-typedef struct lxlsx_cell {
-    lxlsx_row_t row_num;
-    lxlsx_col_t col_num;
-    enum cell_types type;
-    lxlsx_format *format;
-    lxlsx_vml_obj *comment;
-
-    union {
-        double number;
-        int32_t string_id;
-        const char *string;
-    } u;
-
-    double formula_result;
-    char *user_data1;
-    char *user_data2;
-    char *lxlsx_sst_string;
-
-    /* List pointers for tree.h. */
-    RB_ENTRY (lxlsx_cell) tree_pointers;
-} lxlsx_cell;
 
 /* Struct to represent a drawing Target/ID pair. */
 typedef struct lxlsx_drawing_rel_id {

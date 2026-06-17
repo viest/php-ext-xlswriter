@@ -1370,12 +1370,12 @@ int lxlsx_reader_worksheet_cf_block_get(const lxlsx_reader_worksheet *ws, size_t
 
 /* ---- Rich-text runs accessor (§8.2.2) ---------------------------------- */
 
-size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxlsx_reader_cell *c,
+size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxlsx_cell *c,
                             lxlsx_reader_string_run *out, size_t cap)
 {
     if (!ws || !c) return 0;
 
-    if (c->type == LXLSX_READER_CELL_STRING) {
+    if (c->type == STRING_CELL) {
         /* SST cell: cell.raw holds the SST index as decimal text. */
         uint32_t idx;
         size_t   count = 0;
@@ -1401,7 +1401,7 @@ size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxl
         return count;
     }
 
-    if (c->type == LXLSX_READER_CELL_INLINE_STRING) {
+    if (c->type == INLINE_STRING_CELL) {
         size_t i, n = ws->inline_runs_count;
         if (n == 0) return 0;
         if (out) {

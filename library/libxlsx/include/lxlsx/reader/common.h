@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "lxlsx/cell.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,57 +27,6 @@ typedef enum {
 } lxlsx_reader_error;
 
 const char *lxlsx_reader_strerror(lxlsx_reader_error code);
-
-typedef struct {
-    const char *ptr;
-    size_t      len;
-} lxlsx_reader_str;
-
-typedef enum {
-    LXLSX_READER_CELL_BLANK = 0,
-    LXLSX_READER_CELL_NUMBER,
-    LXLSX_READER_CELL_DATETIME,
-    LXLSX_READER_CELL_STRING,
-    LXLSX_READER_CELL_BOOLEAN,
-    LXLSX_READER_CELL_FORMULA,
-    LXLSX_READER_CELL_ERROR,
-    LXLSX_READER_CELL_INLINE_STRING
-} lxlsx_reader_cell_type;
-
-/* Formula sub-types per ECMA-376 §18.18.31 (ST_CellFormulaType). */
-typedef enum {
-    LXLSX_READER_FORMULA_NORMAL    = 0,
-    LXLSX_READER_FORMULA_ARRAY     = 1,
-    LXLSX_READER_FORMULA_DATATABLE = 2,
-    LXLSX_READER_FORMULA_SHARED    = 3
-} lxlsx_reader_formula_kind;
-
-typedef struct {
-    size_t        row;
-    size_t        col;
-    lxlsx_reader_cell_type type;
-    uint32_t      style_id;
-
-    union {
-        double  number;
-        int64_t unix_timestamp;
-        lxlsx_reader_str string;
-        int     boolean;
-        struct {
-            lxlsx_reader_str          formula;     /* expression text (may be empty
-                                             on a shared-formula follower) */
-            lxlsx_reader_str          cached;      /* cached <v> value */
-            lxlsx_reader_formula_kind kind;
-            lxlsx_reader_str          ref;         /* range for array/dataTable, e.g.
-                                             "A1:B3"; empty otherwise */
-            int              si;          /* shared index, or -1 */
-            int              is_dynamic;  /* aca="1" → 1 */
-        }       formula;
-        char    error_code[8];
-    } value;
-
-    lxlsx_reader_str raw;
-} lxlsx_reader_cell;
 
 #define LXLSX_READER_SKIP_NONE          0x00
 #define LXLSX_READER_SKIP_EMPTY_ROWS    0x01

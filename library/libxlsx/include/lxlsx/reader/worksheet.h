@@ -12,13 +12,13 @@ typedef struct lxlsx_reader_worksheet lxlsx_reader_worksheet;
 void lxlsx_reader_worksheet_close(lxlsx_reader_worksheet *ws);
 
 lxlsx_reader_error lxlsx_reader_worksheet_next_row (lxlsx_reader_worksheet *ws);
-lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out);
+lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out);
 
 size_t   lxlsx_reader_worksheet_current_row    (const lxlsx_reader_worksheet *ws);
 size_t   lxlsx_reader_worksheet_max_column_seen(const lxlsx_reader_worksheet *ws);
 uint32_t lxlsx_reader_worksheet_flags          (const lxlsx_reader_worksheet *ws);
 
-typedef int (*lxlsx_reader_cell_cb)   (const lxlsx_reader_cell *cell, void *userdata);
+typedef int (*lxlsx_reader_cell_cb)   (const lxlsx_cell *cell, void *userdata);
 typedef int (*lxlsx_reader_row_end_cb)(size_t row, size_t max_col, void *userdata);
 
 lxlsx_reader_error lxlsx_reader_worksheet_process(lxlsx_reader_worksheet *ws,
@@ -286,13 +286,13 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_charts(lxlsx_reader_worksheet 
 
 /* ---- Rich-text runs (§8.2.2) ------------------------------------------- */
 
-/* For LXLSX_READER_CELL_STRING (SST) and LXLSX_READER_CELL_INLINE_STRING cells, fills `out`
+/* For STRING_CELL (SST) and INLINE_STRING_CELL cells, fills `out`
  * with up to `cap` runs and returns the actual count. When `out` is NULL
  * just returns the run count. Callers can sniff the run count first, then
  * allocate appropriately. The pointers inside each run remain valid until
  * the next streaming step that overwrites the inline buffer (for inline
  * strings) or until the workbook is closed (for SST strings). */
-size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxlsx_reader_cell *c,
+size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxlsx_cell *c,
                             lxlsx_reader_string_run *out, size_t cap);
 
 #ifdef __cplusplus

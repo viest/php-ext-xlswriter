@@ -287,7 +287,7 @@ struct lxlsx_reader_worksheet {
     int           cell_has_inline;
 
     /* Formula attributes from <f t ref si aca>. */
-    lxlsx_reader_formula_kind cell_formula_kind;
+    lxlsx_formula_kind cell_formula_kind;
     char             cell_formula_ref[64];
     int              cell_formula_si;          /* -1 if absent */
     int              cell_formula_is_dynamic;

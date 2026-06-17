@@ -41,7 +41,7 @@ static void test_rich_sst(void)
 {
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
-    lxlsx_reader_cell c;
+    lxlsx_cell c;
     size_t   n;
     lxlsx_reader_string_run runs[8];
     lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE4_XLSX, &wb);
@@ -49,7 +49,7 @@ static void test_rich_sst(void)
 
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
-    TEST_ASSERT_EQUAL_INT(LXLSX_READER_CELL_STRING, c.type);
+    TEST_ASSERT_EQUAL_INT(STRING_CELL, c.type);
 
     n = lxlsx_reader_cell_string_runs(ws, &c, runs, 8);
     TEST_ASSERT_EQUAL_size_t(2, n);

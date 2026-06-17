@@ -15,6 +15,7 @@
 #define __LXLSX_XLSXWRITER_H__
 
 #include "lxlsx/workbook.h"
+#include "lxlsx/cell.h"
 #include "lxlsx/worksheet.h"
 #include "lxlsx/format.h"
 #include "lxlsx/utility.h"

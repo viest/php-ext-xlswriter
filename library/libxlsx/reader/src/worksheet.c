@@ -64,16 +64,17 @@ int64_t lxlsx_reader_excel_serial_to_unix(double serial, int uses_1904)
 /* Cell type inference                                                       */
 /* ------------------------------------------------------------------------- */
 
-static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
+static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
 {
     const lxlsx_reader_styles *st = ws->wb ? ws->wb->styles : NULL;
     const lxlsx_reader_xf     *xf = NULL;
     const char       *t  = ws->cell_t;
 
     memset(out, 0, sizeof(*out));
-    out->row      = ws->cell_row;
-    out->col      = ws->cell_col;
+    out->row_num  = (lxlsx_row_t)ws->cell_row;
+    out->col_num  = (lxlsx_col_t)ws->cell_col;
     out->style_id = ws->cell_style_id;
+    out->style_ref = ws->cell_style_id;
     out->raw.ptr  = ws->cell_value;
     out->raw.len  = ws->cell_value_len;
 
@@ -82,12 +83,12 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
     /* Empty cell (no <v> and no inline string and no formula) */
     if (!ws->cell_has_formula && !ws->cell_has_inline &&
         ws->cell_value_len == 0) {
-        out->type = LXLSX_READER_CELL_BLANK;
+        out->type = BLANK_CELL;
         return;
     }
 
     if (ws->cell_has_formula) {
-        out->type = LXLSX_READER_CELL_FORMULA;
+        out->type = FORMULA_CELL;
         out->value.formula.formula.ptr = ws->cell_formula;
         out->value.formula.formula.len = ws->cell_formula_len;
         out->value.formula.cached.ptr  = ws->cell_value;
@@ -107,12 +108,12 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
                    xf->category == LXLSX_READER_FMT_CATEGORY_TIME ||
                    xf->category == LXLSX_READER_FMT_CATEGORY_DATETIME)) {
             double serial = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
-            out->type = LXLSX_READER_CELL_DATETIME;
+            out->type = DATETIME_CELL;
             out->value.unix_timestamp =
                 lxlsx_reader_excel_serial_to_unix(serial,
                                          ws->wb ? ws->wb->uses_1904 : 0);
         } else {
-            out->type = LXLSX_READER_CELL_NUMBER;
+            out->type = NUMBER_CELL;
             out->value.number = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
         }
         return;
@@ -123,7 +124,7 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
             ? (uint32_t)strtoul(ws->cell_value, NULL, 10) : 0;
         const char *s = ws->wb && ws->wb->sst
             ? lxlsx_reader_sst_get(ws->wb->sst, idx) : NULL;
-        out->type = LXLSX_READER_CELL_STRING;
+        out->type = STRING_CELL;
         if (s) {
             out->value.string.ptr = s;
             out->value.string.len = strlen(s);
@@ -135,21 +136,21 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
     }
 
     if (strcmp(t, "inlineStr") == 0) {
-        out->type = LXLSX_READER_CELL_INLINE_STRING;
+        out->type = INLINE_STRING_CELL;
         out->value.string.ptr = ws->cell_inline;
         out->value.string.len = ws->cell_inline_len;
         return;
     }
 
     if (strcmp(t, "str") == 0) {
-        out->type = LXLSX_READER_CELL_STRING;
+        out->type = STRING_CELL;
         out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
         out->value.string.len = ws->cell_value_len;
         return;
     }
 
     if (strcmp(t, "b") == 0) {
-        out->type = LXLSX_READER_CELL_BOOLEAN;
+        out->type = BOOLEAN_CELL;
         out->value.boolean = (ws->cell_value && ws->cell_value[0] == '1') ? 1 : 0;
         return;
     }
@@ -158,14 +159,14 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
         size_t n = ws->cell_value_len;
         if (n >= sizeof(out->value.error_code))
             n = sizeof(out->value.error_code) - 1;
-        out->type = LXLSX_READER_CELL_ERROR;
+        out->type = ERROR_CELL;
         if (ws->cell_value) memcpy(out->value.error_code, ws->cell_value, n);
         out->value.error_code[n] = 0;
         return;
     }
 
     /* Unknown 't': fall back to string. */
-    out->type = LXLSX_READER_CELL_STRING;
+    out->type = STRING_CELL;
     out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
     out->value.string.len = ws->cell_value_len;
 }
@@ -189,7 +190,7 @@ static void reset_cell(lxlsx_reader_worksheet *ws)
     ws->cell_has_inline = 0;
     ws->cell_row = 0;
     ws->cell_col = 0;
-    ws->cell_formula_kind       = LXLSX_READER_FORMULA_NORMAL;
+    ws->cell_formula_kind       = LXLSX_FORMULA_NORMAL;
     ws->cell_formula_ref[0]     = 0;
     ws->cell_formula_si         = -1;
     ws->cell_formula_is_dynamic = 0;
@@ -232,7 +233,7 @@ static void deliver_cell(lxlsx_reader_worksheet *ws)
         return;
     }
     if (ws->user_cell_cb) {
-        lxlsx_reader_cell c;
+        lxlsx_cell c;
         emit_cell(ws, &c);
         if (ws->user_cell_cb(&c, ws->user_data) != 0) {
             ws->callback_stop = 1;
@@ -342,10 +343,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
             const char *aca_attr = lxlsx_reader_xml_attr(attrs, "aca");
             ws->cell_has_formula = 1;
             if (t_attr) {
-                if (strcmp(t_attr, "array") == 0)          ws->cell_formula_kind = LXLSX_READER_FORMULA_ARRAY;
-                else if (strcmp(t_attr, "dataTable") == 0) ws->cell_formula_kind = LXLSX_READER_FORMULA_DATATABLE;
-                else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXLSX_READER_FORMULA_SHARED;
-                else                                        ws->cell_formula_kind = LXLSX_READER_FORMULA_NORMAL;
+                if (strcmp(t_attr, "array") == 0)          ws->cell_formula_kind = LXLSX_FORMULA_ARRAY;
+                else if (strcmp(t_attr, "dataTable") == 0) ws->cell_formula_kind = LXLSX_FORMULA_DATATABLE;
+                else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXLSX_FORMULA_SHARED;
+                else                                        ws->cell_formula_kind = LXLSX_FORMULA_NORMAL;
             }
             if (ref_attr) copy_attr(ws->cell_formula_ref,
                                     sizeof(ws->cell_formula_ref), ref_attr);
@@ -716,7 +717,7 @@ lxlsx_reader_error lxlsx_reader_worksheet_next_row(lxlsx_reader_worksheet *ws)
      * stops cleanly at the </row> boundary instead of running into the next
      * row (which would steal it from this consumer). */
     if (ws->row_in_progress) {
-        lxlsx_reader_cell dummy;
+        lxlsx_cell dummy;
         while (lxlsx_reader_worksheet_next_cell(ws, &dummy) == LXLSX_READER_NO_ERROR) ;
     }
 
@@ -742,7 +743,7 @@ lxlsx_reader_error lxlsx_reader_worksheet_next_row(lxlsx_reader_worksheet *ws)
     return LXLSX_READER_NO_ERROR;
 }
 
-lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_reader_cell *out)
+lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
 {
     if (!ws || !out) return LXLSX_READER_ERROR_NULL_PARAMETER;
     if (!ws->row_in_progress) return LXLSX_READER_ERROR_END_OF_DATA;

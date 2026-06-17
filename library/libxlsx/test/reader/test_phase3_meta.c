@@ -14,7 +14,7 @@ static void test_formula_array(void)
 {
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
-    lxlsx_reader_cell       c;
+    lxlsx_cell       c;
     lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
@@ -22,8 +22,8 @@ static void test_formula_array(void)
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     /* A1 has the array master formula */
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
-    TEST_ASSERT_EQUAL_INT(LXLSX_READER_CELL_FORMULA, c.type);
-    TEST_ASSERT_EQUAL_INT(LXLSX_READER_FORMULA_ARRAY, c.value.formula.kind);
+    TEST_ASSERT_EQUAL_INT(FORMULA_CELL, c.type);
+    TEST_ASSERT_EQUAL_INT(LXLSX_FORMULA_ARRAY, c.value.formula.kind);
     TEST_ASSERT_EQUAL_STRING_LEN("A1:B2", c.value.formula.ref.ptr,
                                  c.value.formula.ref.len);
     TEST_ASSERT_EQUAL_STRING_LEN("TRANSPOSE(C1:C2)",
@@ -38,7 +38,7 @@ static void test_formula_shared(void)
 {
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
-    lxlsx_reader_cell       c;
+    lxlsx_cell       c;
     lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
@@ -48,7 +48,7 @@ static void test_formula_shared(void)
     /* row 3: shared master at A3 */
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
-    TEST_ASSERT_EQUAL_INT(LXLSX_READER_FORMULA_SHARED, c.value.formula.kind);
+    TEST_ASSERT_EQUAL_INT(LXLSX_FORMULA_SHARED, c.value.formula.kind);
     TEST_ASSERT_EQUAL_INT(0, c.value.formula.si);
     TEST_ASSERT_EQUAL_STRING_LEN("A3:A5", c.value.formula.ref.ptr,
                                  c.value.formula.ref.len);
@@ -60,7 +60,7 @@ static void test_formula_shared(void)
     while (lxlsx_reader_worksheet_next_cell(ws, &c) == LXLSX_READER_NO_ERROR) ;
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
-    TEST_ASSERT_EQUAL_INT(LXLSX_READER_FORMULA_SHARED, c.value.formula.kind);
+    TEST_ASSERT_EQUAL_INT(LXLSX_FORMULA_SHARED, c.value.formula.kind);
     TEST_ASSERT_EQUAL_INT(0, c.value.formula.si);
     /* No expression on the follower. */
     TEST_ASSERT_EQUAL_INT(0, (int)c.value.formula.formula.len);

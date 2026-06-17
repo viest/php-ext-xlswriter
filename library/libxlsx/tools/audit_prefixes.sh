@@ -55,4 +55,10 @@ check 'libxlsxreader|xlsxreader' \
     library/libxlsx/reader/src \
     library/libxlsx/test/reader
 
+check 'lxlsx_reader_cell_type|LXLSX_READER_CELL_|lxlsx_reader_formula_kind|LXLSX_READER_FORMULA_(NORMAL|ARRAY|DATATABLE|SHARED)' \
+    library/libxlsx/include/lxlsx/reader.h \
+    library/libxlsx/include/lxlsx/reader \
+    library/libxlsx/reader/src \
+    library/libxlsx/test/reader
+
 exit "$status"

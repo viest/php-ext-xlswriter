@@ -16,6 +16,8 @@ static const char *NOOP_XLSX = "fixtures/edit_noop.xlsx";
 static const char *NUMBER_XLSX = "fixtures/edit_number.xlsx";
 static const char *SNAPSHOT_XLSX = "fixtures/edit_snapshot.xlsx";
 static const char *NAMESPACE_XLSX = "fixtures/edit_namespace.xlsx";
+static const char *SELF_CLOSING_XLSX = "fixtures/edit_self_closing.xlsx";
+static const char *ORDERED_ROWS_XLSX = "fixtures/edit_ordered_rows.xlsx";
 static const char *CUSTOM_TARGET_XLSX = "fixtures/edit_custom_target.xlsx";
 static const char *NORMALIZED_TARGET_XLSX = "fixtures/edit_normalized_target.xlsx";
 
@@ -449,6 +451,100 @@ static void test_edit_tokenizer_handles_namespaces_and_special_sections(void)
     remove(NAMESPACE_XLSX);
 }
 
+static void test_edit_expands_namespaced_self_closing_sheet_data(void)
+{
+    static const char sheet_xml[] =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<x:worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" "
+        "xmlns:x=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+        "<x:sheetData/>"
+        "</x:worksheet>";
+    lxlsx_edit_session *session;
+    unsigned char *xml;
+    size_t xml_len;
+    const char *worksheet;
+    const char *sheet_data;
+    const char *row;
+    const char *close_sheet_data;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    write_sheet_xml_override(SOURCE_XLSX, SELF_CLOSING_XLSX, sheet_xml);
+    remove(NUMBER_XLSX);
+
+    session = lxlsx_edit_open(SELF_CLOSING_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_string(session, "Edit", 0, 0, "a&<>"));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_string_cell(NUMBER_XLSX, 1, 1, "a&<>");
+
+    xml = read_sheet_xml(NUMBER_XLSX, &xml_len);
+    (void)xml_len;
+    worksheet = strstr((const char *)xml, "<x:worksheet");
+    sheet_data = strstr((const char *)xml, "<x:sheetData>");
+    row = strstr((const char *)xml, "<row r=\"1\"");
+    close_sheet_data = strstr((const char *)xml, "</x:sheetData>");
+    TEST_ASSERT_NOT_NULL(worksheet);
+    TEST_ASSERT_NOT_NULL(sheet_data);
+    TEST_ASSERT_NOT_NULL(row);
+    TEST_ASSERT_NOT_NULL(close_sheet_data);
+    TEST_ASSERT_TRUE(worksheet < sheet_data);
+    TEST_ASSERT_TRUE(sheet_data < row);
+    TEST_ASSERT_TRUE(row < close_sheet_data);
+    assert_xml_contains(xml, "a&amp;&lt;&gt;");
+    lxlsx_source_package_free_buffer(xml);
+    remove(SELF_CLOSING_XLSX);
+}
+
+static void test_edit_inserts_missing_rows_inside_sheet_data_order(void)
+{
+    static const char sheet_xml[] =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+        "<sheetData>"
+        "<row r=\"5\"><c r=\"A5\"><v>5</v></c></row>"
+        "</sheetData>"
+        "</worksheet>";
+    lxlsx_edit_session *session;
+    unsigned char *xml;
+    size_t xml_len;
+    const char *sheet_data;
+    const char *row1;
+    const char *row5;
+    const char *close_sheet_data;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    write_sheet_xml_override(SOURCE_XLSX, ORDERED_ROWS_XLSX, sheet_xml);
+    remove(NUMBER_XLSX);
+
+    session = lxlsx_edit_open(ORDERED_ROWS_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 0, 0, 1.0));
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 4, 0, 55.0));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_number_cell(NUMBER_XLSX, 1, 1, 1.0);
+    assert_number_cell(NUMBER_XLSX, 5, 1, 55.0);
+
+    xml = read_sheet_xml(NUMBER_XLSX, &xml_len);
+    (void)xml_len;
+    sheet_data = strstr((const char *)xml, "<sheetData>");
+    row1 = strstr((const char *)xml, "<row r=\"1\"");
+    row5 = strstr((const char *)xml, "<row r=\"5\"");
+    close_sheet_data = strstr((const char *)xml, "</sheetData>");
+    TEST_ASSERT_NOT_NULL(sheet_data);
+    TEST_ASSERT_NOT_NULL(row1);
+    TEST_ASSERT_NOT_NULL(row5);
+    TEST_ASSERT_NOT_NULL(close_sheet_data);
+    TEST_ASSERT_TRUE(sheet_data < row1);
+    TEST_ASSERT_TRUE(row1 < row5);
+    TEST_ASSERT_TRUE(row5 < close_sheet_data);
+    lxlsx_source_package_free_buffer(xml);
+    remove(ORDERED_ROWS_XLSX);
+}
+
 static void test_opened_workbook_uses_standard_write_api(void)
 {
     lxlsx_workbook *workbook;
@@ -515,6 +611,8 @@ int main(void)
     RUN_TEST(test_string_and_boolean_edit_roundtrip);
     RUN_TEST(test_batched_edits_last_change_wins);
     RUN_TEST(test_edit_tokenizer_handles_namespaces_and_special_sections);
+    RUN_TEST(test_edit_expands_namespaced_self_closing_sheet_data);
+    RUN_TEST(test_edit_inserts_missing_rows_inside_sheet_data_order);
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();

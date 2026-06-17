@@ -14,6 +14,7 @@
 #include "libxlsx/source_package.h"
 #include "libxlsx/worksheet.h"
 #include "libxlsx/workbook.h"
+#include "libxlsx/xmlwriter.h"
 
 #include "xlsx_private.h"
 
@@ -62,7 +63,6 @@ typedef struct {
 
 #define LXLSX_EDIT_CELL_CLOSE       "</c>"
 #define LXLSX_EDIT_ROW_CLOSE        "</row>"
-#define LXLSX_EDIT_SHEET_DATA_CLOSE "</sheetData>"
 
 typedef struct {
     const char *start;
@@ -79,12 +79,6 @@ typedef struct {
     char *ref;
     char *row_ref;
 } lxlsx_edit_prepared_change;
-
-typedef struct {
-    const char *start;
-    const char *end;
-    char *xml;
-} lxlsx_edit_xml_patch;
 
 static int buf_reserve(lxlsx_edit_buf *buf, size_t need)
 {
@@ -113,14 +107,35 @@ static int buf_append(lxlsx_edit_buf *buf, const char *data, size_t len)
     return 0;
 }
 
-static int buf_append_c(lxlsx_edit_buf *buf, char c)
-{
-    return buf_append(buf, &c, 1);
-}
-
 static int buf_append_s(lxlsx_edit_buf *buf, const char *str)
 {
     return buf_append(buf, str, strlen(str));
+}
+
+static int buf_append_matching_end_tag(lxlsx_edit_buf *buf,
+                                       const char *tag_start,
+                                       const char *tag_end)
+{
+    const char *name_start = tag_start + 1;
+    const char *name_end = name_start;
+
+    if (name_start >= tag_end || *name_start == '/' ||
+        *name_start == '!' || *name_start == '?')
+        return -1;
+
+    while (name_end < tag_end && !isspace((unsigned char)*name_end) &&
+           *name_end != '>' && *name_end != '/')
+        name_end++;
+
+    if (name_start == name_end)
+        return -1;
+
+    if (buf_append_s(buf, "</") != 0 ||
+        buf_append(buf, name_start, (size_t)(name_end - name_start)) != 0 ||
+        buf_append_s(buf, ">") != 0)
+        return -1;
+
+    return 0;
 }
 
 static int buf_appendf(lxlsx_edit_buf *buf, const char *fmt, ...)
@@ -157,28 +172,16 @@ static char *dup_range(const char *start, size_t len)
     return out;
 }
 
+static int edit_buf_write_callback(void *userdata, const char *data, size_t len)
+{
+    return buf_append((lxlsx_edit_buf *)userdata, data, len);
+}
+
 static int append_xml_escaped(lxlsx_edit_buf *buf, const char *str)
 {
-    const char *p;
     if (!str)
         return 0;
-    for (p = str; *p; p++) {
-        switch (*p) {
-        case '&':
-            if (buf_append_s(buf, "&amp;") != 0) return -1;
-            break;
-        case '<':
-            if (buf_append_s(buf, "&lt;") != 0) return -1;
-            break;
-        case '>':
-            if (buf_append_s(buf, "&gt;") != 0) return -1;
-            break;
-        default:
-            if (buf_append_c(buf, *p) != 0) return -1;
-            break;
-        }
-    }
-    return 0;
+    return lxlsx_xml_escape_data_write(str, edit_buf_write_callback, buf);
 }
 
 static int needs_xml_space_preserve(const char *str)
@@ -219,6 +222,75 @@ static char *make_row_ref(lxlsx_row_t row)
     char ref[32];
     snprintf(ref, sizeof(ref), "%u", (unsigned int)row + 1);
     return strdup(ref);
+}
+
+static int parse_row_ref(const char *ref, lxlsx_row_t *out_row)
+{
+    unsigned long row = 0;
+    const char *p = ref;
+
+    if (!ref || !*ref)
+        return 0;
+
+    while (*p) {
+        if (*p < '0' || *p > '9')
+            return 0;
+        row = row * 10 + (unsigned long)(*p - '0');
+        if (row > LXLSX_ROW_MAX)
+            return 0;
+        p++;
+    }
+
+    if (row == 0)
+        return 0;
+
+    if (out_row)
+        *out_row = (lxlsx_row_t)(row - 1);
+    return 1;
+}
+
+static int parse_cell_ref(const char *ref,
+                          lxlsx_row_t *out_row,
+                          lxlsx_col_t *out_col)
+{
+    unsigned long row = 0;
+    unsigned long col = 0;
+    const char *p = ref;
+
+    if (!ref || !*ref)
+        return 0;
+
+    if (*p == '$')
+        p++;
+
+    while ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z')) {
+        col = col * 26 + (unsigned long)(toupper((unsigned char)*p) - 'A' + 1);
+        if (col > LXLSX_COL_MAX)
+            return 0;
+        p++;
+    }
+
+    if (col == 0)
+        return 0;
+
+    if (*p == '$')
+        p++;
+
+    while (*p >= '0' && *p <= '9') {
+        row = row * 10 + (unsigned long)(*p - '0');
+        if (row > LXLSX_ROW_MAX)
+            return 0;
+        p++;
+    }
+
+    if (row == 0 || *p != 0)
+        return 0;
+
+    if (out_row)
+        *out_row = (lxlsx_row_t)(row - 1);
+    if (out_col)
+        *out_col = (lxlsx_col_t)(col - 1);
+    return 1;
 }
 
 static int xml_local_name_eq(const char *start, size_t len, const char *name)
@@ -285,15 +357,6 @@ static char *extract_attr(const char *tag_start, const char *tag_end,
     }
 
     return NULL;
-}
-
-static int attr_equals(const char *tag_start, const char *tag_end,
-                       const char *name, const char *value)
-{
-    char *attr = extract_attr(tag_start, tag_end, name);
-    int ok = attr && strcmp(attr, value) == 0;
-    free(attr);
-    return ok;
 }
 
 static int is_self_closing(const char *tag_start, const char *tag_end)
@@ -485,78 +548,6 @@ static int find_matching_end_tag(const char *start, const char *limit,
     return 0;
 }
 
-static int find_cell(const char *xml, size_t len, const char *ref,
-                     const char **cell_start, const char **cell_end,
-                     const char **tag_end, const char **close_start)
-{
-    const char *limit = xml + len;
-    const char *p = xml;
-    lxlsx_edit_xml_tag tag;
-
-    while (xml_next_tag(p, limit, &tag)) {
-        lxlsx_edit_xml_tag close_tag;
-
-        p = tag.end + 1;
-        if (tag.is_end || !tag_name_is(&tag, "c"))
-            continue;
-        if (!attr_equals(tag.start, tag.end, "r", ref))
-            continue;
-
-        *cell_start = tag.start;
-        *tag_end = tag.end;
-        if (close_start)
-            *close_start = NULL;
-        if (tag.is_self_closing) {
-            *cell_end = tag.end + 1;
-            return 1;
-        }
-        if (!find_matching_end_tag(tag.end + 1, limit, "c", &close_tag))
-            return 0;
-        *cell_end = close_tag.end + 1;
-        if (close_start)
-            *close_start = close_tag.start;
-        return 1;
-    }
-
-    return 0;
-}
-
-static int find_row(const char *xml, size_t len, const char *row_ref,
-                    const char **row_start, const char **row_end,
-                    const char **tag_end, const char **close_start)
-{
-    const char *limit = xml + len;
-    const char *p = xml;
-    lxlsx_edit_xml_tag tag;
-
-    while (xml_next_tag(p, limit, &tag)) {
-        lxlsx_edit_xml_tag close_tag;
-
-        p = tag.end + 1;
-        if (tag.is_end || !tag_name_is(&tag, "row"))
-            continue;
-        if (!attr_equals(tag.start, tag.end, "r", row_ref))
-            continue;
-
-        *row_start = tag.start;
-        *tag_end = tag.end;
-        if (close_start)
-            *close_start = NULL;
-        if (tag.is_self_closing) {
-            *row_end = tag.end + 1;
-            return 1;
-        }
-        if (!find_matching_end_tag(tag.end + 1, limit, "row", &close_tag))
-            return 0;
-        *row_end = close_tag.end + 1;
-        if (close_start)
-            *close_start = close_tag.start;
-        return 1;
-    }
-
-    return 0;
-}
-
 static int find_sheet_data(const char *xml, size_t len,
                            const char **sheet_start,
                            const char **sheet_end,
@@ -693,22 +684,6 @@ static int prepared_change_cmp(const void *a, const void *b)
     return 0;
 }
 
-static int xml_patch_cmp(const void *a, const void *b)
-{
-    const lxlsx_edit_xml_patch *left = (const lxlsx_edit_xml_patch *)a;
-    const lxlsx_edit_xml_patch *right = (const lxlsx_edit_xml_patch *)b;
-
-    if (!left->start && !right->start)
-        return 0;
-    if (!left->start)
-        return 1;
-    if (!right->start)
-        return -1;
-    if (left->start == right->start)
-        return 0;
-    return left->start < right->start ? -1 : 1;
-}
-
 static void free_prepared_changes(lxlsx_edit_prepared_change *changes,
                                   size_t count)
 {
@@ -720,16 +695,6 @@ static void free_prepared_changes(lxlsx_edit_prepared_change *changes,
         free(changes[i].row_ref);
     }
     free(changes);
-}
-
-static void free_xml_patches(lxlsx_edit_xml_patch *patches, size_t count)
-{
-    size_t i;
-    if (!patches)
-        return;
-    for (i = 0; i < count; i++)
-        free(patches[i].xml);
-    free(patches);
 }
 
 static lxlsx_error prepare_sheet_changes(const lxlsx_edit_change **changes,
@@ -837,6 +802,54 @@ static lxlsx_error append_cells(lxlsx_edit_buf *buf,
     return LXLSX_NO_ERROR;
 }
 
+static lxlsx_error append_change_cell(lxlsx_edit_buf *buf,
+                                      const lxlsx_edit_prepared_change *change,
+                                      const char *style)
+{
+    char *cell_xml = build_cell_xml(change->change, change->ref, style);
+    if (!cell_xml)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    if (buf_append_s(buf, cell_xml) != 0) {
+        free(cell_xml);
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    free(cell_xml);
+    return LXLSX_NO_ERROR;
+}
+
+static lxlsx_error append_cells_before_col(
+    lxlsx_edit_buf *buf,
+    const lxlsx_edit_prepared_change *changes,
+    size_t count,
+    size_t *index,
+    lxlsx_col_t before_col)
+{
+    while (*index < count && changes[*index].change->col < before_col) {
+        lxlsx_error err = append_change_cell(buf, &changes[*index], NULL);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+        (*index)++;
+    }
+
+    return LXLSX_NO_ERROR;
+}
+
+static lxlsx_error append_remaining_cells(
+    lxlsx_edit_buf *buf,
+    const lxlsx_edit_prepared_change *changes,
+    size_t count,
+    size_t *index)
+{
+    while (*index < count) {
+        lxlsx_error err = append_change_cell(buf, &changes[*index], NULL);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+        (*index)++;
+    }
+
+    return LXLSX_NO_ERROR;
+}
+
 static char *build_new_row_xml(const char *row_ref,
                                const lxlsx_edit_prepared_change *changes,
                                size_t count)
@@ -864,114 +877,130 @@ static char *build_existing_row_xml(const char *row_start,
                                     const lxlsx_edit_prepared_change *changes,
                                     size_t count)
 {
-    lxlsx_edit_xml_patch *patches = NULL;
     lxlsx_edit_buf row = {0};
-    size_t i;
-
-    patches = (lxlsx_edit_xml_patch *)calloc(count, sizeof(*patches));
-    if (!patches)
-        return NULL;
-
-    for (i = 0; i < count; i++) {
-        const char *cell_start = NULL;
-        const char *cell_end = NULL;
-        const char *cell_tag_end = NULL;
-        const char *cell_close_start = NULL;
-        char *style = NULL;
-
-        if (row_close_start &&
-            find_cell(row_start, (size_t)(row_end - row_start), changes[i].ref,
-                      &cell_start, &cell_end, &cell_tag_end,
-                      &cell_close_start)) {
-            (void)cell_close_start;
-            style = extract_attr(cell_start, cell_tag_end, "s");
-            patches[i].start = cell_start;
-            patches[i].end = cell_end;
-        }
-
-        patches[i].xml = build_cell_xml(changes[i].change, changes[i].ref, style);
-        free(style);
-        if (!patches[i].xml)
-            goto fail;
-    }
-
-    if (count > 1)
-        qsort(patches, count, sizeof(*patches), xml_patch_cmp);
+    size_t change_index = 0;
 
     if (!row_close_start) {
         const char *prefix_end = self_closing_prefix_end(row_start, row_tag_end);
         if (buf_append(&row, row_start, (size_t)(prefix_end - row_start)) != 0 ||
             buf_append_s(&row, ">") != 0)
             goto fail;
-        for (i = 0; i < count; i++) {
-            if (buf_append_s(&row, patches[i].xml) != 0)
-                goto fail;
-        }
-        if (buf_append_s(&row, LXLSX_EDIT_ROW_CLOSE) != 0)
+        if (append_remaining_cells(&row, changes, count, &change_index)
+            != LXLSX_NO_ERROR)
+            goto fail;
+        if (buf_append_matching_end_tag(&row, row_start, row_tag_end) != 0)
             goto fail;
     } else {
         const char *pos = row_start;
+        const char *p = row_tag_end + 1;
+        const char *scan_limit = row_close_start;
+        lxlsx_edit_xml_tag tag;
 
-        for (i = 0; i < count; i++) {
-            if (!patches[i].start)
+        while (xml_next_tag(p, scan_limit, &tag)) {
+            const char *cell_end;
+            char *ref = NULL;
+            lxlsx_row_t cell_row = 0;
+            lxlsx_col_t cell_col = 0;
+            int valid_ref = 0;
+
+            p = tag.end + 1;
+            if (tag.is_end || !tag_name_is(&tag, "c"))
                 continue;
-            if (patches[i].start < pos)
+
+            if (tag.is_self_closing) {
+                cell_end = tag.end + 1;
+            } else {
+                lxlsx_edit_xml_tag close_tag;
+                if (!find_matching_end_tag(tag.end + 1, row_close_start,
+                                           "c", &close_tag))
+                    goto fail;
+                cell_end = close_tag.end + 1;
+            }
+
+            ref = extract_attr(tag.start, tag.end, "r");
+            valid_ref = parse_cell_ref(ref, &cell_row, &cell_col);
+            free(ref);
+
+            if (!valid_ref || cell_row != changes[0].change->row) {
+                p = cell_end;
+                continue;
+            }
+
+            if (buf_append(&row, pos, (size_t)(tag.start - pos)) != 0)
                 goto fail;
-            if (buf_append(&row, pos, (size_t)(patches[i].start - pos)) != 0 ||
-                buf_append_s(&row, patches[i].xml) != 0)
+
+            if (append_cells_before_col(&row, changes, count, &change_index,
+                                        cell_col) != LXLSX_NO_ERROR)
                 goto fail;
-            pos = patches[i].end;
+
+            if (change_index < count &&
+                changes[change_index].change->col == cell_col) {
+                char *style = extract_attr(tag.start, tag.end, "s");
+                lxlsx_error err = append_change_cell(
+                    &row, &changes[change_index], style);
+                free(style);
+                if (err != LXLSX_NO_ERROR)
+                    goto fail;
+                change_index++;
+            } else {
+                if (buf_append(&row, tag.start,
+                               (size_t)(cell_end - tag.start)) != 0)
+                    goto fail;
+            }
+
+            pos = cell_end;
+            p = cell_end;
         }
 
         if (buf_append(&row, pos, (size_t)(row_close_start - pos)) != 0)
             goto fail;
 
-        for (i = 0; i < count; i++) {
-            if (patches[i].start)
-                continue;
-            if (buf_append_s(&row, patches[i].xml) != 0)
-                goto fail;
-        }
+        if (append_remaining_cells(&row, changes, count, &change_index)
+            != LXLSX_NO_ERROR)
+            goto fail;
 
         if (buf_append(&row, row_close_start,
                        (size_t)(row_end - row_close_start)) != 0)
             goto fail;
     }
 
-    free_xml_patches(patches, count);
     return row.data;
 
 fail:
     free(row.data);
-    free_xml_patches(patches, count);
     return NULL;
 }
 
-static lxlsx_error append_xml_patch(lxlsx_edit_xml_patch **patches,
-                                    size_t *count,
-                                    size_t *cap,
-                                    const char *start,
-                                    const char *end,
-                                    char *replacement)
+static lxlsx_error append_missing_rows_until(
+    lxlsx_edit_buf *out,
+    const lxlsx_edit_prepared_change *prepared,
+    size_t prepared_count,
+    size_t *index,
+    lxlsx_row_t before_row,
+    int bounded)
 {
-    lxlsx_edit_xml_patch *patch;
+    while (*index < prepared_count &&
+           (!bounded || prepared[*index].change->row < before_row)) {
+        lxlsx_row_t row = prepared[*index].change->row;
+        const char *row_ref = prepared[*index].row_ref;
+        char *row_xml;
+        size_t next = *index + 1;
 
-    if (*count >= *cap) {
-        size_t next_cap = *cap ? *cap * 2 : 4;
-        lxlsx_edit_xml_patch *next =
-            (lxlsx_edit_xml_patch *)realloc(*patches,
-                                            next_cap * sizeof(*next));
-        if (!next)
+        while (next < prepared_count && prepared[next].change->row == row)
+            next++;
+
+        row_xml = build_new_row_xml(row_ref, prepared + *index,
+                                    next - *index);
+        if (!row_xml)
             return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        *patches = next;
-        *cap = next_cap;
+        if (buf_append_s(out, row_xml) != 0) {
+            free(row_xml);
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        }
+        free(row_xml);
+        *index = next;
     }
 
-    patch = &(*patches)[*count];
-    patch->start = start;
-    patch->end = end;
-    patch->xml = replacement;
-    (*count)++;
     return LXLSX_NO_ERROR;
 }
 
@@ -983,133 +1012,137 @@ static lxlsx_error patch_xml_with_changes(unsigned char **xml, size_t *xml_len,
     const char *xml_end = xml_start + *xml_len;
     lxlsx_edit_prepared_change *prepared = NULL;
     size_t prepared_count = 0;
-    lxlsx_edit_xml_patch *row_patches = NULL;
-    size_t row_patch_count = 0;
-    size_t row_patch_cap = 0;
-    lxlsx_edit_buf missing_rows = {0};
     lxlsx_edit_buf out = {0};
+    const char *sheet_start = NULL;
+    const char *sheet_end = NULL;
+    const char *sheet_tag_end = NULL;
+    const char *sheet_close_start = NULL;
     lxlsx_error err;
-    size_t i;
+    size_t change_index = 0;
 
     err = prepare_sheet_changes(changes, change_count, &prepared,
                                 &prepared_count);
     if (err != LXLSX_NO_ERROR)
         return err;
 
-    i = 0;
-    while (i < prepared_count) {
-        lxlsx_row_t row = prepared[i].change->row;
-        const char *row_ref = prepared[i].row_ref;
-        const char *row_start = NULL;
-        const char *row_end = NULL;
-        const char *row_tag_end = NULL;
-        const char *row_close_start = NULL;
-        char *row_xml = NULL;
-        size_t j = i + 1;
-
-        while (j < prepared_count && prepared[j].change->row == row)
-            j++;
-
-        if (find_row(xml_start, *xml_len, row_ref,
-                     &row_start, &row_end, &row_tag_end, &row_close_start)) {
-            row_xml = build_existing_row_xml(row_start, row_end, row_tag_end,
-                                             row_close_start, prepared + i,
-                                             j - i);
-            if (!row_xml) {
-                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                goto done;
-            }
-            err = append_xml_patch(&row_patches, &row_patch_count,
-                                   &row_patch_cap, row_start, row_end,
-                                   row_xml);
-            if (err != LXLSX_NO_ERROR) {
-                free(row_xml);
-                goto done;
-            }
-        } else {
-            row_xml = build_new_row_xml(row_ref, prepared + i, j - i);
-            if (!row_xml) {
-                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                goto done;
-            }
-            if (buf_append_s(&missing_rows, row_xml) != 0) {
-                free(row_xml);
-                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                goto done;
-            }
-            free(row_xml);
-        }
-
-        i = j;
+    if (!find_sheet_data(xml_start, *xml_len, &sheet_start, &sheet_end,
+                         &sheet_tag_end, &sheet_close_start)) {
+        err = LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+        goto done;
     }
 
-    if (row_patch_count > 1)
-        qsort(row_patches, row_patch_count, sizeof(*row_patches), xml_patch_cmp);
-
-    if (missing_rows.len > 0) {
-        const char *sheet_start = NULL;
-        const char *sheet_end = NULL;
-        const char *sheet_tag_end = NULL;
-        const char *sheet_close_start = NULL;
-
-        if (!find_sheet_data(xml_start, *xml_len, &sheet_start, &sheet_end,
-                             &sheet_tag_end, &sheet_close_start)) {
-            err = LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+    if (!sheet_close_start) {
+        const char *prefix_end = self_closing_prefix_end(sheet_start,
+                                                         sheet_tag_end);
+        if (buf_append(&out, xml_start, (size_t)(prefix_end - xml_start)) != 0 ||
+            buf_append_s(&out, ">") != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             goto done;
         }
 
-        if (!sheet_close_start) {
-            const char *prefix_end = self_closing_prefix_end(sheet_start,
-                                                             sheet_tag_end);
-            if (buf_append(&out, xml_start, (size_t)(prefix_end - xml_start)) != 0 ||
-                buf_append_s(&out, ">") != 0 ||
-                buf_append(&out, missing_rows.data, missing_rows.len) != 0 ||
-                buf_append_s(&out, LXLSX_EDIT_SHEET_DATA_CLOSE) != 0 ||
-                buf_append(&out, sheet_end, (size_t)(xml_end - sheet_end)) != 0) {
-                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                goto done;
-            }
-        } else {
-            const char *pos = xml_start;
+        err = append_missing_rows_until(&out, prepared, prepared_count,
+                                        &change_index, 0, 0);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
 
-            for (i = 0; i < row_patch_count; i++) {
-                if (row_patches[i].start < pos)
-                    goto malformed;
-                if (buf_append(&out, pos,
-                               (size_t)(row_patches[i].start - pos)) != 0 ||
-                    buf_append_s(&out, row_patches[i].xml) != 0) {
-                    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                    goto done;
-                }
-                pos = row_patches[i].end;
-            }
-
-            if (sheet_close_start < pos)
-                goto malformed;
-            if (buf_append(&out, pos, (size_t)(sheet_close_start - pos)) != 0 ||
-                buf_append(&out, missing_rows.data, missing_rows.len) != 0 ||
-                buf_append(&out, sheet_close_start,
-                           (size_t)(xml_end - sheet_close_start)) != 0) {
-                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-                goto done;
-            }
+        if (buf_append_matching_end_tag(&out, sheet_start, sheet_tag_end) != 0 ||
+            buf_append(&out, sheet_end, (size_t)(xml_end - sheet_end)) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+            goto done;
         }
     } else {
         const char *pos = xml_start;
+        const char *p = sheet_tag_end + 1;
+        lxlsx_edit_xml_tag tag;
 
-        for (i = 0; i < row_patch_count; i++) {
-            if (row_patches[i].start < pos)
-                goto malformed;
-            if (buf_append(&out, pos,
-                           (size_t)(row_patches[i].start - pos)) != 0 ||
-                buf_append_s(&out, row_patches[i].xml) != 0) {
+        while (xml_next_tag(p, sheet_close_start, &tag)) {
+            const char *row_end;
+            const char *row_close_start = NULL;
+            char *row_ref_attr = NULL;
+            lxlsx_row_t xml_row = 0;
+            int valid_row = 0;
+
+            p = tag.end + 1;
+            if (tag.is_end || !tag_name_is(&tag, "row"))
+                continue;
+
+            if (tag.is_self_closing) {
+                row_end = tag.end + 1;
+            } else {
+                lxlsx_edit_xml_tag close_tag;
+                if (!find_matching_end_tag(tag.end + 1, sheet_close_start,
+                                           "row", &close_tag))
+                    goto malformed;
+                row_close_start = close_tag.start;
+                row_end = close_tag.end + 1;
+            }
+
+            row_ref_attr = extract_attr(tag.start, tag.end, "r");
+            valid_row = parse_row_ref(row_ref_attr, &xml_row);
+            free(row_ref_attr);
+
+            if (!valid_row) {
+                p = row_end;
+                continue;
+            }
+
+            if (buf_append(&out, pos, (size_t)(tag.start - pos)) != 0) {
                 err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
                 goto done;
             }
-            pos = row_patches[i].end;
+
+            if (append_missing_rows_until(&out, prepared, prepared_count,
+                                          &change_index, xml_row, 1)
+                != LXLSX_NO_ERROR) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+                goto done;
+            }
+
+            if (change_index < prepared_count &&
+                prepared[change_index].change->row == xml_row) {
+                char *row_xml;
+                size_t next = change_index + 1;
+                while (next < prepared_count &&
+                       prepared[next].change->row == xml_row)
+                    next++;
+
+                row_xml = build_existing_row_xml(tag.start, row_end, tag.end,
+                                                 row_close_start,
+                                                 prepared + change_index,
+                                                 next - change_index);
+                if (!row_xml) {
+                    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+                    goto done;
+                }
+                if (buf_append_s(&out, row_xml) != 0) {
+                    free(row_xml);
+                    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+                    goto done;
+                }
+                free(row_xml);
+                change_index = next;
+            } else if (buf_append(&out, tag.start,
+                                  (size_t)(row_end - tag.start)) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+                goto done;
+            }
+
+            pos = row_end;
+            p = row_end;
         }
 
-        if (buf_append(&out, pos, (size_t)(xml_end - pos)) != 0) {
+        if (buf_append(&out, pos, (size_t)(sheet_close_start - pos)) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+            goto done;
+        }
+
+        err = append_missing_rows_until(&out, prepared, prepared_count,
+                                        &change_index, 0, 0);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+
+        if (buf_append(&out, sheet_close_start,
+                       (size_t)(xml_end - sheet_close_start)) != 0) {
             err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             goto done;
         }
@@ -1127,8 +1160,6 @@ malformed:
 
 done:
     free(out.data);
-    free(missing_rows.data);
-    free_xml_patches(row_patches, row_patch_count);
     free_prepared_changes(prepared, prepared_count);
     return err;
 }

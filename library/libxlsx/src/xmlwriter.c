@@ -33,6 +33,8 @@ STATIC void _fprint_escaped_attributes(FILE *xmlfile,
 
 STATIC void _fprint_escaped_data(FILE *xmlfile, const char *data);
 
+STATIC int _file_write_callback(void *userdata, const char *data, size_t len);
+
 /*
  * Write the XML declaration.
  */
@@ -195,11 +197,69 @@ _escape_attributes(struct lxlsx_xml_attribute *attribute)
     return encoded;
 }
 
+STATIC int
+_buffer_write_callback(void *userdata, const char *data, size_t len)
+{
+    char **out = (char **)userdata;
+    memcpy(*out, data, len);
+    *out += len;
+    return 0;
+}
+
 /*
- * Escape XML characters in data sections of tags.
- * Note, this is different from _escape_attributes()
- * in that double quotes are not escaped by Excel.
+ * Escape XML characters in data sections of tags and send escaped chunks to a
+ * caller supplied writer. This differs from _escape_attributes() in that
+ * double quotes are not escaped by Excel.
  */
+int
+lxlsx_xml_escape_data_write(const char *data,
+                            lxlsx_xml_write_callback write_cb,
+                            void *userdata)
+{
+    const char *chunk;
+    const char *p;
+
+    if (!data || !write_cb)
+        return -1;
+
+    chunk = data;
+    for (p = data; *p; p++) {
+        const char *escaped = NULL;
+        size_t escaped_len = 0;
+
+        switch (*p) {
+            case '&':
+                escaped = LXLSX_AMP;
+                escaped_len = sizeof(LXLSX_AMP) - 1;
+                break;
+            case '<':
+                escaped = LXLSX_LT;
+                escaped_len = sizeof(LXLSX_LT) - 1;
+                break;
+            case '>':
+                escaped = LXLSX_GT;
+                escaped_len = sizeof(LXLSX_GT) - 1;
+                break;
+            default:
+                break;
+        }
+
+        if (!escaped)
+            continue;
+
+        if (p > chunk && write_cb(userdata, chunk, (size_t)(p - chunk)) != 0)
+            return -1;
+        if (write_cb(userdata, escaped, escaped_len) != 0)
+            return -1;
+        chunk = p + 1;
+    }
+
+    if (p > chunk)
+        return write_cb(userdata, chunk, (size_t)(p - chunk));
+
+    return 0;
+}
+
 char *
 lxlsx_escape_data(const char *data)
 {
@@ -208,26 +268,13 @@ lxlsx_escape_data(const char *data)
     char *encoded = (char *) calloc(encoded_len, 1);
     char *p_encoded = encoded;
 
-    while (*data) {
-        switch (*data) {
-            case '&':
-                memcpy(p_encoded, LXLSX_AMP, sizeof(LXLSX_AMP) - 1);
-                p_encoded += sizeof(LXLSX_AMP) - 1;
-                break;
-            case '<':
-                memcpy(p_encoded, LXLSX_LT, sizeof(LXLSX_LT) - 1);
-                p_encoded += sizeof(LXLSX_LT) - 1;
-                break;
-            case '>':
-                memcpy(p_encoded, LXLSX_GT, sizeof(LXLSX_GT) - 1);
-                p_encoded += sizeof(LXLSX_GT) - 1;
-                break;
-            default:
-                *p_encoded = *data;
-                p_encoded++;
-                break;
-        }
-        data++;
+    if (!encoded)
+        return NULL;
+
+    if (lxlsx_xml_escape_data_write(data, _buffer_write_callback,
+                                    &p_encoded) != 0) {
+        free(encoded);
+        return NULL;
     }
 
     return encoded;
@@ -404,12 +451,14 @@ _fprint_escaped_data(FILE *xmlfile, const char *data)
         fprintf(xmlfile, "%s", data);
     }
     else {
-        char *encoded = lxlsx_escape_data(data);
-        if (encoded) {
-            fprintf(xmlfile, "%s", encoded);
-            free(encoded);
-        }
+        lxlsx_xml_escape_data_write(data, _file_write_callback, xmlfile);
     }
+}
+
+STATIC int
+_file_write_callback(void *userdata, const char *data, size_t len)
+{
+    return fwrite(data, 1, len, (FILE *)userdata) == len ? 0 : -1;
 }
 
 /* Create a new string XML attribute. */

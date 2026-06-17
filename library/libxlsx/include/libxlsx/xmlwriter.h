@@ -181,6 +181,13 @@ uint8_t lxlsx_has_control_characters(const char *string);
 char *lxlsx_escape_control_characters(const char *string);
 char *lxlsx_escape_url_characters(const char *string, uint8_t escape_hash);
 
+typedef int (*lxlsx_xml_write_callback)(void *userdata,
+                                        const char *data,
+                                        size_t len);
+
+int lxlsx_xml_escape_data_write(const char *data,
+                                lxlsx_xml_write_callback write_cb,
+                                void *userdata);
 char *lxlsx_escape_data(const char *data);
 
 /* *INDENT-OFF* */

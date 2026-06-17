@@ -395,9 +395,6 @@ const char *lxlsx_reader_sst_get(lxlsx_reader_sst *s, uint32_t index)
 size_t lxlsx_reader_sst_count(const lxlsx_reader_sst *s)
 {
     if (!s) return 0;
-    if (s->mode == LXLSX_READER_SST_MODE_FULL) return s->loaded_count;
-    /* STREAMING: only known precisely after EOF. Return loaded_count for
-       partial knowledge; callers can distinguish via lxlsx_reader_sst_loaded_count. */
     return s->loaded_count;
 }
 

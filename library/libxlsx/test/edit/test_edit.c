@@ -353,6 +353,38 @@ static void test_string_and_boolean_edit_roundtrip(void)
     lxlsx_source_package_free_buffer(xml);
 }
 
+static void test_batched_edits_last_change_wins(void)
+{
+    lxlsx_edit_session *session;
+    unsigned char *xml;
+    size_t xml_len;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(NUMBER_XLSX);
+
+    session = lxlsx_edit_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 0, 0, 10.0));
+    assert_ok(lxlsx_edit_set_string(session, "Edit", 0, 0, "last value"));
+    assert_ok(lxlsx_edit_set_boolean(session, "Edit", 1, 1, 1));
+    assert_ok(lxlsx_edit_set_formula(session, "Edit", 1, 2, "=A1", "0"));
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 9, 3, 99.0));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_string_cell(NUMBER_XLSX, 1, 1, "last value");
+    assert_boolean_cell(NUMBER_XLSX, 2, 2, 1);
+    assert_formula_cell(NUMBER_XLSX, 2, 3, "A1", "0");
+    assert_number_cell(NUMBER_XLSX, 10, 4, 99.0);
+
+    xml = read_sheet_xml(NUMBER_XLSX, &xml_len);
+    (void)xml_len;
+    assert_xml_contains(xml, "<c r=\"A1\" s=\"");
+    assert_xml_contains(xml, "t=\"inlineStr\"");
+    assert_xml_contains(xml, "<row r=\"10\">");
+    lxlsx_source_package_free_buffer(xml);
+}
+
 static void test_opened_workbook_uses_standard_write_api(void)
 {
     lxlsx_workbook *workbook;
@@ -417,6 +449,7 @@ int main(void)
     RUN_TEST(test_relationship_targets_locate_custom_worksheet_parts);
     RUN_TEST(test_formula_edit_roundtrips);
     RUN_TEST(test_string_and_boolean_edit_roundtrip);
+    RUN_TEST(test_batched_edits_last_change_wins);
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();

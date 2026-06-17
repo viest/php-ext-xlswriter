@@ -28,6 +28,9 @@ size_t              lxlsx_edit_sheet_count(lxlsx_edit_session *session);
 const char         *lxlsx_edit_sheet_name(lxlsx_edit_session *session,
                                           size_t index);
 
+/*
+ * If sheet_name is NULL, edits target the first worksheet in workbook order.
+ */
 lxlsx_error lxlsx_edit_set_number(lxlsx_edit_session *session,
                                   const char *sheet_name,
                                   lxlsx_row_t row,

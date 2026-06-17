@@ -178,23 +178,25 @@
    <file md5sum="c939551bf08cc1cdd0544a4fc51ea0da" name="library/libxlsx/src/workbook.c" role="src" />
    <file md5sum="771d074377eb606419aa639e3a33839d" name="library/libxlsx/src/worksheet.c" role="src" />
    <file md5sum="282802faa2ca72366f50aadd2526f308" name="library/libxlsx/src/xmlwriter.c" role="src" />
-   <file md5sum="d27204690958aa989f83cdc1b5295a15" name="library/libxlsx/reader/src/chart_meta.c" role="src" />
-   <file md5sum="d620a619903e3cfdba7f7abb448d83d5" name="library/libxlsx/reader/src/comments.c" role="src" />
+   <file md5sum="d04f48dc779725d580b674e3a805ffe3" name="library/libxlsx/reader/src/chart_meta.c" role="src" />
+   <file md5sum="81795dde1abd2561a5ae2ae9cd22dce7" name="library/libxlsx/reader/src/comments.c" role="src" />
    <file md5sum="f37d5d1fe7643cc98f6a4079f1c6023e" name="library/libxlsx/reader/src/common.c" role="src" />
-   <file md5sum="3c979ec236ea76178b5f82cd83100908" name="library/libxlsx/reader/src/drawing.c" role="src" />
+   <file md5sum="d8ed8d06991ebff86613981b6937bdb8" name="library/libxlsx/reader/src/drawing.c" role="src" />
    <file md5sum="d8f2a326e35ab28bcd04a46719f465ae" name="library/libxlsx/reader/src/lxlsx_reader_compat.h" role="src" />
    <file md5sum="f3faf1dbd03d835cb56973c493451806" name="library/libxlsx/reader/src/lxlsx_reader_internal.h" role="src" />
    <file md5sum="67e5c301459a43f041f47880d4b4ca51" name="library/libxlsx/reader/src/lxlsx_reader_numfmt.h" role="src" />
    <file md5sum="983ce3920b075c18e0299eeddda3dee1" name="library/libxlsx/reader/src/lxlsx_reader_sst.h" role="src" />
    <file md5sum="a7b276de42cb11d0fee8b9e8a30218b1" name="library/libxlsx/reader/src/lxlsx_reader_styles_priv.h" role="src" />
+   <file md5sum="3d94fa9831feae3272e125a6808ad6f6" name="library/libxlsx/reader/src/lxlsx_reader_util.h" role="src" />
    <file md5sum="1ab39fde92b8b1370eb00698b306aec0" name="library/libxlsx/reader/src/lxlsx_reader_xml_pump.h" role="src" />
    <file md5sum="541dc0ce1fd68efcaa373e3549733a6f" name="library/libxlsx/reader/src/lxlsx_reader_zip.h" role="src" />
    <file md5sum="39fc367c29164f7d26ece3e709adda54" name="library/libxlsx/reader/src/numfmt.c" role="src" />
    <file md5sum="f112476fff724c74a67c5a02ad676a02" name="library/libxlsx/reader/src/sst.c" role="src" />
    <file md5sum="fd5d3fce7e95e8605a54490d7b7ace19" name="library/libxlsx/reader/src/styles.c" role="src" />
-   <file md5sum="c2449cbfb127d982ca47a08e3f98eaf1" name="library/libxlsx/reader/src/workbook.c" role="src" />
-   <file md5sum="0fd0e71e905bfc42fdf45445084ea69f" name="library/libxlsx/reader/src/worksheet.c" role="src" />
-   <file md5sum="b188b089166ed49c2f1753d944f2d731" name="library/libxlsx/reader/src/worksheet_meta.c" role="src" />
+   <file md5sum="173415f326cc1404d394095fd16a06d2" name="library/libxlsx/reader/src/util.c" role="src" />
+   <file md5sum="a9c4a188bdf7df905ccd543c5d2df62f" name="library/libxlsx/reader/src/workbook.c" role="src" />
+   <file md5sum="2762d721d64d0411bd977bc4ea4c8cd2" name="library/libxlsx/reader/src/worksheet.c" role="src" />
+   <file md5sum="b1d13c529734ca2e7b72b83beeeb64f9" name="library/libxlsx/reader/src/worksheet_meta.c" role="src" />
    <file md5sum="4d267a774b8e1214903626f414b83f8b" name="library/libxlsx/reader/src/xml_pump.c" role="src" />
    <file md5sum="c5976a72c97cfb81b64ba7c7618b9072" name="library/libxlsx/reader/src/zip_io.c" role="src" />
    <file md5sum="90121909ee7cfe8020acab7f4a92bfec" name="library/libxlsx/License.txt" role="doc" />
@@ -412,8 +414,8 @@
    <file md5sum="a629b83b2fe5157dd98b0f55fe753b50" name="README.md" role="doc" />
    <file md5sum="1ca1303d561cdce910780e10402eaf25" name="README_zh.md" role="doc" />
    <file md5sum="abc3c7def810a2a10036c268cb71cc94" name="LICENSE" role="doc" />
-   <file md5sum="c9d48a592fa8fa1c14c10fe52a5e1340" name="config.m4" role="src" />
-   <file md5sum="52aecc26f31050045c07c424a7e3027b" name="config.w32" role="src" />
+   <file md5sum="22bdd96c361d2e3f675acc3f3a92be7c" name="config.m4" role="src" />
+   <file md5sum="aa6b7bb2ae4e62ac8643d42cf82e780d" name="config.w32" role="src" />
    <file md5sum="0ca27297a1f10800e75139dee4ff7e89" name="excel.php" role="src" />
    <file md5sum="ba1c714558e7afe17f001fa8c82bc3e2" name="php_xlswriter.h" role="src" />
    <file md5sum="0f7fad70d99b43cfa308598f400a1fa7" name="xlswriter.c" role="src" />

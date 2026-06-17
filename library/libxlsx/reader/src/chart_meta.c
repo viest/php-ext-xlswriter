@@ -13,122 +13,12 @@
  *   for type/title/series.
  */
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
-
-/* Forward decl from comments.c-private helpers. To avoid a public header we
- * duplicate two tiny utilities here. */
-
-static char *cm_strdup_or_null(const char *s) { return s ? strdup(s) : NULL; }
-
-static char *cm_normalise(const char *base, const char *target)
-{
-    size_t blen, tlen;
-    char  *full;
-    const char *slash;
-    if (!base || !target) return NULL;
-    if (target[0] == '/') return strdup(target + 1);
-    slash = strrchr(base, '/');
-    blen = slash ? (size_t)(slash - base) + 1 : 0;
-    tlen = strlen(target);
-    full = (char *)malloc(blen + tlen + 1);
-    if (!full) return NULL;
-    if (blen) memcpy(full, base, blen);
-    memcpy(full + blen, target, tlen);
-    full[blen + tlen] = 0;
-    {
-        char *out = full, *p = full;
-        while (*p) {
-            if (p[0] == '.' && p[1] == '.' && p[2] == '/') {
-                if (out > full) {
-                    out--;
-                    while (out > full && *(out - 1) != '/') out--;
-                }
-                p += 3;
-            } else {
-                *out++ = *p++;
-            }
-        }
-        *out = 0;
-    }
-    return full;
-}
-
-/* Reuse the rel-collector pattern: build (rid -> target) for a given file. */
-
-typedef struct { char *id; char *target; } rel_e;
-typedef struct { rel_e *items; size_t count; size_t cap; } rel_m;
-
-static void relm_push(rel_m *m, const char *id, const char *t)
-{
-    if (m->count >= m->cap) {
-        size_t nc = m->cap ? m->cap * 2 : 4;
-        rel_e *nb = (rel_e *)realloc(m->items, nc * sizeof(*nb));
-        if (!nb) return;
-        m->items = nb; m->cap = nc;
-    }
-    m->items[m->count].id     = id ? strdup(id) : NULL;
-    m->items[m->count].target = t  ? strdup(t)  : NULL;
-    m->count++;
-}
-
-static void relm_free(rel_m *m)
-{
-    size_t i;
-    for (i = 0; i < m->count; i++) { free(m->items[i].id); free(m->items[i].target); }
-    free(m->items);
-    m->items = NULL; m->count = m->cap = 0;
-}
-
-static const char *relm_lookup(const rel_m *m, const char *id)
-{
-    size_t i;
-    for (i = 0; i < m->count; i++)
-        if (m->items[i].id && strcmp(m->items[i].id, id) == 0) return m->items[i].target;
-    return NULL;
-}
-
-static void relm_on_start(void *ud, const char *name, const char **attrs)
-{
-    rel_m *m = (rel_m *)ud;
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-    relm_push(m, lxlsx_reader_xml_attr(attrs, "Id"), lxlsx_reader_xml_attr(attrs, "Target"));
-}
-
-static lxlsx_reader_error load_rels(lxlsx_reader_zip *zip, const char *target_path, rel_m *out)
-{
-    char *rels_path;
-    const char *slash = target_path ? strrchr(target_path, '/') : NULL;
-    size_t prefix_len = slash ? (size_t)(slash - target_path) + 1 : 0;
-    const char *file_part = slash ? slash + 1 : target_path;
-    size_t flen = strlen(file_part);
-    lxlsx_reader_zip_file *zf;
-    lxlsx_reader_xml_pump *pump;
-    lxlsx_reader_error rc;
-
-    rels_path = (char *)malloc(prefix_len + 6 + flen + 5 + 1);
-    if (!rels_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
-    memcpy(rels_path, target_path, prefix_len);
-    memcpy(rels_path + prefix_len, "_rels/", 6);
-    memcpy(rels_path + prefix_len + 6, file_part, flen);
-    memcpy(rels_path + prefix_len + 6 + flen, ".rels", 5);
-    rels_path[prefix_len + 6 + flen + 5] = 0;
-
-    zf = lxlsx_reader_zip_open_entry(zip, rels_path);
-    free(rels_path);
-    if (!zf) return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
-    pump = lxlsx_reader_xml_pump_create_zip_file(zf);
-    if (!pump) { lxlsx_reader_zip_close_entry(zf); return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED; }
-    lxlsx_reader_xml_pump_set_handlers(pump, relm_on_start, NULL, NULL, out);
-    rc = lxlsx_reader_xml_pump_run(pump);
-    lxlsx_reader_xml_pump_destroy(pump);
-    lxlsx_reader_zip_close_entry(zf);
-    return rc;
-}
+#include "lxlsx_reader_util.h"
 
 /* --- drawing anchor & chart-rid scan ------------------------------------ */
 
@@ -169,22 +59,6 @@ static void drw_alloc_anchor(drw_ctx *c)
     c->from_col = c->from_row = c->to_col = c->to_row = -1;
 }
 
-static void drw_buf_append(drw_ctx *c, const char *s, size_t n)
-{
-    size_t need = c->small_len + n + 1;
-    if (need > c->small_cap) {
-        size_t nc = c->small_cap ? c->small_cap : 32;
-        char *nb;
-        while (nc < need) nc *= 2;
-        nb = (char *)realloc(c->small, nc);
-        if (!nb) return;
-        c->small = nb; c->small_cap = nc;
-    }
-    memcpy(c->small + c->small_len, s, n);
-    c->small_len += n;
-    c->small[c->small_len] = 0;
-}
-
 static void drw_on_start(void *ud, const char *name, const char **attrs)
 {
     drw_ctx *c = (drw_ctx *)ud;
@@ -206,14 +80,16 @@ static void drw_on_start(void *ud, const char *name, const char **attrs)
                 a += 2;
             }
         }
-        if (rid && c->cur) c->cur->rid = strdup(rid);
+        if (rid && c->cur) c->cur->rid = lxlsx_reader_strdup(rid);
     }
 }
 
 static void drw_on_text(void *ud, const char *text, int len)
 {
     drw_ctx *c = (drw_ctx *)ud;
-    if ((c->in_col || c->in_row) && len > 0) drw_buf_append(c, text, (size_t)len);
+    if ((c->in_col || c->in_row) && len > 0)
+        lxlsx_reader_buf_append(&c->small, &c->small_len,
+                                &c->small_cap, text, (size_t)len);
 }
 
 static void drw_on_end(void *ud, const char *name)
@@ -292,23 +168,6 @@ typedef struct {
     int   capture_target;    /* 1=name, 2=categories, 3=values, 4=title */
 } chart_ctx;
 
-static void chart_buf_append(chart_ctx *c, const char *s, size_t n)
-{
-    size_t need = c->txt_len + n + 1;
-    if (need > c->txt_cap) {
-        size_t nc = c->txt_cap ? c->txt_cap : 32;
-        char *nb;
-        while (nc < need) nc *= 2;
-        nb = (char *)realloc(c->txt, nc);
-        if (!nb) return;
-        c->txt = nb; c->txt_cap = nc;
-    }
-    memcpy(c->txt + c->txt_len, s, n);
-    c->txt_len += n;
-    c->txt[c->txt_len] = 0;
-}
-static void chart_buf_reset(chart_ctx *c) { c->txt_len = 0; if (c->txt) c->txt[0] = 0; }
-
 static chart_series_owned *chart_push_series(chart_ctx *c)
 {
     if (c->series_count >= c->series_cap) {
@@ -344,14 +203,16 @@ static void chart_on_start(void *ud, const char *name, const char **attrs)
         int i;
         for (i = 0; types[i]; i++) {
             if (lxlsx_reader_xml_name_eq(name, types[i])) {
-                c->type = strdup(types[i]);
+                c->type = lxlsx_reader_strdup(types[i]);
                 break;
             }
         }
     }
     if (lxlsx_reader_xml_name_eq(name, "title")) { c->in_title = 1; }
     if (c->in_title && lxlsx_reader_xml_name_eq(name, "t") && !c->title) {
-        c->in_title_text = 1; c->capture_target = 4; chart_buf_reset(c);
+        c->in_title_text = 1;
+        c->capture_target = 4;
+        lxlsx_reader_buf_reset(c->txt, &c->txt_len);
     }
     if (lxlsx_reader_xml_name_eq(name, "ser") && c->in_plotarea) {
         chart_push_series(c);
@@ -362,7 +223,8 @@ static void chart_on_start(void *ud, const char *name, const char **attrs)
         if (lxlsx_reader_xml_name_eq(name, "cat"))   { c->in_cat = 1; }
         if (lxlsx_reader_xml_name_eq(name, "val"))   { c->in_val = 1; }
         if (lxlsx_reader_xml_name_eq(name, "f"))     {
-            c->in_f = 1; chart_buf_reset(c);
+            c->in_f = 1;
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
             if      (c->in_tx)  c->capture_target = 1;
             else if (c->in_cat) c->capture_target = 2;
             else if (c->in_val) c->capture_target = 3;
@@ -375,8 +237,12 @@ static void chart_on_text(void *ud, const char *text, int len)
 {
     chart_ctx *c = (chart_ctx *)ud;
     if (len <= 0) return;
-    if (c->in_f && c->capture_target > 0) chart_buf_append(c, text, (size_t)len);
-    else if (c->in_title_text && c->capture_target == 4) chart_buf_append(c, text, (size_t)len);
+    if (c->in_f && c->capture_target > 0)
+        lxlsx_reader_buf_append(&c->txt, &c->txt_len, &c->txt_cap,
+                                text, (size_t)len);
+    else if (c->in_title_text && c->capture_target == 4)
+        lxlsx_reader_buf_append(&c->txt, &c->txt_len, &c->txt_cap,
+                                text, (size_t)len);
 }
 
 static void chart_on_end(void *ud, const char *name)
@@ -386,9 +252,9 @@ static void chart_on_end(void *ud, const char *name)
         chart_series_owned *s = c->series_count > 0 ? &c->series[c->series_count - 1] : NULL;
         if (s && c->txt_len > 0) {
             switch (c->capture_target) {
-                case 1: free(s->name);       s->name       = strdup(c->txt); break;
-                case 2: free(s->categories); s->categories = strdup(c->txt); break;
-                case 3: free(s->values);     s->values     = strdup(c->txt); break;
+                case 1: free(s->name);       s->name       = lxlsx_reader_strdup(c->txt); break;
+                case 2: free(s->categories); s->categories = lxlsx_reader_strdup(c->txt); break;
+                case 3: free(s->values);     s->values     = lxlsx_reader_strdup(c->txt); break;
                 default: break;
             }
         }
@@ -396,7 +262,7 @@ static void chart_on_end(void *ud, const char *name)
         c->capture_target = 0;
     }
     if (c->in_title_text && lxlsx_reader_xml_name_eq(name, "t")) {
-        if (!c->title && c->txt_len > 0) c->title = strdup(c->txt);
+        if (!c->title && c->txt_len > 0) c->title = lxlsx_reader_strdup(c->txt);
         c->in_title_text = 0;
         c->capture_target = 0;
     }
@@ -446,34 +312,31 @@ static void chart_meta_free_owned(chart_ctx *c)
 lxlsx_reader_error lxlsx_reader_worksheet_iterate_charts(lxlsx_reader_worksheet *ws,
                                        lxlsx_reader_chart_cb cb, void *userdata)
 {
-    rel_m sheet_rels;
-    char *drawing_target = NULL;
+    lxlsx_reader_rel_map sheet_rels;
+    const char *drawing_target;
     char *drawing_path   = NULL;
     drw_ctx drw;
-    rel_m chart_rels;
+    lxlsx_reader_rel_map chart_rels;
     size_t i;
     lxlsx_reader_error rc;
 
     if (!ws || !ws->wb || !cb) return LXLSX_READER_ERROR_NULL_PARAMETER;
 
-    memset(&sheet_rels, 0, sizeof(sheet_rels));
-    rc = load_rels(ws->wb->zip, ws->target_path, &sheet_rels);
-    if (rc != LXLSX_READER_NO_ERROR) { relm_free(&sheet_rels); return rc; }
-
-    /* Find the drawing target. */
-    for (i = 0; i < sheet_rels.count; i++) {
-        if (sheet_rels.items[i].target &&
-            strstr(sheet_rels.items[i].target, "drawing")) {
-            drawing_target = cm_strdup_or_null(sheet_rels.items[i].target);
-            break;
-        }
+    rc = lxlsx_reader_load_rels(ws->wb->zip, ws->target_path, &sheet_rels, 0);
+    if (rc != LXLSX_READER_NO_ERROR) {
+        lxlsx_reader_rel_map_free(&sheet_rels);
+        return rc;
     }
-    relm_free(&sheet_rels);
 
-    if (!drawing_target) return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+    drawing_target =
+        lxlsx_reader_rel_map_first_target_by_type_suffix(&sheet_rels, "/drawing");
+    if (!drawing_target) {
+        lxlsx_reader_rel_map_free(&sheet_rels);
+        return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
 
-    drawing_path = cm_normalise(ws->target_path, drawing_target);
-    free(drawing_target);
+    drawing_path = lxlsx_reader_zip_resolve_path(ws->target_path, drawing_target);
+    lxlsx_reader_rel_map_free(&sheet_rels);
     if (!drawing_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
 
     /* Scan the drawing for anchors + chart rids. */
@@ -481,17 +344,27 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_charts(lxlsx_reader_worksheet 
     (void)scan_drawing(ws->wb->zip, drawing_path, &drw);
 
     /* Resolve drawing's _rels: rid -> chart path. */
-    memset(&chart_rels, 0, sizeof(chart_rels));
-    (void)load_rels(ws->wb->zip, drawing_path, &chart_rels);
+    rc = lxlsx_reader_load_rels(ws->wb->zip, drawing_path, &chart_rels, 1);
+    if (rc != LXLSX_READER_NO_ERROR) {
+        lxlsx_reader_rel_map_free(&chart_rels);
+        free(drawing_path);
+        {
+            size_t k;
+            for (k = 0; k < drw.count; k++) free(drw.items[k].rid);
+            free(drw.items);
+        }
+        return rc;
+    }
 
     {
         int stop = 0;
         for (i = 0; i < drw.count && !stop; i++) {
-            const char *target = relm_lookup(&chart_rels, drw.items[i].rid);
+            const char *target =
+                lxlsx_reader_rel_map_target_for_id(&chart_rels, drw.items[i].rid);
             char       *chart_path;
             chart_ctx   ch;
             if (!target) continue;
-            chart_path = cm_normalise(drawing_path, target);
+            chart_path = lxlsx_reader_zip_resolve_path(drawing_path, target);
             if (!chart_path) continue;
 
             memset(&ch, 0, sizeof(ch));
@@ -541,7 +414,7 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_charts(lxlsx_reader_worksheet 
         for (k = 0; k < drw.count; k++) free(drw.items[k].rid);
         free(drw.items);
     }
-    relm_free(&chart_rels);
+    lxlsx_reader_rel_map_free(&chart_rels);
     free(drawing_path);
     return LXLSX_READER_NO_ERROR;
 }

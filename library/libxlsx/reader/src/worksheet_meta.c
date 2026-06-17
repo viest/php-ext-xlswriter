@@ -18,66 +18,16 @@
  * the rels file is parsed separately to resolve those into absolute URLs.
  */
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
+#include "lxlsx_reader_util.h"
 
 /* ------------------------------------------------------------------------- */
-/* Cell-ref helpers                                                          */
+/* Helpers                                                                   */
 /* ------------------------------------------------------------------------- */
-
-static void parse_a1_ref(const char *ref, size_t *out_row, size_t *out_col)
-{
-    size_t col = 0, row = 0;
-    const char *p = ref;
-    if (out_row) *out_row = 0;
-    if (out_col) *out_col = 0;
-    if (!p) return;
-    while (*p == '$') p++;
-    while (*p && ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z'))) {
-        col = col * 26 + (toupper((unsigned char)*p) - 'A' + 1);
-        p++;
-    }
-    while (*p == '$') p++;
-    while (*p && *p >= '0' && *p <= '9') {
-        row = row * 10 + (size_t)(*p - '0');
-        p++;
-    }
-    if (out_row) *out_row = row;
-    if (out_col) *out_col = col;
-}
-
-/* Parse "A1" or "A1:B2" into a range. Single-cell refs collapse to a 1x1. */
-static void parse_a1_range(const char *ref, lxlsx_reader_range *out)
-{
-    const char *colon;
-    size_t r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-
-    if (out) { out->first_row = out->first_col = out->last_row = out->last_col = 0; }
-    if (!ref || !out) return;
-
-    colon = strchr(ref, ':');
-    if (colon) {
-        char head[64];
-        size_t n = (size_t)(colon - ref);
-        if (n >= sizeof(head)) n = sizeof(head) - 1;
-        memcpy(head, ref, n);
-        head[n] = 0;
-        parse_a1_ref(head, &r1, &c1);
-        parse_a1_ref(colon + 1, &r2, &c2);
-    } else {
-        parse_a1_ref(ref, &r1, &c1);
-        r2 = r1;
-        c2 = c1;
-    }
-    out->first_row = r1;
-    out->first_col = c1;
-    out->last_row  = r2;
-    out->last_col  = c2;
-}
 
 static int attr_truthy(const char *v)
 {
@@ -165,114 +115,6 @@ static struct lxlsx_reader_col_meta *meta_push_col(lxlsx_reader_worksheet_meta *
 }
 
 /* ------------------------------------------------------------------------- */
-/* Sheet rels (rId -> URL) — simple dynamic map                              */
-/* ------------------------------------------------------------------------- */
-
-typedef struct {
-    char *id;
-    char *target;
-} rel_entry;
-
-typedef struct {
-    rel_entry *entries;
-    size_t     count;
-    size_t     cap;
-} rel_map;
-
-static void rel_map_init(rel_map *m) { m->entries = NULL; m->count = 0; m->cap = 0; }
-static void rel_map_free(rel_map *m)
-{
-    size_t i;
-    if (!m) return;
-    for (i = 0; i < m->count; i++) {
-        free(m->entries[i].id);
-        free(m->entries[i].target);
-    }
-    free(m->entries);
-    m->entries = NULL; m->count = 0; m->cap = 0;
-}
-static int rel_map_push(rel_map *m, const char *id, const char *target)
-{
-    if (m->count >= m->cap) {
-        size_t nc = m->cap ? m->cap * 2 : 4;
-        rel_entry *nb = (rel_entry *)realloc(m->entries, nc * sizeof(*nb));
-        if (!nb) return -1;
-        m->entries = nb;
-        m->cap = nc;
-    }
-    m->entries[m->count].id     = strdup(id);
-    m->entries[m->count].target = strdup(target);
-    m->count++;
-    return 0;
-}
-static const char *rel_map_lookup(const rel_map *m, const char *id)
-{
-    size_t i;
-    if (!m || !id) return NULL;
-    for (i = 0; i < m->count; i++) {
-        if (m->entries[i].id && strcmp(m->entries[i].id, id) == 0)
-            return m->entries[i].target;
-    }
-    return NULL;
-}
-
-static void rel_on_start(void *ud, const char *name, const char **attrs)
-{
-    rel_map *m = (rel_map *)ud;
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-    {
-        const char *id     = lxlsx_reader_xml_attr(attrs, "Id");
-        const char *target = lxlsx_reader_xml_attr(attrs, "Target");
-        if (id && target) rel_map_push(m, id, target);
-    }
-}
-
-/* Open xl/worksheets/_rels/sheetN.xml.rels (if any) for the given sheet
- * target_path (e.g. "xl/worksheets/sheet1.xml"). Always returns NO_ERROR;
- * absent rels file just yields an empty map. */
-static lxlsx_reader_error load_sheet_rels(lxlsx_reader_zip *zip, const char *target_path,
-                                 rel_map *out)
-{
-    char         *rels_path;
-    const char   *slash;
-    size_t        prefix_len, file_len;
-    const char   *file_part;
-    lxlsx_reader_zip_file *zf;
-    lxlsx_reader_xml_pump *pump;
-    lxlsx_reader_error     rc;
-
-    rel_map_init(out);
-    if (!zip || !target_path) return LXLSX_READER_NO_ERROR;
-
-    slash = strrchr(target_path, '/');
-    prefix_len = slash ? (size_t)(slash - target_path) + 1 : 0;
-    file_part  = slash ? slash + 1 : target_path;
-    file_len   = strlen(file_part);
-
-    rels_path = (char *)malloc(prefix_len + 6 + file_len + 5 + 1);
-    if (!rels_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
-    memcpy(rels_path, target_path, prefix_len);
-    memcpy(rels_path + prefix_len, "_rels/", 6);
-    memcpy(rels_path + prefix_len + 6, file_part, file_len);
-    memcpy(rels_path + prefix_len + 6 + file_len, ".rels", 5);
-    rels_path[prefix_len + 6 + file_len + 5] = 0;
-
-    zf = lxlsx_reader_zip_open_entry(zip, rels_path);
-    free(rels_path);
-    if (!zf) return LXLSX_READER_NO_ERROR;  /* missing rels is fine */
-
-    pump = lxlsx_reader_xml_pump_create_zip_file(zf);
-    if (!pump) { lxlsx_reader_zip_close_entry(zf); return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED; }
-
-    lxlsx_reader_xml_pump_set_handlers(pump, rel_on_start, NULL, NULL, out);
-    rc = lxlsx_reader_xml_pump_run(pump);
-
-    lxlsx_reader_xml_pump_destroy(pump);
-    lxlsx_reader_zip_close_entry(zf);
-    return rc;
-}
-
-/* ------------------------------------------------------------------------- */
 /* Metadata SAX                                                              */
 /* ------------------------------------------------------------------------- */
 
@@ -308,7 +150,7 @@ typedef enum {
 
 typedef struct {
     lxlsx_reader_worksheet_meta *m;
-    const rel_map      *rels;
+    const lxlsx_reader_rel_map *rels;
     m_state             state;
     m_state             state_before_skip;
     int                 skip_depth;
@@ -319,25 +161,6 @@ typedef struct {
     size_t              txt_len;
     size_t              txt_cap;
 } m_ctx;
-
-static void txt_append(m_ctx *c, const char *s, size_t n)
-{
-    size_t need = c->txt_len + n + 1;
-    if (need > c->txt_cap) {
-        size_t nc = c->txt_cap ? c->txt_cap : 64;
-        char *nb;
-        while (nc < need) nc *= 2;
-        nb = (char *)realloc(c->txt, nc);
-        if (!nb) return;
-        c->txt = nb;
-        c->txt_cap = nc;
-    }
-    memcpy(c->txt + c->txt_len, s, n);
-    c->txt_len += n;
-    c->txt[c->txt_len] = 0;
-}
-
-static void txt_reset(m_ctx *c) { c->txt_len = 0; if (c->txt) c->txt[0] = 0; }
 
 /* DV/filter helpers — append entries. */
 
@@ -555,7 +378,7 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
         if (lxlsx_reader_xml_name_eq(name, "mergeCell")) {
             const char *ref = lxlsx_reader_xml_attr(attrs, "ref");
             lxlsx_reader_range r;
-            parse_a1_range(ref, &r);
+            lxlsx_reader_parse_a1_range(ref, &r);
             if (r.first_row && r.first_col) meta_push_merge(c->m, r);
         }
         break;
@@ -583,10 +406,10 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
 
     case M_IN_DATAVALIDATION:
         if (lxlsx_reader_xml_name_eq(name, "formula1")) {
-            txt_reset(c);
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
             c->state = M_IN_DV_FORMULA1;
         } else if (lxlsx_reader_xml_name_eq(name, "formula2")) {
-            txt_reset(c);
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
             c->state = M_IN_DV_FORMULA2;
         } else {
             enter_skip(c, name);
@@ -670,7 +493,7 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
 
     case M_IN_CFRULE:
         if (lxlsx_reader_xml_name_eq(name, "formula")) {
-            txt_reset(c);
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
             c->state = M_IN_CF_FORMULA;
         } else {
             /* colorScale, dataBar, iconSet — skip nested element trees. */
@@ -679,12 +502,12 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
         break;
 
     case M_IN_HEADERFOOTER:
-        if      (lxlsx_reader_xml_name_eq(name, "oddHeader"))   { txt_reset(c); c->state = M_IN_ODD_HEADER;   }
-        else if (lxlsx_reader_xml_name_eq(name, "oddFooter"))   { txt_reset(c); c->state = M_IN_ODD_FOOTER;   }
-        else if (lxlsx_reader_xml_name_eq(name, "evenHeader"))  { txt_reset(c); c->state = M_IN_EVEN_HEADER;  }
-        else if (lxlsx_reader_xml_name_eq(name, "evenFooter"))  { txt_reset(c); c->state = M_IN_EVEN_FOOTER;  }
-        else if (lxlsx_reader_xml_name_eq(name, "firstHeader")) { txt_reset(c); c->state = M_IN_FIRST_HEADER; }
-        else if (lxlsx_reader_xml_name_eq(name, "firstFooter")) { txt_reset(c); c->state = M_IN_FIRST_FOOTER; }
+        if      (lxlsx_reader_xml_name_eq(name, "oddHeader"))   { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_ODD_HEADER;   }
+        else if (lxlsx_reader_xml_name_eq(name, "oddFooter"))   { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_ODD_FOOTER;   }
+        else if (lxlsx_reader_xml_name_eq(name, "evenHeader"))  { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_EVEN_HEADER;  }
+        else if (lxlsx_reader_xml_name_eq(name, "evenFooter"))  { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_EVEN_FOOTER;  }
+        else if (lxlsx_reader_xml_name_eq(name, "firstHeader")) { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_FIRST_HEADER; }
+        else if (lxlsx_reader_xml_name_eq(name, "firstFooter")) { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_FIRST_FOOTER; }
         else                                            enter_skip(c, name);
         break;
 
@@ -732,9 +555,9 @@ static void m_on_start(void *ud, const char *name, const char **attrs)
                     a += 2;
                 }
             }
-            if (rid) url = rel_map_lookup(c->rels, rid);
+            if (rid) url = lxlsx_reader_rel_map_target_for_id(c->rels, rid);
 
-            parse_a1_range(ref, &r);
+            lxlsx_reader_parse_a1_range(ref, &r);
             if (r.first_row && r.first_col)
                 meta_push_hyperlink(c->m, r, url, loc, display, tooltip);
         }
@@ -912,7 +735,8 @@ static void m_on_text(void *ud, const char *text, int len)
     case M_IN_FIRST_HEADER:
     case M_IN_FIRST_FOOTER:
     case M_IN_CF_FORMULA:
-        txt_append(c, text, (size_t)len);
+        lxlsx_reader_buf_append(&c->txt, &c->txt_len, &c->txt_cap,
+                                text, (size_t)len);
         break;
     default: break;
     }
@@ -926,23 +750,29 @@ lxlsx_reader_error lxlsx_reader_worksheet_meta_load(lxlsx_reader_worksheet *ws)
 {
     lxlsx_reader_zip_file *zf;
     lxlsx_reader_xml_pump *pump;
-    rel_map       rels;
+    lxlsx_reader_rel_map rels;
     m_ctx         ctx;
     lxlsx_reader_error     rc;
 
     if (!ws || !ws->wb || !ws->target_path) return LXLSX_READER_ERROR_NULL_PARAMETER;
 
     /* Sheet rels first (required to resolve external hyperlinks). */
-    rc = load_sheet_rels(ws->wb->zip, ws->target_path, &rels);
-    if (rc != LXLSX_READER_NO_ERROR) { rel_map_free(&rels); return rc; }
+    rc = lxlsx_reader_load_rels(ws->wb->zip, ws->target_path, &rels, 1);
+    if (rc != LXLSX_READER_NO_ERROR) {
+        lxlsx_reader_rel_map_free(&rels);
+        return rc;
+    }
 
     zf = lxlsx_reader_zip_open_entry(ws->wb->zip, ws->target_path);
-    if (!zf) { rel_map_free(&rels); return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND; }
+    if (!zf) {
+        lxlsx_reader_rel_map_free(&rels);
+        return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
 
     pump = lxlsx_reader_xml_pump_create_zip_file(zf);
     if (!pump) {
         lxlsx_reader_zip_close_entry(zf);
-        rel_map_free(&rels);
+        lxlsx_reader_rel_map_free(&rels);
         return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
     }
 
@@ -958,7 +788,7 @@ lxlsx_reader_error lxlsx_reader_worksheet_meta_load(lxlsx_reader_worksheet *ws)
     free(ctx.txt);
     lxlsx_reader_xml_pump_destroy(pump);
     lxlsx_reader_zip_close_entry(zf);
-    rel_map_free(&rels);
+    lxlsx_reader_rel_map_free(&rels);
     return rc;
 }
 

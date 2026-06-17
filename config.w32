@@ -89,6 +89,7 @@ if (PHP_XLSWRITER != "no") {
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsx\\reader\\src", "\
                 common.c \
+                util.c \
                 zip_io.c \
                 xml_pump.c \
                 sst.c \

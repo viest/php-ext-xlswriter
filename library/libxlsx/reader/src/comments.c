@@ -7,45 +7,12 @@
  * resolve the relationship targets there.
  */
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
-
-/* --- tiny string-list helper -------------------------------------------- */
-
-typedef struct {
-    char  *id;
-    char  *target;
-} crel_entry;
-
-typedef struct {
-    crel_entry *items;
-    size_t      count;
-    size_t      cap;
-} crel_map;
-
-static void crel_init(crel_map *m) { m->items = NULL; m->count = 0; m->cap = 0; }
-static void crel_free(crel_map *m) {
-    size_t i;
-    if (!m) return;
-    for (i = 0; i < m->count; i++) { free(m->items[i].id); free(m->items[i].target); }
-    free(m->items);
-    m->items = NULL; m->count = m->cap = 0;
-}
-static void crel_push(crel_map *m, const char *id, const char *target) {
-    if (m->count >= m->cap) {
-        size_t nc = m->cap ? m->cap * 2 : 4;
-        crel_entry *nb = (crel_entry *)realloc(m->items, nc * sizeof(*nb));
-        if (!nb) return;
-        m->items = nb; m->cap = nc;
-    }
-    m->items[m->count].id     = id     ? strdup(id)     : NULL;
-    m->items[m->count].target = target ? strdup(target) : NULL;
-    m->count++;
-}
+#include "lxlsx_reader_util.h"
 
 /* --- comments XML parse ------------------------------------------------- */
 
@@ -100,52 +67,6 @@ typedef struct {
     char *th_pending_author_id;
 } c_ctx;
 
-/* helper: append text to a heap buffer. */
-static void buf_append(char **buf, size_t *len, size_t *cap, const char *s, size_t n)
-{
-    size_t need = *len + n + 1;
-    if (need > *cap) {
-        size_t nc = *cap ? *cap : 64;
-        char *nb;
-        while (nc < need) nc *= 2;
-        nb = (char *)realloc(*buf, nc);
-        if (!nb) return;
-        *buf = nb;
-        *cap = nc;
-    }
-    memcpy(*buf + *len, s, n);
-    *len += n;
-    (*buf)[*len] = 0;
-}
-
-static void buf_reset(char **buf, size_t *len)
-{
-    *len = 0;
-    if (*buf) (*buf)[0] = 0;
-}
-
-/* Parse a cell ref like "A1" into 1-based (row, col). */
-static void parse_a1(const char *ref, size_t *row, size_t *col)
-{
-    size_t r = 0, c = 0;
-    *row = *col = 0;
-    if (!ref) return;
-    while (*ref == '$') ref++;
-    while ((*ref >= 'A' && *ref <= 'Z') || (*ref >= 'a' && *ref <= 'z')) {
-        char x = *ref;
-        if (x >= 'a' && x <= 'z') x = (char)(x - 32);
-        c = c * 26 + (size_t)(x - 'A' + 1);
-        ref++;
-    }
-    while (*ref == '$') ref++;
-    while (*ref >= '0' && *ref <= '9') {
-        r = r * 10 + (size_t)(*ref - '0');
-        ref++;
-    }
-    *row = r;
-    *col = c;
-}
-
 /* --- legacy comments SAX (xl/comments*.xml) ----------------------------- */
 
 static c_record *records_push(c_ctx *c)
@@ -183,7 +104,7 @@ static void on_legacy_start(void *ud, const char *name, const char **attrs)
             c->authors_count++;
             c->legacy_author_idx++;
         }
-        buf_reset(&c->author_text, &c->author_text_len);
+        lxlsx_reader_buf_reset(c->author_text, &c->author_text_len);
         return;
     }
     if (c->in_commentList && lxlsx_reader_xml_name_eq(name, "comment")) {
@@ -191,7 +112,7 @@ static void on_legacy_start(void *ud, const char *name, const char **attrs)
         const char *authorId = lxlsx_reader_xml_attr(attrs, "authorId");
         c_record   *r        = records_push(c);
         if (r) {
-            parse_a1(ref, &r->row, &r->col);
+            lxlsx_reader_parse_a1_ref(ref, &r->row, &r->col);
             if (authorId) {
                 int idx = (int)strtol(authorId, NULL, 10);
                 if (idx >= 0 && (size_t)idx < c->authors_count
@@ -200,7 +121,7 @@ static void on_legacy_start(void *ud, const char *name, const char **attrs)
                 }
             }
             c->in_comment = 1;
-            buf_reset(&c->cur_text, &c->cur_text_len);
+            lxlsx_reader_buf_reset(c->cur_text, &c->cur_text_len);
         }
         return;
     }
@@ -242,10 +163,11 @@ static void on_legacy_text(void *ud, const char *text, int len)
     c_ctx *c = (c_ctx *)ud;
     if (len <= 0) return;
     if (c->in_author && !c->in_run_t)
-        buf_append(&c->author_text, &c->author_text_len, &c->author_text_cap,
-                   text, (size_t)len);
+        lxlsx_reader_buf_append(&c->author_text, &c->author_text_len,
+                                &c->author_text_cap, text, (size_t)len);
     if (c->in_comment && c->in_run_t)
-        buf_append(&c->cur_text, &c->cur_text_len, &c->cur_text_cap, text, (size_t)len);
+        lxlsx_reader_buf_append(&c->cur_text, &c->cur_text_len,
+                                &c->cur_text_cap, text, (size_t)len);
 }
 
 /* --- threadedComments parse --------------------------------------------- */
@@ -267,7 +189,7 @@ static void on_thread_start(void *ud, const char *name, const char **attrs)
         free(c->th_pending_parent);    c->th_pending_parent    = parent   ? strdup(parent) : NULL;
         free(c->th_pending_ref);       c->th_pending_ref       = ref      ? strdup(ref) : NULL;
         free(c->th_pending_author_id); c->th_pending_author_id = authorId ? strdup(authorId) : NULL;
-        buf_reset(&c->cur_text, &c->cur_text_len);
+        lxlsx_reader_buf_reset(c->cur_text, &c->cur_text_len);
         c->in_threaded_text = 0;
         return;
     }
@@ -285,7 +207,7 @@ static void on_thread_end(void *ud, const char *name)
         if (r) {
             r->threaded = 1;
             r->visible  = 0;
-            parse_a1(c->th_pending_ref, &r->row, &r->col);
+            lxlsx_reader_parse_a1_ref(c->th_pending_ref, &r->row, &r->col);
             r->guid          = c->th_pending_id;        c->th_pending_id = NULL;
             r->parent_guid   = c->th_pending_parent;    c->th_pending_parent = NULL;
             r->author        = c->th_pending_author_id; c->th_pending_author_id = NULL;
@@ -298,116 +220,8 @@ static void on_thread_text(void *ud, const char *text, int len)
 {
     c_ctx *c = (c_ctx *)ud;
     if (c->in_threaded_text && len > 0)
-        buf_append(&c->cur_text, &c->cur_text_len, &c->cur_text_cap, text, (size_t)len);
-}
-
-/* --- _rels resolution --------------------------------------------------- */
-
-typedef struct {
-    crel_map *m;
-    const char *want_type;
-    char       *target;
-} rel_collect_ctx;
-
-static void rel_collect_on_start(void *ud, const char *name, const char **attrs)
-{
-    rel_collect_ctx *c = (rel_collect_ctx *)ud;
-    const char *id, *type, *target;
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-    id     = lxlsx_reader_xml_attr(attrs, "Id");
-    type   = lxlsx_reader_xml_attr(attrs, "Type");
-    target = lxlsx_reader_xml_attr(attrs, "Target");
-    if (!id || !type || !target) return;
-    /* Match by suffix — e.g. ".../comments" or ".../vmlDrawing" or
-     * ".../threadedComment". The full URI has well-known prefixes. */
-    if (c->want_type) {
-        size_t n = strlen(c->want_type);
-        size_t tn = strlen(type);
-        if (tn < n) return;
-        if (strcmp(type + tn - n, c->want_type) != 0) return;
-    }
-    crel_push(c->m, id, target);
-    if (!c->target) c->target = strdup(target);
-}
-
-/* Open xl/worksheets/_rels/<sheet>.xml.rels (or any file's rels). */
-static lxlsx_reader_error load_rels_filter(lxlsx_reader_zip *zip, const char *target_path,
-                                  const char *want_type_suffix,
-                                  crel_map *out, char **first_target)
-{
-    char *rels_path;
-    const char *slash = target_path ? strrchr(target_path, '/') : NULL;
-    size_t prefix_len = slash ? (size_t)(slash - target_path) + 1 : 0;
-    const char *file_part = slash ? slash + 1 : target_path;
-    size_t flen = strlen(file_part);
-    lxlsx_reader_zip_file *zf;
-    lxlsx_reader_xml_pump *pump;
-    rel_collect_ctx rc = { out, want_type_suffix, NULL };
-    lxlsx_reader_error rc_err;
-
-    rels_path = (char *)malloc(prefix_len + 6 + flen + 5 + 1);
-    if (!rels_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
-    memcpy(rels_path, target_path, prefix_len);
-    memcpy(rels_path + prefix_len, "_rels/", 6);
-    memcpy(rels_path + prefix_len + 6, file_part, flen);
-    memcpy(rels_path + prefix_len + 6 + flen, ".rels", 5);
-    rels_path[prefix_len + 6 + flen + 5] = 0;
-
-    zf = lxlsx_reader_zip_open_entry(zip, rels_path);
-    free(rels_path);
-    if (!zf) return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
-
-    pump = lxlsx_reader_xml_pump_create_zip_file(zf);
-    if (!pump) { lxlsx_reader_zip_close_entry(zf); return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED; }
-
-    lxlsx_reader_xml_pump_set_handlers(pump, rel_collect_on_start, NULL, NULL, &rc);
-    rc_err = lxlsx_reader_xml_pump_run(pump);
-    lxlsx_reader_xml_pump_destroy(pump);
-    lxlsx_reader_zip_close_entry(zf);
-
-    if (first_target) *first_target = rc.target;
-    else free(rc.target);
-    return rc_err;
-}
-
-/* Resolve a relative target against a base path: e.g.
- * base="xl/worksheets/sheet1.xml", target="../comments1.xml" -> "xl/comments1.xml" */
-static char *normalise_rel_target(const char *base, const char *target)
-{
-    size_t blen, tlen;
-    char  *full;
-    const char *slash;
-    if (!base || !target) return NULL;
-    if (target[0] == '/') {
-        full = strdup(target + 1);
-        return full;
-    }
-    slash = strrchr(base, '/');
-    blen = slash ? (size_t)(slash - base) + 1 : 0;
-    tlen = strlen(target);
-    full = (char *)malloc(blen + tlen + 1);
-    if (!full) return NULL;
-    if (blen) memcpy(full, base, blen);
-    memcpy(full + blen, target, tlen);
-    full[blen + tlen] = 0;
-    /* Resolve "../" segments. */
-    {
-        char *out = full;
-        char *p   = full;
-        while (*p) {
-            if (p[0] == '.' && p[1] == '.' && p[2] == '/') {
-                if (out > full) {
-                    out--;
-                    while (out > full && *(out - 1) != '/') out--;
-                }
-                p += 3;
-            } else {
-                *out++ = *p++;
-            }
-        }
-        *out = 0;
-    }
-    return full;
+        lxlsx_reader_buf_append(&c->cur_text, &c->cur_text_len,
+                                &c->cur_text_cap, text, (size_t)len);
 }
 
 /* --- vmlDrawing visibility extraction (legacy) -------------------------- */
@@ -486,7 +300,8 @@ static void vml_on_text(void *ud, const char *text, int len)
     vml_ctx *c = (vml_ctx *)ud;
     if (len <= 0) return;
     if (c->in_row || c->in_column) {
-        buf_append(&c->small_buf, &c->small_buf_len, &c->small_buf_cap, text, (size_t)len);
+        lxlsx_reader_buf_append(&c->small_buf, &c->small_buf_len,
+                                &c->small_buf_cap, text, (size_t)len);
     }
 }
 
@@ -580,7 +395,7 @@ static lxlsx_reader_error scan_one_xml(lxlsx_reader_zip *zip, const char *path,
 lxlsx_reader_error lxlsx_reader_worksheet_iterate_comments(lxlsx_reader_worksheet *ws,
                                          lxlsx_reader_comment_cb cb, void *userdata)
 {
-    crel_map        rels;
+    lxlsx_reader_rel_map rels;
     char           *comments_target = NULL;
     char           *thread_target   = NULL;
     char           *vml_target      = NULL;
@@ -594,12 +409,10 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_comments(lxlsx_reader_workshee
 
     if (!ws || !ws->wb || !cb) return LXLSX_READER_ERROR_NULL_PARAMETER;
 
-    crel_init(&rels);
     /* Collect ALL relationships once. */
-    rc = load_rels_filter(ws->wb->zip, ws->target_path, NULL,
-                          &rels, NULL);
+    rc = lxlsx_reader_load_rels(ws->wb->zip, ws->target_path, &rels, 0);
     if (rc != LXLSX_READER_NO_ERROR) {
-        crel_free(&rels);
+        lxlsx_reader_rel_map_free(&rels);
         return rc;
     }
 
@@ -608,26 +421,29 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_comments(lxlsx_reader_workshee
         const char *t = rels.items[i].target;
         if (!t) continue;
         if (strstr(t, "comments") && !strstr(t, "threaded") && !comments_target) {
-            comments_target = strdup(t);
+            comments_target = lxlsx_reader_strdup(t);
         }
         if (strstr(t, "threadedComment") && !thread_target) {
-            thread_target = strdup(t);
+            thread_target = lxlsx_reader_strdup(t);
         }
         if (strstr(t, "vmlDrawing") && !vml_target) {
-            vml_target = strdup(t);
+            vml_target = lxlsx_reader_strdup(t);
         }
     }
 
-    crel_free(&rels);
+    lxlsx_reader_rel_map_free(&rels);
 
     if (!comments_target && !thread_target) {
         free(vml_target);
         return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
     }
 
-    comments_path = comments_target ? normalise_rel_target(ws->target_path, comments_target) : NULL;
-    thread_path   = thread_target   ? normalise_rel_target(ws->target_path, thread_target)   : NULL;
-    vml_path      = vml_target      ? normalise_rel_target(ws->target_path, vml_target)      : NULL;
+    comments_path = comments_target
+        ? lxlsx_reader_zip_resolve_path(ws->target_path, comments_target) : NULL;
+    thread_path = thread_target
+        ? lxlsx_reader_zip_resolve_path(ws->target_path, thread_target) : NULL;
+    vml_path = vml_target
+        ? lxlsx_reader_zip_resolve_path(ws->target_path, vml_target) : NULL;
     free(comments_target);
     free(thread_target);
     free(vml_target);

@@ -1,51 +1,13 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
+#include "lxlsx_reader_util.h"
 
 /* ------------------------------------------------------------------------- */
 /* Helpers                                                                   */
 /* ------------------------------------------------------------------------- */
-
-static int append_buf(char **buf, size_t *len, size_t *cap, const char *src, size_t n)
-{
-    size_t need = *len + n + 1;
-    if (need > *cap) {
-        size_t nc = *cap ? *cap : 64;
-        char *nb;
-        while (nc < need) nc *= 2;
-        nb = (char *)realloc(*buf, nc);
-        if (!nb) return -1;
-        *buf = nb;
-        *cap = nc;
-    }
-    memcpy(*buf + *len, src, n);
-    *len += n;
-    (*buf)[*len] = 0;
-    return 0;
-}
-
-static void parse_cell_ref(const char *ref, size_t *out_row, size_t *out_col)
-{
-    size_t col = 0, row = 0;
-    const char *p = ref;
-    if (out_row) *out_row = 0;
-    if (out_col) *out_col = 0;
-    if (!p) return;
-
-    while (*p && ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z'))) {
-        col = col * 26 + (toupper((unsigned char)*p) - 'A' + 1);
-        p++;
-    }
-    while (*p && *p >= '0' && *p <= '9') {
-        row = row * 10 + (size_t)(*p - '0');
-        p++;
-    }
-    if (out_row) *out_row = row;
-    if (out_col) *out_col = col;
-}
 
 /* Excel serial date -> Unix timestamp.
  * 1900 system: serial 1 == 1900-01-01, but Excel treats 1900 as a leap year
@@ -214,17 +176,6 @@ static void reset_cell(lxlsx_reader_worksheet *ws)
 /* SAX dispatch                                                              */
 /* ------------------------------------------------------------------------- */
 
-static void copy_attr(char *dst, size_t cap, const char *src)
-{
-    size_t n;
-    if (!dst || cap == 0) return;
-    if (!src) { dst[0] = 0; return; }
-    n = strlen(src);
-    if (n >= cap) n = cap - 1;
-    memcpy(dst, src, n);
-    dst[n] = 0;
-}
-
 static void deliver_cell(lxlsx_reader_worksheet *ws)
 {
     if (ws->pull_mode == LXLSX_READER_WS_PULL_CELL) {
@@ -322,10 +273,10 @@ static void on_start(void *ud, const char *name, const char **attrs)
             const char *s_attr = lxlsx_reader_xml_attr(attrs, "s");
 
             reset_cell(ws);
-            copy_attr(ws->cell_ref, sizeof(ws->cell_ref), r_attr);
-            copy_attr(ws->cell_t,   sizeof(ws->cell_t),   t_attr);
+            lxlsx_reader_copy_attr(ws->cell_ref, sizeof(ws->cell_ref), r_attr);
+            lxlsx_reader_copy_attr(ws->cell_t,   sizeof(ws->cell_t),   t_attr);
             ws->cell_style_id = s_attr ? (uint32_t)strtoul(s_attr, NULL, 10) : 0;
-            if (r_attr) parse_cell_ref(r_attr, &ws->cell_row, &ws->cell_col);
+            if (r_attr) lxlsx_reader_parse_a1_ref(r_attr, &ws->cell_row, &ws->cell_col);
             else { ws->cell_row = ws->row_nr; ws->cell_col = 0; }
             if (ws->cell_col > ws->max_col_seen) ws->max_col_seen = ws->cell_col;
 
@@ -348,8 +299,8 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXLSX_FORMULA_SHARED;
                 else                                        ws->cell_formula_kind = LXLSX_FORMULA_NORMAL;
             }
-            if (ref_attr) copy_attr(ws->cell_formula_ref,
-                                    sizeof(ws->cell_formula_ref), ref_attr);
+            if (ref_attr) lxlsx_reader_copy_attr(ws->cell_formula_ref,
+                                                 sizeof(ws->cell_formula_ref), ref_attr);
             if (si_attr) ws->cell_formula_si = (int)strtol(si_attr, NULL, 10);
             if (aca_attr && (strcmp(aca_attr, "1") == 0 ||
                              strcmp(aca_attr, "true") == 0))
@@ -447,21 +398,23 @@ static void on_text(void *ud, const char *text, int len)
 
     switch (ws->state) {
     case LXLSX_READER_WS_IN_VALUE:
-        append_buf(&ws->cell_value, &ws->cell_value_len, &ws->cell_value_cap,
-                   text, (size_t)len);
+        lxlsx_reader_buf_append(&ws->cell_value, &ws->cell_value_len,
+                                &ws->cell_value_cap, text, (size_t)len);
         break;
     case LXLSX_READER_WS_IN_FORMULA:
-        append_buf(&ws->cell_formula, &ws->cell_formula_len, &ws->cell_formula_cap,
-                   text, (size_t)len);
+        lxlsx_reader_buf_append(&ws->cell_formula, &ws->cell_formula_len,
+                                &ws->cell_formula_cap, text, (size_t)len);
         break;
     case LXLSX_READER_WS_IN_INLINE_STR_T:
-        append_buf(&ws->cell_inline, &ws->cell_inline_len, &ws->cell_inline_cap,
-                   text, (size_t)len);
+        lxlsx_reader_buf_append(&ws->cell_inline, &ws->cell_inline_len,
+                                &ws->cell_inline_cap, text, (size_t)len);
         /* Fall-through-style: when this <t> sits inside an <r>, also feed
          * the per-run text accumulator. */
         if (ws->inline_in_run_t) {
-            append_buf(&ws->inline_run_text_buf, &ws->inline_run_text_len,
-                       &ws->inline_run_text_cap, text, (size_t)len);
+            lxlsx_reader_buf_append(&ws->inline_run_text_buf,
+                                    &ws->inline_run_text_len,
+                                    &ws->inline_run_text_cap,
+                                    text, (size_t)len);
         }
         break;
     default:

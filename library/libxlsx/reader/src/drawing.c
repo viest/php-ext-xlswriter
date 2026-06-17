@@ -1,232 +1,28 @@
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
+#include "lxlsx_reader_util.h"
 #include "lxlsx/reader/drawing.h"
 
 /* ------------------------------------------------------------------------- */
-/* Path utilities (small, self-contained — duplicates workbook.c on purpose) */
+/* MIME helpers                                                              */
 /* ------------------------------------------------------------------------- */
-
-static char *xstrdup(const char *s) { return s ? strdup(s) : NULL; }
-
-static int ci_eq(const char *a, const char *b)
-{
-    while (*a && *b) {
-        char x = tolower((unsigned char)*a++);
-        char y = tolower((unsigned char)*b++);
-        if (x != y) return 0;
-    }
-    return *a == 0 && *b == 0;
-}
-
-static char *base_dir(const char *path)
-{
-    const char *slash = path ? strrchr(path, '/') : NULL;
-    char *out;
-    size_t n;
-    if (!slash) return xstrdup("");
-    n = (size_t)(slash - path) + 1;
-    out = (char *)malloc(n + 1);
-    if (!out) return NULL;
-    memcpy(out, path, n);
-    out[n] = 0;
-    return out;
-}
-
-static char *rels_path_for(const char *path)
-{
-    /* "xl/worksheets/sheet1.xml" -> "xl/worksheets/_rels/sheet1.xml.rels" */
-    const char *slash;
-    size_t      prefix_len, flen;
-    const char *file;
-    char       *out;
-
-    if (!path) return NULL;
-    slash      = strrchr(path, '/');
-    prefix_len = slash ? (size_t)(slash - path) + 1 : 0;
-    file       = slash ? slash + 1 : path;
-    flen       = strlen(file);
-
-    out = (char *)malloc(prefix_len + 6 + flen + 5 + 1);
-    if (!out) return NULL;
-    memcpy(out,                           path,    prefix_len);
-    memcpy(out + prefix_len,              "_rels/", 6);
-    memcpy(out + prefix_len + 6,          file,    flen);
-    memcpy(out + prefix_len + 6 + flen,   ".rels", 5);
-    out[prefix_len + 6 + flen + 5] = 0;
-    return out;
-}
-
-/* Resolve a Target uri like "../media/image1.png" relative to a base dir
- * (which always ends in '/' if non-empty). Caller frees. */
-static char *resolve_relative(const char *base, const char *target)
-{
-    char  *bcopy;
-    size_t blen, tlen;
-    char  *out;
-
-    if (!target) return NULL;
-    if (target[0] == '/') return xstrdup(target + 1);
-
-    bcopy = xstrdup(base ? base : "");
-    if (!bcopy) return NULL;
-
-    while (target[0] == '.' && target[1] == '.' && target[2] == '/') {
-        size_t len = strlen(bcopy);
-        if (len > 0 && bcopy[len - 1] == '/') len--;
-        while (len > 0 && bcopy[len - 1] != '/') len--;
-        bcopy[len] = 0;
-        target += 3;
-    }
-    blen = strlen(bcopy);
-    tlen = strlen(target);
-    out  = (char *)malloc(blen + tlen + 1);
-    if (!out) { free(bcopy); return NULL; }
-    if (blen) memcpy(out, bcopy, blen);
-    memcpy(out + blen, target, tlen);
-    out[blen + tlen] = 0;
-    free(bcopy);
-    return out;
-}
 
 static const char *guess_mime(const char *path)
 {
     const char *dot = path ? strrchr(path, '.') : NULL;
     if (!dot) return "application/octet-stream";
-    if (ci_eq(dot, ".png"))  return "image/png";
-    if (ci_eq(dot, ".jpg")  || ci_eq(dot, ".jpeg")) return "image/jpeg";
-    if (ci_eq(dot, ".gif"))  return "image/gif";
-    if (ci_eq(dot, ".bmp"))  return "image/bmp";
-    if (ci_eq(dot, ".tif")  || ci_eq(dot, ".tiff")) return "image/tiff";
-    if (ci_eq(dot, ".svg"))  return "image/svg+xml";
-    if (ci_eq(dot, ".webp")) return "image/webp";
+    if (lxlsx_reader_ascii_case_eq(dot, ".png"))  return "image/png";
+    if (lxlsx_reader_ascii_case_eq(dot, ".jpg") ||
+        lxlsx_reader_ascii_case_eq(dot, ".jpeg")) return "image/jpeg";
+    if (lxlsx_reader_ascii_case_eq(dot, ".gif"))  return "image/gif";
+    if (lxlsx_reader_ascii_case_eq(dot, ".bmp"))  return "image/bmp";
+    if (lxlsx_reader_ascii_case_eq(dot, ".tif") ||
+        lxlsx_reader_ascii_case_eq(dot, ".tiff")) return "image/tiff";
+    if (lxlsx_reader_ascii_case_eq(dot, ".svg"))  return "image/svg+xml";
+    if (lxlsx_reader_ascii_case_eq(dot, ".webp")) return "image/webp";
     return "application/octet-stream";
-}
-
-/* ------------------------------------------------------------------------- */
-/* Read a full zip entry into a fresh buffer                                 */
-/* ------------------------------------------------------------------------- */
-
-static int read_entry_full(lxlsx_reader_zip *zip, const char *path,
-                           void **out_data, size_t *out_len)
-{
-    lxlsx_reader_zip_file *zf;
-    char         *buf;
-    size_t        cap = 8192, len = 0;
-
-    *out_data = NULL;
-    *out_len  = 0;
-    zf = lxlsx_reader_zip_open_entry(zip, path);
-    if (!zf) return -1;
-
-    buf = (char *)malloc(cap);
-    if (!buf) { lxlsx_reader_zip_close_entry(zf); return -1; }
-
-    for (;;) {
-        ssize_t n;
-        if (cap - len < 4096) {
-            char *nb;
-            cap *= 2;
-            nb = (char *)realloc(buf, cap);
-            if (!nb) { free(buf); lxlsx_reader_zip_close_entry(zf); return -1; }
-            buf = nb;
-        }
-        n = lxlsx_reader_zip_read(zf, buf + len, cap - len);
-        if (n < 0) { free(buf); lxlsx_reader_zip_close_entry(zf); return -1; }
-        if (n == 0) break;
-        len += (size_t)n;
-    }
-    lxlsx_reader_zip_close_entry(zf);
-
-    *out_data = buf;
-    *out_len  = len;
-    return 0;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Worksheet rels — find drawing target                                      */
-/* ------------------------------------------------------------------------- */
-
-typedef struct {
-    char *drawing_target;
-} ws_rels_state;
-
-static void ws_rels_start(void *ud, const char *name, const char **attrs)
-{
-    ws_rels_state *s = (ws_rels_state *)ud;
-    const char    *type, *target, *p;
-
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-    type   = lxlsx_reader_xml_attr(attrs, "Type");
-    target = lxlsx_reader_xml_attr(attrs, "Target");
-    if (!type || !target) return;
-
-    p = strstr(type, "/relationships/drawing");
-    if (p && strcmp(p, "/relationships/drawing") == 0) {
-        free(s->drawing_target);
-        s->drawing_target = xstrdup(target);
-    }
-}
-
-/* ------------------------------------------------------------------------- */
-/* Drawing rels — rId -> media path                                          */
-/* ------------------------------------------------------------------------- */
-
-typedef struct {
-    char  rid[32];
-    char *target;
-} rid_pair;
-
-typedef struct {
-    rid_pair *items;
-    size_t    count;
-    size_t    cap;
-} rid_table;
-
-static void rid_table_add(rid_table *t, const char *rid, const char *target)
-{
-    if (t->count >= t->cap) {
-        size_t cap = t->cap ? t->cap * 2 : 8;
-        rid_pair *nb = (rid_pair *)realloc(t->items, cap * sizeof(*nb));
-        if (!nb) return;
-        t->items = nb;
-        t->cap   = cap;
-    }
-    strncpy(t->items[t->count].rid, rid, sizeof(t->items[t->count].rid) - 1);
-    t->items[t->count].rid[sizeof(t->items[t->count].rid) - 1] = 0;
-    t->items[t->count].target = xstrdup(target);
-    t->count++;
-}
-
-static const char *rid_table_get(const rid_table *t, const char *rid)
-{
-    size_t i;
-    for (i = 0; i < t->count; i++) {
-        if (strcmp(t->items[i].rid, rid) == 0) return t->items[i].target;
-    }
-    return NULL;
-}
-
-static void rid_table_free(rid_table *t)
-{
-    size_t i;
-    for (i = 0; i < t->count; i++) free(t->items[i].target);
-    free(t->items);
-    t->items = NULL;
-    t->count = t->cap = 0;
-}
-
-static void drawing_rels_start(void *ud, const char *name, const char **attrs)
-{
-    rid_table  *t = (rid_table *)ud;
-    const char *id, *target;
-
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-    id     = lxlsx_reader_xml_attr(attrs, "Id");
-    target = lxlsx_reader_xml_attr(attrs, "Target");
-    if (id && target) rid_table_add(t, id, target);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -236,7 +32,7 @@ static void drawing_rels_start(void *ud, const char *name, const char **attrs)
 typedef struct {
     lxlsx_reader_workbook    *wb;
     char            *drawing_base;
-    rid_table       *rids;
+    const lxlsx_reader_rel_map *rids;
     lxlsx_reader_image_cb     cb;
     void            *userdata;
     int              stop;
@@ -326,13 +122,15 @@ static void drawing_end(void *ud, const char *name)
     if ((lxlsx_reader_xml_name_eq(name, "twoCellAnchor") ||
          lxlsx_reader_xml_name_eq(name, "oneCellAnchor"))
         && c->have_from && c->have_rid) {
-        const char *target = rid_table_get(c->rids, c->current_rid);
+        const char *target =
+            lxlsx_reader_rel_map_target_for_id(c->rids, c->current_rid);
         if (target) {
-            char *full = resolve_relative(c->drawing_base, target);
+            char *full = lxlsx_reader_zip_join_path(c->drawing_base, target);
             if (full) {
                 void  *data;
                 size_t data_len;
-                if (read_entry_full(c->wb->zip, full, &data, &data_len) == 0) {
+                if (lxlsx_reader_zip_read_entry_all(c->wb->zip, full,
+                                                    &data, &data_len) == 0) {
                     lxlsx_reader_image img;
                     const char *slash;
                     memset(&img, 0, sizeof(img));
@@ -362,76 +160,52 @@ static void drawing_end(void *ud, const char *name)
 
 lxlsx_reader_error lxlsx_reader_worksheet_iterate_images(lxlsx_reader_worksheet *ws, lxlsx_reader_image_cb cb, void *ud)
 {
-    char          *ws_rels = NULL;
     char          *drawing_path = NULL;
-    char          *drawing_rels = NULL;
     char          *drawing_base = NULL;
-    char          *ws_base      = NULL;
-    ws_rels_state  wrs          = { NULL };
-    rid_table      rids         = { NULL, 0, 0 };
+    const char    *drawing_target;
+    lxlsx_reader_rel_map ws_rels;
+    lxlsx_reader_rel_map drawing_rels;
+    lxlsx_reader_error rc;
 
-    if (!ws || !cb)         return LXLSX_READER_ERROR_NULL_PARAMETER;
+    if (!ws || !ws->wb || !cb) return LXLSX_READER_ERROR_NULL_PARAMETER;
     if (!ws->target_path)   return LXLSX_READER_NO_ERROR;
 
-    /* 1) Find drawing target via worksheet rels (if any) */
-    ws_rels = rels_path_for(ws->target_path);
-    if (!ws_rels) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+    rc = lxlsx_reader_load_rels(ws->wb->zip, ws->target_path, &ws_rels, 1);
+    if (rc != LXLSX_READER_NO_ERROR) return rc;
 
-    if (!lxlsx_reader_zip_entry_exists(ws->wb->zip, ws_rels)) {
-        free(ws_rels);
+    drawing_target =
+        lxlsx_reader_rel_map_first_target_by_type_suffix(&ws_rels, "/drawing");
+    if (!drawing_target) {
+        lxlsx_reader_rel_map_free(&ws_rels);
         return LXLSX_READER_NO_ERROR;
     }
-    {
-        lxlsx_reader_zip_file *zf = lxlsx_reader_zip_open_entry(ws->wb->zip, ws_rels);
-        free(ws_rels);
-        if (!zf) return LXLSX_READER_NO_ERROR;
-        {
-            lxlsx_reader_xml_pump *p = lxlsx_reader_xml_pump_create_zip_file(zf);
-            if (p) {
-                lxlsx_reader_xml_pump_set_handlers(p, ws_rels_start, NULL, NULL, &wrs);
-                lxlsx_reader_xml_pump_run(p);
-                lxlsx_reader_xml_pump_destroy(p);
-            }
-        }
-        lxlsx_reader_zip_close_entry(zf);
-    }
 
-    if (!wrs.drawing_target) return LXLSX_READER_NO_ERROR;
-
-    /* 2) Resolve drawing path relative to worksheet base */
-    ws_base      = base_dir(ws->target_path);
-    drawing_path = resolve_relative(ws_base, wrs.drawing_target);
-    free(wrs.drawing_target);
-    free(ws_base);
+    drawing_path = lxlsx_reader_zip_resolve_path(ws->target_path, drawing_target);
+    lxlsx_reader_rel_map_free(&ws_rels);
     if (!drawing_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
 
-    /* 3) Drawing rels: rId -> image path */
-    drawing_rels = rels_path_for(drawing_path);
-    if (drawing_rels && lxlsx_reader_zip_entry_exists(ws->wb->zip, drawing_rels)) {
-        lxlsx_reader_zip_file *zf = lxlsx_reader_zip_open_entry(ws->wb->zip, drawing_rels);
-        if (zf) {
-            lxlsx_reader_xml_pump *p = lxlsx_reader_xml_pump_create_zip_file(zf);
-            if (p) {
-                lxlsx_reader_xml_pump_set_handlers(p, drawing_rels_start, NULL, NULL, &rids);
-                lxlsx_reader_xml_pump_run(p);
-                lxlsx_reader_xml_pump_destroy(p);
-            }
-            lxlsx_reader_zip_close_entry(zf);
-        }
+    rc = lxlsx_reader_load_rels(ws->wb->zip, drawing_path, &drawing_rels, 1);
+    if (rc != LXLSX_READER_NO_ERROR) {
+        free(drawing_path);
+        return rc;
     }
-    free(drawing_rels);
 
     /* 4) Parse drawing.xml; emit images via callback.
      *
      * The drawing.xml must be slurped fully into memory before parsing rather
      * than streamed from the zip. minizip's unzFile permits only one open
      * entry per handle, and the drawing_end callback opens each media entry
-     * (read_entry_full) on that same handle — which clobbers the drawing.xml
+     * on that same handle — which clobbers the drawing.xml
      * read cursor. A streamed parse therefore dies at the first chunk refill
      * (drawing.xml > LXLSX_READER_PARSE_BUFFER_SIZE), silently truncating the image
      * list to whatever fit in the first buffer. Reading drawing.xml into a
      * private buffer first decouples the two. */
-    drawing_base = base_dir(drawing_path);
+    drawing_base = lxlsx_reader_zip_base_path(drawing_path);
+    if (!drawing_base) {
+        lxlsx_reader_rel_map_free(&drawing_rels);
+        free(drawing_path);
+        return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+    }
     {
         drawing_ctx  dc;
         void        *xml_data = NULL;
@@ -440,11 +214,12 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_images(lxlsx_reader_worksheet 
         memset(&dc, 0, sizeof(dc));
         dc.wb           = ws->wb;
         dc.drawing_base = drawing_base;
-        dc.rids         = &rids;
+        dc.rids         = &drawing_rels;
         dc.cb           = cb;
         dc.userdata     = ud;
 
-        if (read_entry_full(ws->wb->zip, drawing_path, &xml_data, &xml_len) == 0) {
+        if (lxlsx_reader_zip_read_entry_all(ws->wb->zip, drawing_path,
+                                            &xml_data, &xml_len) == 0) {
             lxlsx_reader_xml_pump *p = lxlsx_reader_xml_pump_create_buffer((const char *)xml_data, xml_len);
             if (p) {
                 lxlsx_reader_xml_pump_set_handlers(p, drawing_start, drawing_end, drawing_text, &dc);
@@ -457,6 +232,6 @@ lxlsx_reader_error lxlsx_reader_worksheet_iterate_images(lxlsx_reader_worksheet 
 
     free(drawing_path);
     free(drawing_base);
-    rid_table_free(&rids);
+    lxlsx_reader_rel_map_free(&drawing_rels);
     return LXLSX_READER_NO_ERROR;
 }

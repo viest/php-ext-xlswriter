@@ -72,6 +72,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libexpat/expat/lib/xmlrole.c \
     library/libexpat/expat/lib/xmltok.c \
     library/libxlsx/reader/src/common.c \
+    library/libxlsx/reader/src/util.c \
     library/libxlsx/reader/src/zip_io.c \
     library/libxlsx/reader/src/xml_pump.c \
     library/libxlsx/reader/src/sst.c \

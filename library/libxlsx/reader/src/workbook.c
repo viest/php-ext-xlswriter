@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "lxlsx_reader_internal.h"
+#include "lxlsx_reader_util.h"
 #include "lxlsx_reader_xml_pump.h"
 
 /* Well-known Open Packaging Conventions strings. */
@@ -22,129 +23,6 @@ static const char *REL_TYPE_SHARED_STRINGS =
 static const char *REL_TYPE_STYLES =
     "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
-/* --- string utilities ---------------------------------------------------- */
-
-static char *str_dup(const char *s)
-{
-    if (!s) return NULL;
-    return strdup(s);
-}
-
-static char *normalize_zip_path(char *path)
-{
-    char **segments;
-    char *p;
-    size_t count = 0;
-    size_t i;
-    size_t len;
-    size_t out_len = 0;
-    char *out;
-    char *write;
-
-    if (!path) return NULL;
-    len = strlen(path);
-    segments = (char **)calloc(len + 1, sizeof(*segments));
-    if (!segments) {
-        free(path);
-        return NULL;
-    }
-
-    p = path;
-    while (*p) {
-        char *seg;
-        while (*p == '/') p++;
-        if (!*p) break;
-        seg = p;
-        while (*p && *p != '/') p++;
-        if (*p == '/') *p++ = 0;
-
-        if (strcmp(seg, ".") == 0 || seg[0] == 0) {
-            continue;
-        } else if (strcmp(seg, "..") == 0) {
-            if (count > 0) count--;
-        } else {
-            segments[count++] = seg;
-        }
-    }
-
-    for (i = 0; i < count; i++)
-        out_len += strlen(segments[i]) + (i ? 1 : 0);
-
-    out = (char *)malloc(out_len + 1);
-    if (!out) {
-        free(segments);
-        free(path);
-        return NULL;
-    }
-
-    write = out;
-    for (i = 0; i < count; i++) {
-        size_t seg_len = strlen(segments[i]);
-        if (i) *write++ = '/';
-        memcpy(write, segments[i], seg_len);
-        write += seg_len;
-    }
-    *write = 0;
-
-    free(segments);
-    free(path);
-    return out;
-}
-
-/* Normalize a workbook-relative path to a zip-absolute path.
- * Examples:
- *   base="xl/", target="worksheets/sheet1.xml" -> "xl/worksheets/sheet1.xml"
- *   base="xl/", target="./worksheets/../worksheets/custom.xml" -> "xl/worksheets/custom.xml"
- *   base="xl/", target="/xl/sharedStrings.xml" -> "xl/sharedStrings.xml"
- */
-static char *join_base(const char *base, const char *target)
-{
-    size_t bl, tl;
-    char  *out;
-    if (!target) return NULL;
-    if (target[0] == '/') return normalize_zip_path(str_dup(target + 1));
-    bl = base ? strlen(base) : 0;
-    tl = strlen(target);
-    out = (char *)malloc(bl + tl + 1);
-    if (!out) return NULL;
-    if (bl) memcpy(out, base, bl);
-    memcpy(out + bl, target, tl);
-    out[bl + tl] = 0;
-    return normalize_zip_path(out);
-}
-
-static char *base_path_of(const char *path)
-{
-    const char *slash = path ? strrchr(path, '/') : NULL;
-    char *out;
-    size_t n;
-    if (!slash) return str_dup("");
-    n = (size_t)(slash - path) + 1;
-    out = (char *)malloc(n + 1);
-    if (!out) return NULL;
-    memcpy(out, path, n);
-    out[n] = 0;
-    return out;
-}
-
-static char *rels_path_of(const char *path)
-{
-    /* "xl/workbook.xml" -> "xl/_rels/workbook.xml.rels"
-     * "/sheet1.xml"     -> "_rels/sheet1.xml.rels" */
-    const char *slash = path ? strrchr(path, '/') : NULL;
-    size_t prefix_len = slash ? (size_t)(slash - path) + 1 : 0;
-    const char *file = slash ? slash + 1 : path;
-    size_t flen = strlen(file);
-    char *out = (char *)malloc(prefix_len + 6 + flen + 5 + 1);
-    if (!out) return NULL;
-    memcpy(out, path, prefix_len);
-    memcpy(out + prefix_len, "_rels/", 6);
-    memcpy(out + prefix_len + 6, file, flen);
-    memcpy(out + prefix_len + 6 + flen, ".rels", 5);
-    out[prefix_len + 6 + flen + 5] = 0;
-    return out;
-}
-
 static int sheet_array_push(lxlsx_reader_workbook *wb, const char *name, const char *rid,
                             lxlsx_reader_sheet_visibility vis)
 {
@@ -156,8 +34,8 @@ static int sheet_array_push(lxlsx_reader_workbook *wb, const char *name, const c
         wb->sheets    = nb;
         wb->sheet_cap = cap;
     }
-    wb->sheets[wb->sheet_count].name       = str_dup(name);
-    wb->sheets[wb->sheet_count].rel_id     = str_dup(rid);
+    wb->sheets[wb->sheet_count].name       = lxlsx_reader_strdup(name);
+    wb->sheets[wb->sheet_count].rel_id     = lxlsx_reader_strdup(rid);
     wb->sheets[wb->sheet_count].target     = NULL;
     wb->sheets[wb->sheet_count].visibility = (int)vis;
     wb->sheet_count++;
@@ -187,7 +65,7 @@ static void ct_on_start(void *ud, const char *name, const char **attrs)
             strcmp(content, CT_WORKBOOK_XLTM) == 0) {
             free(c->workbook_path);
             /* PartName starts with leading '/'; strip it. */
-            c->workbook_path = str_dup(part_name[0] == '/' ? part_name + 1 : part_name);
+            c->workbook_path = lxlsx_reader_strdup(part_name[0] == '/' ? part_name + 1 : part_name);
         }
     }
 }
@@ -251,8 +129,8 @@ static int dn_array_push(lxlsx_reader_workbook *wb, const char *name, const char
         wb->defined_names    = nb;
         wb->defined_name_cap = cap;
     }
-    wb->defined_names[wb->defined_name_count].name              = str_dup(name);
-    wb->defined_names[wb->defined_name_count].formula           = str_dup(formula);
+    wb->defined_names[wb->defined_name_count].name              = lxlsx_reader_strdup(name);
+    wb->defined_names[wb->defined_name_count].formula           = lxlsx_reader_strdup(formula);
     wb->defined_names[wb->defined_name_count].scope_sheet_index = scope_sheet_index;
     wb->defined_names[wb->defined_name_count].hidden            = hidden;
     wb->defined_name_count++;
@@ -284,7 +162,7 @@ static void wb_on_start(void *ud, const char *name, const char **attrs)
         const char *hd  = lxlsx_reader_xml_attr(attrs, "hidden");
         c->in_defined_name = 1;
         free(c->dn_name);
-        c->dn_name = nm ? strdup(nm) : NULL;
+        c->dn_name = lxlsx_reader_strdup(nm);
         c->dn_local_sheet = lsi ? (int)strtol(lsi, NULL, 10) : -1;
         c->dn_hidden = (hd && (strcmp(hd, "1") == 0 || strcmp(hd, "true") == 0)) ? 1 : 0;
         c->dn_text_len = 0;
@@ -318,19 +196,8 @@ static void wb_on_text(void *ud, const char *text, int len)
     wb_ctx *c = (wb_ctx *)ud;
     if (!c->in_defined_name || len <= 0) return;
     {
-        size_t need = c->dn_text_len + (size_t)len + 1;
-        if (need > c->dn_text_cap) {
-            size_t nc = c->dn_text_cap ? c->dn_text_cap : 64;
-            char *nb;
-            while (nc < need) nc *= 2;
-            nb = (char *)realloc(c->dn_text, nc);
-            if (!nb) return;
-            c->dn_text = nb;
-            c->dn_text_cap = nc;
-        }
-        memcpy(c->dn_text + c->dn_text_len, text, (size_t)len);
-        c->dn_text_len += (size_t)len;
-        c->dn_text[c->dn_text_len] = 0;
+        (void)lxlsx_reader_buf_append(&c->dn_text, &c->dn_text_len,
+                                      &c->dn_text_cap, text, (size_t)len);
     }
 }
 
@@ -383,65 +250,43 @@ static lxlsx_reader_error parse_workbook_xml(lxlsx_reader_workbook *wb)
 /* xl/_rels/workbook.xml.rels                                                */
 /* ------------------------------------------------------------------------- */
 
-typedef struct {
-    lxlsx_reader_workbook *wb;
-} rel_ctx;
-
-static void rel_on_start(void *ud, const char *name, const char **attrs)
-{
-    rel_ctx *c = (rel_ctx *)ud;
-    const char *id, *type, *target;
-    if (!lxlsx_reader_xml_name_eq(name, "Relationship")) return;
-
-    id     = lxlsx_reader_xml_attr(attrs, "Id");
-    type   = lxlsx_reader_xml_attr(attrs, "Type");
-    target = lxlsx_reader_xml_attr(attrs, "Target");
-    if (!id || !type || !target) return;
-
-    if (strcmp(type, REL_TYPE_WORKSHEET) == 0) {
-        size_t i;
-        for (i = 0; i < c->wb->sheet_count; i++) {
-            if (c->wb->sheets[i].rel_id &&
-                strcmp(c->wb->sheets[i].rel_id, id) == 0) {
-                free(c->wb->sheets[i].target);
-                c->wb->sheets[i].target = join_base(c->wb->base_path, target);
-                break;
-            }
-        }
-    } else if (strcmp(type, REL_TYPE_SHARED_STRINGS) == 0) {
-        free(c->wb->sst_path);
-        c->wb->sst_path = join_base(c->wb->base_path, target);
-    } else if (strcmp(type, REL_TYPE_STYLES) == 0) {
-        free(c->wb->styles_path);
-        c->wb->styles_path = join_base(c->wb->base_path, target);
-    }
-}
-
 static lxlsx_reader_error parse_workbook_rels(lxlsx_reader_workbook *wb)
 {
-    char         *rpath;
-    lxlsx_reader_zip_file *zf;
-    lxlsx_reader_xml_pump *pump;
-    rel_ctx       ctx;
-    lxlsx_reader_error     rc;
+    lxlsx_reader_rel_map rels;
+    lxlsx_reader_error rc;
+    size_t i;
 
-    rpath = rels_path_of(wb->workbook_path);
-    if (!rpath) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+    rc = lxlsx_reader_load_rels(wb->zip, wb->workbook_path, &rels, 0);
+    if (rc == LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND)
+        return LXLSX_READER_ERROR_FILE_CORRUPTED;
+    if (rc != LXLSX_READER_NO_ERROR)
+        return rc;
 
-    zf = lxlsx_reader_zip_open_entry(wb->zip, rpath);
-    free(rpath);
-    if (!zf) return LXLSX_READER_ERROR_FILE_CORRUPTED;
+    for (i = 0; i < rels.count; i++) {
+        lxlsx_reader_rel *rel = &rels.items[i];
+        if (!rel->id || !rel->type || !rel->target) continue;
+        if (strcmp(rel->type, REL_TYPE_WORKSHEET) == 0) {
+            size_t j;
+            for (j = 0; j < wb->sheet_count; j++) {
+                if (wb->sheets[j].rel_id &&
+                    strcmp(wb->sheets[j].rel_id, rel->id) == 0) {
+                    free(wb->sheets[j].target);
+                    wb->sheets[j].target =
+                        lxlsx_reader_zip_join_path(wb->base_path, rel->target);
+                    break;
+                }
+            }
+        } else if (strcmp(rel->type, REL_TYPE_SHARED_STRINGS) == 0) {
+            free(wb->sst_path);
+            wb->sst_path = lxlsx_reader_zip_join_path(wb->base_path, rel->target);
+        } else if (strcmp(rel->type, REL_TYPE_STYLES) == 0) {
+            free(wb->styles_path);
+            wb->styles_path = lxlsx_reader_zip_join_path(wb->base_path, rel->target);
+        }
+    }
 
-    pump = lxlsx_reader_xml_pump_create_zip_file(zf);
-    if (!pump) { lxlsx_reader_zip_close_entry(zf); return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED; }
-
-    ctx.wb = wb;
-    lxlsx_reader_xml_pump_set_handlers(pump, rel_on_start, NULL, NULL, &ctx);
-    rc = lxlsx_reader_xml_pump_run(pump);
-
-    lxlsx_reader_xml_pump_destroy(pump);
-    lxlsx_reader_zip_close_entry(zf);
-    return rc;
+    lxlsx_reader_rel_map_free(&rels);
+    return LXLSX_READER_NO_ERROR;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -455,7 +300,7 @@ static lxlsx_reader_error workbook_finalize_open(lxlsx_reader_workbook *wb)
     rc = find_workbook_path(wb->zip, &wb->workbook_path);
     if (rc != LXLSX_READER_NO_ERROR) return rc;
 
-    wb->base_path = base_path_of(wb->workbook_path);
+    wb->base_path = lxlsx_reader_zip_base_path(wb->workbook_path);
     if (!wb->base_path) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
 
     rc = parse_workbook_xml(wb);

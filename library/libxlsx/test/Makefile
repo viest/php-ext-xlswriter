@@ -42,6 +42,12 @@ MD5_OBJS := $(patsubst ../third_party/md5/%.c,$(OBJ_DIR)/md5/%.o,$(MD5_SRCS))
 EXPAT_OBJS := $(patsubst $(EXPAT_DIR)/%.c,$(OBJ_DIR)/expat/%.o,$(EXPAT_SRCS))
 LIB_OBJS := $(LIBXLSX_OBJS) $(MINIZIP_OBJS) $(TMPFILEPLUS_OBJS) $(MD5_OBJS) $(EXPAT_OBJS)
 
+WRITER_TEST_DIR := writer
+WRITER_TEST_BIN := $(WRITER_TEST_DIR)/test_all
+WRITER_TEST_SRCS := \
+	$(WRITER_TEST_DIR)/test_all.c \
+	$(wildcard $(WRITER_TEST_DIR)/*/test*.c)
+WRITER_TEST_OBJS := $(patsubst $(WRITER_TEST_DIR)/%.c,$(OBJ_DIR)/writer/%.o,$(WRITER_TEST_SRCS))
 READER_TEST_SRCS := $(wildcard $(READER_TEST_DIR)/test_*.c)
 READER_TEST_BINS := $(patsubst $(READER_TEST_DIR)/%.c,$(READER_TEST_DIR)/%,$(READER_TEST_SRCS))
 INTEGRATION_TEST_SRCS := $(wildcard $(INTEGRATION_TEST_DIR)/test_*.c)
@@ -77,11 +83,8 @@ all: $(LIB_TEST)
 
 test: writer-test reader-test integration-test edit-test header-test
 
-writer-test: $(LIB_TEST)
-	$(Q)$(MAKE) -C writer test \
-		LIBS_A="$(abspath $(LIB_TEST))" \
-		INC_DIR="$(abspath $(INC_DIR))" \
-		LIB_DIR="$(abspath $(SRC_DIR))"
+writer-test: $(WRITER_TEST_BIN)
+	$(Q)./$(WRITER_TEST_BIN)
 
 reader-test: reader-fixtures $(READER_TEST_BINS)
 	$(Q)set -e; for test_bin in $(READER_TEST_BINS); do ./$$test_bin; done
@@ -119,6 +122,13 @@ $(OBJ_DIR)/md5/%.o: ../third_party/md5/%.c | $(OBJ_DIR)/md5
 $(OBJ_DIR)/expat/%.o: $(EXPAT_DIR)/%.c | $(OBJ_DIR)/expat
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/writer/%.o: $(WRITER_TEST_DIR)/%.c
+	$(Q)mkdir -p $(@D)
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(WRITER_TEST_BIN): $(WRITER_TEST_OBJS) $(LIB_TEST)
+	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS_O)
+
 $(READER_TEST_DIR)/%: $(READER_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h $(READER_TEST_DIR)/xlsx_test_paths.h
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
 
@@ -153,11 +163,7 @@ $(FIXTURES_DIR)/edit_normalized_target.xlsx: $(FIXTURES_DIR)/gen_edit_relationsh
 	$(Q)$(PYTHON) $< $@ "./worksheets/../worksheets/custom.xml"
 
 clean:
-	$(Q)$(MAKE) -C writer clean \
-		LIBS_A="$(abspath $(LIB_TEST))" \
-		INC_DIR="$(abspath $(INC_DIR))" \
-		LIB_DIR="$(abspath $(SRC_DIR))"
-	$(Q)rm -rf $(OBJ_DIR) $(LIB_TEST) $(READER_TEST_BINS) $(READER_FIXTURES) \
+	$(Q)rm -rf $(OBJ_DIR) $(LIB_TEST) $(WRITER_TEST_BIN) $(READER_TEST_BINS) $(READER_FIXTURES) \
 		$(READER_TEST_DIR)/*.dSYM $(INTEGRATION_TEST_BINS) $(INTEGRATION_TEST_DIR)/*.dSYM \
 		$(EDIT_TEST_BINS) $(EDIT_TEST_DIR)/*.dSYM \
 		$(INTEGRATION_OUTPUTS) $(EDIT_OUTPUTS) $(EDIT_FIXTURES)

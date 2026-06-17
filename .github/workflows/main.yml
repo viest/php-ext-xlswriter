@@ -53,14 +53,50 @@ jobs:
             mingw-w64-ucrt-x86_64-python
             mingw-w64-ucrt-x86_64-zlib
 
-      - name: Run libxlsx tests
+      - name: Run libxlsx writer tests
         if: runner.os != 'Windows'
-        run: make -C library/libxlsx/test test
+        run: make -C library/libxlsx/test writer-test
 
-      - name: Run libxlsx tests on Windows
+      - name: Run libxlsx writer tests on Windows
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: make -C library/libxlsx/test test
+        run: make -C library/libxlsx/test writer-test
+
+      - name: Run libxlsx reader tests
+        if: runner.os != 'Windows'
+        run: make -C library/libxlsx/test reader-test
+
+      - name: Run libxlsx reader tests on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make -C library/libxlsx/test reader-test
+
+      - name: Run libxlsx integration tests
+        if: runner.os != 'Windows'
+        run: make -C library/libxlsx/test integration-test
+
+      - name: Run libxlsx integration tests on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make -C library/libxlsx/test integration-test
+
+      - name: Run libxlsx edit tests
+        if: runner.os != 'Windows'
+        run: make -C library/libxlsx/test edit-test
+
+      - name: Run libxlsx edit tests on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make -C library/libxlsx/test edit-test
+
+      - name: Run libxlsx public header tests
+        if: runner.os != 'Windows'
+        run: make -C library/libxlsx/test header-test
+
+      - name: Run libxlsx public header tests on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make -C library/libxlsx/test header-test
 
   libxlsx-container-test:
     name: libxlsx on ${{ matrix.name }}
@@ -95,8 +131,20 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Run libxlsx tests
-        run: make -C library/libxlsx/test test
+      - name: Run libxlsx writer tests
+        run: make -C library/libxlsx/test writer-test
+
+      - name: Run libxlsx reader tests
+        run: make -C library/libxlsx/test reader-test
+
+      - name: Run libxlsx integration tests
+        run: make -C library/libxlsx/test integration-test
+
+      - name: Run libxlsx edit tests
+        run: make -C library/libxlsx/test edit-test
+
+      - name: Run libxlsx public header tests
+        run: make -C library/libxlsx/test header-test
 
   build-test:
     name: PHP ${{ matrix.php-versions }} on ${{ matrix.operating-system }}

@@ -88,13 +88,13 @@ writer-test: $(WRITER_TEST_BIN)
 	$(Q)./$(WRITER_TEST_BIN)
 
 reader-test: reader-fixtures $(READER_TEST_BINS)
-	$(Q)set -e; for test_bin in $(READER_TEST_BINS); do ./$$test_bin; done
+	$(Q)set -e; for test_bin in $(READER_TEST_BINS); do printf '==> %s\n' "$$test_bin"; ./$$test_bin; done
 
 integration-test: $(INTEGRATION_TEST_BINS)
-	$(Q)set -e; for test_bin in $(INTEGRATION_TEST_BINS); do ./$$test_bin; done
+	$(Q)set -e; for test_bin in $(INTEGRATION_TEST_BINS); do printf '==> %s\n' "$$test_bin"; ./$$test_bin; done
 
 edit-test: edit-fixtures $(EDIT_TEST_BINS)
-	$(Q)set -e; for test_bin in $(EDIT_TEST_BINS); do ./$$test_bin; done
+	$(Q)set -e; for test_bin in $(EDIT_TEST_BINS); do printf '==> %s\n' "$$test_bin"; ./$$test_bin; done
 
 edit-fixtures: $(EDIT_FIXTURES)
 

@@ -15,6 +15,7 @@ static const char *SOURCE_XLSX = "fixtures/edit_source.xlsx";
 static const char *NOOP_XLSX = "fixtures/edit_noop.xlsx";
 static const char *NUMBER_XLSX = "fixtures/edit_number.xlsx";
 static const char *SNAPSHOT_XLSX = "fixtures/edit_snapshot.xlsx";
+static const char *NAMESPACE_XLSX = "fixtures/edit_namespace.xlsx";
 static const char *CUSTOM_TARGET_XLSX = "fixtures/edit_custom_target.xlsx";
 static const char *NORMALIZED_TARGET_XLSX = "fixtures/edit_normalized_target.xlsx";
 
@@ -106,6 +107,29 @@ static unsigned char *read_sheet_xml(const char *path, size_t *len)
 static void assert_xml_contains(const unsigned char *xml, const char *needle)
 {
     TEST_ASSERT_NOT_NULL_MESSAGE(strstr((const char *)xml, needle), needle);
+}
+
+static void write_sheet_xml_override(const char *source_path,
+                                     const char *output_path,
+                                     const char *sheet_xml)
+{
+    lxlsx_source_package *package = NULL;
+    lxlsx_source_package_replacement replacement;
+    int sheet_index;
+
+    remove(output_path);
+    assert_ok(lxlsx_source_package_open(source_path, &package));
+    sheet_index = lxlsx_source_package_find_first(package,
+                                                  "xl/worksheets/sheet1.xml");
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, sheet_index);
+
+    replacement.entry_index = (size_t)sheet_index;
+    replacement.data = (const unsigned char *)sheet_xml;
+    replacement.size = strlen(sheet_xml);
+    assert_ok(lxlsx_source_package_save_with_replacements(
+        package, output_path, &replacement, 1));
+
+    lxlsx_source_package_close(package);
 }
 
 static void assert_number_cell_in_sheet(const char *path, const char *sheet_name,
@@ -385,6 +409,46 @@ static void test_batched_edits_last_change_wins(void)
     lxlsx_source_package_free_buffer(xml);
 }
 
+static void test_edit_tokenizer_handles_namespaces_and_special_sections(void)
+{
+    static const char sheet_xml[] =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<x:worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" "
+        "xmlns:x=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+        "<x:sheetData>"
+        "<!-- <x:row r=\"1\"><x:c r=\"A1\"><x:v>999</x:v></x:c></x:row> -->"
+        "<![CDATA[<x:row r=\"1\"><x:c r=\"B1\"><x:v>999</x:v></x:c></x:row>]]>"
+        "<x:row r=\"1\"><x:c r=\"A1\"><x:v>1</x:v></x:c></x:row>"
+        "</x:sheetData>"
+        "</x:worksheet>";
+    lxlsx_edit_session *session;
+    unsigned char *xml;
+    size_t xml_len;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    write_sheet_xml_override(SOURCE_XLSX, NAMESPACE_XLSX, sheet_xml);
+    remove(NUMBER_XLSX);
+
+    session = lxlsx_edit_open(NAMESPACE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 0, 0, 77.0));
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 0, 1, 88.0));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_number_cell(NUMBER_XLSX, 1, 1, 77.0);
+    assert_number_cell(NUMBER_XLSX, 1, 2, 88.0);
+
+    xml = read_sheet_xml(NUMBER_XLSX, &xml_len);
+    (void)xml_len;
+    assert_xml_contains(xml, "<!-- <x:row r=\"1\"");
+    assert_xml_contains(xml, "<![CDATA[<x:row r=\"1\"");
+    assert_xml_contains(xml, "<c r=\"A1\"");
+    assert_xml_contains(xml, "<c r=\"B1\"");
+    lxlsx_source_package_free_buffer(xml);
+    remove(NAMESPACE_XLSX);
+}
+
 static void test_opened_workbook_uses_standard_write_api(void)
 {
     lxlsx_workbook *workbook;
@@ -450,6 +514,7 @@ int main(void)
     RUN_TEST(test_formula_edit_roundtrips);
     RUN_TEST(test_string_and_boolean_edit_roundtrip);
     RUN_TEST(test_batched_edits_last_change_wins);
+    RUN_TEST(test_edit_tokenizer_handles_namespaces_and_special_sections);
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();

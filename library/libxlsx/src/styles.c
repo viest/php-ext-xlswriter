@@ -119,11 +119,7 @@ lxlsx_styles_write_rich_font(lxlsx_styles *self, lxlsx_format *format)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_styles_xml_declaration(lxlsx_styles *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_styles_xml_declaration, lxlsx_styles)
 
 /*
  * Write the <styleSheet> element.

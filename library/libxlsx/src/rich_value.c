@@ -58,11 +58,7 @@ lxlsx_rich_value_free(lxlsx_rich_value *rich_value)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_rich_value_xml_declaration(lxlsx_rich_value *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_rich_value_xml_declaration, lxlsx_rich_value)
 
 /*****************************************************************************
  *

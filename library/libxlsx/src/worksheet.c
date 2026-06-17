@@ -17,6 +17,8 @@
 #include "libxlsx/format.h"
 #include "libxlsx/utility.h"
 
+#include <ctype.h>
+
 #ifdef USE_OPENSSL_MD5
 #include <openssl/md5.h>
 #else
@@ -41,6 +43,7 @@ STATIC int _drawing_rel_id_cmp(lxlsx_drawing_rel_id *tuple1,
                                lxlsx_drawing_rel_id *tuple2);
 STATIC int _cond_format_hash_cmp(lxlsx_cond_format_hash_element *elem_1,
                                  lxlsx_cond_format_hash_element *elem_2);
+static int _worksheet_string_exceeds_limit(const char *string, size_t limit);
 
 #ifndef __clang_analyzer__
 LXLSX_RB_GENERATE_ROW(lxlsx_table_rows, lxlsx_row, tree_pointers, _row_cmp);
@@ -2008,11 +2011,7 @@ _check_table_name(lxlsx_table_options *user_options)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_worksheet_xml_declaration(lxlsx_worksheet *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_worksheet_xml_declaration, lxlsx_worksheet)
 
 /*
  * Write the <worksheet> element.
@@ -7980,7 +7979,7 @@ lxlsx_worksheet_write_string(lxlsx_worksheet *self,
         if (err)
             return err;
 
-        if (lxlsx_utf8_strlen(string) > LXLSX_STR_MAX)
+        if (_worksheet_string_exceeds_limit(string, LXLSX_STR_MAX))
             return LXLSX_ERROR_MAX_STRING_LENGTH_EXCEEDED;
 
         return lxlsx_edit_set_string(self->edit_session, self->edit_sheet_name,
@@ -8000,7 +7999,7 @@ lxlsx_worksheet_write_string(lxlsx_worksheet *self,
     if (err)
         return err;
 
-    if (lxlsx_utf8_strlen(string) > LXLSX_STR_MAX)
+    if (_worksheet_string_exceeds_limit(string, LXLSX_STR_MAX))
         return LXLSX_ERROR_MAX_STRING_LENGTH_EXCEEDED;
 
     if (!self->optimize) {
@@ -12066,6 +12065,45 @@ static void reset_cell(lxlsx_reader_worksheet *ws)
     free(ws->inline_pending_color);     ws->inline_pending_color = NULL;
 }
 
+static int _worksheet_string_exceeds_limit(const char *string, size_t limit)
+{
+    return string && strlen(string) > limit && lxlsx_utf8_strlen(string) > limit;
+}
+
+static int _reader_valid_a1_ref(const char *ref)
+{
+    size_t row = 0;
+    size_t col = 0;
+
+    if (!ref || !*ref)
+        return 0;
+
+    if (*ref == '$')
+        ref++;
+
+    while ((*ref >= 'A' && *ref <= 'Z') || (*ref >= 'a' && *ref <= 'z')) {
+        col = col * 26 + (size_t)(toupper((unsigned char)*ref) - 'A' + 1);
+        if (col > LXLSX_COL_MAX)
+            return 0;
+        ref++;
+    }
+
+    if (col == 0)
+        return 0;
+
+    if (*ref == '$')
+        ref++;
+
+    while (*ref >= '0' && *ref <= '9') {
+        row = row * 10 + (size_t)(*ref - '0');
+        if (row > LXLSX_ROW_MAX)
+            return 0;
+        ref++;
+    }
+
+    return row > 0 && *ref == 0;
+}
+
 /* ------------------------------------------------------------------------- */
 /* SAX dispatch                                                              */
 /* ------------------------------------------------------------------------- */
@@ -12187,7 +12225,13 @@ static void on_start(void *ud, const char *name, const char **attrs)
                 return;
             }
             ws->cell_style_id = s_attr ? (uint32_t)strtoul(s_attr, NULL, 10) : 0;
-            if (r_attr) lxlsx_reader_parse_a1_ref(r_attr, &ws->cell_row, &ws->cell_col);
+            if (r_attr) {
+                if (!_reader_valid_a1_ref(r_attr)) {
+                    fail_parse(ws, LXLSX_READER_ERROR_INVALID_CELL_REF);
+                    return;
+                }
+                lxlsx_reader_parse_a1_ref(r_attr, &ws->cell_row, &ws->cell_col);
+            }
             else { ws->cell_row = ws->row_nr; ws->cell_col = 0; }
             if (ws->cell_col > ws->max_col_seen) ws->max_col_seen = ws->cell_col;
 

@@ -105,11 +105,7 @@ lxlsx_content_types_free(lxlsx_content_types *content_types)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_content_types_xml_declaration(lxlsx_content_types *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_content_types_xml_declaration, lxlsx_content_types)
 
 /*
  * Write the <Types> element.

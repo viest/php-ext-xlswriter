@@ -25,6 +25,7 @@ STAILQ_HEAD(lxlsx_sst_order_list, lxlsx_sst_element);
 /* Wrapper around RB_GENERATE_STATIC from tree.h to avoid unused function
  * warnings and to avoid portability issues with the _unused attribute. */
 #define LXLSX_RB_GENERATE_ELEMENT(name, type, field, cmp) \
+    RB_GENERATE_FIND(name, type, field, cmp, static) \
     RB_GENERATE_INSERT_COLOR(name, type, field, static) \
     RB_GENERATE_INSERT(name, type, field, cmp, static)  \
     /* Add unused struct to allow adding a semicolon */ \

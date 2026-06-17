@@ -92,11 +92,7 @@ lxlsx_app_free(lxlsx_app *app)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_app_xml_declaration(lxlsx_app *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_app_xml_declaration, lxlsx_app)
 
 /*
  * Write the <Properties> element.

@@ -76,11 +76,7 @@ _datetime_to_iso8601_date(time_t *timer, char *str, size_t size)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_core_xml_declaration(lxlsx_core *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_core_xml_declaration, lxlsx_core)
 
 /*
  * Write the <cp:coreProperties> element.

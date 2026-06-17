@@ -43,6 +43,7 @@ typedef struct lxlsx_hash_table {
 typedef struct lxlsx_hash_element {
     void *key;
     void *value;
+    size_t key_len;
 
     STAILQ_ENTRY (lxlsx_hash_element) lxlsx_hash_order_pointers;
     SLIST_ENTRY (lxlsx_hash_element) lxlsx_hash_list_pointers;

@@ -79,11 +79,7 @@ lxlsx_free_relationships(lxlsx_relationships *rels)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_relationships_xml_declaration(lxlsx_relationships *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_relationships_xml_declaration, lxlsx_relationships)
 
 /*
  * Write the <Relationship> element.

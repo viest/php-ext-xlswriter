@@ -157,11 +157,7 @@ lxlsx_comment_free(lxlsx_comment *comment)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_comment_xml_declaration(lxlsx_comment *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_comment_xml_declaration, lxlsx_comment)
 
 /*****************************************************************************
  *

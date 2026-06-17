@@ -108,11 +108,7 @@ _element_cmp(struct lxlsx_sst_element *element1, struct lxlsx_sst_element *eleme
 /*
  * Write the XML declaration.
  */
-STATIC void
-_sst_xml_declaration(lxlsx_sst *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_sst_xml_declaration, lxlsx_sst)
 
 /*
  * Write the <t> element.
@@ -244,8 +240,16 @@ lxlsx_sst_assemble_xml_file(lxlsx_sst *self)
 struct lxlsx_sst_element *
 lxlsx_get_sst_index(lxlsx_sst *sst, const char *string, uint8_t is_rich_string)
 {
+    struct lxlsx_sst_element key;
     struct lxlsx_sst_element *element;
     struct lxlsx_sst_element *existing_element;
+
+    key.string = (char *)string;
+    existing_element = RB_FIND(lxlsx_sst_rb_tree, sst->rb_tree, &key);
+    if (existing_element) {
+        sst->string_count++;
+        return existing_element;
+    }
 
     /* Create an sst element to potentially add to the table. */
     element = calloc(1, sizeof(struct lxlsx_sst_element));

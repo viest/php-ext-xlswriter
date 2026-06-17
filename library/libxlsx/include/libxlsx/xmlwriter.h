@@ -34,6 +34,13 @@
         dst[LXLSX_MAX_ATTRIBUTE_LENGTH - 1] = '\0';       \
     } while (0)
 
+#define LXLSX_DEFINE_XML_DECLARATION(fn_name, type_name) \
+    STATIC void                                          \
+    fn_name(type_name *self)                             \
+    {                                                    \
+        lxlsx_xml_declaration(self->file);               \
+    }
+
 
  /* *INDENT-OFF* */
 #ifdef __cplusplus

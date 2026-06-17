@@ -59,11 +59,7 @@ lxlsx_metadata_free(lxlsx_metadata *metadata)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_metadata_xml_declaration(lxlsx_metadata *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_metadata_xml_declaration, lxlsx_metadata)
 
 /*
  * Write the <metadata> element.

@@ -6,6 +6,7 @@
 
 #include "xlsx_test_paths.h"
 #include "libxlsx.h"
+#include "libxlsx/source_package.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -302,6 +303,60 @@ static void test_unified_cell_formula_and_style_ref(void)
     lxlsx_reader_workbook_close(wb);
 }
 
+static void test_invalid_cell_ref_is_rejected(void)
+{
+    const char *path = "fixtures/invalid_cell_ref.xlsx";
+    lxlsx_source_package *package = NULL;
+    unsigned char *sheet_xml = NULL;
+    size_t sheet_xml_len = 0;
+    int sheet_index;
+    char *cell_ref;
+    lxlsx_source_package_replacement replacement;
+    lxlsx_reader_workbook *wb = NULL;
+    lxlsx_reader_worksheet *ws = NULL;
+    lxlsx_cell cell;
+
+    remove(path);
+    TEST_ASSERT_EQUAL_INT(LXLSX_NO_ERROR,
+                          lxlsx_source_package_open(LXLSX_TEST_TYPES_XLSX,
+                                                     &package));
+    sheet_index = lxlsx_source_package_find_first(package,
+                                                  "xl/worksheets/sheet1.xml");
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, sheet_index);
+    TEST_ASSERT_EQUAL_INT(LXLSX_NO_ERROR,
+                          lxlsx_source_package_read_entry(
+                              package, (size_t)sheet_index, &sheet_xml,
+                              &sheet_xml_len));
+
+    cell_ref = strstr((char *)sheet_xml, "r=\"A1\"");
+    TEST_ASSERT_NOT_NULL(cell_ref);
+    cell_ref[3] = '1';
+    cell_ref[4] = 'A';
+
+    replacement.entry_index = (size_t)sheet_index;
+    replacement.data = sheet_xml;
+    replacement.size = sheet_xml_len;
+    TEST_ASSERT_EQUAL_INT(LXLSX_NO_ERROR,
+                          lxlsx_source_package_save_with_replacements(
+                              package, path, &replacement, 1));
+
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_open(path, &wb));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_get_worksheet_by_name(
+                              wb, "Types", LXLSX_READER_SKIP_NONE, &ws));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_worksheet_next_row(ws));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_ERROR_INVALID_CELL_REF,
+                          lxlsx_reader_worksheet_next_cell(ws, &cell));
+
+    lxlsx_reader_worksheet_close(ws);
+    lxlsx_reader_workbook_close(wb);
+    lxlsx_source_package_free_buffer(sheet_xml);
+    lxlsx_source_package_close(package);
+    remove(path);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -313,5 +368,6 @@ int main(void)
     RUN_TEST(test_all_cell_types);
     RUN_TEST(test_pull_pulls_correct_values);
     RUN_TEST(test_unified_cell_formula_and_style_ref);
+    RUN_TEST(test_invalid_cell_ref_is_rejected);
     return UNITY_END();
 }

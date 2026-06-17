@@ -60,6 +60,7 @@ EDIT_OUTPUTS := \
 	$(FIXTURES_DIR)/edit_source.xlsx \
 	$(FIXTURES_DIR)/edit_noop.xlsx \
 	$(FIXTURES_DIR)/edit_number.xlsx \
+	$(FIXTURES_DIR)/edit_namespace.xlsx \
 	$(FIXTURES_DIR)/edit_snapshot.xlsx \
 	$(FIXTURES_DIR)/edit_raw_copy.xlsx \
 	$(FIXTURES_DIR)/edit_duplicate.zip \

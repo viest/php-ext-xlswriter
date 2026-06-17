@@ -61,6 +61,10 @@ lxlsx_error lxlsx_source_package_read_entry(const lxlsx_source_package *package,
                                             size_t *out_len);
 void lxlsx_source_package_free_buffer(void *buffer);
 
+/* Return the untouched local-file record slice for an entry in the original
+ * XLSX package. This is intended for tests and diagnostics that need to verify
+ * byte-for-byte preservation of entries not replaced by edit output. The
+ * returned pointer is owned by the package and remains valid until close. */
 lxlsx_error lxlsx_source_package_entry_raw_local_record(
     const lxlsx_source_package *package,
     size_t index,

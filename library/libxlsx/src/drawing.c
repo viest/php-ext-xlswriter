@@ -105,11 +105,7 @@ lxlsx_add_drawing_object(lxlsx_drawing *drawing,
 /*
  * Write the XML declaration.
  */
-STATIC void
-_drawing_xml_declaration(lxlsx_drawing *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_drawing_xml_declaration, lxlsx_drawing)
 
 /*
  * Write the <xdr:wsDr> element.

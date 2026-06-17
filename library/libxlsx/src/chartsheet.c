@@ -81,11 +81,7 @@ lxlsx_chartsheet_free(lxlsx_chartsheet *chartsheet)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_chartsheet_xml_declaration(lxlsx_chartsheet *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_chartsheet_xml_declaration, lxlsx_chartsheet)
 
 /*
  * Write the <chartsheet> element.

@@ -59,11 +59,7 @@ lxlsx_custom_free(lxlsx_custom *custom)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_custom_xml_declaration(lxlsx_custom *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_custom_xml_declaration, lxlsx_custom)
 
 /*
  * Write the <vt:lpwstr> element.

@@ -1533,11 +1533,7 @@ _prepare_tables(lxlsx_workbook *self)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_workbook_xml_declaration(lxlsx_workbook *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_workbook_xml_declaration, lxlsx_workbook)
 
 /*
  * Write the <workbook> element.

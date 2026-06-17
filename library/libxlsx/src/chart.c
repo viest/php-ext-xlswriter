@@ -607,11 +607,7 @@ _chart_set_range(lxlsx_series_range *range, const char *sheetname,
 /*
  * Write the XML declaration.
  */
-STATIC void
-_chart_xml_declaration(lxlsx_chart *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_chart_xml_declaration, lxlsx_chart)
 
 /*
  * Write the <c:protection> element.

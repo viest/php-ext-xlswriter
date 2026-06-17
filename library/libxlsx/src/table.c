@@ -60,11 +60,7 @@ lxlsx_table_free(lxlsx_table *table)
 /*
  * Write the XML declaration.
  */
-STATIC void
-_table_xml_declaration(lxlsx_table *self)
-{
-    lxlsx_xml_declaration(self->file);
-}
+LXLSX_DEFINE_XML_DECLARATION(_table_xml_declaration, lxlsx_table)
 
 /*
  * Write the <table> element.

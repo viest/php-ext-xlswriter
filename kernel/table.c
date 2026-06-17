@@ -2,8 +2,8 @@
   +----------------------------------------------------------------------+
   | XlsWriter Extension — Excel Table builder.                            |
   +----------------------------------------------------------------------+
-  | Configures lxw_table_options + an array of lxw_table_column. Each PHP |
-  | column entry is converted to a calloc'd lxw_table_column with its     |
+  | Configures lxlsx_table_options + an array of lxlsx_table_column. Each PHP |
+  | column entry is converted to a calloc'd lxlsx_table_column with its     |
   | string fields strdup'd into the table_object's owned string list.     |
   +----------------------------------------------------------------------+
 */
@@ -34,7 +34,7 @@ PHP_VTIFUL_API zend_object *table_objects_new(zend_class_entry *ce)
     return &intern->zo;
 }
 
-static void free_columns(lxw_table_column **columns)
+static void free_columns(lxlsx_table_column **columns)
 {
     if (!columns) return;
     for (int i = 0; columns[i]; i++) {
@@ -103,7 +103,7 @@ PHP_METHOD(vtiful_table, __construct)
     ZVAL_COPY(return_value, getThis());
     obj = Z_TABLE_P(getThis());
     if (!obj->ptr.opts) {
-        obj->ptr.opts = ecalloc(1, sizeof(lxw_table_options));
+        obj->ptr.opts = ecalloc(1, sizeof(lxlsx_table_options));
     }
 }
 /* }}} */
@@ -198,7 +198,7 @@ PHP_METHOD(vtiful_table, columns)
 {
     zval *zv_cols = NULL, *entry;
     int count, idx;
-    lxw_table_column **arr;
+    lxlsx_table_column **arr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_ARRAY(zv_cols)
@@ -213,12 +213,12 @@ PHP_METHOD(vtiful_table, columns)
     }
 
     count = zend_hash_num_elements(Z_ARRVAL_P(zv_cols));
-    arr = ecalloc(count + 1, sizeof(lxw_table_column *));
+    arr = ecalloc(count + 1, sizeof(lxlsx_table_column *));
     idx = 0;
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(zv_cols), entry) {
         if (Z_TYPE_P(entry) != IS_ARRAY) continue;
 
-        lxw_table_column *col = ecalloc(1, sizeof(lxw_table_column));
+        lxlsx_table_column *col = ecalloc(1, sizeof(lxlsx_table_column));
         zval *v;
 
         v = zend_hash_str_find(Z_ARRVAL_P(entry), "header", sizeof("header") - 1);
@@ -239,11 +239,11 @@ PHP_METHOD(vtiful_table, columns)
         v = zend_hash_str_find(Z_ARRVAL_P(entry), "format", sizeof("format") - 1);
         if (v) {
             if (Z_TYPE_P(v) == IS_RESOURCE) {
-                col->format = (lxw_format *)zend_fetch_resource(
+                col->format = (lxlsx_format *)zend_fetch_resource(
                     Z_RES_P(v), VTIFUL_RESOURCE_NAME, le_xls_writer);
             } else if (Z_TYPE_P(v) == IS_OBJECT &&
                        instanceof_function(Z_OBJCE_P(v), vtiful_format_ce)) {
-                format_object *fo = Z_FORMAT_P(v);
+                lxlsx_format_object *fo = Z_FORMAT_P(v);
                 col->format = fo->ptr.format;
             }
         }
@@ -251,11 +251,11 @@ PHP_METHOD(vtiful_table, columns)
         v = zend_hash_str_find(Z_ARRVAL_P(entry), "header_format", sizeof("header_format") - 1);
         if (v) {
             if (Z_TYPE_P(v) == IS_RESOURCE) {
-                col->header_format = (lxw_format *)zend_fetch_resource(
+                col->header_format = (lxlsx_format *)zend_fetch_resource(
                     Z_RES_P(v), VTIFUL_RESOURCE_NAME, le_xls_writer);
             } else if (Z_TYPE_P(v) == IS_OBJECT &&
                        instanceof_function(Z_OBJCE_P(v), vtiful_format_ce)) {
-                format_object *fo = Z_FORMAT_P(v);
+                lxlsx_format_object *fo = Z_FORMAT_P(v);
                 col->header_format = fo->ptr.format;
             }
         }
@@ -295,20 +295,20 @@ VTIFUL_STARTUP_FUNCTION(table)
     table_handlers.offset   = offsetof(table_object, zo);
     table_handlers.free_obj = table_objects_free;
 
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_DEFAULT", LXW_TABLE_STYLE_TYPE_DEFAULT)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_LIGHT",   LXW_TABLE_STYLE_TYPE_LIGHT)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_MEDIUM",  LXW_TABLE_STYLE_TYPE_MEDIUM)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_DARK",    LXW_TABLE_STYLE_TYPE_DARK)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_DEFAULT", LXLSX_TABLE_STYLE_TYPE_DEFAULT)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_LIGHT",   LXLSX_TABLE_STYLE_TYPE_LIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_MEDIUM",  LXLSX_TABLE_STYLE_TYPE_MEDIUM)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "STYLE_TYPE_DARK",    LXLSX_TABLE_STYLE_TYPE_DARK)
 
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_NONE",      LXW_TABLE_FUNCTION_NONE)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_AVERAGE",   LXW_TABLE_FUNCTION_AVERAGE)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_COUNT_NUMS",LXW_TABLE_FUNCTION_COUNT_NUMS)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_COUNT",     LXW_TABLE_FUNCTION_COUNT)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_MAX",       LXW_TABLE_FUNCTION_MAX)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_MIN",       LXW_TABLE_FUNCTION_MIN)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_STD_DEV",   LXW_TABLE_FUNCTION_STD_DEV)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_SUM",       LXW_TABLE_FUNCTION_SUM)
-    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_VAR",       LXW_TABLE_FUNCTION_VAR)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_NONE",      LXLSX_TABLE_FUNCTION_NONE)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_AVERAGE",   LXLSX_TABLE_FUNCTION_AVERAGE)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_COUNT_NUMS",LXLSX_TABLE_FUNCTION_COUNT_NUMS)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_COUNT",     LXLSX_TABLE_FUNCTION_COUNT)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_MAX",       LXLSX_TABLE_FUNCTION_MAX)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_MIN",       LXLSX_TABLE_FUNCTION_MIN)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_STD_DEV",   LXLSX_TABLE_FUNCTION_STD_DEV)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_SUM",       LXLSX_TABLE_FUNCTION_SUM)
+    REGISTER_CLASS_CONST_LONG(vtiful_table_ce, "FUNCTION_VAR",       LXLSX_TABLE_FUNCTION_VAR)
 
     return SUCCESS;
 }

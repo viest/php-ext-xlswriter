@@ -17,22 +17,22 @@
 /* Cell -> string view                                                       */
 /* ------------------------------------------------------------------------- */
 
-static void cell_text_view(const lxr_cell *c, const char **out_ptr, size_t *out_len)
+static void cell_text_view(const lxlsx_cell *c, const char **out_ptr, size_t *out_len)
 {
     if (!c) { *out_ptr = ""; *out_len = 0; return; }
     switch (c->type) {
-    case LXR_CELL_BLANK:
+    case BLANK_CELL:
         *out_ptr = ""; *out_len = 0; return;
-    case LXR_CELL_STRING:
-    case LXR_CELL_INLINE_STRING:
+    case STRING_CELL:
+    case INLINE_STRING_CELL:
         *out_ptr = c->value.string.ptr ? c->value.string.ptr : "";
         *out_len = c->value.string.len;
         return;
-    case LXR_CELL_NUMBER:
-    case LXR_CELL_DATETIME:
-    case LXR_CELL_BOOLEAN:
-    case LXR_CELL_ERROR:
-    case LXR_CELL_FORMULA:
+    case NUMBER_CELL:
+    case DATETIME_CELL:
+    case BOOLEAN_CELL:
+    case ERROR_CELL:
+    case FORMULA_CELL:
     default:
         *out_ptr = c->raw.ptr ? c->raw.ptr : "";
         *out_len = c->raw.len;
@@ -44,10 +44,10 @@ static void cell_text_view(const lxr_cell *c, const char **out_ptr, size_t *out_
 /* Open helpers                                                              */
 /* ------------------------------------------------------------------------- */
 
-lxr_workbook *file_open(const char *directory, const char *file_name) {
+lxlsx_reader_workbook *file_open(const char *directory, const char *file_name) {
     char         *path = (char *)emalloc(strlen(directory) + strlen(file_name) + 2);
-    lxr_workbook *wb   = NULL;
-    lxr_error     rc;
+    lxlsx_reader_workbook *wb   = NULL;
+    lxlsx_reader_error     rc;
 
     strcpy(path, directory);
     strcat(path, "/");
@@ -61,8 +61,8 @@ lxr_workbook *file_open(const char *directory, const char *file_name) {
         return NULL;
     }
 
-    rc = lxr_workbook_open(path, &wb);
-    if (rc != LXR_NO_ERROR || wb == NULL) {
+    rc = lxlsx_reader_workbook_open(path, &wb);
+    if (rc != LXLSX_READER_NO_ERROR || wb == NULL) {
         zend_string *message = char_join_to_zend_str("Failed to open file, file path:", path);
         zend_throw_exception(vtiful_exception_ce, ZSTR_VAL(message), 100);
         zend_string_free(message);
@@ -73,44 +73,44 @@ lxr_workbook *file_open(const char *directory, const char *file_name) {
     return wb;
 }
 
-lxr_worksheet *sheet_open(lxr_workbook *wb, const zend_string *zs_sheet_name_t, const zend_long zl_flag)
+lxlsx_reader_worksheet *sheet_open(lxlsx_reader_workbook *wb, const zend_string *zs_sheet_name_t, const zend_long zl_flag)
 {
-    lxr_worksheet *ws = NULL;
+    lxlsx_reader_worksheet *ws = NULL;
     const char    *name = zs_sheet_name_t ? ZSTR_VAL(zs_sheet_name_t) : NULL;
-    if (lxr_workbook_get_worksheet_by_name(wb, name, (uint32_t)zl_flag, &ws) != LXR_NO_ERROR) {
+    if (lxlsx_reader_workbook_get_worksheet_by_name(wb, name, (uint32_t)zl_flag, &ws) != LXLSX_READER_NO_ERROR) {
         return NULL;
     }
     return ws;
 }
 
-void sheet_list(lxr_workbook *wb, zval *zv_result_t)
+void sheet_list(lxlsx_reader_workbook *wb, zval *zv_result_t)
 {
     size_t i, n;
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
         array_init(zv_result_t);
     }
-    n = lxr_workbook_sheet_count(wb);
+    n = lxlsx_reader_workbook_sheet_count(wb);
     for (i = 0; i < n; i++) {
-        const char *name = lxr_workbook_sheet_name(wb, i);
+        const char *name = lxlsx_reader_workbook_sheet_name(wb, i);
         if (name) add_next_index_stringl(zv_result_t, name, strlen(name));
     }
 }
 
-void sheet_list_with_meta(lxr_workbook *wb, zval *zv_result_t)
+void sheet_list_with_meta(lxlsx_reader_workbook *wb, zval *zv_result_t)
 {
     size_t i, n;
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
         array_init(zv_result_t);
     }
-    n = lxr_workbook_sheet_count(wb);
+    n = lxlsx_reader_workbook_sheet_count(wb);
     for (i = 0; i < n; i++) {
-        const char *name = lxr_workbook_sheet_name(wb, i);
+        const char *name = lxlsx_reader_workbook_sheet_name(wb, i);
         const char *state;
         zval entry;
         if (!name) continue;
-        switch (lxr_workbook_sheet_visibility(wb, i)) {
-            case LXR_SHEET_HIDDEN:      state = "hidden";     break;
-            case LXR_SHEET_VERY_HIDDEN: state = "veryHidden"; break;
+        switch (lxlsx_reader_workbook_sheet_visibility(wb, i)) {
+            case LXLSX_READER_SHEET_HIDDEN:      state = "hidden";     break;
+            case LXLSX_READER_SHEET_VERY_HIDDEN: state = "veryHidden"; break;
             default:                    state = "visible";    break;
         }
         array_init(&entry);
@@ -206,9 +206,9 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
 /* Row / cell streaming                                                      */
 /* ------------------------------------------------------------------------- */
 
-int sheet_read_row(lxr_worksheet *ws)
+int sheet_read_row(lxlsx_reader_worksheet *ws)
 {
-    return lxr_worksheet_next_row(ws) == LXR_NO_ERROR ? 1 : 0;
+    return lxlsx_reader_worksheet_next_row(ws) == LXLSX_READER_NO_ERROR ? 1 : 0;
 }
 
 /* Apply user type (or global default) to either a real cell or a synthesised
@@ -234,17 +234,17 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         return XLSWRITER_FALSE;
     }
 
-    uint32_t      ws_flags         = lxr_worksheet_flags(r->sheet_t);
-    int           skip_empty_cells = (ws_flags & LXR_SKIP_EMPTY_CELLS)   != 0;
+    uint32_t      ws_flags         = lxlsx_reader_worksheet_flags(r->sheet_t);
+    int           skip_empty_cells = (ws_flags & LXLSX_READER_SKIP_EMPTY_CELLS)   != 0;
     int           skip_empty_value = (ws_flags & SKIP_EMPTY_VALUE)       != 0;
-    int           skip_merged_foll = (ws_flags & LXR_SKIP_MERGED_FOLLOW) != 0;
+    int           skip_merged_foll = (ws_flags & LXLSX_READER_SKIP_MERGED_FOLLOW) != 0;
     zend_array   *za_type          = (zv_type_arr_t && Z_TYPE_P(zv_type_arr_t) == IS_ARRAY)
                                        ? Z_ARR_P(zv_type_arr_t) : NULL;
     size_t        expected_col     = 1;
     size_t        row_max_col      = 0;
     int           saw_real_cell    = 0;
-    size_t        row_nr           = lxr_worksheet_current_row(r->sheet_t);
-    lxr_cell      cell;
+    size_t        row_nr           = lxlsx_reader_worksheet_current_row(r->sheet_t);
+    lxlsx_cell      cell;
 
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
         if (r->cols > 0) {
@@ -254,7 +254,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         }
     }
 
-    while (lxr_worksheet_next_cell(r->sheet_t, &cell) == LXR_NO_ERROR) {
+    while (lxlsx_reader_worksheet_next_cell(r->sheet_t, &cell) == LXLSX_READER_NO_ERROR) {
         const char *str;
         size_t      str_len;
         size_t      cur_col;
@@ -262,7 +262,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         cell_text_view(&cell, &str, &str_len);
         if (skip_empty_value && str_len == 0) continue;
 
-        cur_col = cell.col > 0 ? cell.col : 1;
+        cur_col = cell.col_num > 0 ? cell.col_num : 1;
 
         /* Lead / intermediate gap blanks. Both SKIP_EMPTY_CELLS and
          * SKIP_EMPTY_VALUE suppress synthesised blanks, mirroring how
@@ -270,7 +270,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         if (!skip_empty_cells && !skip_empty_value) {
             while (expected_col < cur_col) {
                 if (skip_merged_foll &&
-                    lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
+                    lxlsx_reader_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
                     add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
                 } else {
                     emit_typed_value(zv_result_t, za_type, data_type_default,
@@ -285,7 +285,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
         }
 
         if (skip_merged_foll &&
-            lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, cur_col)) {
+            lxlsx_reader_worksheet_in_merge_follow(r->sheet_t, row_nr, cur_col)) {
             add_index_null(zv_result_t, (zend_ulong)(cur_col - 1));
         } else {
             emit_typed_value(zv_result_t, za_type, data_type_default,
@@ -303,7 +303,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
     if (!skip_empty_cells && !skip_empty_value && saw_real_cell && r->cols > 0) {
         while (expected_col <= r->cols) {
             if (skip_merged_foll &&
-                lxr_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
+                lxlsx_reader_worksheet_in_merge_follow(r->sheet_t, row_nr, expected_col)) {
                 add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
             } else {
                 emit_typed_value(zv_result_t, za_type, data_type_default,
@@ -325,7 +325,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
 /* Callback bridge                                                           */
 /* ------------------------------------------------------------------------- */
 
-static int lxr_row_end_bridge(size_t row, size_t max_col, void *callback_data)
+static int lxlsx_reader_row_end_bridge(size_t row, size_t max_col, void *callback_data)
 {
     xls_read_callback_data *_cd = (xls_read_callback_data *)callback_data;
     zval args[3], retval;
@@ -348,7 +348,7 @@ static int lxr_row_end_bridge(size_t row, size_t max_col, void *callback_data)
     return 0;
 }
 
-static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
+static int lxlsx_reader_cell_bridge(const lxlsx_cell *c, void *callback_data)
 {
     xls_read_callback_data *_cd = (xls_read_callback_data *)callback_data;
     const char *str;
@@ -363,11 +363,11 @@ static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
     _cd->fci->params      = args;
     _cd->fci->param_count = 3;
 
-    ZVAL_LONG(&args[0], (zend_long)(c->row - 1));
-    ZVAL_LONG(&args[1], (zend_long)(c->col - 1));
+    ZVAL_LONG(&args[0], (zend_long)(c->row_num - 1));
+    ZVAL_LONG(&args[1], (zend_long)(c->col_num - 1));
     ZVAL_NULL(&args[2]);
 
-    if (c->type == LXR_CELL_BLANK) goto CALL;
+    if (c->type == BLANK_CELL) goto CALL;
 
     if (Z_TYPE_P(_cd->zv_type_t) != IS_ARRAY && _cd->data_type_default == READ_TYPE_EMPTY) {
         zend_long _long = 0; double _double = 0;
@@ -390,7 +390,7 @@ static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
     }
 
     if (Z_TYPE_P(_cd->zv_type_t) == IS_ARRAY) {
-        zval      *t     = zend_hash_index_find(Z_ARR_P(_cd->zv_type_t), (zend_long)(c->col - 1));
+        zval      *t     = zend_hash_index_find(Z_ARR_P(_cd->zv_type_t), (zend_long)(c->col_num - 1));
         zend_ulong _type = (t && Z_TYPE_P(t) == IS_LONG) ? Z_LVAL_P(t) : READ_TYPE_EMPTY;
         data_to_custom_type(str, str_len, _type, &args[2], 0);
     }
@@ -405,18 +405,18 @@ static int lxr_cell_bridge(const lxr_cell *c, void *callback_data)
 }
 
 unsigned int load_sheet_current_row_data_callback(zend_string *zs_sheet_name_t,
-                                                  lxr_workbook *wb, void *callback_data)
+                                                  lxlsx_reader_workbook *wb, void *callback_data)
 {
-    lxr_worksheet *ws   = NULL;
+    lxlsx_reader_worksheet *ws   = NULL;
     const char    *name = zs_sheet_name_t ? ZSTR_VAL(zs_sheet_name_t) : NULL;
-    lxr_error      rc;
+    lxlsx_reader_error      rc;
 
-    if (lxr_workbook_get_worksheet_by_name(wb, name, LXR_SKIP_NONE, &ws) != LXR_NO_ERROR) {
+    if (lxlsx_reader_workbook_get_worksheet_by_name(wb, name, LXLSX_READER_SKIP_NONE, &ws) != LXLSX_READER_NO_ERROR) {
         return 0;
     }
-    rc = lxr_worksheet_process(ws, lxr_cell_bridge, lxr_row_end_bridge, callback_data);
-    lxr_worksheet_close(ws);
-    return rc == LXR_NO_ERROR ? 1 : 0;
+    rc = lxlsx_reader_worksheet_process(ws, lxlsx_reader_cell_bridge, lxlsx_reader_row_end_bridge, callback_data);
+    lxlsx_reader_worksheet_close(ws);
+    return rc == LXLSX_READER_NO_ERROR ? 1 : 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -451,18 +451,18 @@ void load_sheet_row_data(struct xls_resource_read_t *r, zend_long sheet_flag, zv
             return;  /* EOF */
         }
 
-        size_t cur_row = lxr_worksheet_current_row(r->sheet_t);
+        size_t cur_row = lxlsx_reader_worksheet_current_row(r->sheet_t);
         zval   row;
         ZVAL_NULL(&row);
         load_sheet_current_row_data(r, &row, zv_type_t, data_type_default, READ_SKIP_ROW);
 
-        if ((sheet_flag & LXR_SKIP_EMPTY_ROWS) && row_is_empty(&row)) {
+        if ((sheet_flag & LXLSX_READER_SKIP_EMPTY_ROWS) && row_is_empty(&row)) {
             zval_ptr_dtor(&row);
             r->expected_row_nr = cur_row + 1;
             continue;
         }
 
-        if (!(sheet_flag & LXR_SKIP_EMPTY_ROWS) && cur_row > r->expected_row_nr) {
+        if (!(sheet_flag & LXLSX_READER_SKIP_EMPTY_ROWS) && cur_row > r->expected_row_nr) {
             size_t gap = cur_row - r->expected_row_nr;
             array_init(zv_result_t);
             r->pending_synth_rows = gap - 1;
@@ -488,19 +488,19 @@ void load_sheet_all_data(struct xls_resource_read_t *r, zend_long sheet_flag, zv
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) array_init(zv_result_t);
 
     while (sheet_read_row(r->sheet_t)) {
-        size_t cur_row = lxr_worksheet_current_row(r->sheet_t);
+        size_t cur_row = lxlsx_reader_worksheet_current_row(r->sheet_t);
         zval   row;
         ZVAL_NULL(&row);
 
         load_sheet_current_row_data(r, &row, zv_type_t, data_type_default, READ_SKIP_ROW);
 
-        if ((sheet_flag & LXR_SKIP_EMPTY_ROWS) && row_is_empty(&row)) {
+        if ((sheet_flag & LXLSX_READER_SKIP_EMPTY_ROWS) && row_is_empty(&row)) {
             zval_ptr_dtor(&row);
             r->expected_row_nr = cur_row + 1;
             continue;
         }
 
-        if (!(sheet_flag & LXR_SKIP_EMPTY_ROWS)) {
+        if (!(sheet_flag & LXLSX_READER_SKIP_EMPTY_ROWS)) {
             while (r->expected_row_nr < cur_row) {
                 zval empty;
                 if (r->cols > 0) {
@@ -523,7 +523,7 @@ void skip_rows(struct xls_resource_read_t *r, zval *zv_type_t, zend_long data_ty
     (void)zv_type_t;
     (void)data_type_default;
     if (!r || !r->sheet_t || zl_skip_row <= 0) return;
-    lxr_worksheet_skip_rows(r->sheet_t, (size_t)zl_skip_row);
+    lxlsx_reader_worksheet_skip_rows(r->sheet_t, (size_t)zl_skip_row);
     if (r->expected_row_nr == 0) r->expected_row_nr = 1;
     r->expected_row_nr += (size_t)zl_skip_row;
 }

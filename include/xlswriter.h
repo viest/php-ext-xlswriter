@@ -26,9 +26,9 @@
 #include "zend_API.h"
 #include "php.h"
 
-#include "lxlsx.h"
-#include "lxlsx/packager.h"
-#include "lxlsx/format.h"
+#include "libxlsx.h"
+#include "libxlsx/packager.h"
+#include "libxlsx/format.h"
 
 #include "common.h"
 #include "php_xlswriter.h"
@@ -42,7 +42,6 @@
 #include "table.h"
 #include "help.h"
 
-#include "lxlsx/reader.h"
 #include "read.h"
 #include "csv.h"
 
@@ -377,6 +376,7 @@ static inline void php_vtiful_close_resource(zend_object *obj) {
     if (intern->write_ptr.workbook != NULL) {
         lxlsx_workbook_free(intern->write_ptr.workbook);
         intern->write_ptr.workbook = NULL;
+        intern->write_ptr.worksheet = NULL;
     }
 
     xls_auto_widths_reset(&intern->write_ptr);

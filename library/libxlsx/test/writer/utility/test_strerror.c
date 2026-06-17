@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 // Test lxlsx_strerror() to ensure the error_string array doesn't go out of sync.
 CTEST(utility, lxlsx_strerror) {

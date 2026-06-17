@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "lxlsx/xmlwriter.h"
+#include "libxlsx/xmlwriter.h"
 
 #define LXLSX_AMP  "&amp;"
 #define LXLSX_LT   "&lt;"

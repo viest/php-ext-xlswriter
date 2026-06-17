@@ -18,8 +18,6 @@
 #include "ext/standard/info.h"
 #include "xlswriter.h"
 
-#include "lxlsx/reader.h"
-
 int le_xls_writer;
 
 ZEND_BEGIN_ARG_INFO_EX(xlswriter_get_version_arginfo, 0, 0, 0)

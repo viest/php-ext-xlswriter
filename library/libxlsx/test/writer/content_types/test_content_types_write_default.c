@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/content_types.h"
+#include "../../../include/libxlsx/content_types.h"
 
 // Test the _write_default() function.
 CTEST(content_types, write_default) {

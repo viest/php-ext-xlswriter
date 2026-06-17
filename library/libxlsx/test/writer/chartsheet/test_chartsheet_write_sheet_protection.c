@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/chartsheet.h"
+#include "../../../include/libxlsx/chartsheet.h"
 
 
 /* 1. Test the _write_sheet_protection() method. */

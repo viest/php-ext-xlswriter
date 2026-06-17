@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/shared_strings.h"
+#include "../../../include/libxlsx/shared_strings.h"
 
 // Test _xml_declaration().
 CTEST(sst, lxlsx_xml_declaration) {

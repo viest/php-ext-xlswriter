@@ -45,10 +45,10 @@
  */
 
 #include <zlib.h>
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/packager.h"
-#include "lxlsx/hash_table.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/packager.h"
+#include "libxlsx/hash_table.h"
+#include "libxlsx/utility.h"
 
 STATIC lxlsx_error _add_file_to_zip(lxlsx_packager *self, FILE *file,
                                   const char *filename);

@@ -10,15 +10,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lxlsx/edit.h"
-#include "lxlsx/source_package.h"
-#include "lxlsx/worksheet.h"
-#include "lxlsx/reader/workbook.h"
+#include "libxlsx/edit.h"
+#include "libxlsx/source_package.h"
+#include "libxlsx/worksheet.h"
+#include "libxlsx/workbook.h"
 
-#include "lxlsx_reader_internal.h"
+#include "xlsx_private.h"
 
 typedef enum {
     LXLSX_EDIT_CHANGE_NUMBER,
+    LXLSX_EDIT_CHANGE_STRING,
+    LXLSX_EDIT_CHANGE_BOOLEAN,
     LXLSX_EDIT_CHANGE_FORMULA
 } lxlsx_edit_change_type;
 
@@ -28,6 +30,8 @@ typedef struct {
     lxlsx_col_t col;
     lxlsx_edit_change_type type;
     double number;
+    char *string;
+    int boolean;
     char *formula;
     char *cached_result;
 } lxlsx_edit_change;
@@ -146,6 +150,16 @@ static int append_xml_escaped(lxlsx_edit_buf *buf, const char *str)
         }
     }
     return 0;
+}
+
+static int needs_xml_space_preserve(const char *str)
+{
+    size_t len;
+    if (!str || !*str)
+        return 0;
+    len = strlen(str);
+    return isspace((unsigned char)str[0]) ||
+           isspace((unsigned char)str[len - 1]);
 }
 
 static char *make_cell_ref(lxlsx_row_t row, lxlsx_col_t col)
@@ -393,6 +407,14 @@ static char *build_cell_xml(const lxlsx_edit_change *change,
             goto fail;
     }
 
+    if (change->type == LXLSX_EDIT_CHANGE_STRING) {
+        if (buf_append_s(&buf, " t=\"inlineStr\"") != 0)
+            goto fail;
+    } else if (change->type == LXLSX_EDIT_CHANGE_BOOLEAN) {
+        if (buf_append_s(&buf, " t=\"b\"") != 0)
+            goto fail;
+    }
+
     if (change->type == LXLSX_EDIT_CHANGE_FORMULA &&
         change->cached_result && !looks_numeric(change->cached_result)) {
         if (buf_append_s(&buf, " t=\"str\"") != 0)
@@ -407,6 +429,22 @@ static char *build_cell_xml(const lxlsx_edit_change *change,
         if (buf_append_s(&buf, "<v>") != 0 ||
             buf_append_s(&buf, number) != 0 ||
             buf_append_s(&buf, "</v>") != 0)
+            goto fail;
+    } else if (change->type == LXLSX_EDIT_CHANGE_STRING) {
+        const char *string = change->string ? change->string : "";
+        if (buf_append_s(&buf, "<is><t") != 0)
+            goto fail;
+        if (needs_xml_space_preserve(string) &&
+            buf_append_s(&buf, " xml:space=\"preserve\"") != 0) {
+            goto fail;
+        }
+        if (buf_append_s(&buf, ">") != 0 ||
+            append_xml_escaped(&buf, string) != 0 ||
+            buf_append_s(&buf, "</t></is>") != 0) {
+            goto fail;
+        }
+    } else if (change->type == LXLSX_EDIT_CHANGE_BOOLEAN) {
+        if (buf_appendf(&buf, "<v>%d</v>", change->boolean ? 1 : 0) != 0)
             goto fail;
     } else {
         const char *formula = change->formula;
@@ -592,6 +630,8 @@ static lxlsx_error append_change(lxlsx_edit_session *session,
                                  lxlsx_col_t col,
                                  lxlsx_edit_change_type type,
                                  double number,
+                                 const char *string,
+                                 int boolean,
                                  const char *formula,
                                  const char *cached_result)
 {
@@ -626,14 +666,19 @@ static lxlsx_error append_change(lxlsx_edit_session *session,
     change->col = col;
     change->type = type;
     change->number = number;
+    change->boolean = boolean ? 1 : 0;
+    if (string)
+        change->string = strdup(string);
     if (formula)
         change->formula = strdup(formula);
     if (cached_result)
         change->cached_result = strdup(cached_result);
 
-    if (!change->target || (formula && !change->formula) ||
+    if (!change->target || (string && !change->string) ||
+        (formula && !change->formula) ||
         (cached_result && !change->cached_result)) {
         free(change->target);
+        free(change->string);
         free(change->formula);
         free(change->cached_result);
         memset(change, 0, sizeof(*change));
@@ -680,6 +725,7 @@ void lxlsx_edit_close(lxlsx_edit_session *session)
         return;
     for (i = 0; i < session->change_count; i++) {
         free(session->changes[i].target);
+        free(session->changes[i].string);
         free(session->changes[i].formula);
         free(session->changes[i].cached_result);
     }
@@ -689,6 +735,20 @@ void lxlsx_edit_close(lxlsx_edit_session *session)
     free(session);
 }
 
+size_t lxlsx_edit_sheet_count(lxlsx_edit_session *session)
+{
+    if (!session || !session->workbook)
+        return 0;
+    return session->workbook->sheet_count;
+}
+
+const char *lxlsx_edit_sheet_name(lxlsx_edit_session *session, size_t index)
+{
+    if (!session || !session->workbook || index >= session->workbook->sheet_count)
+        return NULL;
+    return session->workbook->sheets[index].name;
+}
+
 lxlsx_error lxlsx_edit_set_number(lxlsx_edit_session *session,
                                   const char *sheet_name,
                                   lxlsx_row_t row,
@@ -696,7 +756,29 @@ lxlsx_error lxlsx_edit_set_number(lxlsx_edit_session *session,
                                   double value)
 {
     return append_change(session, sheet_name, row, col,
-                         LXLSX_EDIT_CHANGE_NUMBER, value, NULL, NULL);
+                         LXLSX_EDIT_CHANGE_NUMBER, value, NULL, 0, NULL, NULL);
+}
+
+lxlsx_error lxlsx_edit_set_string(lxlsx_edit_session *session,
+                                  const char *sheet_name,
+                                  lxlsx_row_t row,
+                                  lxlsx_col_t col,
+                                  const char *value)
+{
+    return append_change(session, sheet_name, row, col,
+                         LXLSX_EDIT_CHANGE_STRING, 0.0,
+                         value ? value : "", 0, NULL, NULL);
+}
+
+lxlsx_error lxlsx_edit_set_boolean(lxlsx_edit_session *session,
+                                   const char *sheet_name,
+                                   lxlsx_row_t row,
+                                   lxlsx_col_t col,
+                                   int value)
+{
+    return append_change(session, sheet_name, row, col,
+                         LXLSX_EDIT_CHANGE_BOOLEAN, 0.0, NULL,
+                         value, NULL, NULL);
 }
 
 lxlsx_error lxlsx_edit_set_formula(lxlsx_edit_session *session,
@@ -707,7 +789,7 @@ lxlsx_error lxlsx_edit_set_formula(lxlsx_edit_session *session,
                                    const char *cached_result)
 {
     return append_change(session, sheet_name, row, col,
-                         LXLSX_EDIT_CHANGE_FORMULA, 0.0, formula,
+                         LXLSX_EDIT_CHANGE_FORMULA, 0.0, NULL, 0, formula,
                          cached_result);
 }
 

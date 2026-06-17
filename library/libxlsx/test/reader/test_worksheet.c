@@ -4,8 +4,8 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx/reader.h"
+#include "xlsx_test_paths.h"
+#include "libxlsx.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -19,7 +19,7 @@ static void test_open_by_index_and_close(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
-        lxlsx_reader_workbook_open(LXLSX_READER_TEST_HIDDEN_ROW_XLSX, &wb));
+        lxlsx_reader_workbook_open(LXLSX_TEST_HIDDEN_ROW_XLSX, &wb));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
         lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws));
     TEST_ASSERT_NOT_NULL(ws);
@@ -33,7 +33,7 @@ static void test_iterate_all_rows(void)
     lxlsx_reader_worksheet *ws = NULL;
     int rows = 0;
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_HIDDEN_ROW_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_HIDDEN_ROW_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     while (lxlsx_reader_worksheet_next_row(ws) == LXLSX_READER_NO_ERROR) {
@@ -59,7 +59,7 @@ static void test_skip_hidden_rows(void)
     lxlsx_reader_worksheet *ws = NULL;
     int rows = 0;
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_HIDDEN_ROW_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_HIDDEN_ROW_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_HIDDEN_ROWS, &ws);
 
     while (lxlsx_reader_worksheet_next_row(ws) == LXLSX_READER_NO_ERROR) {
@@ -80,7 +80,7 @@ static void test_skip_rows_budget(void)
     lxlsx_reader_worksheet *ws = NULL;
     int rows = 0;
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_HIDDEN_ROW_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_HIDDEN_ROW_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
     lxlsx_reader_worksheet_skip_rows(ws, 2);
 
@@ -123,7 +123,7 @@ static void test_callback_mode(void)
     lxlsx_reader_worksheet *ws = NULL;
     cb_state s = {0, 0};
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_HIDDEN_ROW_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_HIDDEN_ROW_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
@@ -209,7 +209,7 @@ static void test_all_cell_types(void)
     memset(&s, 0, sizeof(s));
 
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
-        lxlsx_reader_workbook_open(LXLSX_READER_TEST_TYPES_XLSX, &wb));
+        lxlsx_reader_workbook_open(LXLSX_TEST_TYPES_XLSX, &wb));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
         lxlsx_reader_workbook_get_worksheet_by_name(wb, "Types", LXLSX_READER_SKIP_NONE, &ws));
 
@@ -243,7 +243,7 @@ static void test_pull_pulls_correct_values(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_cell c;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_TYPES_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_TYPES_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_name(wb, "Types", LXLSX_READER_SKIP_NONE, &ws);
 
     /* Row 1: 42, 3.14 */
@@ -272,7 +272,7 @@ static void test_unified_cell_formula_and_style_ref(void)
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_cell c;
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_TYPES_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_TYPES_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_name(wb, "Types", LXLSX_READER_SKIP_NONE, &ws);
 
     lxlsx_reader_worksheet_skip_rows(ws, 4);

@@ -3,8 +3,106 @@ name: php-ext-xlswriter
 on: [push, pull_request]
 
 jobs:
+  libxlsx-test:
+    name: libxlsx on ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 22.04 x64
+            runner: ubuntu-22.04
+          - name: Ubuntu 24.04 x64
+            runner: ubuntu-24.04
+          - name: Ubuntu 22.04 arm64
+            runner: ubuntu-22.04-arm
+          - name: Ubuntu 24.04 arm64
+            runner: ubuntu-24.04-arm
+          - name: macOS 14 arm64
+            runner: macos-14
+          - name: macOS 15 arm64
+            runner: macos-15
+          - name: macOS 15 Intel
+            runner: macos-15-intel
+          - name: Windows Server 2022 x64
+            runner: windows-2022
+          - name: Windows Server 2025 x64
+            runner: windows-2025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zlib1g-dev
+
+      - name: Windows dependencies
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-python
+            mingw-w64-ucrt-x86_64-zlib
+
+      - name: Run libxlsx tests
+        if: runner.os != 'Windows'
+        run: make -C library/libxlsx/test test
+
+      - name: Run libxlsx tests on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make -C library/libxlsx/test test
+
+  libxlsx-container-test:
+    name: libxlsx on ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Alpine musl x64
+            image: php:8.3-cli-alpine
+            install: apk add --no-cache git build-base python3 zlib-dev
+          - name: Debian 12 x64
+            image: debian:12
+            install: apt-get update && apt-get install -y --no-install-recommends git ca-certificates build-essential python3 zlib1g-dev && rm -rf /var/lib/apt/lists/*
+          - name: Fedora x64
+            image: fedora:latest
+            install: dnf install -y git gcc make python3 zlib-devel
+          - name: Rocky Linux 9 x64
+            image: rockylinux:9
+            install: dnf install -y git gcc make python3 zlib-devel
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      # actions/checkout@v4 falls back to a tarball download (which cannot
+      # fetch submodules) when git >= 2.18 is missing in the container, so
+      # install it before the checkout step.
+      - name: Toolchain
+        run: ${{ matrix.install }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run libxlsx tests
+        run: make -C library/libxlsx/test test
+
   build-test:
     name: PHP ${{ matrix.php-versions }} on ${{ matrix.operating-system }}
+    needs:
+      - libxlsx-test
+      - libxlsx-container-test
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false
@@ -46,7 +144,7 @@ jobs:
         run: |
           php -m
           phpize
-          ./configure --enable-reader
+          ./configure
           make clean
           make -j2
 
@@ -62,6 +160,9 @@ jobs:
 
   alpine-musl:
     name: Alpine musl (PHP 8.3)
+    needs:
+      - libxlsx-test
+      - libxlsx-container-test
     runs-on: ubuntu-22.04
     container:
       image: php:8.3-cli-alpine
@@ -84,7 +185,7 @@ jobs:
       - name: Build extension
         run: |
           phpize
-          ./configure --enable-reader
+          ./configure
           make clean
           make -j2
 

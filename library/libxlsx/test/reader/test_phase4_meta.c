@@ -5,8 +5,8 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx/reader.h"
+#include "xlsx_test_paths.h"
+#include "libxlsx.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -16,7 +16,7 @@ static void test_page_setup(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_page_setup p;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE4_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE4_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(1, lxlsx_reader_worksheet_page_setup(ws, &p));
@@ -44,7 +44,7 @@ static void test_rich_sst(void)
     lxlsx_cell c;
     size_t   n;
     lxlsx_reader_string_run runs[8];
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE4_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE4_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
@@ -96,7 +96,7 @@ static void test_comments(void)
     cb_collect     col;
     int            i;
 
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE4_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE4_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     memset(&col, 0, sizeof(col));

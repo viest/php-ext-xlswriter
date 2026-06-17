@@ -8,9 +8,9 @@
  *
  */
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/format.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/format.h"
+#include "libxlsx/utility.h"
 
 /*****************************************************************************
  *

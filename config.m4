@@ -26,7 +26,13 @@ if test "$PHP_XLSWRITER" != "no"; then
     kernel/conditional_format.c \
     kernel/table.c \
     kernel/formula_ast.c \
+    kernel/read.c \
+    kernel/csv.c \
     kernel/write.c \
+    library/libexpat/expat/lib/loadlibrary.c \
+    library/libexpat/expat/lib/xmlparse.c \
+    library/libexpat/expat/lib/xmlrole.c \
+    library/libexpat/expat/lib/xmltok.c \
     library/libxlsx/third_party/tmpfileplus/tmpfileplus.c \
     library/libxlsx/src/app.c \
     library/libxlsx/src/chart.c \
@@ -54,6 +60,13 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsx/src/rich_value_rel.c \
     library/libxlsx/src/rich_value_structure.c \
     library/libxlsx/src/rich_value_types.c \
+    library/libxlsx/src/source_package.c \
+    library/libxlsx/src/edit.c \
+    library/libxlsx/src/common.c \
+    library/libxlsx/src/xlsx_util.c \
+    library/libxlsx/src/zip_io.c \
+    library/libxlsx/src/xml_pump.c \
+    library/libxlsx/src/sst.c \
     library/libxlsx/third_party/minizip/ioapi.c \
     library/libxlsx/third_party/minizip/mztools.c \
     library/libxlsx/third_party/minizip/unzip.c \
@@ -62,30 +75,6 @@ if test "$PHP_XLSWRITER" != "no"; then
 
     md5_sources="
     library/libxlsx/third_party/md5/md5.c \
-    "
-
-    reader_sources="
-    kernel/read.c \
-    kernel/csv.c \
-    library/libexpat/expat/lib/loadlibrary.c \
-    library/libexpat/expat/lib/xmlparse.c \
-    library/libexpat/expat/lib/xmlrole.c \
-    library/libexpat/expat/lib/xmltok.c \
-    library/libxlsx/reader/src/common.c \
-    library/libxlsx/reader/src/util.c \
-    library/libxlsx/reader/src/zip_io.c \
-    library/libxlsx/reader/src/xml_pump.c \
-    library/libxlsx/reader/src/sst.c \
-    library/libxlsx/reader/src/styles.c \
-    library/libxlsx/reader/src/numfmt.c \
-    library/libxlsx/reader/src/workbook.c \
-    library/libxlsx/reader/src/worksheet.c \
-    library/libxlsx/reader/src/worksheet_meta.c \
-    library/libxlsx/reader/src/comments.c \
-    library/libxlsx/reader/src/chart_meta.c \
-    library/libxlsx/reader/src/drawing.c \
-    library/libxlsx/src/source_package.c \
-    library/libxlsx/src/edit.c \
     "
 
     AC_MSG_CHECKING([Check libxlsx library])
@@ -133,20 +122,17 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_INCLUDE([PHP_EXT_SRCDIR])
     PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/include])
     PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/include])
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/internal])
     PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/third_party/minizip])
+    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
 
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/kernel])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/src])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/minizip])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/tmpfileplus])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/md5])
 
-    AC_MSG_RESULT([building bundled libxlsx reader])
-    xlswriter_sources="$xlswriter_sources $reader_sources"
-    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libexpat/expat/lib])
-    PHP_ADD_INCLUDE([PHP_EXT_SRCDIR/library/libxlsx/reader/src])
-    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
-    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/reader/src])
     LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
 
     if test -z "$PHP_DEBUG"; then

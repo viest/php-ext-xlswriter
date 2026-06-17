@@ -4,9 +4,9 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx_reader_xml_pump.h"
-#include "lxlsx_reader_zip.h"
+#include "xlsx_test_paths.h"
+#include "xml_pump.h"
+#include "zip_io.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -200,7 +200,7 @@ static void test_suspend_and_resume(void)
 static void test_pump_on_zip_file(void)
 {
     counter_state st = {0};
-    lxlsx_reader_zip *z = lxlsx_reader_zip_open_path(LXLSX_READER_TEST_HIDDEN_ROW_XLSX);
+    lxlsx_reader_zip *z = lxlsx_reader_zip_open_path(LXLSX_TEST_HIDDEN_ROW_XLSX);
     lxlsx_reader_zip_file *zf;
     lxlsx_reader_xml_pump *p;
     TEST_ASSERT_NOT_NULL(z);

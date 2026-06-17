@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/workbook.h"
+#include "../../../include/libxlsx/workbook.h"
 
 /* Test the _write_defined_names() method. */
 CTEST(workbook, write_defined_names) {

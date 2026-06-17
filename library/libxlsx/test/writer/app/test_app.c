@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/app.h"
+#include "../../../include/libxlsx/app.h"
 
 // Test assembling a complete App file.
 CTEST(app, app01) {

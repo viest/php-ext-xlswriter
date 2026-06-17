@@ -30,7 +30,7 @@ jobs:
       - name: Build extension
         run: |
           phpize
-          ./configure --enable-reader
+          ./configure
           make clean
           make -j2
 

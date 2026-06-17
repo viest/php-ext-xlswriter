@@ -17,12 +17,12 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "lxlsx.h"
-#include "lxlsx/common.h"
-#include "lxlsx/third_party/tmpfileplus.h"
+#include "libxlsx.h"
+#include "libxlsx/common.h"
+#include "libxlsx/third_party/tmpfileplus.h"
 
 #ifdef USE_DTOA_LIBRARY
-#include "lxlsx/third_party/emyg_dtoa.h"
+#include "libxlsx/third_party/emyg_dtoa.h"
 #endif
 
 char *error_strings[LXLSX_MAX_ERRNO + 1] = {

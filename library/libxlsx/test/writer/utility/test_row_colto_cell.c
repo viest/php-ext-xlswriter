@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 // Test xl_rowcol_to_cell().
 CTEST(utility, lxlsx_rowcol_to_cell) {

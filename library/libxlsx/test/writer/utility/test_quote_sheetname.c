@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 
 // Test _datetime_to_excel_date().

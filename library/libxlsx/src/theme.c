@@ -10,9 +10,9 @@
 
 #include <string.h>
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/theme.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/theme.h"
+#include "libxlsx/utility.h"
 
 const char *lxlsx_theme_strs[] = {
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n",

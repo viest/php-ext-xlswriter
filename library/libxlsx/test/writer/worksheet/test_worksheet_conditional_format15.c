@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
-#include "../../../include/lxlsx/shared_strings.h"
+#include "../../../include/libxlsx/worksheet.h"
+#include "../../../include/libxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
 CTEST(worksheet, lxlsx_worksheet_condtional_format15) {

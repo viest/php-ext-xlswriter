@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/chartsheet.h"
-#include "../../../include/lxlsx/drawing.h"
+#include "../../../include/libxlsx/chartsheet.h"
+#include "../../../include/libxlsx/drawing.h"
 
 // Test assembling a complete Chartsheet file.
 CTEST(chartsheet, chartsheet) {

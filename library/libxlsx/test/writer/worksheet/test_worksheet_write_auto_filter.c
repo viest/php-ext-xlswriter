@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "lxlsx/worksheet.h"
+#include "libxlsx/worksheet.h"
 
 
 /* Test the _write_auto_filter() method with no filter. */

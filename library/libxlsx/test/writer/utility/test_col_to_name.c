@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 // Test _xl_col_to_name().
 CTEST(utility, lxlsx_col_to_name) {

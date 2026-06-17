@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/styles.h"
+#include "../../../include/libxlsx/styles.h"
 
 // Test the _write_table_styles() function.
 CTEST(styles, write_table_styles) {

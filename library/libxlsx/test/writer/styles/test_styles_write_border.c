@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/styles.h"
+#include "../../../include/libxlsx/styles.h"
 
 // Test the _write_border() function.
 CTEST(styles, write_border) {

@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 // Test lxlsx_utf8_strlen().
 CTEST(utility, lxlsx_utf8_strlen) {

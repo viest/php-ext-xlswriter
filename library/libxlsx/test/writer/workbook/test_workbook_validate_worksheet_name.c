@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/workbook.h"
-#include "../../../include/lxlsx/shared_strings.h"
+#include "../../../include/libxlsx/workbook.h"
+#include "../../../include/libxlsx/shared_strings.h"
 
 
 /* Test a valid sheet name. */

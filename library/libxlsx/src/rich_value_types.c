@@ -7,9 +7,9 @@
  *
  */
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/rich_value_types.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/rich_value_types.h"
+#include "libxlsx/utility.h"
 
 /*
  * Forward declarations.

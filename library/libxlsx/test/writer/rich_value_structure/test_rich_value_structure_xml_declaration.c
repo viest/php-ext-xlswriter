@@ -8,7 +8,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "lxlsx/rich_value_structure.h"
+#include "libxlsx/rich_value_structure.h"
 
 // Test _xml_declaration().
 CTEST(lxlsx_rich_value_structure, lxlsx_xml_declaration) {

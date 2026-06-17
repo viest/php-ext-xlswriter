@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 
 // Function used for testing.

@@ -8,9 +8,9 @@
  *
  */
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/core.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/core.h"
+#include "libxlsx/utility.h"
 
 /*
  * Forward declarations.

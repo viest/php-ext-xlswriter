@@ -8,9 +8,9 @@
  *
  */
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/shared_strings.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/shared_strings.h"
+#include "libxlsx/utility.h"
 #include <ctype.h>
 
 /*

@@ -8,10 +8,10 @@
  *
  */
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/worksheet.h"
-#include "lxlsx/table.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/worksheet.h"
+#include "libxlsx/table.h"
+#include "libxlsx/utility.h"
 
 /*
  * Forward declarations.

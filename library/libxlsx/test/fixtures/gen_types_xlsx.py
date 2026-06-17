@@ -17,6 +17,7 @@ CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>
 </Types>
 """
 
@@ -40,7 +41,29 @@ WORKBOOK_RELS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
   <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>
 </Relationships>
+"""
+
+THEME = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Reader Test Theme">
+  <a:themeElements>
+    <a:clrScheme name="Reader Test">
+      <a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>
+      <a:dk1><a:srgbClr val="000000"/></a:dk1>
+      <a:lt2><a:srgbClr val="EEEEEE"/></a:lt2>
+      <a:dk2><a:srgbClr val="111111"/></a:dk2>
+      <a:accent1><a:srgbClr val="112233"/></a:accent1>
+      <a:accent2><a:srgbClr val="445566"/></a:accent2>
+      <a:accent3><a:srgbClr val="778899"/></a:accent3>
+      <a:accent4><a:srgbClr val="AABBCC"/></a:accent4>
+      <a:accent5><a:srgbClr val="DDEEFF"/></a:accent5>
+      <a:accent6><a:srgbClr val="123456"/></a:accent6>
+      <a:hlink><a:srgbClr val="0000FF"/></a:hlink>
+      <a:folHlink><a:srgbClr val="800080"/></a:folHlink>
+    </a:clrScheme>
+  </a:themeElements>
+</a:theme>
 """
 
 # SST: index 0 = "hello", 1 = "world", 2 = "rich-text run"
@@ -58,22 +81,46 @@ SHARED_STRINGS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 #  xf[2]: numFmtId=22 (datetime)
 #  xf[3]: numFmtId=164 (custom date "yyyy-mm-dd")
 #  xf[4]: numFmtId=9  (percent)
+#  xf[5]: theme font color
+#  xf[6]: theme+tint fill color
+#  xf[7]: theme+tint border color
+#  dxf[0]: conditional-format style with font/fill/border colors
 STYLES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="1">
     <numFmt numFmtId="164" formatCode="yyyy-mm-dd"/>
   </numFmts>
-  <fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>
-  <fills count="1"><fill><patternFill patternType="none"/></fill></fills>
-  <borders count="1"><border/></borders>
+  <fonts count="3">
+    <font><sz val="11"/><name val="Calibri"/></font>
+    <font><sz val="11"/><name val="Calibri"/><color theme="4"/></font>
+    <font><sz val="11"/><name val="Calibri"/><color indexed="10"/></font>
+  </fonts>
+  <fills count="2">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="solid"><fgColor theme="5" tint="0.5"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border/>
+    <border><left style="thin"><color theme="6" tint="-0.5"/></left></border>
+  </borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="5">
+  <cellXfs count="8">
     <xf numFmtId="0"   fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="14"  fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
     <xf numFmtId="22"  fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
     <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
     <xf numFmtId="9"   fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+    <xf numFmtId="0"   fontId="1" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0"   fontId="2" fillId="1" borderId="0" xfId="0"/>
+    <xf numFmtId="0"   fontId="0" fillId="0" borderId="1" xfId="0"/>
   </cellXfs>
+  <dxfs count="1">
+    <dxf>
+      <font><b/><color theme="4"/></font>
+      <fill><patternFill patternType="solid"><fgColor indexed="10"/></patternFill></fill>
+      <border><bottom style="thin"><color rgb="FF010203"/></bottom></border>
+    </dxf>
+  </dxfs>
 </styleSheet>
 """
 
@@ -112,6 +159,7 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as z:
     z.writestr("xl/_rels/workbook.xml.rels", WORKBOOK_RELS)
     z.writestr("xl/sharedStrings.xml", SHARED_STRINGS)
     z.writestr("xl/styles.xml", STYLES)
+    z.writestr("xl/theme/theme1.xml", THEME)
     z.writestr("xl/worksheets/sheet1.xml", SHEET)
 
 print("wrote", OUT)

@@ -22,6 +22,32 @@ static const char *zarr_str(zval *arr, const char *key, size_t key_len);
 static zend_long   zarr_long(zval *arr, const char *key, size_t key_len, zend_long dflt);
 static double      zarr_double(zval *arr, const char *key, size_t key_len, double dflt);
 
+static void reset_write_workbook_state(xls_object *obj)
+{
+    if (obj == NULL) {
+        return;
+    }
+
+    if (obj->write_ptr.workbook != NULL) {
+        lxlsx_workbook_free(obj->write_ptr.workbook);
+        obj->write_ptr.workbook = NULL;
+        obj->write_ptr.worksheet = NULL;
+    }
+
+    xls_auto_widths_reset(&obj->write_ptr);
+    obj->write_ptr.auto_size_enabled = 0;
+    obj->lxlsx_format_ptr.format = NULL;
+
+    if (obj->formats_cache_ptr.maps != NULL) {
+        zend_hash_clean(obj->formats_cache_ptr.maps);
+    }
+
+    if (obj->row_options != NULL) {
+        efree(obj->row_options);
+        obj->row_options = NULL;
+    }
+}
+
 static zend_always_inline void *vtiful_object_alloc(size_t obj_size, zend_class_entry *ce) {
     void *obj = emalloc(obj_size + zend_object_properties_size(ce));
     memset(obj, 0, obj_size);
@@ -119,6 +145,7 @@ ZEND_BEGIN_ARG_INFO_EX(xls_data_arginfo, 0, 0, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_output_arginfo, 0, 0, 0)
+                ZEND_ARG_INFO(0, file_name)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(xls_get_handle_arginfo, 0, 0, 0)
@@ -937,7 +964,8 @@ PHP_METHOD(vtiful_xls, data)
             if (key == NULL) {
                 column_index = index;
             }
-            type_writer(data, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL, object_format(obj, NULL, obj->lxlsx_format_ptr.format));
+            type_writer(data, SHEET_CURRENT_LINE(obj), column_index, &obj->write_ptr, NULL,
+                        object_format(obj, NULL, obj->lxlsx_format_ptr.format));
 
             // next number index
             ++column_index;
@@ -953,6 +981,17 @@ PHP_METHOD(vtiful_xls, data)
 PHP_METHOD(vtiful_xls, output)
 {
     zval rv, *file_path = NULL;
+    zval output_path;
+    zval *return_path;
+    zend_string *zs_file_name = NULL;
+    lxlsx_error error;
+    char *old_filename = NULL;
+    int filename_replaced = 0;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+            Z_PARAM_OPTIONAL
+            Z_PARAM_STR_OR_NULL(zs_file_name)
+    ZEND_PARSE_PARAMETERS_END();
 
     file_path = zend_read_property(vtiful_xls_ce, PROP_OBJ(getThis()), ZEND_STRL(V_XLS_FIL), 0, &rv TSRMLS_DC);
 
@@ -960,12 +999,63 @@ PHP_METHOD(vtiful_xls, output)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
+    return_path = file_path;
+
+    if (zs_file_name != NULL) {
+        zval *dir_path = NULL;
+        char *filename;
+
+        if (!lxlsx_workbook_is_edit(obj->write_ptr.workbook)) {
+            zend_throw_exception(vtiful_exception_ce,
+                "output(fileName) is only supported after openFile()", 132);
+            return;
+        }
+
+        GET_CONFIG_PATH(dir_path, vtiful_xls_ce, PROP_OBJ(getThis()));
+        xls_file_path(zs_file_name, dir_path, &output_path);
+
+        filename = lxlsx_strdup(Z_STRVAL(output_path));
+        if (filename == NULL) {
+            zval_ptr_dtor(&output_path);
+            zend_throw_exception(vtiful_exception_ce, exception_message_map(LXLSX_ERROR_MEMORY_MALLOC_FAILED),
+                                 LXLSX_ERROR_MEMORY_MALLOC_FAILED);
+            return;
+        }
+
+        old_filename = obj->write_ptr.workbook->filename;
+        obj->write_ptr.workbook->filename = filename;
+        filename_replaced = 1;
+        return_path = &output_path;
+    }
+
     /* Apply any tracked auto-size widths before the workbook is packaged. */
     xls_auto_widths_flush(&obj->write_ptr);
 
-    lxlsx_workbook_file(&obj->write_ptr);
+    error = lxlsx_workbook_file(&obj->write_ptr);
+    if (error > LXLSX_NO_ERROR) {
+        if (filename_replaced) {
+            free(obj->write_ptr.workbook->filename);
+            obj->write_ptr.workbook->filename = old_filename;
+        }
+        if (return_path == &output_path) {
+            zval_ptr_dtor(&output_path);
+        }
+        zend_throw_exception(vtiful_exception_ce, exception_message_map(error), error);
+        return;
+    }
 
-    ZVAL_COPY(return_value, file_path);
+    if (return_path == &output_path) {
+        if (filename_replaced) {
+            free(old_filename);
+        }
+        add_property_zval(getThis(), V_XLS_FIL, &output_path);
+    }
+
+    ZVAL_COPY(return_value, return_path);
+
+    if (return_path == &output_path) {
+        zval_ptr_dtor(&output_path);
+    }
 }
 /* }}} */
 
@@ -2535,8 +2625,11 @@ PHP_METHOD(vtiful_xls, validation)
  */
 PHP_METHOD(vtiful_xls, openFile)
 {
+    zval file_path;
     zval *zv_config_path = NULL;
     zend_string *zs_file_name = NULL;
+    lxlsx_reader_workbook *wb = NULL;
+    lxlsx_workbook *edit_workbook = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_STR(zs_file_name)
@@ -2560,7 +2653,29 @@ PHP_METHOD(vtiful_xls, openFile)
         obj->read_ptr.file_t = NULL;
     }
 
-    obj->read_ptr.file_t = file_open(Z_STRVAL_P(zv_config_path), ZSTR_VAL(zs_file_name));
+    wb = file_open(Z_STRVAL_P(zv_config_path), ZSTR_VAL(zs_file_name));
+    if (wb == NULL) {
+        return;
+    }
+
+    xls_file_path(zs_file_name, zv_config_path, &file_path);
+    edit_workbook = lxlsx_workbook_open(Z_STRVAL(file_path));
+    if (edit_workbook == NULL) {
+        lxlsx_reader_workbook_close(wb);
+        zval_ptr_dtor(&file_path);
+        zend_throw_exception(vtiful_exception_ce, "Open workbook for editing failed", 131);
+        return;
+    }
+
+    reset_write_workbook_state(obj);
+
+    obj->read_ptr.file_t = wb;
+    obj->write_ptr.workbook = edit_workbook;
+    obj->write_ptr.worksheet = lxlsx_workbook_get_worksheet_by_name(
+        edit_workbook, lxlsx_reader_workbook_sheet_name(wb, 0));
+
+    add_property_zval(return_value, V_XLS_FIL, &file_path);
+    zval_ptr_dtor(&file_path);
 }
 /* }}} */
 
@@ -2595,6 +2710,14 @@ PHP_METHOD(vtiful_xls, openSheet)
 
     obj->read_ptr.sheet_flag = zl_flag;
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
+    if (obj->read_ptr.sheet_t != NULL && obj->write_ptr.workbook != NULL &&
+        lxlsx_workbook_is_edit(obj->write_ptr.workbook)) {
+        const char *sheet_name = zs_sheet_name != NULL
+            ? ZSTR_VAL(zs_sheet_name)
+            : lxlsx_reader_workbook_sheet_name(obj->read_ptr.file_t, 0);
+        obj->write_ptr.worksheet = lxlsx_workbook_get_worksheet_by_name(
+            obj->write_ptr.workbook, sheet_name);
+    }
 }
 /* }}} */
 

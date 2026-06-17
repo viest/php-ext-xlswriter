@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 // Test assembling a Worksheet file with different span ranges.
 CTEST(worksheet, spans01) {

@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/relationships.h"
+#include "../../../include/libxlsx/relationships.h"
 
 // Test assembling a complete Relationships file.
 CTEST(relationships, relationships01) {

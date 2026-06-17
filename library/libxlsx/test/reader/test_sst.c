@@ -3,14 +3,14 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx_reader_sst.h"
-#include "lxlsx_reader_zip.h"
+#include "xlsx_test_paths.h"
+#include "sst.h"
+#include "zip_io.h"
 
 void setUp(void) {}
 void tearDown(void) {}
 
-static const char *XLSX = LXLSX_READER_TEST_HIDDEN_ROW_XLSX;
+static const char *XLSX = LXLSX_TEST_HIDDEN_ROW_XLSX;
 
 static void test_sst_open_full(void)
 {

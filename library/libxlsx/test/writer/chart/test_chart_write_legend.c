@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/chart.h"
+#include "../../../include/libxlsx/chart.h"
 
 // Test the _write_legend() function.
 CTEST(chart, write_legend01) {

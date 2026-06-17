@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/styles.h"
-#include "../../../include/lxlsx/format.h"
+#include "../../../include/libxlsx/styles.h"
+#include "../../../include/libxlsx/format.h"
 
 // Test the _write_xf() method. Default properties.
 CTEST(styles, write_xf01) {

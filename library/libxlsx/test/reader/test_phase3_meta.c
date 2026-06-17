@@ -4,8 +4,8 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx/reader.h"
+#include "xlsx_test_paths.h"
+#include "libxlsx.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -15,7 +15,7 @@ static void test_formula_array(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_cell       c;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     /* row 1 */
@@ -39,7 +39,7 @@ static void test_formula_shared(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_cell       c;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     /* skip rows 1, 2 */
@@ -74,7 +74,7 @@ static void test_data_validations(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_data_validation d;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_worksheet_data_validation_count(ws));
@@ -102,7 +102,7 @@ static void test_autofilter(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_autofilter af;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE3_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE3_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(1, lxlsx_reader_worksheet_autofilter(ws, &af));

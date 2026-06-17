@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
-#include "../../../include/lxlsx/format.h"
+#include "../../../include/libxlsx/worksheet.h"
+#include "../../../include/libxlsx/format.h"
 
 // Test the _write_col_info() function.
 CTEST(worksheet, write_col_info01) {

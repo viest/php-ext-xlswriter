@@ -5,8 +5,8 @@
 #include <unity.h>
 #include <zlib.h>
 
-#include "lxlsx.h"
-#include "lxlsx/source_package.h"
+#include "libxlsx.h"
+#include "libxlsx/source_package.h"
 
 void setUp(void) {}
 void tearDown(void) {}

@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "lxlsx/metadata.h"
+#include "libxlsx/metadata.h"
 
 // Test _xml_declaration().
 CTEST(metadata, lxlsx_xml_declaration) {

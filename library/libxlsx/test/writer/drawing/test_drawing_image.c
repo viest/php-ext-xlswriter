@@ -13,8 +13,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/drawing.h"
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/drawing.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 // Test assembling a complete Drawing file.
 CTEST(drawing, lxlsx_drawing_image01) {

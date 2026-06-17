@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/workbook.h"
+#include "../../../include/libxlsx/workbook.h"
 
 // Test the _write_sheet() function.
 CTEST(workbook, write_sheet1) {

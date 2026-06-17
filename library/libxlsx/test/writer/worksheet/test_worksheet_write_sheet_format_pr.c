@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 // Test the _write_sheet_format_pr() function.
 CTEST(worksheet, write_sheet_format_pr) {

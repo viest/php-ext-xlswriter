@@ -3,8 +3,7 @@
 
 #include <unity.h>
 
-#include "lxlsx.h"
-#include "lxlsx/reader.h"
+#include "libxlsx.h"
 
 void setUp(void) {}
 void tearDown(void) {}

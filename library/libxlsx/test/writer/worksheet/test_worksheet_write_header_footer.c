@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 // Test the header and footer functions.
 CTEST(worksheet, write_odd_header) {

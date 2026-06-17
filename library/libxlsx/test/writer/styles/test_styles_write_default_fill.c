@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/styles.h"
+#include "../../../include/libxlsx/styles.h"
 
 // Test the _write_default_fill() function.
 CTEST(styles, write_default_fill) {

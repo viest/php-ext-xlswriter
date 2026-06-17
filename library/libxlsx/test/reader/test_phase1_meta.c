@@ -5,8 +5,8 @@
 
 #include <unity.h>
 
-#include "lxlsx_reader_test_paths.h"
-#include "lxlsx/reader.h"
+#include "xlsx_test_paths.h"
+#include "libxlsx.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -15,7 +15,7 @@ static void test_sheet_visibility(void)
 {
     lxlsx_reader_workbook *wb = NULL;
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
-        lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb));
+        lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb));
     TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_workbook_sheet_count(wb));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_SHEET_VISIBLE,
         lxlsx_reader_workbook_sheet_visibility(wb, 0));
@@ -28,7 +28,7 @@ static void test_defined_names(void)
 {
     lxlsx_reader_workbook *wb = NULL;
     lxlsx_reader_defined_name dn;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     TEST_ASSERT_EQUAL_size_t(3, lxlsx_reader_workbook_defined_name_count(wb));
 
     TEST_ASSERT_EQUAL_INT(1, lxlsx_reader_workbook_defined_name_get(wb, 0, &dn));
@@ -53,7 +53,7 @@ static void test_merged_cells(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_range      r;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
         lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws));
     TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_worksheet_merged_count(ws));
@@ -81,7 +81,7 @@ static void test_hyperlinks(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_hyperlink  h;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_worksheet_hyperlink_count(ws));
@@ -111,11 +111,30 @@ static void test_hyperlinks(void)
     lxlsx_reader_workbook_close(wb);
 }
 
+static void test_metadata_available_after_streaming_starts(void)
+{
+    lxlsx_reader_workbook  *wb = NULL;
+    lxlsx_reader_worksheet *ws = NULL;
+    lxlsx_cell c;
+
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
+
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
+
+    TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_worksheet_merged_count(ws));
+    TEST_ASSERT_EQUAL_size_t(2, lxlsx_reader_worksheet_hyperlink_count(ws));
+
+    lxlsx_reader_worksheet_close(ws);
+    lxlsx_reader_workbook_close(wb);
+}
+
 static void test_in_merge_follow(void)
 {
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     /* Phase1 fixture has two merges: A1:C1 and D2:E5. */
@@ -142,7 +161,7 @@ static void test_sheet_protection(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_protection p;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(1, lxlsx_reader_worksheet_protection(ws, &p));
@@ -170,7 +189,7 @@ static void test_row_options(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_row_options ro;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     /* Row 2: ht=30.5 customHeight=1 */
@@ -200,7 +219,7 @@ static void test_col_options(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_reader_col_options co;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     /* Col B (=2): width 22.5 */
@@ -231,7 +250,7 @@ static void test_defaults(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     double         d = 0.0;
-    lxlsx_reader_workbook_open(LXLSX_READER_TEST_PHASE1_XLSX, &wb);
+    lxlsx_reader_workbook_open(LXLSX_TEST_PHASE1_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_index(wb, 0, LXLSX_READER_SKIP_NONE, &ws);
 
     TEST_ASSERT_EQUAL_INT(1, lxlsx_reader_worksheet_default_row_height(ws, &d));
@@ -257,6 +276,7 @@ int main(void)
     RUN_TEST(test_defined_names);
     RUN_TEST(test_merged_cells);
     RUN_TEST(test_hyperlinks);
+    RUN_TEST(test_metadata_available_after_streaming_starts);
     RUN_TEST(test_in_merge_follow);
     RUN_TEST(test_sheet_protection);
     RUN_TEST(test_row_options);

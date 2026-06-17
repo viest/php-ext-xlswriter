@@ -172,8 +172,6 @@ void xls_auto_widths_flush(xls_resource_write_t *res)
  */
 void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *format, lxlsx_format *lxlsx_format_handle)
 {
-    lxlsx_format *value_format = NULL;
-
     lxlsx_col_t lxlsx_col = (lxlsx_col_t)columns;
     lxlsx_row_t lxlsx_row = (lxlsx_row_t)row;
 
@@ -411,21 +409,24 @@ void image_opt_writer(zval *value, zend_long row, zend_long columns,
  */
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format)
 {
-    lxlsx_worksheet_write_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(value), format);
+    WORKSHEET_WRITER_EXCEPTION(
+        lxlsx_worksheet_write_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(value), format));
 }
 
 void dynamic_formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format)
 {
-    lxlsx_worksheet_write_dynamic_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(value), format);
+    WORKSHEET_WRITER_EXCEPTION(
+        lxlsx_worksheet_write_dynamic_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(value), format));
 }
 
 void dynamic_array_formula_writer(zend_string *value, zend_long first_row, zend_long first_col,
                                   zend_long last_row, zend_long last_col,
                                   xls_resource_write_t *res, lxlsx_format *format)
 {
-    lxlsx_worksheet_write_dynamic_array_formula(res->worksheet, (lxlsx_row_t)first_row, (lxlsx_col_t)first_col,
-                                          (lxlsx_row_t)last_row, (lxlsx_col_t)last_col,
-                                          ZSTR_VAL(value), format);
+    WORKSHEET_WRITER_EXCEPTION(
+        lxlsx_worksheet_write_dynamic_array_formula(res->worksheet, (lxlsx_row_t)first_row, (lxlsx_col_t)first_col,
+                                              (lxlsx_row_t)last_row, (lxlsx_col_t)last_col,
+                                              ZSTR_VAL(value), format));
 }
 
 /*
@@ -840,6 +841,10 @@ lxlsx_workbook_file(xls_resource_write_t *self)
     lxlsx_packager *packager = NULL;
     lxlsx_error error = LXLSX_NO_ERROR;
     char codename[LXLSX_MAX_SHEETNAME_LENGTH] = { 0 };
+
+    if (lxlsx_workbook_is_edit(self->workbook)) {
+        return lxlsx_workbook_save_as(self->workbook, self->workbook->filename);
+    }
 
     /* Add a default worksheet if non have been added. */
     if (!self->workbook->num_sheets)

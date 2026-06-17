@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/utility.h"
+#include "../../../include/libxlsx/utility.h"
 
 // Test lxlsx_name_to_row().
 CTEST(utility, lxlsx_name_to_row) {

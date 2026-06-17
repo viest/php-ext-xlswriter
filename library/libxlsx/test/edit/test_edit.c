@@ -4,10 +4,9 @@
 
 #include <unity.h>
 
-#include "lxlsx.h"
-#include "lxlsx/edit.h"
-#include "lxlsx/reader.h"
-#include "lxlsx/source_package.h"
+#include "libxlsx.h"
+#include "libxlsx/edit.h"
+#include "libxlsx/source_package.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -181,6 +180,71 @@ static void assert_formula_cell(const char *path, size_t row, size_t col,
     lxlsx_reader_workbook_close(workbook);
 }
 
+static void assert_string_cell(const char *path, size_t row, size_t col,
+                               const char *expected)
+{
+    lxlsx_reader_workbook *workbook = NULL;
+    lxlsx_reader_worksheet *worksheet = NULL;
+    lxlsx_cell cell;
+    int found = 0;
+
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_open(path, &workbook));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_get_worksheet_by_name(
+                              workbook, "Edit", LXLSX_READER_SKIP_NONE,
+                              &worksheet));
+
+    while (lxlsx_reader_worksheet_next_row(worksheet) == LXLSX_READER_NO_ERROR) {
+        while (lxlsx_reader_worksheet_next_cell(worksheet, &cell)
+               == LXLSX_READER_NO_ERROR) {
+            if (cell.row_num == row && cell.col_num == col) {
+                TEST_ASSERT_TRUE(cell.type == STRING_CELL ||
+                                 cell.type == INLINE_STRING_CELL);
+                TEST_ASSERT_EQUAL_STRING_LEN(expected,
+                                             cell.value.string.ptr,
+                                             cell.value.string.len);
+                found = 1;
+            }
+        }
+    }
+
+    TEST_ASSERT_TRUE(found);
+    lxlsx_reader_worksheet_close(worksheet);
+    lxlsx_reader_workbook_close(workbook);
+}
+
+static void assert_boolean_cell(const char *path, size_t row, size_t col,
+                                int expected)
+{
+    lxlsx_reader_workbook *workbook = NULL;
+    lxlsx_reader_worksheet *worksheet = NULL;
+    lxlsx_cell cell;
+    int found = 0;
+
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_open(path, &workbook));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_get_worksheet_by_name(
+                              workbook, "Edit", LXLSX_READER_SKIP_NONE,
+                              &worksheet));
+
+    while (lxlsx_reader_worksheet_next_row(worksheet) == LXLSX_READER_NO_ERROR) {
+        while (lxlsx_reader_worksheet_next_cell(worksheet, &cell)
+               == LXLSX_READER_NO_ERROR) {
+            if (cell.row_num == row && cell.col_num == col) {
+                TEST_ASSERT_EQUAL_INT(BOOLEAN_CELL, cell.type);
+                TEST_ASSERT_EQUAL_INT(expected ? 1 : 0, cell.value.boolean);
+                found = 1;
+            }
+        }
+    }
+
+    TEST_ASSERT_TRUE(found);
+    lxlsx_reader_worksheet_close(worksheet);
+    lxlsx_reader_workbook_close(workbook);
+}
+
 static void test_noop_edit_save_is_byte_identical(void)
 {
     lxlsx_edit_session *session;
@@ -263,6 +327,68 @@ static void test_formula_edit_roundtrips(void)
     assert_formula_cell(NUMBER_XLSX, 2, 1, "A1*2", "85");
 }
 
+static void test_string_and_boolean_edit_roundtrip(void)
+{
+    lxlsx_edit_session *session;
+    unsigned char *xml;
+    size_t xml_len;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(NUMBER_XLSX);
+
+    session = lxlsx_edit_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_string(session, "Edit", 0, 0, "new text"));
+    assert_ok(lxlsx_edit_set_boolean(session, "Edit", 1, 1, 1));
+    assert_ok(lxlsx_edit_save_as(session, NUMBER_XLSX));
+    lxlsx_edit_close(session);
+
+    assert_string_cell(NUMBER_XLSX, 1, 1, "new text");
+    assert_boolean_cell(NUMBER_XLSX, 2, 2, 1);
+
+    xml = read_sheet_xml(NUMBER_XLSX, &xml_len);
+    (void)xml_len;
+    assert_xml_contains(xml, "t=\"inlineStr\"");
+    assert_xml_contains(xml, "<v>1</v>");
+    lxlsx_source_package_free_buffer(xml);
+}
+
+static void test_opened_workbook_uses_standard_write_api(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_format *format;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(NUMBER_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    TEST_ASSERT_TRUE(lxlsx_workbook_is_edit(workbook));
+
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    assert_ok(lxlsx_worksheet_write_string(worksheet, 0, 0, "via workbook", NULL));
+    assert_ok(lxlsx_worksheet_write_number(worksheet, 1, 0, 123.0, NULL));
+    assert_ok(lxlsx_worksheet_write_boolean(worksheet, 1, 1, 1, NULL));
+    assert_ok(lxlsx_worksheet_write_formula(worksheet, 1, 2, "=A2*2", NULL));
+
+    format = lxlsx_workbook_add_format(workbook);
+    TEST_ASSERT_NOT_NULL(format);
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_write_string(worksheet, 2, 0,
+                                                       "formatted", format));
+
+    assert_ok(lxlsx_workbook_save_as(workbook, NUMBER_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    assert_string_cell(NUMBER_XLSX, 1, 1, "via workbook");
+    assert_number_cell(NUMBER_XLSX, 2, 1, 123.0);
+    assert_boolean_cell(NUMBER_XLSX, 2, 2, 1);
+    assert_formula_cell(NUMBER_XLSX, 2, 3, "A2*2", "0");
+}
+
 static void test_edit_uses_open_time_snapshot(void)
 {
     lxlsx_edit_session *session;
@@ -290,6 +416,8 @@ int main(void)
     RUN_TEST(test_number_edit_preserves_worksheet_state);
     RUN_TEST(test_relationship_targets_locate_custom_worksheet_parts);
     RUN_TEST(test_formula_edit_roundtrips);
+    RUN_TEST(test_string_and_boolean_edit_roundtrip);
+    RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();
 }

@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/styles.h"
+#include "../../../include/libxlsx/styles.h"
 
 // Test assembling a complete Styles file.
 CTEST(styles, styles01) {

@@ -11,7 +11,7 @@
 
 #include <zlib.h>
 
-#include "lxlsx/source_package.h"
+#include "libxlsx/source_package.h"
 
 #define ZIP_LOCAL_FILE_SIG   0x04034b50u
 #define ZIP_CENTRAL_FILE_SIG 0x02014b50u

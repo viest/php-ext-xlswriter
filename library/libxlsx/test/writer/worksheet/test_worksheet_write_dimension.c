@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
+#include "../../../include/libxlsx/worksheet.h"
 
 // Test the _write_dimension() function.
 CTEST(worksheet, write_dimension) {

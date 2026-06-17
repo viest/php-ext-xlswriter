@@ -9,7 +9,7 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/content_types.h"
+#include "../../../include/libxlsx/content_types.h"
 
 // Test _xml_declaration().
 CTEST(content_types, lxlsx_xml_declaration) {

@@ -9,8 +9,8 @@
 #include "../ctest.h"
 #include "../helper.h"
 
-#include "../../../include/lxlsx/worksheet.h"
-#include "../../../include/lxlsx/table.h"
+#include "../../../include/libxlsx/worksheet.h"
+#include "../../../include/libxlsx/table.h"
 
 // Test assembling a complete Table file.
 CTEST(worksheet, lxlsx_worksheet_table07) {

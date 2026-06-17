@@ -12,16 +12,16 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-#include "lxlsx/xmlwriter.h"
-#include "lxlsx/worksheet.h"
-#include "lxlsx/format.h"
-#include "lxlsx/utility.h"
+#include "libxlsx/xmlwriter.h"
+#include "libxlsx/worksheet.h"
+#include "libxlsx/format.h"
+#include "libxlsx/utility.h"
 
 #ifdef USE_OPENSSL_MD5
 #include <openssl/md5.h>
 #else
 #ifndef USE_NO_MD5
-#include "lxlsx/third_party/md5.h"
+#include "libxlsx/third_party/md5.h"
 #endif
 #endif
 
@@ -546,6 +546,8 @@ lxlsx_worksheet_free(lxlsx_worksheet *worksheet)
 
     if (!worksheet)
         return;
+
+    free(worksheet->edit_sheet_name);
 
     if (worksheet->col_options) {
         for (col = 0; col < worksheet->col_options_max; col++) {
@@ -7904,6 +7906,18 @@ lxlsx_worksheet_assemble_xml_file(lxlsx_worksheet *self)
  *
  ****************************************************************************/
 
+static uint8_t
+_worksheet_is_edit(lxlsx_worksheet *self)
+{
+    return self && self->is_edit && self->edit_session;
+}
+
+static lxlsx_error
+_worksheet_edit_reject_format(lxlsx_format *format)
+{
+    return format ? LXLSX_ERROR_FEATURE_NOT_SUPPORTED : LXLSX_NO_ERROR;
+}
+
 /*
  * Write a number to a cell in Excel.
  */
@@ -7914,6 +7928,19 @@ lxlsx_worksheet_write_number(lxlsx_worksheet *self,
 {
     lxlsx_cell *cell;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self)) {
+        err = _worksheet_edit_reject_format(format);
+        if (err)
+            return err;
+
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+
+        return lxlsx_edit_set_number(self->edit_session, self->edit_sheet_name,
+                                     row_num, col_num, value);
+    }
 
     err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
     if (err)
@@ -7940,6 +7967,25 @@ lxlsx_worksheet_write_string(lxlsx_worksheet *self,
     char *string_copy;
     struct lxlsx_sst_element *lxlsx_sst_element;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self)) {
+        if (!string || !*string)
+            return format ? LXLSX_ERROR_FEATURE_NOT_SUPPORTED : LXLSX_NO_ERROR;
+
+        err = _worksheet_edit_reject_format(format);
+        if (err)
+            return err;
+
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+
+        if (lxlsx_utf8_strlen(string) > LXLSX_STR_MAX)
+            return LXLSX_ERROR_MAX_STRING_LENGTH_EXCEEDED;
+
+        return lxlsx_edit_set_string(self->edit_session, self->edit_sheet_name,
+                                     row_num, col_num, string);
+    }
 
     if (!string || !*string) {
         /* Treat a NULL or empty string with formatting as a blank cell. */
@@ -7997,6 +8043,27 @@ lxlsx_worksheet_write_formula_num(lxlsx_worksheet *self,
     lxlsx_cell *cell;
     char *formula_copy;
     lxlsx_error err;
+    char result_buf[64];
+
+    if (_worksheet_is_edit(self)) {
+        err = _worksheet_edit_reject_format(format);
+        if (err)
+            return err;
+
+        if (!formula)
+            return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+        if (lxlsx_str_is_empty(formula))
+            return LXLSX_ERROR_PARAMETER_IS_EMPTY;
+
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+
+        snprintf(result_buf, sizeof(result_buf), "%.15g", result);
+        return lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
+                                      row_num, col_num, formula, result_buf);
+    }
 
     if (!formula)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
@@ -8035,6 +8102,25 @@ lxlsx_worksheet_write_formula_str(lxlsx_worksheet *self,
     lxlsx_cell *cell;
     char *formula_copy;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self)) {
+        err = _worksheet_edit_reject_format(format);
+        if (err)
+            return err;
+
+        if (!formula)
+            return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+        if (lxlsx_str_is_empty(formula))
+            return LXLSX_ERROR_PARAMETER_IS_EMPTY;
+
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+
+        return lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
+                                      row_num, col_num, formula, result);
+    }
 
     if (!formula)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
@@ -8091,6 +8177,9 @@ _store_array_formula(lxlsx_worksheet *self,
     char *formula_copy;
     char *range;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
 
     /* Swap last row/col with first row/col as necessary */
     if (first_row > last_row) {
@@ -8280,6 +8369,9 @@ lxlsx_worksheet_write_blank(lxlsx_worksheet *self,
     lxlsx_cell *cell;
     lxlsx_error err;
 
+    if (_worksheet_is_edit(self))
+        return format ? LXLSX_ERROR_FEATURE_NOT_SUPPORTED : LXLSX_NO_ERROR;
+
     /* Blank cells without formatting are ignored by Excel. */
     if (!format)
         return LXLSX_NO_ERROR;
@@ -8305,6 +8397,19 @@ lxlsx_worksheet_write_boolean(lxlsx_worksheet *self,
 {
     lxlsx_cell *cell;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self)) {
+        err = _worksheet_edit_reject_format(format);
+        if (err)
+            return err;
+
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+
+        return lxlsx_edit_set_boolean(self->edit_session, self->edit_sheet_name,
+                                      row_num, col_num, value);
+    }
 
     err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
     if (err)
@@ -8825,6 +8930,9 @@ lxlsx_worksheet_set_column_opt(lxlsx_worksheet *self,
     lxlsx_col_t col;
     lxlsx_error err;
 
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     if (user_options) {
         hidden = user_options->hidden;
         level = user_options->level;
@@ -8990,6 +9098,9 @@ lxlsx_worksheet_set_row_opt(lxlsx_worksheet *self,
     lxlsx_row *row;
     lxlsx_error err;
 
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     if (user_options) {
         hidden = user_options->hidden;
         level = user_options->level;
@@ -9087,6 +9198,9 @@ lxlsx_worksheet_merge_range(lxlsx_worksheet *self, lxlsx_row_t first_row,
     lxlsx_row_t tmp_row;
     lxlsx_col_t tmp_col;
     lxlsx_error err;
+
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
 
     /* Excel doesn't allow a single cell to be merged */
     if (first_row == last_row && first_col == last_col)
@@ -11769,4 +11883,2161 @@ lxlsx_worksheet_set_error_cell(lxlsx_worksheet *self,
         _new_error_cell(row_num, col_num, ref_id, object_props->format);
     _insert_cell(self, row_num, col_num, cell);
 
+}
+
+
+/****************************************************************************
+ *
+ * XLSX worksheet row/cell read support.
+ *
+ ****************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "xlsx_private.h"
+#include "xlsx_util.h"
+
+/* ------------------------------------------------------------------------- */
+/* Helpers                                                                   */
+/* ------------------------------------------------------------------------- */
+
+/* Excel serial date -> Unix timestamp.
+ * 1900 system: serial 1 == 1900-01-01, but Excel treats 1900 as a leap year
+ * (Lotus 1-2-3 bug), so we anchor at 1899-12-30 to keep all serials >= 61
+ * correct. Serials 0..59 inherit the historical Lotus interpretation.
+ * 1904 system: serial 0 == 1904-01-01. */
+int64_t lxlsx_reader_excel_serial_to_unix(double serial, int uses_1904)
+{
+    static const int64_t EPOCH_1900 = -2209161600LL; /* 1899-12-30T00:00:00Z */
+    static const int64_t EPOCH_1904 = -2082844800LL; /* 1904-01-01T00:00:00Z */
+    int64_t base = uses_1904 ? EPOCH_1904 : EPOCH_1900;
+    return base + (int64_t)(serial * 86400.0);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Cell type inference                                                       */
+/* ------------------------------------------------------------------------- */
+
+static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
+{
+    const lxlsx_reader_styles *st = ws->wb ? ws->wb->styles : NULL;
+    const lxlsx_reader_xf     *xf = NULL;
+    const char       *t  = ws->cell_t;
+
+    memset(out, 0, sizeof(*out));
+    out->row_num  = (lxlsx_row_t)ws->cell_row;
+    out->col_num  = (lxlsx_col_t)ws->cell_col;
+    out->style_id = ws->cell_style_id;
+    out->style_ref = ws->cell_style_id;
+    out->raw.ptr  = ws->cell_value;
+    out->raw.len  = ws->cell_value_len;
+
+    if (st) xf = lxlsx_reader_styles_get_xf(st, ws->cell_style_id);
+
+    /* Empty cell (no <v> and no inline string and no formula) */
+    if (!ws->cell_has_formula && !ws->cell_has_inline &&
+        ws->cell_value_len == 0) {
+        out->type = BLANK_CELL;
+        return;
+    }
+
+    if (ws->cell_has_formula) {
+        out->type = FORMULA_CELL;
+        out->value.formula.formula.ptr = ws->cell_formula;
+        out->value.formula.formula.len = ws->cell_formula_len;
+        out->value.formula.cached.ptr  = ws->cell_value;
+        out->value.formula.cached.len  = ws->cell_value_len;
+        out->value.formula.kind        = ws->cell_formula_kind;
+        out->value.formula.ref.ptr     = ws->cell_formula_ref[0]
+            ? ws->cell_formula_ref : NULL;
+        out->value.formula.ref.len     = ws->cell_formula_ref[0]
+            ? strlen(ws->cell_formula_ref) : 0;
+        out->value.formula.si          = ws->cell_formula_si;
+        out->value.formula.is_dynamic  = ws->cell_formula_is_dynamic;
+        return;
+    }
+
+    if (t[0] == 0 || strcmp(t, "n") == 0) {
+        if (xf && (xf->category == LXLSX_READER_FMT_CATEGORY_DATE ||
+                   xf->category == LXLSX_READER_FMT_CATEGORY_TIME ||
+                   xf->category == LXLSX_READER_FMT_CATEGORY_DATETIME)) {
+            double serial = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
+            out->type = DATETIME_CELL;
+            out->value.unix_timestamp =
+                lxlsx_reader_excel_serial_to_unix(serial,
+                                         ws->wb ? ws->wb->uses_1904 : 0);
+        } else {
+            out->type = NUMBER_CELL;
+            out->value.number = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
+        }
+        return;
+    }
+
+    if (strcmp(t, "s") == 0) {
+        uint32_t idx = ws->cell_value
+            ? (uint32_t)strtoul(ws->cell_value, NULL, 10) : 0;
+        const char *s = ws->wb && ws->wb->sst
+            ? lxlsx_reader_sst_get(ws->wb->sst, idx) : NULL;
+        out->type = STRING_CELL;
+        if (s) {
+            out->value.string.ptr = s;
+            out->value.string.len = strlen(s);
+        } else {
+            out->value.string.ptr = "";
+            out->value.string.len = 0;
+        }
+        return;
+    }
+
+    if (strcmp(t, "inlineStr") == 0) {
+        out->type = INLINE_STRING_CELL;
+        out->value.string.ptr = ws->cell_inline;
+        out->value.string.len = ws->cell_inline_len;
+        return;
+    }
+
+    if (strcmp(t, "str") == 0) {
+        out->type = STRING_CELL;
+        out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
+        out->value.string.len = ws->cell_value_len;
+        return;
+    }
+
+    if (strcmp(t, "b") == 0) {
+        out->type = BOOLEAN_CELL;
+        out->value.boolean = (ws->cell_value && ws->cell_value[0] == '1') ? 1 : 0;
+        return;
+    }
+
+    if (strcmp(t, "e") == 0) {
+        size_t n = ws->cell_value_len;
+        if (n >= sizeof(out->value.error_code))
+            n = sizeof(out->value.error_code) - 1;
+        out->type = ERROR_CELL;
+        if (ws->cell_value) memcpy(out->value.error_code, ws->cell_value, n);
+        out->value.error_code[n] = 0;
+        return;
+    }
+
+    /* Unknown 't': fall back to string. */
+    out->type = STRING_CELL;
+    out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
+    out->value.string.len = ws->cell_value_len;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Cell reset                                                                */
+/* ------------------------------------------------------------------------- */
+
+static void reset_cell(lxlsx_reader_worksheet *ws)
+{
+    ws->cell_t[0] = 0;
+    ws->cell_ref[0] = 0;
+    ws->cell_style_id = 0;
+    ws->cell_value_len = 0;
+    if (ws->cell_value) ws->cell_value[0] = 0;
+    ws->cell_formula_len = 0;
+    if (ws->cell_formula) ws->cell_formula[0] = 0;
+    ws->cell_inline_len = 0;
+    if (ws->cell_inline) ws->cell_inline[0] = 0;
+    ws->cell_has_formula = 0;
+    ws->cell_has_inline = 0;
+    ws->cell_row = 0;
+    ws->cell_col = 0;
+    ws->cell_formula_kind       = LXLSX_FORMULA_NORMAL;
+    ws->cell_formula_ref[0]     = 0;
+    ws->cell_formula_si         = -1;
+    ws->cell_formula_is_dynamic = 0;
+    /* Free any rich runs accumulated for the previous inline-string cell. */
+    if (ws->inline_runs) {
+        size_t i;
+        for (i = 0; i < ws->inline_runs_count; i++) {
+            free(ws->inline_runs[i].text);
+            free(ws->inline_runs[i].font_name);
+            free(ws->inline_runs[i].color);
+        }
+        ws->inline_runs_count = 0;
+    }
+    ws->inline_in_r = ws->inline_in_rpr = ws->inline_in_run_t = 0;
+    free(ws->inline_pending_text);     ws->inline_pending_text = NULL;
+    free(ws->inline_pending_font_name); ws->inline_pending_font_name = NULL;
+    free(ws->inline_pending_color);     ws->inline_pending_color = NULL;
+}
+
+/* ------------------------------------------------------------------------- */
+/* SAX dispatch                                                              */
+/* ------------------------------------------------------------------------- */
+
+static void deliver_cell(lxlsx_reader_worksheet *ws)
+{
+    if (ws->pull_mode == LXLSX_READER_WS_PULL_CELL) {
+        ws->pending_cell = 1;
+        lxlsx_reader_xml_pump_suspend(ws->pump);
+        return;
+    }
+    if (ws->user_cell_cb) {
+        lxlsx_cell c;
+        emit_cell(ws, &c);
+        if (ws->user_cell_cb(&c, ws->user_data) != 0) {
+            ws->callback_stop = 1;
+            lxlsx_reader_xml_pump_suspend(ws->pump);
+        }
+    }
+}
+
+static void deliver_row_end(lxlsx_reader_worksheet *ws)
+{
+    if (ws->pull_mode == LXLSX_READER_WS_PULL_CELL) {
+        /* No more cells in this row */
+        ws->pending_row_end = 1;
+        lxlsx_reader_xml_pump_suspend(ws->pump);
+        return;
+    }
+    if (ws->user_row_cb) {
+        if (ws->user_row_cb(ws->row_nr, ws->max_col_seen, ws->user_data) != 0) {
+            ws->callback_stop = 1;
+            lxlsx_reader_xml_pump_suspend(ws->pump);
+        }
+    }
+}
+
+static void on_start(void *ud, const char *name, const char **attrs)
+{
+    lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
+
+    if (ws->state == LXLSX_READER_WS_SKIP) {
+        ws->skip_depth++;
+        return;
+    }
+
+    switch (ws->state) {
+    case LXLSX_READER_WS_INIT:
+        if (lxlsx_reader_xml_name_eq(name, "worksheet")) ws->state = LXLSX_READER_WS_IN_WORKSHEET;
+        break;
+
+    case LXLSX_READER_WS_IN_WORKSHEET:
+        if (lxlsx_reader_xml_name_eq(name, "sheetData")) ws->state = LXLSX_READER_WS_IN_SHEETDATA;
+        break;
+
+    case LXLSX_READER_WS_IN_SHEETDATA:
+        if (lxlsx_reader_xml_name_eq(name, "row")) {
+            const char *r_attr = lxlsx_reader_xml_attr(attrs, "r");
+            const char *hidden = lxlsx_reader_xml_attr(attrs, "hidden");
+            ws->row_nr = r_attr ? (size_t)strtoul(r_attr, NULL, 10) : ws->row_nr + 1;
+            ws->row_hidden = (hidden && (strcmp(hidden, "1") == 0 ||
+                                         strcmp(hidden, "true") == 0));
+            ws->row_in_progress = 1;
+            ws->state = LXLSX_READER_WS_IN_ROW;
+
+            if (ws->row_hidden && (ws->flags & LXLSX_READER_SKIP_HIDDEN_ROWS)) {
+                /* skip the entire row content */
+                free(ws->skip_tag);
+                ws->skip_tag = strdup("row");
+                ws->state_before_skip = LXLSX_READER_WS_IN_SHEETDATA;
+                ws->state = LXLSX_READER_WS_SKIP;
+                ws->skip_depth = 1;
+                ws->row_in_progress = 0;
+                return;
+            }
+
+            if (ws->skip_rows_remaining > 0) {
+                ws->skip_rows_remaining--;
+                free(ws->skip_tag);
+                ws->skip_tag = strdup("row");
+                ws->state_before_skip = LXLSX_READER_WS_IN_SHEETDATA;
+                ws->state = LXLSX_READER_WS_SKIP;
+                ws->skip_depth = 1;
+                ws->row_in_progress = 0;
+                return;
+            }
+
+            if (ws->pull_mode == LXLSX_READER_WS_PULL_ROW) {
+                ws->pending_row_start = 1;
+                lxlsx_reader_xml_pump_suspend(ws->pump);
+            }
+        }
+        break;
+
+    case LXLSX_READER_WS_IN_ROW:
+        if (lxlsx_reader_xml_name_eq(name, "c")) {
+            const char *r_attr = lxlsx_reader_xml_attr(attrs, "r");
+            const char *t_attr = lxlsx_reader_xml_attr(attrs, "t");
+            const char *s_attr = lxlsx_reader_xml_attr(attrs, "s");
+
+            reset_cell(ws);
+            lxlsx_reader_copy_attr(ws->cell_ref, sizeof(ws->cell_ref), r_attr);
+            lxlsx_reader_copy_attr(ws->cell_t,   sizeof(ws->cell_t),   t_attr);
+            ws->cell_style_id = s_attr ? (uint32_t)strtoul(s_attr, NULL, 10) : 0;
+            if (r_attr) lxlsx_reader_parse_a1_ref(r_attr, &ws->cell_row, &ws->cell_col);
+            else { ws->cell_row = ws->row_nr; ws->cell_col = 0; }
+            if (ws->cell_col > ws->max_col_seen) ws->max_col_seen = ws->cell_col;
+
+            ws->state = LXLSX_READER_WS_IN_CELL;
+        }
+        break;
+
+    case LXLSX_READER_WS_IN_CELL:
+        if (lxlsx_reader_xml_name_eq(name, "v")) {
+            ws->state = LXLSX_READER_WS_IN_VALUE;
+        } else if (lxlsx_reader_xml_name_eq(name, "f")) {
+            const char *t_attr   = lxlsx_reader_xml_attr(attrs, "t");
+            const char *ref_attr = lxlsx_reader_xml_attr(attrs, "ref");
+            const char *si_attr  = lxlsx_reader_xml_attr(attrs, "si");
+            const char *aca_attr = lxlsx_reader_xml_attr(attrs, "aca");
+            ws->cell_has_formula = 1;
+            if (t_attr) {
+                if (strcmp(t_attr, "array") == 0)          ws->cell_formula_kind = LXLSX_FORMULA_ARRAY;
+                else if (strcmp(t_attr, "dataTable") == 0) ws->cell_formula_kind = LXLSX_FORMULA_DATATABLE;
+                else if (strcmp(t_attr, "shared") == 0)    ws->cell_formula_kind = LXLSX_FORMULA_SHARED;
+                else                                        ws->cell_formula_kind = LXLSX_FORMULA_NORMAL;
+            }
+            if (ref_attr) lxlsx_reader_copy_attr(ws->cell_formula_ref,
+                                                 sizeof(ws->cell_formula_ref), ref_attr);
+            if (si_attr) ws->cell_formula_si = (int)strtol(si_attr, NULL, 10);
+            if (aca_attr && (strcmp(aca_attr, "1") == 0 ||
+                             strcmp(aca_attr, "true") == 0))
+                ws->cell_formula_is_dynamic = 1;
+            ws->state = LXLSX_READER_WS_IN_FORMULA;
+        } else if (lxlsx_reader_xml_name_eq(name, "is")) {
+            ws->cell_has_inline = 1;
+            ws->state = LXLSX_READER_WS_IN_INLINE_STR;
+        } else {
+            /* Skip unknown sub-elements (extLst, etc.) */
+            free(ws->skip_tag);
+            ws->skip_tag = strdup(name);
+            ws->state_before_skip = LXLSX_READER_WS_IN_CELL;
+            ws->state = LXLSX_READER_WS_SKIP;
+            ws->skip_depth = 1;
+        }
+        break;
+
+    case LXLSX_READER_WS_IN_INLINE_STR:
+        if (lxlsx_reader_xml_name_eq(name, "t")) {
+            ws->state = LXLSX_READER_WS_IN_INLINE_STR_T;
+        } else if (lxlsx_reader_xml_name_eq(name, "r")) {
+            /* Begin a new rich-text run. */
+            ws->inline_in_r = 1;
+            free(ws->inline_pending_text);     ws->inline_pending_text = NULL;
+            free(ws->inline_pending_font_name); ws->inline_pending_font_name = NULL;
+            free(ws->inline_pending_color);     ws->inline_pending_color = NULL;
+            ws->inline_pending_font_size = 0;
+            ws->inline_pending_bold = ws->inline_pending_italic = 0;
+            ws->inline_pending_strike = ws->inline_pending_underline = 0;
+            ws->inline_run_text_len = 0;
+            if (ws->inline_run_text_buf) ws->inline_run_text_buf[0] = 0;
+        } else {
+            free(ws->skip_tag);
+            ws->skip_tag = strdup(name);
+            ws->state_before_skip = LXLSX_READER_WS_IN_INLINE_STR;
+            ws->state = LXLSX_READER_WS_SKIP;
+            ws->skip_depth = 1;
+        }
+        break;
+
+    default:
+        /* Inline-string rich runs sit on top of the existing FSM. We don't
+         * dedicate a new state because the structure is local and small. */
+        if (ws->state == LXLSX_READER_WS_IN_INLINE_STR && ws->inline_in_r) {
+            /* (handled above) */
+        }
+        break;
+    }
+
+    /* Out-of-band: <r>/<rPr>/<t>/<rPr children> handling for inline rich runs. */
+    if (ws->inline_in_r) {
+        if (lxlsx_reader_xml_name_eq(name, "rPr")) {
+            ws->inline_in_rpr = 1;
+        } else if (ws->inline_in_rpr) {
+            const char *v;
+            if (lxlsx_reader_xml_name_eq(name, "rFont")) {
+                if ((v = lxlsx_reader_xml_attr(attrs, "val"))) {
+                    free(ws->inline_pending_font_name);
+                    ws->inline_pending_font_name = strdup(v);
+                }
+            } else if (lxlsx_reader_xml_name_eq(name, "sz")) {
+                if ((v = lxlsx_reader_xml_attr(attrs, "val"))) ws->inline_pending_font_size = strtod(v, NULL);
+            } else if (lxlsx_reader_xml_name_eq(name, "b")) {
+                v = lxlsx_reader_xml_attr(attrs, "val");
+                ws->inline_pending_bold = !v || strcmp(v, "0") != 0;
+            } else if (lxlsx_reader_xml_name_eq(name, "i")) {
+                v = lxlsx_reader_xml_attr(attrs, "val");
+                ws->inline_pending_italic = !v || strcmp(v, "0") != 0;
+            } else if (lxlsx_reader_xml_name_eq(name, "strike")) {
+                v = lxlsx_reader_xml_attr(attrs, "val");
+                ws->inline_pending_strike = !v || strcmp(v, "0") != 0;
+            } else if (lxlsx_reader_xml_name_eq(name, "u")) {
+                v = lxlsx_reader_xml_attr(attrs, "val");
+                if (!v || strcmp(v, "single") == 0)             ws->inline_pending_underline = 1;
+                else if (strcmp(v, "double") == 0)              ws->inline_pending_underline = 2;
+                else if (strcmp(v, "singleAccounting") == 0)    ws->inline_pending_underline = 3;
+                else if (strcmp(v, "doubleAccounting") == 0)    ws->inline_pending_underline = 4;
+            } else if (lxlsx_reader_xml_name_eq(name, "color")) {
+                if ((v = lxlsx_reader_xml_attr(attrs, "rgb"))) {
+                    free(ws->inline_pending_color);
+                    ws->inline_pending_color = strdup(v);
+                }
+            }
+        } else if (lxlsx_reader_xml_name_eq(name, "t")) {
+            ws->inline_in_run_t = 1;
+        }
+    }
+}
+
+static void on_text(void *ud, const char *text, int len)
+{
+    lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
+    if (len <= 0) return;
+
+    switch (ws->state) {
+    case LXLSX_READER_WS_IN_VALUE:
+        lxlsx_reader_buf_append(&ws->cell_value, &ws->cell_value_len,
+                                &ws->cell_value_cap, text, (size_t)len);
+        break;
+    case LXLSX_READER_WS_IN_FORMULA:
+        lxlsx_reader_buf_append(&ws->cell_formula, &ws->cell_formula_len,
+                                &ws->cell_formula_cap, text, (size_t)len);
+        break;
+    case LXLSX_READER_WS_IN_INLINE_STR_T:
+        lxlsx_reader_buf_append(&ws->cell_inline, &ws->cell_inline_len,
+                                &ws->cell_inline_cap, text, (size_t)len);
+        /* Fall-through-style: when this <t> sits inside an <r>, also feed
+         * the per-run text accumulator. */
+        if (ws->inline_in_run_t) {
+            lxlsx_reader_buf_append(&ws->inline_run_text_buf,
+                                    &ws->inline_run_text_len,
+                                    &ws->inline_run_text_cap,
+                                    text, (size_t)len);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+static void on_end(void *ud, const char *name)
+{
+    lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ud;
+
+    if (ws->state == LXLSX_READER_WS_SKIP) {
+        ws->skip_depth--;
+        if (ws->skip_depth == 0 && ws->skip_tag &&
+            lxlsx_reader_xml_name_eq(name, ws->skip_tag)) {
+            free(ws->skip_tag);
+            ws->skip_tag = NULL;
+            ws->state = ws->state_before_skip;
+            /* For row-level skips, transition out the same way a real
+             * </row> would (back to IN_SHEETDATA). */
+        }
+        return;
+    }
+
+    /* Out-of-band: rich-text run end transitions for inline strings. */
+    if (ws->inline_in_run_t && lxlsx_reader_xml_name_eq(name, "t")) {
+        ws->inline_in_run_t = 0;
+    } else if (ws->inline_in_rpr && lxlsx_reader_xml_name_eq(name, "rPr")) {
+        ws->inline_in_rpr = 0;
+    } else if (ws->inline_in_r && lxlsx_reader_xml_name_eq(name, "r")) {
+        /* Commit run to inline_runs[]. */
+        if (ws->inline_runs_count >= ws->inline_runs_cap) {
+            size_t nc = ws->inline_runs_cap ? ws->inline_runs_cap * 2 : 4;
+            void *nb = realloc(ws->inline_runs, nc * sizeof(*ws->inline_runs));
+            if (nb) {
+                ws->inline_runs = nb;
+                ws->inline_runs_cap = nc;
+            }
+        }
+        if (ws->inline_runs_count < ws->inline_runs_cap) {
+            ws->inline_runs[ws->inline_runs_count].text =
+                ws->inline_run_text_len > 0 ? strdup(ws->inline_run_text_buf) : strdup("");
+            ws->inline_runs[ws->inline_runs_count].font_name = ws->inline_pending_font_name;
+            ws->inline_runs[ws->inline_runs_count].color     = ws->inline_pending_color;
+            ws->inline_runs[ws->inline_runs_count].font_size = ws->inline_pending_font_size;
+            ws->inline_runs[ws->inline_runs_count].bold      = ws->inline_pending_bold;
+            ws->inline_runs[ws->inline_runs_count].italic    = ws->inline_pending_italic;
+            ws->inline_runs[ws->inline_runs_count].strike    = ws->inline_pending_strike;
+            ws->inline_runs[ws->inline_runs_count].underline = ws->inline_pending_underline;
+            ws->inline_runs_count++;
+            /* The pending struct's owned strings are now owned by inline_runs. */
+            ws->inline_pending_font_name = NULL;
+            ws->inline_pending_color     = NULL;
+        }
+        ws->inline_in_r = 0;
+    }
+
+    switch (ws->state) {
+    case LXLSX_READER_WS_IN_VALUE:
+        if (lxlsx_reader_xml_name_eq(name, "v")) ws->state = LXLSX_READER_WS_IN_CELL;
+        break;
+    case LXLSX_READER_WS_IN_FORMULA:
+        if (lxlsx_reader_xml_name_eq(name, "f")) ws->state = LXLSX_READER_WS_IN_CELL;
+        break;
+    case LXLSX_READER_WS_IN_INLINE_STR_T:
+        if (lxlsx_reader_xml_name_eq(name, "t")) ws->state = LXLSX_READER_WS_IN_INLINE_STR;
+        break;
+    case LXLSX_READER_WS_IN_INLINE_STR:
+        if (lxlsx_reader_xml_name_eq(name, "is")) ws->state = LXLSX_READER_WS_IN_CELL;
+        break;
+    case LXLSX_READER_WS_IN_CELL:
+        if (lxlsx_reader_xml_name_eq(name, "c")) {
+            ws->state = LXLSX_READER_WS_IN_ROW;
+            deliver_cell(ws);
+        }
+        break;
+    case LXLSX_READER_WS_IN_ROW:
+        if (lxlsx_reader_xml_name_eq(name, "row")) {
+            ws->state = LXLSX_READER_WS_IN_SHEETDATA;
+            ws->row_in_progress = 0;
+            deliver_row_end(ws);
+        }
+        break;
+    case LXLSX_READER_WS_IN_SHEETDATA:
+        if (lxlsx_reader_xml_name_eq(name, "sheetData")) ws->state = LXLSX_READER_WS_IN_WORKSHEET;
+        break;
+    case LXLSX_READER_WS_IN_WORKSHEET:
+        if (lxlsx_reader_xml_name_eq(name, "worksheet")) {
+            ws->state = LXLSX_READER_WS_INIT;
+            ws->eof   = 1;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Open / close                                                              */
+/* ------------------------------------------------------------------------- */
+
+static lxlsx_reader_error open_internal(lxlsx_reader_workbook *wb, const char *target,
+                               uint32_t flags, lxlsx_reader_worksheet **out)
+{
+    lxlsx_reader_worksheet *ws;
+    if (!wb || !target || !out) return LXLSX_READER_ERROR_NULL_PARAMETER;
+
+    /* Validate the entry exists up front (cheap locate, no open) so that a
+     * bad path still fails at open time. The data stream and metadata are
+     * loaded lazily — see ensure_data_open / lxlsx_reader_worksheet_ensure_meta. */
+    if (!lxlsx_reader_zip_entry_exists(wb->zip, target)) {
+        return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
+
+    ws = (lxlsx_reader_worksheet *)calloc(1, sizeof(*ws));
+    if (!ws) return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+
+    ws->wb          = wb;
+    ws->flags       = flags;
+    ws->state       = LXLSX_READER_WS_INIT;
+    ws->target_path = strdup(target);
+    if (!ws->target_path) { free(ws); return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED; }
+
+    *out = ws;
+    return LXLSX_READER_NO_ERROR;
+}
+
+/* Lazily load worksheet metadata. minizip allows only one open entry at a
+ * time, so the metadata pass cannot run while the data stream holds the
+ * entry. If data is mid-stream we leave metadata unloaded (accessors return
+ * empty); callers that need metadata during reads must trigger a load before
+ * the first data read. When the data pump has reached EOF we may safely
+ * reclaim the entry. */
+lxlsx_reader_error lxlsx_reader_worksheet_ensure_meta(const lxlsx_reader_worksheet *ws_c)
+{
+    lxlsx_reader_worksheet *ws = (lxlsx_reader_worksheet *)ws_c;
+    lxlsx_reader_error      rc;
+
+    if (!ws) return LXLSX_READER_ERROR_NULL_PARAMETER;
+    if (ws->meta_loaded) return LXLSX_READER_NO_ERROR;
+
+    /* Data stream active and not exhausted: loading now would require
+     * tearing down the pump mid-row, losing unread cells. Decline; metadata
+     * accessors will see an empty cache. */
+    if (ws->data_opened && ws->pump && !lxlsx_reader_xml_pump_is_eof(ws->pump)) {
+        return LXLSX_READER_NO_ERROR;
+    }
+
+    /* Reclaim the entry if the data pump is done (or never started). */
+    if (ws->data_opened) {
+        if (ws->pump) { lxlsx_reader_xml_pump_destroy(ws->pump); ws->pump = NULL; }
+        if (ws->zf)   { lxlsx_reader_zip_close_entry(ws->zf);    ws->zf = NULL; }
+        ws->data_opened = 0;
+    }
+
+    rc = lxlsx_reader_worksheet_meta_load(ws);
+    if (rc != LXLSX_READER_NO_ERROR) return rc;
+    ws->meta_loaded = 1;
+    return LXLSX_READER_NO_ERROR;
+}
+
+/* Open the data entry + pump on first use. Callers must route every data
+ * read through this so the entry is ready. */
+lxlsx_reader_error lxlsx_reader_worksheet_ensure_data_open(lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return LXLSX_READER_ERROR_NULL_PARAMETER;
+    if (ws->data_opened) return LXLSX_READER_NO_ERROR;
+
+    /* Metadata must be loaded before the data entry opens. minizip allows
+     * only one active entry per handle, so loading it later while rows are
+     * mid-stream would either fail silently or require discarding unread
+     * cells. DEFER_METADATA keeps the old pure-streaming behaviour, except
+     * merge-follow still needs metadata to produce correct row data. */
+    if (!(ws->flags & LXLSX_READER_DEFER_METADATA) ||
+        (ws->flags & LXLSX_READER_SKIP_MERGED_FOLLOW)) {
+        lxlsx_reader_error rc = lxlsx_reader_worksheet_ensure_meta(ws);
+        if (rc != LXLSX_READER_NO_ERROR) return rc;
+    }
+
+    ws->zf = lxlsx_reader_zip_open_entry(ws->wb->zip, ws->target_path);
+    if (!ws->zf) return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+
+    ws->pump = lxlsx_reader_xml_pump_create_zip_file(ws->zf);
+    if (!ws->pump) {
+        lxlsx_reader_zip_close_entry(ws->zf);
+        ws->zf = NULL;
+        return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    lxlsx_reader_xml_pump_set_handlers(ws->pump, on_start, on_end, on_text, ws);
+    ws->data_opened = 1;
+    return LXLSX_READER_NO_ERROR;
+}
+
+lxlsx_reader_error lxlsx_reader_worksheet_open_internal(lxlsx_reader_workbook *wb, const char *target,
+                                      uint32_t flags, lxlsx_reader_worksheet **out)
+{
+    return open_internal(wb, target, flags, out);
+}
+
+void lxlsx_reader_worksheet_close(lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return;
+    if (ws->pump) lxlsx_reader_xml_pump_destroy(ws->pump);
+    if (ws->zf)   lxlsx_reader_zip_close_entry(ws->zf);
+    lxlsx_reader_worksheet_meta_free(&ws->meta);
+    free(ws->merge_order);
+    free(ws->cell_value);
+    free(ws->cell_formula);
+    free(ws->cell_inline);
+    free(ws->skip_tag);
+    free(ws->target_path);
+    /* Inline rich-text run state. */
+    if (ws->inline_runs) {
+        size_t i;
+        for (i = 0; i < ws->inline_runs_count; i++) {
+            free(ws->inline_runs[i].text);
+            free(ws->inline_runs[i].font_name);
+            free(ws->inline_runs[i].color);
+        }
+        free(ws->inline_runs);
+    }
+    free(ws->inline_run_text_buf);
+    free(ws->inline_pending_text);
+    free(ws->inline_pending_font_name);
+    free(ws->inline_pending_color);
+    free(ws);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Pull mode                                                                 */
+/* ------------------------------------------------------------------------- */
+
+static lxlsx_reader_error drive(lxlsx_reader_worksheet *ws)
+{
+    lxlsx_reader_error rc;
+    if (lxlsx_reader_xml_pump_is_eof(ws->pump) && !lxlsx_reader_xml_pump_is_suspended(ws->pump)) {
+        return LXLSX_READER_ERROR_END_OF_DATA;
+    }
+    if (lxlsx_reader_xml_pump_is_suspended(ws->pump)) {
+        rc = lxlsx_reader_xml_pump_resume(ws->pump);
+    } else {
+        rc = lxlsx_reader_xml_pump_run(ws->pump);
+    }
+    return rc;
+}
+
+lxlsx_reader_error lxlsx_reader_worksheet_next_row(lxlsx_reader_worksheet *ws)
+{
+    lxlsx_reader_error rc;
+    if (!ws) return LXLSX_READER_ERROR_NULL_PARAMETER;
+
+    rc = lxlsx_reader_worksheet_ensure_data_open(ws);
+    if (rc != LXLSX_READER_NO_ERROR) return rc;
+
+    /* Drain anything left from a previous row by calling next_cell until it
+     * returns END_OF_DATA. next_cell uses the suspend mechanism, so the pump
+     * stops cleanly at the </row> boundary instead of running into the next
+     * row (which would steal it from this consumer). */
+    if (ws->row_in_progress) {
+        lxlsx_cell dummy;
+        while (lxlsx_reader_worksheet_next_cell(ws, &dummy) == LXLSX_READER_NO_ERROR) ;
+    }
+
+    ws->pending_row_start = 0;
+    ws->pending_row_end   = 0;
+    ws->pending_cell      = 0;
+    ws->pull_mode         = LXLSX_READER_WS_PULL_ROW;
+
+    while (!ws->pending_row_start && !ws->eof) {
+        rc = drive(ws);
+        if (rc != LXLSX_READER_NO_ERROR) {
+            ws->pull_mode = LXLSX_READER_WS_PULL_NONE;
+            return rc;
+        }
+        if (!ws->pending_row_start && lxlsx_reader_xml_pump_is_eof(ws->pump)) break;
+    }
+
+    ws->pull_mode = LXLSX_READER_WS_PULL_NONE;
+    if (!ws->pending_row_start) return LXLSX_READER_ERROR_END_OF_DATA;
+
+    ws->pending_row_start = 0;
+    ws->max_col_seen = 0;
+    return LXLSX_READER_NO_ERROR;
+}
+
+lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
+{
+    if (!ws || !out) return LXLSX_READER_ERROR_NULL_PARAMETER;
+    if (!ws->row_in_progress) return LXLSX_READER_ERROR_END_OF_DATA;
+
+    ws->pending_row_end = 0;
+    ws->pending_cell    = 0;
+    ws->pull_mode       = LXLSX_READER_WS_PULL_CELL;
+
+    while (!ws->pending_cell && !ws->pending_row_end && !ws->eof) {
+        lxlsx_reader_error rc = drive(ws);
+        if (rc != LXLSX_READER_NO_ERROR) {
+            ws->pull_mode = LXLSX_READER_WS_PULL_NONE;
+            return rc;
+        }
+        if (lxlsx_reader_xml_pump_is_eof(ws->pump) && !ws->pending_cell) break;
+    }
+
+    ws->pull_mode = LXLSX_READER_WS_PULL_NONE;
+
+    if (ws->pending_cell) {
+        ws->pending_cell = 0;
+        emit_cell(ws, out);
+        return LXLSX_READER_NO_ERROR;
+    }
+    /* row ended */
+    return LXLSX_READER_ERROR_END_OF_DATA;
+}
+
+size_t lxlsx_reader_worksheet_current_row(const lxlsx_reader_worksheet *ws)
+{
+    return ws ? ws->row_nr : 0;
+}
+
+size_t lxlsx_reader_worksheet_max_column_seen(const lxlsx_reader_worksheet *ws)
+{
+    return ws ? ws->max_col_seen : 0;
+}
+
+uint32_t lxlsx_reader_worksheet_flags(const lxlsx_reader_worksheet *ws)
+{
+    return ws ? ws->flags : 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Push (callback) mode                                                      */
+/* ------------------------------------------------------------------------- */
+
+lxlsx_reader_error lxlsx_reader_worksheet_process(lxlsx_reader_worksheet *ws,
+                                lxlsx_reader_cell_cb    cell_cb,
+                                lxlsx_reader_row_end_cb row_cb,
+                                void          *userdata)
+{
+    lxlsx_reader_error rc;
+    if (!ws) return LXLSX_READER_ERROR_NULL_PARAMETER;
+
+    rc = lxlsx_reader_worksheet_ensure_data_open(ws);
+    if (rc != LXLSX_READER_NO_ERROR) return rc;
+
+    ws->pull_mode      = LXLSX_READER_WS_PULL_NONE;
+    ws->user_cell_cb   = cell_cb;
+    ws->user_row_cb    = row_cb;
+    ws->user_data      = userdata;
+    ws->callback_stop  = 0;
+
+    while (!ws->eof && !ws->callback_stop) {
+        rc = drive(ws);
+        if (rc != LXLSX_READER_NO_ERROR) {
+            ws->user_cell_cb = NULL;
+            ws->user_row_cb  = NULL;
+            return rc;
+        }
+        if (lxlsx_reader_xml_pump_is_eof(ws->pump)) break;
+    }
+    ws->user_cell_cb = NULL;
+    ws->user_row_cb  = NULL;
+    return LXLSX_READER_NO_ERROR;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Skip                                                                      */
+/* ------------------------------------------------------------------------- */
+
+lxlsx_reader_error lxlsx_reader_worksheet_skip_rows(lxlsx_reader_worksheet *ws, size_t n)
+{
+    if (!ws) return LXLSX_READER_ERROR_NULL_PARAMETER;
+    ws->skip_rows_remaining += n;
+    return LXLSX_READER_NO_ERROR;
+}
+
+
+/****************************************************************************
+ *
+ * XLSX worksheet metadata read support.
+ *
+ ****************************************************************************/
+
+/*
+ * Phase-1 sheet metadata parser.
+ *
+ * The libxlsx reader streaming pump in worksheet.c is single-purpose: it walks
+ * <sheetData> and emits cells. But several worksheet-level elements
+ * (<mergeCells>, <hyperlinks>, <sheetProtection>, <cols>, <sheetFormatPr>,
+ * plus row attrs on <row> elements themselves) live as siblings of
+ * <sheetData> and may appear *after* it in the XML stream. They're also too
+ * small to justify on-demand re-parsing.
+ *
+ * This file implements an eager scan at sheet open: open a fresh entry,
+ * skip <c> children inside <sheetData> (still tokenising the bytes — minizip
+ * has to decompress them anyway), and capture every metadata element into
+ * the worksheet's lxlsx_reader_worksheet_meta cache. Accessors below read from this
+ * cache.
+ *
+ * Hyperlinks may carry r:id pointing at xl/worksheets/_rels/sheetN.xml.rels;
+ * the rels file is parsed separately to resolve those into absolute URLs.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "xlsx_private.h"
+#include "xlsx_util.h"
+
+/* ------------------------------------------------------------------------- */
+/* Helpers                                                                   */
+/* ------------------------------------------------------------------------- */
+
+static int attr_truthy(const char *v)
+{
+    if (!v) return 0;
+    return (strcmp(v, "1") == 0 || strcmp(v, "true") == 0) ? 1 : 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Storage helpers                                                           */
+/* ------------------------------------------------------------------------- */
+
+static int meta_push_merge(lxlsx_reader_worksheet_meta *m, lxlsx_reader_range r)
+{
+    if (m->merges_count >= m->merges_cap) {
+        size_t nc = m->merges_cap ? m->merges_cap * 2 : 8;
+        lxlsx_reader_range *nb = (lxlsx_reader_range *)realloc(m->merges, nc * sizeof(*nb));
+        if (!nb) return -1;
+        m->merges = nb;
+        m->merges_cap = nc;
+    }
+    m->merges[m->merges_count++] = r;
+    return 0;
+}
+
+static int meta_push_hyperlink(lxlsx_reader_worksheet_meta *m,
+                               lxlsx_reader_range r,
+                               const char *url, const char *location,
+                               const char *display, const char *tooltip)
+{
+    struct lxlsx_reader_hyperlink_owned *h;
+    if (m->hyperlinks_count >= m->hyperlinks_cap) {
+        size_t nc = m->hyperlinks_cap ? m->hyperlinks_cap * 2 : 8;
+        struct lxlsx_reader_hyperlink_owned *nb = (struct lxlsx_reader_hyperlink_owned *)realloc(
+            m->hyperlinks, nc * sizeof(*nb));
+        if (!nb) return -1;
+        m->hyperlinks = nb;
+        m->hyperlinks_cap = nc;
+    }
+    h = &m->hyperlinks[m->hyperlinks_count++];
+    h->range    = r;
+    h->url      = url      ? strdup(url)      : NULL;
+    h->location = location ? strdup(location) : NULL;
+    h->display  = display  ? strdup(display)  : NULL;
+    h->tooltip  = tooltip  ? strdup(tooltip)  : NULL;
+    return 0;
+}
+
+static struct lxlsx_reader_row_meta *meta_get_or_make_row(lxlsx_reader_worksheet_meta *m, size_t row)
+{
+    /* Rows arrive in order; a quick check on the tail is enough. */
+    if (m->rows_count > 0 && m->rows[m->rows_count - 1].row == row) {
+        return &m->rows[m->rows_count - 1];
+    }
+    if (m->rows_count >= m->rows_cap) {
+        size_t nc = m->rows_cap ? m->rows_cap * 2 : 16;
+        struct lxlsx_reader_row_meta *nb = (struct lxlsx_reader_row_meta *)realloc(
+            m->rows, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->rows = nb;
+        m->rows_cap = nc;
+    }
+    {
+        struct lxlsx_reader_row_meta *r = &m->rows[m->rows_count++];
+        memset(r, 0, sizeof(*r));
+        r->row = row;
+        return r;
+    }
+}
+
+static struct lxlsx_reader_col_meta *meta_push_col(lxlsx_reader_worksheet_meta *m)
+{
+    if (m->cols_count >= m->cols_cap) {
+        size_t nc = m->cols_cap ? m->cols_cap * 2 : 8;
+        struct lxlsx_reader_col_meta *nb = (struct lxlsx_reader_col_meta *)realloc(
+            m->cols, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->cols = nb;
+        m->cols_cap = nc;
+    }
+    {
+        struct lxlsx_reader_col_meta *c = &m->cols[m->cols_count++];
+        memset(c, 0, sizeof(*c));
+        return c;
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Metadata SAX                                                              */
+/* ------------------------------------------------------------------------- */
+
+typedef enum {
+    M_INIT = 0,
+    M_IN_WORKSHEET,
+    M_IN_SHEETDATA,
+    M_IN_ROW,
+    M_IN_COLS,
+    M_IN_MERGECELLS,
+    M_IN_HYPERLINKS,
+    M_IN_DATAVALIDATIONS,
+    M_IN_DATAVALIDATION,    /* parsing a single <dataValidation>; capturing
+                              <formula1>/<formula2> children */
+    M_IN_DV_FORMULA1,
+    M_IN_DV_FORMULA2,
+    M_IN_AUTOFILTER,
+    M_IN_FILTERCOLUMN,
+    M_IN_FILTERS,           /* <filters> inside a <filterColumn> */
+    /* §8.2.5 page setup — text-collecting states for header/footer. */
+    M_IN_HEADERFOOTER,
+    M_IN_ODD_HEADER,
+    M_IN_ODD_FOOTER,
+    M_IN_EVEN_HEADER,
+    M_IN_EVEN_FOOTER,
+    M_IN_FIRST_HEADER,
+    M_IN_FIRST_FOOTER,
+    M_IN_CONDFMT,
+    M_IN_CFRULE,
+    M_IN_CF_FORMULA,
+    M_SKIP
+} m_state;
+
+typedef struct {
+    lxlsx_reader_worksheet_meta *m;
+    const lxlsx_reader_rel_map *rels;
+    m_state             state;
+    m_state             state_before_skip;
+    int                 skip_depth;
+    char               *skip_tag;
+    /* DV text accumulator — ECMA-376 puts formulas inside <formula1>/<formula2>
+     * as text children, so we collect them like definedName text. */
+    char               *txt;
+    size_t              txt_len;
+    size_t              txt_cap;
+} m_ctx;
+
+/* DV/filter helpers — append entries. */
+
+static struct lxlsx_reader_dv_owned *meta_push_dv(lxlsx_reader_worksheet_meta *m)
+{
+    if (m->dvs_count >= m->dvs_cap) {
+        size_t nc = m->dvs_cap ? m->dvs_cap * 2 : 4;
+        struct lxlsx_reader_dv_owned *nb = (struct lxlsx_reader_dv_owned *)realloc(
+            m->dvs, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->dvs = nb;
+        m->dvs_cap = nc;
+    }
+    {
+        struct lxlsx_reader_dv_owned *d = &m->dvs[m->dvs_count++];
+        memset(d, 0, sizeof(*d));
+        return d;
+    }
+}
+
+static struct lxlsx_reader_filter_column_owned *meta_push_filter_column(lxlsx_reader_worksheet_meta *m)
+{
+    if (m->filter_columns_count >= m->filter_columns_cap) {
+        size_t nc = m->filter_columns_cap ? m->filter_columns_cap * 2 : 4;
+        struct lxlsx_reader_filter_column_owned *nb = (struct lxlsx_reader_filter_column_owned *)realloc(
+            m->filter_columns, nc * sizeof(*nb));
+        if (!nb) return NULL;
+        m->filter_columns = nb;
+        m->filter_columns_cap = nc;
+    }
+    {
+        struct lxlsx_reader_filter_column_owned *fc = &m->filter_columns[m->filter_columns_count++];
+        memset(fc, 0, sizeof(*fc));
+        return fc;
+    }
+}
+
+/* For LXLSX_READER_FILTER_LIST: append to a NULL-terminated owned values array. */
+static void filter_column_push_value(struct lxlsx_reader_filter_column_owned *fc, const char *val)
+{
+    size_t n = 0;
+    char **nv;
+    if (!val) return;
+    if (fc->values) while (fc->values[n]) n++;
+    nv = (char **)realloc(fc->values, (n + 2) * sizeof(*nv));
+    if (!nv) return;
+    nv[n]     = strdup(val);
+    nv[n + 1] = NULL;
+    fc->values = nv;
+}
+
+static void enter_skip(m_ctx *c, const char *tag)
+{
+    free(c->skip_tag);
+    c->skip_tag = strdup(tag);
+    c->state_before_skip = c->state;
+    c->state = M_SKIP;
+    c->skip_depth = 1;
+}
+
+static void m_on_start(void *ud, const char *name, const char **attrs)
+{
+    m_ctx *c = (m_ctx *)ud;
+
+    if (c->state == M_SKIP) { c->skip_depth++; return; }
+
+    switch (c->state) {
+    case M_INIT:
+        if (lxlsx_reader_xml_name_eq(name, "worksheet")) c->state = M_IN_WORKSHEET;
+        break;
+
+    case M_IN_WORKSHEET:
+        if (lxlsx_reader_xml_name_eq(name, "sheetData")) {
+            c->state = M_IN_SHEETDATA;
+        } else if (lxlsx_reader_xml_name_eq(name, "sheetFormatPr")) {
+            const char *drh = lxlsx_reader_xml_attr(attrs, "defaultRowHeight");
+            const char *dcw = lxlsx_reader_xml_attr(attrs, "defaultColWidth");
+            if (drh) {
+                c->m->has_default_row_height = 1;
+                c->m->default_row_height = strtod(drh, NULL);
+            }
+            if (dcw) {
+                c->m->has_default_col_width = 1;
+                c->m->default_col_width = strtod(dcw, NULL);
+            }
+            /* element is empty / self-closing in practice — stay in WORKSHEET */
+        } else if (lxlsx_reader_xml_name_eq(name, "cols")) {
+            c->state = M_IN_COLS;
+        } else if (lxlsx_reader_xml_name_eq(name, "mergeCells")) {
+            c->state = M_IN_MERGECELLS;
+        } else if (lxlsx_reader_xml_name_eq(name, "hyperlinks")) {
+            c->state = M_IN_HYPERLINKS;
+        } else if (lxlsx_reader_xml_name_eq(name, "dataValidations")) {
+            c->state = M_IN_DATAVALIDATIONS;
+        } else if (lxlsx_reader_xml_name_eq(name, "autoFilter")) {
+            const char *ref = lxlsx_reader_xml_attr(attrs, "ref");
+            c->m->autofilter_present = 1;
+            if (ref) {
+                free(c->m->autofilter_range);
+                c->m->autofilter_range = strdup(ref);
+            }
+            c->state = M_IN_AUTOFILTER;
+        } else if (lxlsx_reader_xml_name_eq(name, "pageMargins")) {
+            const char *l = lxlsx_reader_xml_attr(attrs, "left");
+            const char *r = lxlsx_reader_xml_attr(attrs, "right");
+            const char *t = lxlsx_reader_xml_attr(attrs, "top");
+            const char *b = lxlsx_reader_xml_attr(attrs, "bottom");
+            const char *h = lxlsx_reader_xml_attr(attrs, "header");
+            const char *f = lxlsx_reader_xml_attr(attrs, "footer");
+            c->m->page_has_margins = 1;
+            if (l) c->m->page_margin_left   = strtod(l, NULL);
+            if (r) c->m->page_margin_right  = strtod(r, NULL);
+            if (t) c->m->page_margin_top    = strtod(t, NULL);
+            if (b) c->m->page_margin_bottom = strtod(b, NULL);
+            if (h) c->m->page_margin_header = strtod(h, NULL);
+            if (f) c->m->page_margin_footer = strtod(f, NULL);
+        } else if (lxlsx_reader_xml_name_eq(name, "pageSetup")) {
+            const char *v;
+            c->m->page_has_setup = 1;
+            if ((v = lxlsx_reader_xml_attr(attrs, "paperSize")))    c->m->page_paper_size    = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "fitToWidth")))   c->m->page_fit_to_width  = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "fitToHeight")))  c->m->page_fit_to_height = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "scale")))        c->m->page_scale         = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "orientation"))
+                && strcmp(v, "landscape") == 0)            c->m->page_orientation_landscape = 1;
+            if ((v = lxlsx_reader_xml_attr(attrs, "horizontalDpi")))   c->m->page_horizontal_dpi = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "verticalDpi")))     c->m->page_vertical_dpi   = (int)strtol(v, NULL, 10);
+            if ((v = lxlsx_reader_xml_attr(attrs, "firstPageNumber"))) c->m->page_first_page_number = (int)strtol(v, NULL, 10);
+            c->m->page_use_first_page_number = attr_truthy(lxlsx_reader_xml_attr(attrs, "useFirstPageNumber"));
+        } else if (lxlsx_reader_xml_name_eq(name, "printOptions")) {
+            c->m->page_print_h_centered  = attr_truthy(lxlsx_reader_xml_attr(attrs, "horizontalCentered"));
+            c->m->page_print_v_centered  = attr_truthy(lxlsx_reader_xml_attr(attrs, "verticalCentered"));
+            c->m->page_print_grid_lines  = attr_truthy(lxlsx_reader_xml_attr(attrs, "gridLines"));
+            c->m->page_print_headings    = attr_truthy(lxlsx_reader_xml_attr(attrs, "headings"));
+        } else if (lxlsx_reader_xml_name_eq(name, "conditionalFormatting")) {
+            const char *sqref = lxlsx_reader_xml_attr(attrs, "sqref");
+            if (c->m->cf_blocks_count >= c->m->cf_blocks_cap) {
+                size_t nc = c->m->cf_blocks_cap ? c->m->cf_blocks_cap * 2 : 4;
+                struct lxlsx_reader_cf_block_owned *nb = realloc(c->m->cf_blocks,
+                                                        nc * sizeof(*nb));
+                if (nb) { c->m->cf_blocks = nb; c->m->cf_blocks_cap = nc; }
+            }
+            if (c->m->cf_blocks_count < c->m->cf_blocks_cap) {
+                struct lxlsx_reader_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count++];
+                memset(bk, 0, sizeof(*bk));
+                if (sqref) bk->sqref = strdup(sqref);
+            }
+            c->state = M_IN_CONDFMT;
+        } else if (lxlsx_reader_xml_name_eq(name, "headerFooter")) {
+            c->m->page_different_odd_even = attr_truthy(lxlsx_reader_xml_attr(attrs, "differentOddEven"));
+            c->m->page_different_first    = attr_truthy(lxlsx_reader_xml_attr(attrs, "differentFirst"));
+            c->m->page_scale_with_doc     = attr_truthy(lxlsx_reader_xml_attr(attrs, "scaleWithDoc"));
+            c->m->page_align_with_margins = attr_truthy(lxlsx_reader_xml_attr(attrs, "alignWithMargins"));
+            c->state = M_IN_HEADERFOOTER;
+        } else if (lxlsx_reader_xml_name_eq(name, "sheetProtection")) {
+            const char *v;
+            c->m->prot_present = 1;
+            v = lxlsx_reader_xml_attr(attrs, "password");
+            if (v) {
+                size_t n = strlen(v);
+                if (n >= sizeof(c->m->prot_hash)) n = sizeof(c->m->prot_hash) - 1;
+                memcpy(c->m->prot_hash, v, n);
+                c->m->prot_hash[n] = 0;
+            }
+            c->m->prot_sheet               = attr_truthy(lxlsx_reader_xml_attr(attrs, "sheet"));
+            c->m->prot_content             = attr_truthy(lxlsx_reader_xml_attr(attrs, "content"));
+            c->m->prot_objects             = attr_truthy(lxlsx_reader_xml_attr(attrs, "objects"));
+            c->m->prot_scenarios           = attr_truthy(lxlsx_reader_xml_attr(attrs, "scenarios"));
+            c->m->prot_format_cells        = attr_truthy(lxlsx_reader_xml_attr(attrs, "formatCells"));
+            c->m->prot_format_columns      = attr_truthy(lxlsx_reader_xml_attr(attrs, "formatColumns"));
+            c->m->prot_format_rows         = attr_truthy(lxlsx_reader_xml_attr(attrs, "formatRows"));
+            c->m->prot_insert_columns      = attr_truthy(lxlsx_reader_xml_attr(attrs, "insertColumns"));
+            c->m->prot_insert_rows         = attr_truthy(lxlsx_reader_xml_attr(attrs, "insertRows"));
+            c->m->prot_insert_hyperlinks   = attr_truthy(lxlsx_reader_xml_attr(attrs, "insertHyperlinks"));
+            c->m->prot_delete_columns      = attr_truthy(lxlsx_reader_xml_attr(attrs, "deleteColumns"));
+            c->m->prot_delete_rows         = attr_truthy(lxlsx_reader_xml_attr(attrs, "deleteRows"));
+            c->m->prot_select_locked_cells = attr_truthy(lxlsx_reader_xml_attr(attrs, "selectLockedCells"));
+            c->m->prot_sort                = attr_truthy(lxlsx_reader_xml_attr(attrs, "sort"));
+            c->m->prot_auto_filter         = attr_truthy(lxlsx_reader_xml_attr(attrs, "autoFilter"));
+            c->m->prot_pivot_tables        = attr_truthy(lxlsx_reader_xml_attr(attrs, "pivotTables"));
+            c->m->prot_select_unlocked_cells = attr_truthy(lxlsx_reader_xml_attr(attrs, "selectUnlockedCells"));
+        }
+        break;
+
+    case M_IN_COLS:
+        if (lxlsx_reader_xml_name_eq(name, "col")) {
+            const char *vmin = lxlsx_reader_xml_attr(attrs, "min");
+            const char *vmax = lxlsx_reader_xml_attr(attrs, "max");
+            const char *vw   = lxlsx_reader_xml_attr(attrs, "width");
+            const char *cw   = lxlsx_reader_xml_attr(attrs, "customWidth");
+            const char *hd   = lxlsx_reader_xml_attr(attrs, "hidden");
+            const char *ol   = lxlsx_reader_xml_attr(attrs, "outlineLevel");
+            const char *cl   = lxlsx_reader_xml_attr(attrs, "collapsed");
+            struct lxlsx_reader_col_meta *col = meta_push_col(c->m);
+            if (col) {
+                col->min = vmin ? (size_t)strtoul(vmin, NULL, 10) : 0;
+                col->max = vmax ? (size_t)strtoul(vmax, NULL, 10) : col->min;
+                if (vw) {
+                    col->width = strtod(vw, NULL);
+                    /* OOXML lists customWidth=1 when an explicit width was set;
+                     * absent customWidth on a width attr is the default-derived
+                     * value the writer emits. Treat any present width as
+                     * "user-visible width". */
+                    col->has_width = 1;
+                    (void)cw;
+                }
+                col->hidden        = attr_truthy(hd);
+                col->outline_level = ol ? (int)strtol(ol, NULL, 10) : 0;
+                col->collapsed     = attr_truthy(cl);
+            }
+        }
+        break;
+
+    case M_IN_MERGECELLS:
+        if (lxlsx_reader_xml_name_eq(name, "mergeCell")) {
+            const char *ref = lxlsx_reader_xml_attr(attrs, "ref");
+            lxlsx_reader_range r;
+            lxlsx_reader_parse_a1_range(ref, &r);
+            if (r.first_row && r.first_col) meta_push_merge(c->m, r);
+        }
+        break;
+
+    case M_IN_DATAVALIDATIONS:
+        if (lxlsx_reader_xml_name_eq(name, "dataValidation")) {
+            struct lxlsx_reader_dv_owned *d = meta_push_dv(c->m);
+            const char *v;
+            if (!d) break;
+            if ((v = lxlsx_reader_xml_attr(attrs, "type")))               d->type        = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "operator")))           d->operator_   = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "errorStyle")))         d->error_style = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "prompt")))             d->prompt      = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "promptTitle")))        d->prompt_title= strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "error")))              d->error       = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "errorTitle")))         d->error_title = strdup(v);
+            if ((v = lxlsx_reader_xml_attr(attrs, "sqref")))              d->sqref       = strdup(v);
+            d->allow_blank          = attr_truthy(lxlsx_reader_xml_attr(attrs, "allowBlank"));
+            d->show_drop_down       = attr_truthy(lxlsx_reader_xml_attr(attrs, "showDropDown"));
+            d->show_input_message   = attr_truthy(lxlsx_reader_xml_attr(attrs, "showInputMessage"));
+            d->show_error_message   = attr_truthy(lxlsx_reader_xml_attr(attrs, "showErrorMessage"));
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+
+    case M_IN_DATAVALIDATION:
+        if (lxlsx_reader_xml_name_eq(name, "formula1")) {
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
+            c->state = M_IN_DV_FORMULA1;
+        } else if (lxlsx_reader_xml_name_eq(name, "formula2")) {
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
+            c->state = M_IN_DV_FORMULA2;
+        } else {
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_AUTOFILTER:
+        if (lxlsx_reader_xml_name_eq(name, "filterColumn")) {
+            const char *cid = lxlsx_reader_xml_attr(attrs, "colId");
+            struct lxlsx_reader_filter_column_owned *fc = meta_push_filter_column(c->m);
+            if (fc) {
+                fc->col_id = cid ? (int)strtol(cid, NULL, 10) : 0;
+                fc->kind   = LXLSX_READER_FILTER_NONE;
+            }
+            c->state = M_IN_FILTERCOLUMN;
+        } else {
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_FILTERCOLUMN:
+        if (c->m->filter_columns_count == 0) { enter_skip(c, name); break; }
+        {
+            struct lxlsx_reader_filter_column_owned *fc =
+                &c->m->filter_columns[c->m->filter_columns_count - 1];
+            if (lxlsx_reader_xml_name_eq(name, "filters")) {
+                fc->kind = LXLSX_READER_FILTER_LIST;
+                c->state = M_IN_FILTERS;
+            } else if (lxlsx_reader_xml_name_eq(name, "customFilters")) {
+                const char *and_attr = lxlsx_reader_xml_attr(attrs, "and");
+                fc->kind = LXLSX_READER_FILTER_CUSTOM;
+                fc->custom_and = attr_truthy(and_attr);
+                /* children customFilter come in <customFilter operator val>;
+                 * parse them inline by transitioning into a list-style scan. */
+                c->state = M_IN_FILTERS;  /* reuse */
+            } else if (lxlsx_reader_xml_name_eq(name, "top10")) {
+                const char *val_attr  = lxlsx_reader_xml_attr(attrs, "val");
+                const char *top_attr  = lxlsx_reader_xml_attr(attrs, "top");
+                const char *pct_attr  = lxlsx_reader_xml_attr(attrs, "percent");
+                fc->kind      = LXLSX_READER_FILTER_TOP10;
+                fc->top       = top_attr ? attr_truthy(top_attr) : 1;
+                fc->percent   = attr_truthy(pct_attr);
+                fc->top_value = val_attr ? strtod(val_attr, NULL) : 0;
+                enter_skip(c, name);
+            } else if (lxlsx_reader_xml_name_eq(name, "dynamicFilter")) {
+                fc->kind = LXLSX_READER_FILTER_DYNAMIC;
+                enter_skip(c, name);
+            } else {
+                enter_skip(c, name);
+            }
+        }
+        break;
+
+    case M_IN_CONDFMT:
+        if (lxlsx_reader_xml_name_eq(name, "cfRule") && c->m->cf_blocks_count > 0) {
+            struct lxlsx_reader_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count - 1];
+            const char *v;
+            if (bk->rules_count >= bk->rules_cap) {
+                size_t nc = bk->rules_cap ? bk->rules_cap * 2 : 2;
+                struct lxlsx_reader_cf_rule_owned *nb = realloc(bk->rules, nc * sizeof(*nb));
+                if (nb) { bk->rules = nb; bk->rules_cap = nc; }
+            }
+            if (bk->rules_count < bk->rules_cap) {
+                struct lxlsx_reader_cf_rule_owned *r = &bk->rules[bk->rules_count++];
+                memset(r, 0, sizeof(*r));
+                r->dxf_id = -1;
+                if ((v = lxlsx_reader_xml_attr(attrs, "type")))        r->type        = strdup(v);
+                if ((v = lxlsx_reader_xml_attr(attrs, "operator")))    r->operator_   = strdup(v);
+                if ((v = lxlsx_reader_xml_attr(attrs, "priority")))    r->priority    = (int)strtol(v, NULL, 10);
+                if ((v = lxlsx_reader_xml_attr(attrs, "dxfId")))       r->dxf_id      = (int)strtol(v, NULL, 10);
+                if ((v = lxlsx_reader_xml_attr(attrs, "rank")))        r->rank        = strtod(v, NULL);
+                if ((v = lxlsx_reader_xml_attr(attrs, "text")))        r->text        = strdup(v);
+                if ((v = lxlsx_reader_xml_attr(attrs, "timePeriod")))  r->time_period = strdup(v);
+                r->stop_if_true = attr_truthy(lxlsx_reader_xml_attr(attrs, "stopIfTrue"));
+                r->percent      = attr_truthy(lxlsx_reader_xml_attr(attrs, "percent"));
+                r->bottom       = attr_truthy(lxlsx_reader_xml_attr(attrs, "bottom"));
+            }
+            c->state = M_IN_CFRULE;
+        }
+        break;
+
+    case M_IN_CFRULE:
+        if (lxlsx_reader_xml_name_eq(name, "formula")) {
+            lxlsx_reader_buf_reset(c->txt, &c->txt_len);
+            c->state = M_IN_CF_FORMULA;
+        } else {
+            /* colorScale, dataBar, iconSet — skip nested element trees. */
+            enter_skip(c, name);
+        }
+        break;
+
+    case M_IN_HEADERFOOTER:
+        if      (lxlsx_reader_xml_name_eq(name, "oddHeader"))   { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_ODD_HEADER;   }
+        else if (lxlsx_reader_xml_name_eq(name, "oddFooter"))   { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_ODD_FOOTER;   }
+        else if (lxlsx_reader_xml_name_eq(name, "evenHeader"))  { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_EVEN_HEADER;  }
+        else if (lxlsx_reader_xml_name_eq(name, "evenFooter"))  { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_EVEN_FOOTER;  }
+        else if (lxlsx_reader_xml_name_eq(name, "firstHeader")) { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_FIRST_HEADER; }
+        else if (lxlsx_reader_xml_name_eq(name, "firstFooter")) { lxlsx_reader_buf_reset(c->txt, &c->txt_len); c->state = M_IN_FIRST_FOOTER; }
+        else                                            enter_skip(c, name);
+        break;
+
+    case M_IN_FILTERS:
+        if (c->m->filter_columns_count == 0) { enter_skip(c, name); break; }
+        {
+            struct lxlsx_reader_filter_column_owned *fc =
+                &c->m->filter_columns[c->m->filter_columns_count - 1];
+            if (lxlsx_reader_xml_name_eq(name, "filter")) {
+                const char *v = lxlsx_reader_xml_attr(attrs, "val");
+                if (v) filter_column_push_value(fc, v);
+                enter_skip(c, name);
+            } else if (lxlsx_reader_xml_name_eq(name, "customFilter")) {
+                const char *op  = lxlsx_reader_xml_attr(attrs, "operator");
+                const char *val = lxlsx_reader_xml_attr(attrs, "val");
+                if (!fc->custom_op_1) {
+                    fc->custom_op_1  = op  ? strdup(op)  : strdup("equal");
+                    fc->custom_val_1 = val ? strdup(val) : NULL;
+                } else if (!fc->custom_op_2) {
+                    fc->custom_op_2  = op  ? strdup(op)  : strdup("equal");
+                    fc->custom_val_2 = val ? strdup(val) : NULL;
+                }
+                enter_skip(c, name);
+            } else {
+                enter_skip(c, name);
+            }
+        }
+        break;
+
+    case M_IN_HYPERLINKS:
+        if (lxlsx_reader_xml_name_eq(name, "hyperlink")) {
+            const char *ref     = lxlsx_reader_xml_attr(attrs, "ref");
+            const char *loc     = lxlsx_reader_xml_attr(attrs, "location");
+            const char *display = lxlsx_reader_xml_attr(attrs, "display");
+            const char *tooltip = lxlsx_reader_xml_attr(attrs, "tooltip");
+            const char *rid     = lxlsx_reader_xml_attr(attrs, "id");
+            const char *url     = NULL;
+            lxlsx_reader_range r;
+
+            if (!rid) {
+                /* "r:id" — namespace lookup by walking attrs. */
+                const char **a = attrs;
+                while (a && *a) {
+                    if (lxlsx_reader_xml_name_eq(*a, "id")) { rid = *(a + 1); break; }
+                    a += 2;
+                }
+            }
+            if (rid) url = lxlsx_reader_rel_map_target_for_id(c->rels, rid);
+
+            lxlsx_reader_parse_a1_range(ref, &r);
+            if (r.first_row && r.first_col)
+                meta_push_hyperlink(c->m, r, url, loc, display, tooltip);
+        }
+        break;
+
+    case M_IN_SHEETDATA:
+        if (lxlsx_reader_xml_name_eq(name, "row")) {
+            const char *r_attr  = lxlsx_reader_xml_attr(attrs, "r");
+            const char *ht      = lxlsx_reader_xml_attr(attrs, "ht");
+            const char *hidden  = lxlsx_reader_xml_attr(attrs, "hidden");
+            const char *ol      = lxlsx_reader_xml_attr(attrs, "outlineLevel");
+            const char *cl      = lxlsx_reader_xml_attr(attrs, "collapsed");
+            const char *ch      = lxlsx_reader_xml_attr(attrs, "customHeight");
+            size_t row_nr = r_attr ? (size_t)strtoul(r_attr, NULL, 10) : 0;
+            /* Only cache rows that carry at least one metadata attr — else
+             * getRowOptions(N) would return an empty struct for rows whose
+             * only purpose is holding cells. */
+            int has_meta = (ht || ol ||
+                            attr_truthy(hidden) ||
+                            attr_truthy(cl) ||
+                            attr_truthy(ch));
+            if (row_nr > 0 && has_meta) {
+                struct lxlsx_reader_row_meta *rm = meta_get_or_make_row(c->m, row_nr);
+                if (rm) {
+                    if (ht) {
+                        rm->has_height = 1;
+                        rm->height = strtod(ht, NULL);
+                    }
+                    rm->hidden        = attr_truthy(hidden);
+                    rm->outline_level = ol ? (int)strtol(ol, NULL, 10) : 0;
+                    rm->collapsed     = attr_truthy(cl);
+                    rm->custom_height = attr_truthy(ch);
+                }
+            }
+            c->state = M_IN_ROW;
+        }
+        break;
+
+    case M_IN_ROW:
+        /* Skip every <c> and child — metadata only cares about row attrs. */
+        enter_skip(c, name);
+        break;
+
+    default:
+        break;
+    }
+}
+
+static void m_on_end(void *ud, const char *name)
+{
+    m_ctx *c = (m_ctx *)ud;
+
+    if (c->state == M_SKIP) {
+        c->skip_depth--;
+        if (c->skip_depth == 0 && c->skip_tag &&
+            lxlsx_reader_xml_name_eq(name, c->skip_tag)) {
+            free(c->skip_tag);
+            c->skip_tag = NULL;
+            c->state = c->state_before_skip;
+        }
+        return;
+    }
+
+    switch (c->state) {
+    case M_IN_ROW:
+        if (lxlsx_reader_xml_name_eq(name, "row")) c->state = M_IN_SHEETDATA;
+        break;
+    case M_IN_SHEETDATA:
+        if (lxlsx_reader_xml_name_eq(name, "sheetData")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_COLS:
+        if (lxlsx_reader_xml_name_eq(name, "cols")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_MERGECELLS:
+        if (lxlsx_reader_xml_name_eq(name, "mergeCells")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_HYPERLINKS:
+        if (lxlsx_reader_xml_name_eq(name, "hyperlinks")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_DATAVALIDATION:
+        if (lxlsx_reader_xml_name_eq(name, "dataValidation")) c->state = M_IN_DATAVALIDATIONS;
+        break;
+    case M_IN_DATAVALIDATIONS:
+        if (lxlsx_reader_xml_name_eq(name, "dataValidations")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_DV_FORMULA1:
+        if (lxlsx_reader_xml_name_eq(name, "formula1")) {
+            if (c->m->dvs_count > 0 && c->txt_len > 0) {
+                struct lxlsx_reader_dv_owned *d = &c->m->dvs[c->m->dvs_count - 1];
+                free(d->formula1);
+                d->formula1 = strdup(c->txt);
+            }
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+    case M_IN_DV_FORMULA2:
+        if (lxlsx_reader_xml_name_eq(name, "formula2")) {
+            if (c->m->dvs_count > 0 && c->txt_len > 0) {
+                struct lxlsx_reader_dv_owned *d = &c->m->dvs[c->m->dvs_count - 1];
+                free(d->formula2);
+                d->formula2 = strdup(c->txt);
+            }
+            c->state = M_IN_DATAVALIDATION;
+        }
+        break;
+    case M_IN_FILTERCOLUMN:
+        if (lxlsx_reader_xml_name_eq(name, "filterColumn")) c->state = M_IN_AUTOFILTER;
+        break;
+    case M_IN_FILTERS:
+        if (lxlsx_reader_xml_name_eq(name, "filters") ||
+            lxlsx_reader_xml_name_eq(name, "customFilters")) {
+            c->state = M_IN_FILTERCOLUMN;
+        }
+        break;
+    case M_IN_AUTOFILTER:
+        if (lxlsx_reader_xml_name_eq(name, "autoFilter")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_HEADERFOOTER:
+        if (lxlsx_reader_xml_name_eq(name, "headerFooter")) c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_CFRULE:
+        if (lxlsx_reader_xml_name_eq(name, "cfRule")) c->state = M_IN_CONDFMT;
+        break;
+    case M_IN_CONDFMT:
+        if (lxlsx_reader_xml_name_eq(name, "conditionalFormatting"))
+            c->state = M_IN_WORKSHEET;
+        break;
+    case M_IN_CF_FORMULA:
+        if (lxlsx_reader_xml_name_eq(name, "formula")) {
+            if (c->m->cf_blocks_count > 0) {
+                struct lxlsx_reader_cf_block_owned *bk = &c->m->cf_blocks[c->m->cf_blocks_count - 1];
+                if (bk->rules_count > 0 && c->txt_len > 0) {
+                    struct lxlsx_reader_cf_rule_owned *r = &bk->rules[bk->rules_count - 1];
+                    if (!r->formula1)      r->formula1 = strdup(c->txt);
+                    else if (!r->formula2) r->formula2 = strdup(c->txt);
+                }
+            }
+            c->state = M_IN_CFRULE;
+        }
+        break;
+#define HF_END(state_, tagname_, slot_)                              \
+    case state_:                                                     \
+        if (lxlsx_reader_xml_name_eq(name, tagname_)) {                       \
+            free(c->m->slot_);                                       \
+            c->m->slot_ = c->txt_len > 0 ? strdup(c->txt) : NULL;    \
+            c->state = M_IN_HEADERFOOTER;                            \
+        } break;
+    HF_END(M_IN_ODD_HEADER,   "oddHeader",   page_odd_header)
+    HF_END(M_IN_ODD_FOOTER,   "oddFooter",   page_odd_footer)
+    HF_END(M_IN_EVEN_HEADER,  "evenHeader",  page_even_header)
+    HF_END(M_IN_EVEN_FOOTER,  "evenFooter",  page_even_footer)
+    HF_END(M_IN_FIRST_HEADER, "firstHeader", page_first_header)
+    HF_END(M_IN_FIRST_FOOTER, "firstFooter", page_first_footer)
+#undef HF_END
+    case M_IN_WORKSHEET:
+        if (lxlsx_reader_xml_name_eq(name, "worksheet")) c->state = M_INIT;
+        break;
+    default:
+        break;
+    }
+}
+
+/* Text capture for <formula1>/<formula2> and header/footer text fields. */
+static void m_on_text(void *ud, const char *text, int len)
+{
+    m_ctx *c = (m_ctx *)ud;
+    if (len <= 0) return;
+    switch (c->state) {
+    case M_IN_DV_FORMULA1:
+    case M_IN_DV_FORMULA2:
+    case M_IN_ODD_HEADER:
+    case M_IN_ODD_FOOTER:
+    case M_IN_EVEN_HEADER:
+    case M_IN_EVEN_FOOTER:
+    case M_IN_FIRST_HEADER:
+    case M_IN_FIRST_FOOTER:
+    case M_IN_CF_FORMULA:
+        lxlsx_reader_buf_append(&c->txt, &c->txt_len, &c->txt_cap,
+                                text, (size_t)len);
+        break;
+    default: break;
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Public load / free                                                         */
+/* ------------------------------------------------------------------------- */
+
+lxlsx_reader_error lxlsx_reader_worksheet_meta_load(lxlsx_reader_worksheet *ws)
+{
+    lxlsx_reader_zip_file *zf;
+    lxlsx_reader_xml_pump *pump;
+    lxlsx_reader_rel_map rels;
+    m_ctx         ctx;
+    lxlsx_reader_error     rc;
+
+    if (!ws || !ws->wb || !ws->target_path) return LXLSX_READER_ERROR_NULL_PARAMETER;
+
+    /* Sheet rels first (required to resolve external hyperlinks). */
+    rc = lxlsx_reader_load_rels(ws->wb->zip, ws->target_path, &rels, 1);
+    if (rc != LXLSX_READER_NO_ERROR) {
+        lxlsx_reader_rel_map_free(&rels);
+        return rc;
+    }
+
+    zf = lxlsx_reader_zip_open_entry(ws->wb->zip, ws->target_path);
+    if (!zf) {
+        lxlsx_reader_rel_map_free(&rels);
+        return LXLSX_READER_ERROR_ZIP_ENTRY_NOT_FOUND;
+    }
+
+    pump = lxlsx_reader_xml_pump_create_zip_file(zf);
+    if (!pump) {
+        lxlsx_reader_zip_close_entry(zf);
+        lxlsx_reader_rel_map_free(&rels);
+        return LXLSX_READER_ERROR_MEMORY_MALLOC_FAILED;
+    }
+
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.m     = &ws->meta;
+    ctx.rels  = &rels;
+    ctx.state = M_INIT;
+
+    lxlsx_reader_xml_pump_set_handlers(pump, m_on_start, m_on_end, m_on_text, &ctx);
+    rc = lxlsx_reader_xml_pump_run(pump);
+
+    free(ctx.skip_tag);
+    free(ctx.txt);
+    lxlsx_reader_xml_pump_destroy(pump);
+    lxlsx_reader_zip_close_entry(zf);
+    lxlsx_reader_rel_map_free(&rels);
+    return rc;
+}
+
+void lxlsx_reader_worksheet_meta_free(lxlsx_reader_worksheet_meta *m)
+{
+    size_t i;
+    if (!m) return;
+    free(m->merges);
+    if (m->hyperlinks) {
+        for (i = 0; i < m->hyperlinks_count; i++) {
+            free(m->hyperlinks[i].url);
+            free(m->hyperlinks[i].location);
+            free(m->hyperlinks[i].display);
+            free(m->hyperlinks[i].tooltip);
+        }
+        free(m->hyperlinks);
+    }
+    free(m->rows);
+    free(m->cols);
+    if (m->dvs) {
+        for (i = 0; i < m->dvs_count; i++) {
+            free(m->dvs[i].type);
+            free(m->dvs[i].operator_);
+            free(m->dvs[i].error_style);
+            free(m->dvs[i].formula1);
+            free(m->dvs[i].formula2);
+            free(m->dvs[i].prompt);
+            free(m->dvs[i].prompt_title);
+            free(m->dvs[i].error);
+            free(m->dvs[i].error_title);
+            free(m->dvs[i].sqref);
+        }
+        free(m->dvs);
+    }
+    free(m->autofilter_range);
+    if (m->filter_columns) {
+        for (i = 0; i < m->filter_columns_count; i++) {
+            if (m->filter_columns[i].values) {
+                size_t j = 0;
+                while (m->filter_columns[i].values[j]) {
+                    free(m->filter_columns[i].values[j]);
+                    j++;
+                }
+                free(m->filter_columns[i].values);
+            }
+            free(m->filter_columns[i].custom_op_1);
+            free(m->filter_columns[i].custom_val_1);
+            free(m->filter_columns[i].custom_op_2);
+            free(m->filter_columns[i].custom_val_2);
+        }
+        free(m->filter_columns);
+    }
+    free(m->filter_columns_pub);
+    free(m->page_odd_header);
+    free(m->page_odd_footer);
+    free(m->page_even_header);
+    free(m->page_even_footer);
+    free(m->page_first_header);
+    free(m->page_first_footer);
+    if (m->cf_blocks) {
+        for (i = 0; i < m->cf_blocks_count; i++) {
+            size_t j;
+            free(m->cf_blocks[i].sqref);
+            for (j = 0; j < m->cf_blocks[i].rules_count; j++) {
+                free(m->cf_blocks[i].rules[j].type);
+                free(m->cf_blocks[i].rules[j].operator_);
+                free(m->cf_blocks[i].rules[j].text);
+                free(m->cf_blocks[i].rules[j].time_period);
+                free(m->cf_blocks[i].rules[j].formula1);
+                free(m->cf_blocks[i].rules[j].formula2);
+            }
+            free(m->cf_blocks[i].rules);
+        }
+        free(m->cf_blocks);
+    }
+    free(m->cf_rules_pub);
+    memset(m, 0, sizeof(*m));
+}
+
+/* ------------------------------------------------------------------------- */
+/* Public accessors                                                          */
+/* ------------------------------------------------------------------------- */
+
+size_t lxlsx_reader_worksheet_merged_count(const lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    return ws->meta.merges_count;
+}
+
+int lxlsx_reader_worksheet_merged_get(const lxlsx_reader_worksheet *ws, size_t idx, lxlsx_reader_range *out)
+{
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    if (idx >= ws->meta.merges_count) return 0;
+    *out = ws->meta.merges[idx];
+    return 1;
+}
+
+/* Comparator for the merge_key array used to build merge_order. */
+struct merge_key { size_t idx; size_t last_row; };
+static int merge_key_cmp(const void *a, const void *b)
+{
+    size_t la = ((const struct merge_key *)a)->last_row;
+    size_t lb = ((const struct merge_key *)b)->last_row;
+    if (la < lb) return -1;
+    if (la > lb) return 1;
+    return 0;
+}
+
+/* Build merge_order: indices into meta.merges sorted by ascending last_row.
+ * Uses a merge_key array so the qsort comparator is self-contained
+ * (qsort_r is not portable across glibc/BSD/MSVC). On OOM the index is left
+ * NULL and in_merge_follow falls back to a plain linear scan. */
+static void build_merge_index(lxlsx_reader_worksheet *ws)
+{
+    size_t n = ws->meta.merges_count;
+
+    ws->merge_index_built = 1;
+    ws->merge_order       = NULL;
+    ws->merge_cursor      = 0;
+    ws->merge_last_row    = 0;
+    if (n == 0) return;
+
+    struct merge_key *keys = (struct merge_key *)malloc(n * sizeof(*keys));
+    if (!keys) return;
+    for (size_t i = 0; i < n; i++) {
+        keys[i].idx      = i;
+        keys[i].last_row = ws->meta.merges[i].last_row;
+    }
+    qsort(keys, n, sizeof(*keys), merge_key_cmp);
+
+    ws->merge_order = (size_t *)malloc(n * sizeof(size_t));
+    if (!ws->merge_order) { free(keys); return; }
+    for (size_t i = 0; i < n; i++) ws->merge_order[i] = keys[i].idx;
+    free(keys);
+}
+
+int lxlsx_reader_worksheet_in_merge_follow(lxlsx_reader_worksheet *ws, size_t row, size_t col)
+{
+    size_t i, n;
+    if (!ws) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    n = ws->meta.merges_count;
+    if (n == 0) return 0;
+
+    if (!ws->merge_index_built) build_merge_index(ws);
+
+    /* Index build failed (OOM): fall back to a plain linear scan. */
+    if (!ws->merge_order) {
+        for (i = 0; i < n; i++) {
+            const lxlsx_reader_range *r = &ws->meta.merges[i];
+            if (row >= r->first_row && row <= r->last_row &&
+                col >= r->first_col && col <= r->last_col) {
+                return (row == r->first_row && col == r->first_col) ? 0 : 1;
+            }
+        }
+        return 0;
+    }
+
+    /* Reset the cursor when access is not monotonically increasing in row,
+     * so out-of-order callers still get correct results. */
+    if (row < ws->merge_last_row) ws->merge_cursor = 0;
+    ws->merge_last_row = row;
+
+    /* Drop merges that end above this row — they can never match again. */
+    while (ws->merge_cursor < n &&
+           ws->meta.merges[ws->merge_order[ws->merge_cursor]].last_row < row) {
+        ws->merge_cursor++;
+    }
+
+    /* Check the remaining active merges (last_row >= row). */
+    for (i = ws->merge_cursor; i < n; i++) {
+        const lxlsx_reader_range *r = &ws->meta.merges[ws->merge_order[i]];
+        if (row >= r->first_row && row <= r->last_row &&
+            col >= r->first_col && col <= r->last_col) {
+            /* Inside this range. Master is (first_row, first_col). */
+            return (row == r->first_row && col == r->first_col) ? 0 : 1;
+        }
+    }
+    return 0;
+}
+
+size_t lxlsx_reader_worksheet_hyperlink_count(const lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    return ws->meta.hyperlinks_count;
+}
+
+int lxlsx_reader_worksheet_hyperlink_get(const lxlsx_reader_worksheet *ws, size_t idx,
+                                lxlsx_reader_hyperlink *out)
+{
+    const struct lxlsx_reader_hyperlink_owned *h;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    if (idx >= ws->meta.hyperlinks_count) return 0;
+    h = &ws->meta.hyperlinks[idx];
+    out->range    = h->range;
+    out->url      = h->url;
+    out->location = h->location;
+    out->display  = h->display;
+    out->tooltip  = h->tooltip;
+    return 1;
+}
+
+const char *lxlsx_reader_worksheet_hyperlink_url(const lxlsx_reader_worksheet *ws,
+                                        size_t row, size_t col)
+{
+    size_t i;
+    if (!ws) return NULL;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return NULL;
+    for (i = 0; i < ws->meta.hyperlinks_count; i++) {
+        const struct lxlsx_reader_hyperlink_owned *h = &ws->meta.hyperlinks[i];
+        if (row >= h->range.first_row && row <= h->range.last_row &&
+            col >= h->range.first_col && col <= h->range.last_col) {
+            return h->url ? h->url : h->location;
+        }
+    }
+    return NULL;
+}
+
+int lxlsx_reader_worksheet_protection(const lxlsx_reader_worksheet *ws, lxlsx_reader_protection *out)
+{
+    const lxlsx_reader_worksheet_meta *m;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    m = &ws->meta;
+    out->is_present                = m->prot_present;
+    {
+        size_t n = strlen(m->prot_hash);
+        if (n >= sizeof(out->password_hash)) n = sizeof(out->password_hash) - 1;
+        memcpy(out->password_hash, m->prot_hash, n);
+        out->password_hash[n] = 0;
+    }
+    out->sheet                = m->prot_sheet;
+    out->content              = m->prot_content;
+    out->objects              = m->prot_objects;
+    out->scenarios            = m->prot_scenarios;
+    out->format_cells         = m->prot_format_cells;
+    out->format_columns       = m->prot_format_columns;
+    out->format_rows          = m->prot_format_rows;
+    out->insert_columns       = m->prot_insert_columns;
+    out->insert_rows          = m->prot_insert_rows;
+    out->insert_hyperlinks    = m->prot_insert_hyperlinks;
+    out->delete_columns       = m->prot_delete_columns;
+    out->delete_rows          = m->prot_delete_rows;
+    out->select_locked_cells  = m->prot_select_locked_cells;
+    out->sort                 = m->prot_sort;
+    out->auto_filter          = m->prot_auto_filter;
+    out->pivot_tables         = m->prot_pivot_tables;
+    out->select_unlocked_cells = m->prot_select_unlocked_cells;
+    return m->prot_present;
+}
+
+int lxlsx_reader_worksheet_row_options(const lxlsx_reader_worksheet *ws, size_t row,
+                              lxlsx_reader_row_options *out)
+{
+    size_t i;
+    if (!ws || !out || row == 0) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    for (i = 0; i < ws->meta.rows_count; i++) {
+        const struct lxlsx_reader_row_meta *r = &ws->meta.rows[i];
+        if (r->row == row) {
+            out->has_height    = r->has_height;
+            out->height        = r->height;
+            out->hidden        = r->hidden;
+            out->outline_level = r->outline_level;
+            out->collapsed     = r->collapsed;
+            out->custom_height = r->custom_height;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int lxlsx_reader_worksheet_col_options(const lxlsx_reader_worksheet *ws, size_t col,
+                              lxlsx_reader_col_options *out)
+{
+    size_t i;
+    if (!ws || !out || col == 0) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    for (i = 0; i < ws->meta.cols_count; i++) {
+        const struct lxlsx_reader_col_meta *c = &ws->meta.cols[i];
+        if (col >= c->min && col <= c->max) {
+            out->has_width     = c->has_width;
+            out->width         = c->width;
+            out->hidden        = c->hidden;
+            out->outline_level = c->outline_level;
+            out->collapsed     = c->collapsed;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int lxlsx_reader_worksheet_default_row_height(const lxlsx_reader_worksheet *ws, double *out)
+{
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    if (!ws->meta.has_default_row_height) return 0;
+    *out = ws->meta.default_row_height;
+    return 1;
+}
+
+int lxlsx_reader_worksheet_default_col_width(const lxlsx_reader_worksheet *ws, double *out)
+{
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    if (!ws->meta.has_default_col_width) return 0;
+    *out = ws->meta.default_col_width;
+    return 1;
+}
+
+/* ---- Data validation accessors ----------------------------------------- */
+
+size_t lxlsx_reader_worksheet_data_validation_count(const lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    return ws->meta.dvs_count;
+}
+
+int lxlsx_reader_worksheet_data_validation_get(const lxlsx_reader_worksheet *ws, size_t idx,
+                                      lxlsx_reader_data_validation *out)
+{
+    const struct lxlsx_reader_dv_owned *d;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    if (idx >= ws->meta.dvs_count) return 0;
+    d = &ws->meta.dvs[idx];
+    out->type               = d->type;
+    out->operator_          = d->operator_;
+    out->error_style        = d->error_style;
+    out->formula1           = d->formula1;
+    out->formula2           = d->formula2;
+    out->prompt             = d->prompt;
+    out->prompt_title       = d->prompt_title;
+    out->error              = d->error;
+    out->error_title        = d->error_title;
+    out->sqref              = d->sqref;
+    out->allow_blank        = d->allow_blank;
+    out->show_drop_down     = d->show_drop_down;
+    out->show_input_message = d->show_input_message;
+    out->show_error_message = d->show_error_message;
+    return 1;
+}
+
+/* ---- Conditional format accessors (§8.2.3) ----------------------------- */
+
+size_t lxlsx_reader_worksheet_cf_block_count(const lxlsx_reader_worksheet *ws)
+{
+    if (!ws) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    return ws->meta.cf_blocks_count;
+}
+
+int lxlsx_reader_worksheet_cf_block_get(const lxlsx_reader_worksheet *ws, size_t idx,
+                               lxlsx_reader_cf_block *out)
+{
+    lxlsx_reader_worksheet_meta *m;
+    const struct lxlsx_reader_cf_block_owned *bk;
+    size_t i;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    m = (lxlsx_reader_worksheet_meta *)&ws->meta;
+    if (idx >= m->cf_blocks_count) return 0;
+    bk = &m->cf_blocks[idx];
+
+    /* Materialise a public-shape rules array per block, lazily and once.
+     * We over-allocate cf_rules_pub to hold ALL rules across all blocks
+     * (positions are sequential within the array per block). */
+    if (!m->cf_rules_pub) {
+        size_t total = 0, j, off = 0;
+        for (j = 0; j < m->cf_blocks_count; j++) total += m->cf_blocks[j].rules_count;
+        m->cf_rules_pub = (lxlsx_reader_cf_rule *)calloc(total ? total : 1, sizeof(lxlsx_reader_cf_rule));
+        if (!m->cf_rules_pub) return 0;
+        m->cf_rules_pub_n = total;
+        for (j = 0; j < m->cf_blocks_count; j++) {
+            for (i = 0; i < m->cf_blocks[j].rules_count; i++, off++) {
+                const struct lxlsx_reader_cf_rule_owned *src = &m->cf_blocks[j].rules[i];
+                lxlsx_reader_cf_rule                    *dst = &m->cf_rules_pub[off];
+                dst->type        = src->type;
+                dst->operator_   = src->operator_;
+                dst->priority    = src->priority;
+                dst->stop_if_true = src->stop_if_true;
+                dst->dxf_id      = src->dxf_id;
+                dst->percent     = src->percent;
+                dst->bottom      = src->bottom;
+                dst->rank        = src->rank;
+                dst->text        = src->text;
+                dst->time_period = src->time_period;
+                dst->formula1    = src->formula1;
+                dst->formula2    = src->formula2;
+            }
+        }
+    }
+
+    /* Find the offset of this block's rules in the contiguous array. */
+    {
+        size_t j, off = 0;
+        for (j = 0; j < idx; j++) off += m->cf_blocks[j].rules_count;
+        out->sqref       = bk->sqref;
+        out->rules       = bk->rules_count > 0 ? &m->cf_rules_pub[off] : NULL;
+        out->rules_count = bk->rules_count;
+    }
+    return 1;
+}
+
+/* ---- Rich-text runs accessor (§8.2.2) ---------------------------------- */
+
+size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxlsx_cell *c,
+                            lxlsx_reader_string_run *out, size_t cap)
+{
+    if (!ws || !c) return 0;
+
+    if (c->type == STRING_CELL) {
+        /* SST cell: cell.raw holds the SST index as decimal text. */
+        uint32_t idx;
+        size_t   count = 0;
+        const lxlsx_reader_sst_run *runs;
+        size_t i;
+        if (!ws->wb || !ws->wb->sst || !c->raw.ptr) return 0;
+        idx = (uint32_t)strtoul(c->raw.ptr, NULL, 10);
+        runs = lxlsx_reader_sst_get_runs(ws->wb->sst, idx, &count);
+        if (count == 0) return 0;
+        if (out) {
+            for (i = 0; i < count && i < cap; i++) {
+                out[i].text       = runs[i].text;
+                out[i].text_len   = runs[i].text ? strlen(runs[i].text) : 0;
+                out[i].font_name  = runs[i].font_name;
+                out[i].font_size  = runs[i].font_size;
+                out[i].bold       = runs[i].bold;
+                out[i].italic     = runs[i].italic;
+                out[i].strike     = runs[i].strike;
+                out[i].underline  = runs[i].underline;
+                out[i].color      = runs[i].color;
+            }
+        }
+        return count;
+    }
+
+    if (c->type == INLINE_STRING_CELL) {
+        size_t i, n = ws->inline_runs_count;
+        if (n == 0) return 0;
+        if (out) {
+            for (i = 0; i < n && i < cap; i++) {
+                out[i].text       = ws->inline_runs[i].text;
+                out[i].text_len   = ws->inline_runs[i].text ? strlen(ws->inline_runs[i].text) : 0;
+                out[i].font_name  = ws->inline_runs[i].font_name;
+                out[i].font_size  = ws->inline_runs[i].font_size;
+                out[i].bold       = ws->inline_runs[i].bold;
+                out[i].italic     = ws->inline_runs[i].italic;
+                out[i].strike     = ws->inline_runs[i].strike;
+                out[i].underline  = ws->inline_runs[i].underline;
+                out[i].color      = ws->inline_runs[i].color;
+            }
+        }
+        return n;
+    }
+
+    return 0;
+}
+
+/* ---- Page setup accessor ------------------------------------------------ */
+
+int lxlsx_reader_worksheet_page_setup(const lxlsx_reader_worksheet *ws, lxlsx_reader_page_setup *out)
+{
+    const lxlsx_reader_worksheet_meta *m;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    m = &ws->meta;
+    /* If nothing about the page was parsed, surface 0 so callers can return
+     * an explicit "no page setup" sentinel. */
+    if (!m->page_has_margins && !m->page_has_setup &&
+        !m->page_print_h_centered && !m->page_print_v_centered &&
+        !m->page_print_grid_lines && !m->page_print_headings &&
+        !m->page_odd_header && !m->page_odd_footer &&
+        !m->page_even_header && !m->page_even_footer &&
+        !m->page_first_header && !m->page_first_footer) return 0;
+
+    memset(out, 0, sizeof(*out));
+    out->has_margins   = m->page_has_margins;
+    out->margin_left   = m->page_margin_left;
+    out->margin_right  = m->page_margin_right;
+    out->margin_top    = m->page_margin_top;
+    out->margin_bottom = m->page_margin_bottom;
+    out->margin_header = m->page_margin_header;
+    out->margin_footer = m->page_margin_footer;
+
+    out->has_setup           = m->page_has_setup;
+    out->paper_size          = m->page_paper_size;
+    out->fit_to_width        = m->page_fit_to_width;
+    out->fit_to_height       = m->page_fit_to_height;
+    out->scale               = m->page_scale;
+    out->orientation_landscape = m->page_orientation_landscape;
+    out->horizontal_dpi      = m->page_horizontal_dpi;
+    out->vertical_dpi        = m->page_vertical_dpi;
+    out->first_page_number   = m->page_first_page_number;
+    out->use_first_page_number = m->page_use_first_page_number;
+
+    out->print_horizontal_centered = m->page_print_h_centered;
+    out->print_vertical_centered   = m->page_print_v_centered;
+    out->print_grid_lines          = m->page_print_grid_lines;
+    out->print_headings            = m->page_print_headings;
+
+    out->odd_header   = m->page_odd_header;
+    out->odd_footer   = m->page_odd_footer;
+    out->even_header  = m->page_even_header;
+    out->even_footer  = m->page_even_footer;
+    out->first_header = m->page_first_header;
+    out->first_footer = m->page_first_footer;
+    out->different_odd_even = m->page_different_odd_even;
+    out->different_first    = m->page_different_first;
+    out->scale_with_doc     = m->page_scale_with_doc;
+    out->align_with_margins = m->page_align_with_margins;
+    return 1;
+}
+
+/* ---- AutoFilter accessor ------------------------------------------------ */
+
+int lxlsx_reader_worksheet_autofilter(const lxlsx_reader_worksheet *ws, lxlsx_reader_autofilter *out)
+{
+    lxlsx_reader_worksheet_meta *m;
+    size_t i;
+    if (!ws || !out) return 0;
+    if (lxlsx_reader_worksheet_ensure_meta(ws) != LXLSX_READER_NO_ERROR) return 0;
+    m = (lxlsx_reader_worksheet_meta *)&ws->meta;  /* mutable for cache materialisation */
+    if (!m->autofilter_present) return 0;
+
+    /* Lazily materialise a stable public-shape array of filter columns so
+     * out->columns has a predictable lifetime (same as the worksheet). */
+    if (!m->filter_columns_pub && m->filter_columns_count > 0) {
+        m->filter_columns_pub = (lxlsx_reader_filter_column *)
+            calloc(m->filter_columns_count, sizeof(lxlsx_reader_filter_column));
+        if (m->filter_columns_pub) {
+            for (i = 0; i < m->filter_columns_count; i++) {
+                const struct lxlsx_reader_filter_column_owned *src = &m->filter_columns[i];
+                lxlsx_reader_filter_column *dst = &m->filter_columns_pub[i];
+                dst->col_id        = src->col_id;
+                dst->kind          = (lxlsx_reader_filter_kind)src->kind;
+                dst->values        = (const char **)src->values;
+                dst->custom_and    = src->custom_and;
+                dst->custom_op_1   = src->custom_op_1;
+                dst->custom_val_1  = src->custom_val_1;
+                dst->custom_op_2   = src->custom_op_2;
+                dst->custom_val_2  = src->custom_val_2;
+                dst->top           = src->top;
+                dst->percent       = src->percent;
+                dst->top_value     = src->top_value;
+            }
+        }
+    }
+
+    out->range         = m->autofilter_range;
+    out->columns       = m->filter_columns_pub;
+    out->columns_count = m->filter_columns_count;
+    return 1;
 }

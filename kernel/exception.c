@@ -52,6 +52,8 @@ char* exception_message_map(int code) {
             return "Zlib error when adding sub file to xlsx file.";
         case LXLSX_ERROR_ZIP_CLOSE:
             return "Zlib error when closing xlsx file.";
+        case LXLSX_ERROR_FEATURE_NOT_SUPPORTED:
+            return "Feature is not currently supported in this configuration.";
         case LXLSX_ERROR_NULL_PARAMETER_IGNORED:
             return "NULL function parameter ignored.";
         case LXLSX_ERROR_PARAMETER_VALIDATION:

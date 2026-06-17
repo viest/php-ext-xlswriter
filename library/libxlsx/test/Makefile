@@ -9,7 +9,6 @@ ARFLAGS ?= rc
 PYTHON ?= python3
 
 SRC_DIR := ../src
-READER_SRC_DIR := ../reader/src
 INC_DIR := ../include
 EXPAT_DIR := ../../libexpat/expat/lib
 OBJ_DIR := .test_obj
@@ -21,11 +20,10 @@ EDIT_TEST_DIR := edit
 FIXTURES_DIR := fixtures
 
 CFLAGS += -DTESTING -DCOLOR_OK -DXML_POOR_ENTROPY -DNOCRYPT -DNOUNCRYPT -g -Wall -Wextra -Wno-unused-parameter
-CPPFLAGS += -I$(INC_DIR) -I$(READER_SRC_DIR) -I../third_party/minizip -I$(EXPAT_DIR) -I$(READER_TEST_DIR)
+CPPFLAGS += -I$(INC_DIR) -I$(SRC_DIR) -I../internal -I../third_party/minizip -I$(EXPAT_DIR) -I$(READER_TEST_DIR)
 LIBS_O := -lz
 
-WRITER_SRCS := $(wildcard $(SRC_DIR)/*.c)
-READER_SRCS := $(wildcard $(READER_SRC_DIR)/*.c)
+LIBXLSX_SRCS := $(wildcard $(SRC_DIR)/*.c)
 MINIZIP_SRCS := \
 	../third_party/minizip/ioapi.c \
 	../third_party/minizip/unzip.c \
@@ -37,13 +35,12 @@ EXPAT_SRCS := \
 	$(EXPAT_DIR)/xmlrole.c \
 	$(EXPAT_DIR)/xmltok.c
 
-WRITER_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/writer/%.o,$(WRITER_SRCS))
-READER_OBJS := $(patsubst $(READER_SRC_DIR)/%.c,$(OBJ_DIR)/reader/%.o,$(READER_SRCS))
+LIBXLSX_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/libxlsx/%.o,$(LIBXLSX_SRCS))
 MINIZIP_OBJS := $(patsubst ../third_party/minizip/%.c,$(OBJ_DIR)/minizip/%.o,$(MINIZIP_SRCS))
 TMPFILEPLUS_OBJS := $(patsubst ../third_party/tmpfileplus/%.c,$(OBJ_DIR)/tmpfileplus/%.o,$(TMPFILEPLUS_SRCS))
 MD5_OBJS := $(patsubst ../third_party/md5/%.c,$(OBJ_DIR)/md5/%.o,$(MD5_SRCS))
 EXPAT_OBJS := $(patsubst $(EXPAT_DIR)/%.c,$(OBJ_DIR)/expat/%.o,$(EXPAT_SRCS))
-LIB_OBJS := $(WRITER_OBJS) $(READER_OBJS) $(MINIZIP_OBJS) $(TMPFILEPLUS_OBJS) $(MD5_OBJS) $(EXPAT_OBJS)
+LIB_OBJS := $(LIBXLSX_OBJS) $(MINIZIP_OBJS) $(TMPFILEPLUS_OBJS) $(MD5_OBJS) $(EXPAT_OBJS)
 
 READER_TEST_SRCS := $(wildcard $(READER_TEST_DIR)/test_*.c)
 READER_TEST_BINS := $(patsubst $(READER_TEST_DIR)/%.c,$(READER_TEST_DIR)/%,$(READER_TEST_SRCS))
@@ -70,9 +67,8 @@ READER_FIXTURES := \
 	$(FIXTURES_DIR)/phase4.xlsx
 
 PUBLIC_HEADERS := $(patsubst $(INC_DIR)/%,%, \
-	$(wildcard $(INC_DIR)/lxlsx.h) \
-	$(wildcard $(INC_DIR)/lxlsx/*.h) \
-	$(wildcard $(INC_DIR)/lxlsx/reader/*.h))
+	$(wildcard $(INC_DIR)/libxlsx.h) \
+	$(wildcard $(INC_DIR)/libxlsx/*.h))
 HEADER_TEST_STAMPS := $(patsubst %.h,$(OBJ_DIR)/headers/%.ok,$(PUBLIC_HEADERS))
 
 .PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test edit-fixtures header-test
@@ -105,13 +101,10 @@ reader-fixtures: $(READER_FIXTURES)
 $(LIB_TEST): $(LIB_OBJS)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
-$(OBJ_DIR)/writer $(OBJ_DIR)/reader $(OBJ_DIR)/minizip $(OBJ_DIR)/tmpfileplus $(OBJ_DIR)/md5 $(OBJ_DIR)/expat:
+$(OBJ_DIR)/libxlsx $(OBJ_DIR)/minizip $(OBJ_DIR)/tmpfileplus $(OBJ_DIR)/md5 $(OBJ_DIR)/expat:
 	$(Q)mkdir -p $@
 
-$(OBJ_DIR)/writer/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)/writer
-	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/reader/%.o: $(READER_SRC_DIR)/%.c | $(OBJ_DIR)/reader
+$(OBJ_DIR)/libxlsx/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)/libxlsx
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/minizip/%.o: ../third_party/minizip/%.c | $(OBJ_DIR)/minizip
@@ -126,7 +119,7 @@ $(OBJ_DIR)/md5/%.o: ../third_party/md5/%.c | $(OBJ_DIR)/md5
 $(OBJ_DIR)/expat/%.o: $(EXPAT_DIR)/%.c | $(OBJ_DIR)/expat
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(READER_TEST_DIR)/%: $(READER_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h $(READER_TEST_DIR)/lxlsx_reader_test_paths.h
+$(READER_TEST_DIR)/%: $(READER_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h $(READER_TEST_DIR)/xlsx_test_paths.h
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
 
 $(INTEGRATION_TEST_DIR)/%: $(INTEGRATION_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h

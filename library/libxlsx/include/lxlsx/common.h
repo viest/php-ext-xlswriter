@@ -16,6 +16,9 @@
 #ifndef __LXLSX_COMMON_H__
 #define __LXLSX_COMMON_H__
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <time.h>
 #include "third_party/queue.h"
 #include "third_party/tree.h"

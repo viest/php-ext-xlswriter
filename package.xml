@@ -93,7 +93,7 @@
    <file md5sum="e27b556277ddedeac7cfa09f4d7c655c" name="library/libxlsx/include/lxlsx/chart.h" role="src" />
    <file md5sum="51cae8013afeb24fdf1c9b5b94bf3e85" name="library/libxlsx/include/lxlsx/chartsheet.h" role="src" />
    <file md5sum="45051e3fb5fe99e21ed0a8b050ba3cac" name="library/libxlsx/include/lxlsx/comment.h" role="src" />
-   <file md5sum="acd4a88f0b39df0e98b26910af9cd167" name="library/libxlsx/include/lxlsx/common.h" role="src" />
+   <file md5sum="1c86b76c4f517d08c717b20dedc08d2b" name="library/libxlsx/include/lxlsx/common.h" role="src" />
    <file md5sum="d4f961067e06c6c268687223c226bc3e" name="library/libxlsx/include/lxlsx/content_types.h" role="src" />
    <file md5sum="1fdb3286d74d4144d733cbe2474b8080" name="library/libxlsx/include/lxlsx/core.h" role="src" />
    <file md5sum="a8b483b362204f19836584d704f2e72e" name="library/libxlsx/include/lxlsx/custom.h" role="src" />

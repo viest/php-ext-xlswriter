@@ -14,22 +14,22 @@
 #include <ctype.h>
 #include "lxlsx/xmlwriter.h"
 
-#define LXW_AMP  "&amp;"
-#define LXW_LT   "&lt;"
-#define LXW_GT   "&gt;"
-#define LXW_QUOT "&quot;"
-#define LXW_NL   "&#xA;"
+#define LXLSX_AMP  "&amp;"
+#define LXLSX_LT   "&lt;"
+#define LXLSX_GT   "&gt;"
+#define LXLSX_QUOT "&quot;"
+#define LXLSX_NL   "&#xA;"
 
 /* Defines. */
-#define LXW_MAX_ENCODED_ATTRIBUTE_LENGTH (LXW_MAX_ATTRIBUTE_LENGTH*6)
+#define LXLSX_MAX_ENCODED_ATTRIBUTE_LENGTH (LXLSX_MAX_ATTRIBUTE_LENGTH*6)
 
 /* Forward declarations. */
-STATIC char *_escape_attributes(struct xml_attribute *attribute);
+STATIC char *_escape_attributes(struct lxlsx_xml_attribute *attribute);
 
-char *lxw_escape_data(const char *data);
+char *lxlsx_escape_data(const char *data);
 
 STATIC void _fprint_escaped_attributes(FILE *xmlfile,
-                                       struct xml_attribute_list *attributes);
+                                       struct lxlsx_xml_attribute_list *attributes);
 
 STATIC void _fprint_escaped_data(FILE *xmlfile, const char *data);
 
@@ -37,7 +37,7 @@ STATIC void _fprint_escaped_data(FILE *xmlfile, const char *data);
  * Write the XML declaration.
  */
 void
-lxw_xml_declaration(FILE *xmlfile)
+lxlsx_xml_declaration(FILE *xmlfile)
 {
     fprintf(xmlfile, "<?xml version=\"1.0\" "
             "encoding=\"UTF-8\" standalone=\"yes\"?>\n");
@@ -47,8 +47,8 @@ lxw_xml_declaration(FILE *xmlfile)
  * Write an XML start tag with optional attributes.
  */
 void
-lxw_xml_start_tag(FILE *xmlfile,
-                  const char *tag, struct xml_attribute_list *attributes)
+lxlsx_xml_start_tag(FILE *xmlfile,
+                  const char *tag, struct lxlsx_xml_attribute_list *attributes)
 {
     fprintf(xmlfile, "<%s", tag);
 
@@ -62,11 +62,11 @@ lxw_xml_start_tag(FILE *xmlfile,
  * This is a minor speed optimization for elements that don't need encoding.
  */
 void
-lxw_xml_start_tag_unencoded(FILE *xmlfile,
+lxlsx_xml_start_tag_unencoded(FILE *xmlfile,
                             const char *tag,
-                            struct xml_attribute_list *attributes)
+                            struct lxlsx_xml_attribute_list *attributes)
 {
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute *attribute;
 
     fprintf(xmlfile, "<%s", tag);
 
@@ -83,7 +83,7 @@ lxw_xml_start_tag_unencoded(FILE *xmlfile,
  * Write an XML end tag.
  */
 void
-lxw_xml_end_tag(FILE *xmlfile, const char *tag)
+lxlsx_xml_end_tag(FILE *xmlfile, const char *tag)
 {
     fprintf(xmlfile, "</%s>", tag);
 }
@@ -92,8 +92,8 @@ lxw_xml_end_tag(FILE *xmlfile, const char *tag)
  * Write an empty XML tag with optional attributes.
  */
 void
-lxw_xml_empty_tag(FILE *xmlfile,
-                  const char *tag, struct xml_attribute_list *attributes)
+lxlsx_xml_empty_tag(FILE *xmlfile,
+                  const char *tag, struct lxlsx_xml_attribute_list *attributes)
 {
     fprintf(xmlfile, "<%s", tag);
 
@@ -107,11 +107,11 @@ lxw_xml_empty_tag(FILE *xmlfile,
  * This is a minor speed optimization for elements that don't need encoding.
  */
 void
-lxw_xml_empty_tag_unencoded(FILE *xmlfile,
+lxlsx_xml_empty_tag_unencoded(FILE *xmlfile,
                             const char *tag,
-                            struct xml_attribute_list *attributes)
+                            struct lxlsx_xml_attribute_list *attributes)
 {
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute *attribute;
 
     fprintf(xmlfile, "<%s", tag);
 
@@ -128,9 +128,9 @@ lxw_xml_empty_tag_unencoded(FILE *xmlfile,
  * Write an XML element containing data with optional attributes.
  */
 void
-lxw_xml_data_element(FILE *xmlfile,
+lxlsx_xml_data_element(FILE *xmlfile,
                      const char *tag,
-                     const char *data, struct xml_attribute_list *attributes)
+                     const char *data, struct lxlsx_xml_attribute_list *attributes)
 {
     fprintf(xmlfile, "<%s", tag);
 
@@ -147,7 +147,7 @@ lxw_xml_data_element(FILE *xmlfile,
  * Write an XML <si> element for rich strings, without encoding.
  */
 void
-lxw_xml_rich_si_element(FILE *xmlfile, const char *string)
+lxlsx_xml_rich_si_element(FILE *xmlfile, const char *string)
 {
     fprintf(xmlfile, "<si>%s</si>", string);
 }
@@ -156,33 +156,33 @@ lxw_xml_rich_si_element(FILE *xmlfile, const char *string)
  * Escape XML characters in attributes.
  */
 STATIC char *
-_escape_attributes(struct xml_attribute *attribute)
+_escape_attributes(struct lxlsx_xml_attribute *attribute)
 {
-    char *encoded = (char *) calloc(LXW_MAX_ENCODED_ATTRIBUTE_LENGTH, 1);
+    char *encoded = (char *) calloc(LXLSX_MAX_ENCODED_ATTRIBUTE_LENGTH, 1);
     char *p_encoded = encoded;
     char *p_attr = attribute->value;
 
     while (*p_attr) {
         switch (*p_attr) {
             case '&':
-                memcpy(p_encoded, LXW_AMP, sizeof(LXW_AMP) - 1);
-                p_encoded += sizeof(LXW_AMP) - 1;
+                memcpy(p_encoded, LXLSX_AMP, sizeof(LXLSX_AMP) - 1);
+                p_encoded += sizeof(LXLSX_AMP) - 1;
                 break;
             case '<':
-                memcpy(p_encoded, LXW_LT, sizeof(LXW_LT) - 1);
-                p_encoded += sizeof(LXW_LT) - 1;
+                memcpy(p_encoded, LXLSX_LT, sizeof(LXLSX_LT) - 1);
+                p_encoded += sizeof(LXLSX_LT) - 1;
                 break;
             case '>':
-                memcpy(p_encoded, LXW_GT, sizeof(LXW_GT) - 1);
-                p_encoded += sizeof(LXW_GT) - 1;
+                memcpy(p_encoded, LXLSX_GT, sizeof(LXLSX_GT) - 1);
+                p_encoded += sizeof(LXLSX_GT) - 1;
                 break;
             case '"':
-                memcpy(p_encoded, LXW_QUOT, sizeof(LXW_QUOT) - 1);
-                p_encoded += sizeof(LXW_QUOT) - 1;
+                memcpy(p_encoded, LXLSX_QUOT, sizeof(LXLSX_QUOT) - 1);
+                p_encoded += sizeof(LXLSX_QUOT) - 1;
                 break;
             case '\n':
-                memcpy(p_encoded, LXW_NL, sizeof(LXW_NL) - 1);
-                p_encoded += sizeof(LXW_NL) - 1;
+                memcpy(p_encoded, LXLSX_NL, sizeof(LXLSX_NL) - 1);
+                p_encoded += sizeof(LXLSX_NL) - 1;
                 break;
             default:
                 *p_encoded = *p_attr;
@@ -201,7 +201,7 @@ _escape_attributes(struct xml_attribute *attribute)
  * in that double quotes are not escaped by Excel.
  */
 char *
-lxw_escape_data(const char *data)
+lxlsx_escape_data(const char *data)
 {
     size_t encoded_len = (strlen(data) * 5 + 1);
 
@@ -211,16 +211,16 @@ lxw_escape_data(const char *data)
     while (*data) {
         switch (*data) {
             case '&':
-                memcpy(p_encoded, LXW_AMP, sizeof(LXW_AMP) - 1);
-                p_encoded += sizeof(LXW_AMP) - 1;
+                memcpy(p_encoded, LXLSX_AMP, sizeof(LXLSX_AMP) - 1);
+                p_encoded += sizeof(LXLSX_AMP) - 1;
                 break;
             case '<':
-                memcpy(p_encoded, LXW_LT, sizeof(LXW_LT) - 1);
-                p_encoded += sizeof(LXW_LT) - 1;
+                memcpy(p_encoded, LXLSX_LT, sizeof(LXLSX_LT) - 1);
+                p_encoded += sizeof(LXLSX_LT) - 1;
                 break;
             case '>':
-                memcpy(p_encoded, LXW_GT, sizeof(LXW_GT) - 1);
-                p_encoded += sizeof(LXW_GT) - 1;
+                memcpy(p_encoded, LXLSX_GT, sizeof(LXLSX_GT) - 1);
+                p_encoded += sizeof(LXLSX_GT) - 1;
                 break;
             default:
                 *p_encoded = *data;
@@ -237,24 +237,24 @@ lxw_escape_data(const char *data)
  * Check for control characters in strings.
  */
 uint8_t
-lxw_has_control_characters(const char *string)
+lxlsx_has_control_characters(const char *string)
 {
     while (*string) {
         /* 0xE0 == 0b11100000 masks values > 0x19 == 0b00011111. */
         if (!(*string & 0xE0) && *string != 0x0A && *string != 0x09)
-            return LXW_TRUE;
+            return LXLSX_TRUE;
 
         string++;
     }
 
-    return LXW_FALSE;
+    return LXLSX_FALSE;
 }
 
 /*
  * Escape control characters in strings with _xHHHH_.
  */
 char *
-lxw_escape_control_characters(const char *string)
+lxlsx_escape_control_characters(const char *string)
 {
     size_t escape_len = sizeof("_xHHHH_") - 1;
     size_t encoded_len = (strlen(string) * escape_len + 1);
@@ -293,7 +293,7 @@ lxw_escape_control_characters(const char *string)
             case '\x1D':
             case '\x1E':
             case '\x1F':
-                lxw_snprintf(p_encoded, escape_len + 1, "_x%04X_", *string);
+                lxlsx_snprintf(p_encoded, escape_len + 1, "_x%04X_", *string);
                 p_encoded += escape_len;
                 break;
             default:
@@ -311,7 +311,7 @@ lxw_escape_control_characters(const char *string)
  * Escape special characters in URL strings with with %XX.
  */
 char *
-lxw_escape_url_characters(const char *string, uint8_t escape_hash)
+lxlsx_escape_url_characters(const char *string, uint8_t escape_hash)
 {
 
     size_t escape_len = sizeof("%XX") - 1;
@@ -332,13 +332,13 @@ lxw_escape_url_characters(const char *string, uint8_t escape_hash)
             case '^':
             case '{':
             case '}':
-                lxw_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
+                lxlsx_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
                 p_encoded += escape_len;
                 break;
             case '#':
                 /* This is only escaped for "external:" style links. */
                 if (escape_hash) {
-                    lxw_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
+                    lxlsx_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
                     p_encoded += escape_len;
                 }
                 else {
@@ -349,7 +349,7 @@ lxw_escape_url_characters(const char *string, uint8_t escape_hash)
             case '%':
                 /* Only escape % if it isn't already an escape. */
                 if (!isxdigit(*(string + 1)) || !isxdigit(*(string + 2))) {
-                    lxw_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
+                    lxlsx_snprintf(p_encoded, escape_len + 1, "%%%2x", *string);
                     p_encoded += escape_len;
                 }
                 else {
@@ -371,9 +371,9 @@ lxw_escape_url_characters(const char *string, uint8_t escape_hash)
 /* Write out escaped attributes. */
 STATIC void
 _fprint_escaped_attributes(FILE *xmlfile,
-                           struct xml_attribute_list *attributes)
+                           struct lxlsx_xml_attribute_list *attributes)
 {
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute *attribute;
 
     if (attributes) {
         STAILQ_FOREACH(attribute, attributes, list_entries) {
@@ -404,7 +404,7 @@ _fprint_escaped_data(FILE *xmlfile, const char *data)
         fprintf(xmlfile, "%s", data);
     }
     else {
-        char *encoded = lxw_escape_data(data);
+        char *encoded = lxlsx_escape_data(data);
         if (encoded) {
             fprintf(xmlfile, "%s", encoded);
             free(encoded);
@@ -413,37 +413,37 @@ _fprint_escaped_data(FILE *xmlfile, const char *data)
 }
 
 /* Create a new string XML attribute. */
-struct xml_attribute *
-lxw_new_attribute_str(const char *key, const char *value)
+struct lxlsx_xml_attribute *
+lxlsx_new_attribute_str(const char *key, const char *value)
 {
-    struct xml_attribute *attribute = malloc(sizeof(struct xml_attribute));
+    struct lxlsx_xml_attribute *attribute = malloc(sizeof(struct lxlsx_xml_attribute));
 
-    LXW_ATTRIBUTE_COPY(attribute->key, key);
-    LXW_ATTRIBUTE_COPY(attribute->value, value);
+    LXLSX_ATTRIBUTE_COPY(attribute->key, key);
+    LXLSX_ATTRIBUTE_COPY(attribute->value, value);
 
     return attribute;
 }
 
 /* Create a new integer XML attribute. */
-struct xml_attribute *
-lxw_new_attribute_int(const char *key, int32_t value)
+struct lxlsx_xml_attribute *
+lxlsx_new_attribute_int(const char *key, int32_t value)
 {
-    struct xml_attribute *attribute = malloc(sizeof(struct xml_attribute));
+    struct lxlsx_xml_attribute *attribute = malloc(sizeof(struct lxlsx_xml_attribute));
 
-    LXW_ATTRIBUTE_COPY(attribute->key, key);
-    lxw_snprintf(attribute->value, LXW_MAX_ATTRIBUTE_LENGTH, "%d", value);
+    LXLSX_ATTRIBUTE_COPY(attribute->key, key);
+    lxlsx_snprintf(attribute->value, LXLSX_MAX_ATTRIBUTE_LENGTH, "%d", value);
 
     return attribute;
 }
 
 /* Create a new double XML attribute. */
-struct xml_attribute *
-lxw_new_attribute_dbl(const char *key, double value)
+struct lxlsx_xml_attribute *
+lxlsx_new_attribute_dbl(const char *key, double value)
 {
-    struct xml_attribute *attribute = malloc(sizeof(struct xml_attribute));
+    struct lxlsx_xml_attribute *attribute = malloc(sizeof(struct lxlsx_xml_attribute));
 
-    LXW_ATTRIBUTE_COPY(attribute->key, key);
-    lxw_sprintf_dbl(attribute->value, value);
+    LXLSX_ATTRIBUTE_COPY(attribute->key, key);
+    lxlsx_sprintf_dbl(attribute->value, value);
 
     return attribute;
 }

@@ -15,18 +15,18 @@
 CTEST(worksheet, set_selection01) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"/></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, 0, 0, 0, 0);
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, 0, 0, 0, 0);
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -34,18 +34,18 @@ CTEST(worksheet, set_selection01) {
 CTEST(worksheet, set_selection02) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"A2\" sqref=\"A2\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, 1, 0, 1, 0);
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, 1, 0, 1, 0);
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -53,18 +53,18 @@ CTEST(worksheet, set_selection02) {
 CTEST(worksheet, set_selection03) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"B1\" sqref=\"B1\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, RANGE("B1:B1"));
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, RANGE("B1:B1"));
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -72,18 +72,18 @@ CTEST(worksheet, set_selection03) {
 CTEST(worksheet, set_selection04) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"D3\" sqref=\"D3\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, RANGE("D3:D3"));
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, RANGE("D3:D3"));
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -91,18 +91,18 @@ CTEST(worksheet, set_selection04) {
 CTEST(worksheet, set_selection05) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"D3\" sqref=\"D3:F4\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, RANGE("D3:F4"));
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, RANGE("D3:F4"));
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -110,18 +110,18 @@ CTEST(worksheet, set_selection05) {
 CTEST(worksheet, set_selection06) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"F4\" sqref=\"D3:F4\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, RANGE("F4:D3"));
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, RANGE("F4:D3"));
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -129,16 +129,16 @@ CTEST(worksheet, set_selection06) {
 CTEST(worksheet, set_selection07) {
     char* got;
     char exp[] = "<sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"A2\" sqref=\"A2\"/></sheetView></sheetViews>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_select(worksheet);
-    worksheet_set_selection(worksheet, RANGE("A2:A2"));
+    lxlsx_worksheet_select(worksheet);
+    lxlsx_worksheet_set_selection(worksheet, RANGE("A2:A2"));
     _worksheet_write_sheet_views(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

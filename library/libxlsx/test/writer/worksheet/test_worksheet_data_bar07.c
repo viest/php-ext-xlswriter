@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_data_bar07) {
+CTEST(worksheet, lxlsx_worksheet_data_bar07) {
 
     char* got;
     char exp[] =
@@ -114,34 +114,34 @@ CTEST(worksheet, worksheet_data_bar07) {
               "</extLst>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type                           = LXW_CONDITIONAL_DATA_BAR;
-    conditional_format->bar_axis_position              = LXW_CONDITIONAL_BAR_AXIS_MIDPOINT;
-    worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
-    memset(conditional_format, 0, sizeof(lxw_conditional_format));
+    conditional_format->type                           = LXLSX_CONDITIONAL_DATA_BAR;
+    conditional_format->bar_axis_position              = LXLSX_CONDITIONAL_BAR_AXIS_MIDPOINT;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
+    memset(conditional_format, 0, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type                           = LXW_CONDITIONAL_DATA_BAR;
+    conditional_format->type                           = LXLSX_CONDITIONAL_DATA_BAR;
     conditional_format->bar_color                      = 0x63C384;
-    conditional_format->bar_axis_position              = LXW_CONDITIONAL_BAR_AXIS_NONE;
-    worksheet_conditional_format_range(worksheet, RANGE("A2:B2"), conditional_format);
-    memset(conditional_format, 0, sizeof(lxw_conditional_format));
+    conditional_format->bar_axis_position              = LXLSX_CONDITIONAL_BAR_AXIS_NONE;
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A2:B2"), conditional_format);
+    memset(conditional_format, 0, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type                           = LXW_CONDITIONAL_DATA_BAR;
+    conditional_format->type                           = LXLSX_CONDITIONAL_DATA_BAR;
     conditional_format->bar_color                      = 0xFF555A;
     conditional_format->bar_axis_color                 = 0x0070C0;
-    worksheet_conditional_format_range(worksheet, RANGE("A3:C3"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A3:C3"), conditional_format);
 
     free(conditional_format);
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

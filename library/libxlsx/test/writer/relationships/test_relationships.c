@@ -25,23 +25,23 @@ CTEST(relationships, relationships01) {
           "<Relationship Id=\"rId5\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain\" Target=\"calcChain.xml\"/>"
         "</Relationships>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_relationships *rels = lxw_relationships_new();
+    lxlsx_relationships *rels = lxlsx_relationships_new();
     rels->file = testfile;
 
-    lxw_add_document_relationship(rels, "/worksheet",     "worksheets/sheet1.xml");
-    lxw_add_document_relationship(rels, "/theme",         "theme/theme1.xml");
-    lxw_add_document_relationship(rels, "/styles",        "styles.xml");
-    lxw_add_document_relationship(rels, "/sharedStrings", "sharedStrings.xml");
-    lxw_add_document_relationship(rels, "/calcChain",     "calcChain.xml");
+    lxlsx_add_document_relationship(rels, "/worksheet",     "worksheets/sheet1.xml");
+    lxlsx_add_document_relationship(rels, "/theme",         "theme/theme1.xml");
+    lxlsx_add_document_relationship(rels, "/styles",        "styles.xml");
+    lxlsx_add_document_relationship(rels, "/sharedStrings", "sharedStrings.xml");
+    lxlsx_add_document_relationship(rels, "/calcChain",     "calcChain.xml");
 
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 }
 
 // Test assembling a complete Relationships file.
@@ -55,17 +55,17 @@ CTEST(relationships, relationships02) {
           "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink\" Target=\"link00.xlsx\" TargetMode=\"External\"/>"
         "</Relationships>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_relationships *rels = lxw_relationships_new();
+    lxlsx_relationships *rels = lxlsx_relationships_new();
     rels->file = testfile;
 
-    lxw_add_worksheet_relationship(rels, "/hyperlink", "www.foo.com", "External");
-    lxw_add_worksheet_relationship(rels, "/hyperlink", "link00.xlsx", "External");
+    lxlsx_add_worksheet_relationship(rels, "/hyperlink", "www.foo.com", "External");
+    lxlsx_add_worksheet_relationship(rels, "/hyperlink", "link00.xlsx", "External");
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 }

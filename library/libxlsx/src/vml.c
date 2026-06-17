@@ -25,16 +25,16 @@
 /*
  * Create a new vml object.
  */
-lxw_vml *
-lxw_vml_new(void)
+lxlsx_vml *
+lxlsx_vml_new(void)
 {
-    lxw_vml *vml = calloc(1, sizeof(lxw_vml));
+    lxlsx_vml *vml = calloc(1, sizeof(lxlsx_vml));
     GOTO_LABEL_ON_MEM_ERROR(vml, mem_error);
 
     return vml;
 
 mem_error:
-    lxw_vml_free(vml);
+    lxlsx_vml_free(vml);
     return NULL;
 }
 
@@ -42,7 +42,7 @@ mem_error:
  * Free a vml object.
  */
 void
-lxw_vml_free(lxw_vml *vml)
+lxlsx_vml_free(lxlsx_vml *vml)
 {
     if (!vml)
         return;
@@ -59,35 +59,35 @@ lxw_vml_free(lxw_vml *vml)
  * Write the <x:Visible> element.
  */
 STATIC void
-_vml_write_visible(lxw_vml *self)
+_vml_write_visible(lxlsx_vml *self)
 {
-    lxw_xml_empty_tag(self->file, "x:Visible", NULL);
+    lxlsx_xml_empty_tag(self->file, "x:Visible", NULL);
 }
 
 /*
  * Write the <v:f> element.
  */
 STATIC void
-_vml_write_formula(lxw_vml *self, char *equation)
+_vml_write_formula(lxlsx_vml *self, char *equation)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("eqn", equation);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("eqn", equation);
 
-    lxw_xml_empty_tag(self->file, "v:f", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:f", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:formulas> element.
  */
 STATIC void
-_vml_write_formulas(lxw_vml *self)
+_vml_write_formulas(lxlsx_vml *self)
 {
-    lxw_xml_start_tag(self->file, "v:formulas", NULL);
+    lxlsx_xml_start_tag(self->file, "v:formulas", NULL);
 
     _vml_write_formula(self, "if lineDrawn pixelLineWidth 0");
     _vml_write_formula(self, "sum @0 1 0");
@@ -102,283 +102,283 @@ _vml_write_formulas(lxw_vml *self)
     _vml_write_formula(self, "prod @7 21600 pixelHeight");
     _vml_write_formula(self, "sum @10 21600 0");
 
-    lxw_xml_end_tag(self->file, "v:formulas");
+    lxlsx_xml_end_tag(self->file, "v:formulas");
 }
 
 /*
  * Write the <x:TextHAlign> element.
  */
 STATIC void
-_vml_write_text_halign(lxw_vml *self)
+_vml_write_text_halign(lxlsx_vml *self)
 {
 
-    lxw_xml_data_element(self->file, "x:TextHAlign", "Center", NULL);
+    lxlsx_xml_data_element(self->file, "x:TextHAlign", "Center", NULL);
 }
 
 /*
  * Write the <x:TextVAlign> element.
  */
 STATIC void
-_vml_write_text_valign(lxw_vml *self)
+_vml_write_text_valign(lxlsx_vml *self)
 {
-    lxw_xml_data_element(self->file, "x:TextVAlign", "Center", NULL);
+    lxlsx_xml_data_element(self->file, "x:TextVAlign", "Center", NULL);
 }
 
 /*
  * Write the <x:FmlaMacro> element.
  */
 STATIC void
-_vml_write_fmla_macro(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_fmla_macro(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    lxw_xml_data_element(self->file, "x:FmlaMacro", vml_obj->macro, NULL);
+    lxlsx_xml_data_element(self->file, "x:FmlaMacro", lxlsx_vml_obj->macro, NULL);
 }
 
 /*
  * Write the <x:PrintObject> element.
  */
 STATIC void
-_vml_write_print_object(lxw_vml *self)
+_vml_write_print_object(lxlsx_vml *self)
 {
-    lxw_xml_data_element(self->file, "x:PrintObject", "False", NULL);
+    lxlsx_xml_data_element(self->file, "x:PrintObject", "False", NULL);
 }
 
 /*
  * Write the <o:lock> element.
  */
 STATIC void
-_vml_write_aspect_ratio_lock(lxw_vml *self)
+_vml_write_aspect_ratio_lock(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("v:ext", "edit");
-    LXW_PUSH_ATTRIBUTES_STR("aspectratio", "t");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("v:ext", "edit");
+    LXLSX_PUSH_ATTRIBUTES_STR("aspectratio", "t");
 
-    lxw_xml_empty_tag(self->file, "o:lock", &attributes);
+    lxlsx_xml_empty_tag(self->file, "o:lock", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <o:lock> element.
  */
 STATIC void
-_vml_write_rotation_lock(lxw_vml *self)
+_vml_write_rotation_lock(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("v:ext", "edit");
-    LXW_PUSH_ATTRIBUTES_STR("rotation", "t");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("v:ext", "edit");
+    LXLSX_PUSH_ATTRIBUTES_STR("rotation", "t");
 
-    lxw_xml_empty_tag(self->file, "o:lock", &attributes);
+    lxlsx_xml_empty_tag(self->file, "o:lock", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <x:Column> element.
  */
 STATIC void
-_vml_write_column(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_column(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    char data[LXW_ATTR_32];
+    char data[LXLSX_ATTR_32];
 
-    lxw_snprintf(data, LXW_ATTR_32, "%d", vml_obj->col);
+    lxlsx_snprintf(data, LXLSX_ATTR_32, "%d", lxlsx_vml_obj->col);
 
-    lxw_xml_data_element(self->file, "x:Column", data, NULL);
+    lxlsx_xml_data_element(self->file, "x:Column", data, NULL);
 }
 
 /*
  * Write the <x:Row> element.
  */
 STATIC void
-_vml_write_row(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_row(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    char data[LXW_ATTR_32];
+    char data[LXLSX_ATTR_32];
 
-    lxw_snprintf(data, LXW_ATTR_32, "%d", vml_obj->row);
+    lxlsx_snprintf(data, LXLSX_ATTR_32, "%d", lxlsx_vml_obj->row);
 
-    lxw_xml_data_element(self->file, "x:Row", data, NULL);
+    lxlsx_xml_data_element(self->file, "x:Row", data, NULL);
 }
 
 /*
  * Write the <x:AutoFill> element.
  */
 STATIC void
-_vml_write_auto_fill(lxw_vml *self)
+_vml_write_auto_fill(lxlsx_vml *self)
 {
-    lxw_xml_data_element(self->file, "x:AutoFill", "False", NULL);
+    lxlsx_xml_data_element(self->file, "x:AutoFill", "False", NULL);
 }
 
 /*
  * Write the <x:Anchor> element.
  */
 STATIC void
-_vml_write_anchor(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_anchor(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    char anchor_data[LXW_MAX_ATTRIBUTE_LENGTH];
+    char anchor_data[LXLSX_MAX_ATTRIBUTE_LENGTH];
 
-    lxw_snprintf(anchor_data,
-                 LXW_MAX_ATTRIBUTE_LENGTH,
+    lxlsx_snprintf(anchor_data,
+                 LXLSX_MAX_ATTRIBUTE_LENGTH,
                  "%d, %d, %d, %d, %d, %d, %d, %d",
-                 vml_obj->from.col,
-                 (uint32_t) vml_obj->from.col_offset,
-                 vml_obj->from.row,
-                 (uint32_t) vml_obj->from.row_offset,
-                 vml_obj->to.col,
-                 (uint32_t) vml_obj->to.col_offset,
-                 vml_obj->to.row, (uint32_t) vml_obj->to.row_offset);
+                 lxlsx_vml_obj->from.col,
+                 (uint32_t) lxlsx_vml_obj->from.col_offset,
+                 lxlsx_vml_obj->from.row,
+                 (uint32_t) lxlsx_vml_obj->from.row_offset,
+                 lxlsx_vml_obj->to.col,
+                 (uint32_t) lxlsx_vml_obj->to.col_offset,
+                 lxlsx_vml_obj->to.row, (uint32_t) lxlsx_vml_obj->to.row_offset);
 
-    lxw_xml_data_element(self->file, "x:Anchor", anchor_data, NULL);
+    lxlsx_xml_data_element(self->file, "x:Anchor", anchor_data, NULL);
 }
 
 /*
  * Write the <x:SizeWithCells> element.
  */
 STATIC void
-_vml_write_size_with_cells(lxw_vml *self)
+_vml_write_size_with_cells(lxlsx_vml *self)
 {
-    lxw_xml_empty_tag(self->file, "x:SizeWithCells", NULL);
+    lxlsx_xml_empty_tag(self->file, "x:SizeWithCells", NULL);
 }
 
 /*
  * Write the <x:MoveWithCells> element.
  */
 STATIC void
-_vml_write_move_with_cells(lxw_vml *self)
+_vml_write_move_with_cells(lxlsx_vml *self)
 {
-    lxw_xml_empty_tag(self->file, "x:MoveWithCells", NULL);
+    lxlsx_xml_empty_tag(self->file, "x:MoveWithCells", NULL);
 }
 
 /*
  * Write the <v:shadow> element.
  */
 STATIC void
-_vml_write_shadow(lxw_vml *self)
+_vml_write_shadow(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("on", "t");
-    LXW_PUSH_ATTRIBUTES_STR("color", "black");
-    LXW_PUSH_ATTRIBUTES_STR("obscured", "t");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("on", "t");
+    LXLSX_PUSH_ATTRIBUTES_STR("color", "black");
+    LXLSX_PUSH_ATTRIBUTES_STR("obscured", "t");
 
-    lxw_xml_empty_tag(self->file, "v:shadow", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:shadow", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:stroke> element.
  */
 STATIC void
-_vml_write_stroke(lxw_vml *self)
+_vml_write_stroke(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("joinstyle", "miter");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("joinstyle", "miter");
 
-    lxw_xml_empty_tag(self->file, "v:stroke", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:stroke", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <o:lock> element.
  */
 STATIC void
-_vml_write_shapetype_lock(lxw_vml *self)
+_vml_write_shapetype_lock(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("v:ext", "edit");
-    LXW_PUSH_ATTRIBUTES_STR("shapetype", "t");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("v:ext", "edit");
+    LXLSX_PUSH_ATTRIBUTES_STR("shapetype", "t");
 
-    lxw_xml_empty_tag(self->file, "o:lock", &attributes);
+    lxlsx_xml_empty_tag(self->file, "o:lock", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <font> element.
  */
 STATIC void
-_vml_write_font(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_font(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("face", "Calibri");
-    LXW_PUSH_ATTRIBUTES_STR("size", "220");
-    LXW_PUSH_ATTRIBUTES_STR("color", "#000000");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("face", "Calibri");
+    LXLSX_PUSH_ATTRIBUTES_STR("size", "220");
+    LXLSX_PUSH_ATTRIBUTES_STR("color", "#000000");
 
-    lxw_xml_data_element(self->file, "font", vml_obj->name, &attributes);
+    lxlsx_xml_data_element(self->file, "font", lxlsx_vml_obj->name, &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:imagedata> element.
  */
 STATIC void
-_vml_write_imagedata(lxw_vml *self, uint32_t rel_index, char *name)
+_vml_write_imagedata(lxlsx_vml *self, uint32_t rel_index, char *name)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
-    char rel_id[LXW_ATTR_32];
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
+    char rel_id[LXLSX_ATTR_32];
 
-    lxw_snprintf(rel_id, LXW_ATTR_32, "rId%d", rel_index);
+    lxlsx_snprintf(rel_id, LXLSX_ATTR_32, "rId%d", rel_index);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("o:relid", rel_id);
-    LXW_PUSH_ATTRIBUTES_STR("o:title", name);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("o:relid", rel_id);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:title", name);
 
-    lxw_xml_empty_tag(self->file, "v:imagedata", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:imagedata", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:path> element.
  */
 STATIC void
-_vml_write_image_path(lxw_vml *self)
+_vml_write_image_path(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("o:extrusionok", "f");
-    LXW_PUSH_ATTRIBUTES_STR("gradientshapeok", "t");
-    LXW_PUSH_ATTRIBUTES_STR("o:connecttype", "rect");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("o:extrusionok", "f");
+    LXLSX_PUSH_ATTRIBUTES_STR("gradientshapeok", "t");
+    LXLSX_PUSH_ATTRIBUTES_STR("o:connecttype", "rect");
 
-    lxw_xml_empty_tag(self->file, "v:path", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:path", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shape> element.
  */
 STATIC void
-_vml_write_image_shape(lxw_vml *self, uint32_t vml_shape_id, uint32_t z_index,
-                       lxw_vml_obj *image_obj)
+_vml_write_image_shape(lxlsx_vml *self, uint32_t lxlsx_vml_shape_id, uint32_t z_index,
+                       lxlsx_vml_obj *image_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
-    char width_str[LXW_ATTR_32];
-    char height_str[LXW_ATTR_32];
-    char style[LXW_MAX_ATTRIBUTE_LENGTH];
-    char o_spid[LXW_ATTR_32];
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
+    char width_str[LXLSX_ATTR_32];
+    char height_str[LXLSX_ATTR_32];
+    char style[LXLSX_MAX_ATTRIBUTE_LENGTH];
+    char o_spid[LXLSX_ATTR_32];
     char type[] = "#_x0000_t75";
     double width;
     double height;
@@ -391,26 +391,26 @@ _vml_write_image_shape(lxw_vml *self, uint32_t vml_shape_id, uint32_t z_index,
     width = 72.0 / 96.0 * (uint32_t) (width * 96.0 / 72 + 0.25);
     height = 72.0 / 96.0 * (uint32_t) (height * 96.0 / 72 + 0.25);
 
-    lxw_sprintf_dbl(width_str, width);
-    lxw_sprintf_dbl(height_str, height);
+    lxlsx_sprintf_dbl(width_str, width);
+    lxlsx_sprintf_dbl(height_str, height);
 
-    lxw_snprintf(o_spid, LXW_ATTR_32, "_x0000_s%d", vml_shape_id);
+    lxlsx_snprintf(o_spid, LXLSX_ATTR_32, "_x0000_s%d", lxlsx_vml_shape_id);
 
-    lxw_snprintf(style,
-                 LXW_MAX_ATTRIBUTE_LENGTH,
+    lxlsx_snprintf(style,
+                 LXLSX_MAX_ATTRIBUTE_LENGTH,
                  "position:absolute;"
                  "margin-left:0;"
                  "margin-top:0;"
                  "width:%spt;"
                  "height:%spt;" "z-index:%d", width_str, height_str, z_index);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", image_obj->image_position);
-    LXW_PUSH_ATTRIBUTES_STR("o:spid", o_spid);
-    LXW_PUSH_ATTRIBUTES_STR("type", type);
-    LXW_PUSH_ATTRIBUTES_STR("style", style);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", image_obj->image_position);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:spid", o_spid);
+    LXLSX_PUSH_ATTRIBUTES_STR("type", type);
+    LXLSX_PUSH_ATTRIBUTES_STR("style", style);
 
-    lxw_xml_start_tag(self->file, "v:shape", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shape", &attributes);
 
     /* Write the v:imagedata element. */
     _vml_write_imagedata(self, image_obj->rel_index, image_obj->name);
@@ -418,19 +418,19 @@ _vml_write_image_shape(lxw_vml *self, uint32_t vml_shape_id, uint32_t z_index,
     /* Write the o:lock element. */
     _vml_write_rotation_lock(self);
 
-    lxw_xml_end_tag(self->file, "v:shape");
+    lxlsx_xml_end_tag(self->file, "v:shape");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shapetype> element for images.
  */
 STATIC void
-_vml_write_image_shapetype(lxw_vml *self)
+_vml_write_image_shapetype(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char id[] = "_x0000_t75";
     char coordsize[] = "21600,21600";
     char o_spt[] = "75";
@@ -439,16 +439,16 @@ _vml_write_image_shapetype(lxw_vml *self)
     char filled[] = "f";
     char stroked[] = "f";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", id);
-    LXW_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
-    LXW_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
-    LXW_PUSH_ATTRIBUTES_STR("o:preferrelative", o_preferrelative);
-    LXW_PUSH_ATTRIBUTES_STR("path", path);
-    LXW_PUSH_ATTRIBUTES_STR("filled", filled);
-    LXW_PUSH_ATTRIBUTES_STR("stroked", stroked);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", id);
+    LXLSX_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:preferrelative", o_preferrelative);
+    LXLSX_PUSH_ATTRIBUTES_STR("path", path);
+    LXLSX_PUSH_ATTRIBUTES_STR("filled", filled);
+    LXLSX_PUSH_ATTRIBUTES_STR("stroked", stroked);
 
-    lxw_xml_start_tag(self->file, "v:shapetype", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shapetype", &attributes);
 
     /* Write the v:stroke element. */
     _vml_write_stroke(self);
@@ -462,27 +462,27 @@ _vml_write_image_shapetype(lxw_vml *self)
     /* Write the o:lock element. */
     _vml_write_aspect_ratio_lock(self);
 
-    lxw_xml_end_tag(self->file, "v:shapetype");
+    lxlsx_xml_end_tag(self->file, "v:shapetype");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <x:ClientData> element.
  */
 STATIC void
-_vml_write_button_client_data(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_button_client_data(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("ObjectType", "Button");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("ObjectType", "Button");
 
-    lxw_xml_start_tag(self->file, "x:ClientData", &attributes);
+    lxlsx_xml_start_tag(self->file, "x:ClientData", &attributes);
 
     /* Write the <x:Anchor> element. */
-    _vml_write_anchor(self, vml_obj);
+    _vml_write_anchor(self, lxlsx_vml_obj);
 
     /* Write the x:PrintObject element. */
     _vml_write_print_object(self);
@@ -491,7 +491,7 @@ _vml_write_button_client_data(lxw_vml *self, lxw_vml_obj *vml_obj)
     _vml_write_auto_fill(self);
 
     /* Write the x:FmlaMacro element. */
-    _vml_write_fmla_macro(self, vml_obj);
+    _vml_write_fmla_macro(self, lxlsx_vml_obj);
 
     /* Write the x:TextHAlign element. */
     _vml_write_text_halign(self);
@@ -499,126 +499,126 @@ _vml_write_button_client_data(lxw_vml *self, lxw_vml_obj *vml_obj)
     /* Write the x:TextVAlign element. */
     _vml_write_text_valign(self);
 
-    lxw_xml_end_tag(self->file, "x:ClientData");
+    lxlsx_xml_end_tag(self->file, "x:ClientData");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <div> element.
  */
 STATIC void
-_vml_write_button_div(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_button_div(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("style", "text-align:center");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("style", "text-align:center");
 
-    lxw_xml_start_tag(self->file, "div", &attributes);
+    lxlsx_xml_start_tag(self->file, "div", &attributes);
 
     /* Write the font element. */
-    _vml_write_font(self, vml_obj);
+    _vml_write_font(self, lxlsx_vml_obj);
 
-    lxw_xml_end_tag(self->file, "div");
+    lxlsx_xml_end_tag(self->file, "div");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:textbox> element.
  */
 STATIC void
-_vml_write_button_textbox(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_button_textbox(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("style", "mso-direction-alt:auto");
-    LXW_PUSH_ATTRIBUTES_STR("o:singleclick", "f");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("style", "mso-direction-alt:auto");
+    LXLSX_PUSH_ATTRIBUTES_STR("o:singleclick", "f");
 
-    lxw_xml_start_tag(self->file, "v:textbox", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:textbox", &attributes);
 
     /* Write the div element. */
-    _vml_write_button_div(self, vml_obj);
+    _vml_write_button_div(self, lxlsx_vml_obj);
 
-    lxw_xml_end_tag(self->file, "v:textbox");
+    lxlsx_xml_end_tag(self->file, "v:textbox");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:fill> element.
  */
 STATIC void
-_vml_write_button_fill(lxw_vml *self)
+_vml_write_button_fill(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("color2", "buttonFace [67]");
-    LXW_PUSH_ATTRIBUTES_STR("o:detectmouseclick", "t");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("color2", "buttonFace [67]");
+    LXLSX_PUSH_ATTRIBUTES_STR("o:detectmouseclick", "t");
 
-    lxw_xml_empty_tag(self->file, "v:fill", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:fill", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:path> element for buttons.
  */
 STATIC void
-_vml_write_button_path(lxw_vml *self)
+_vml_write_button_path(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("shadowok", "f");
-    LXW_PUSH_ATTRIBUTES_STR("o:extrusionok", "f");
-    LXW_PUSH_ATTRIBUTES_STR("strokeok", "f");
-    LXW_PUSH_ATTRIBUTES_STR("fillok", "f");
-    LXW_PUSH_ATTRIBUTES_STR("o:connecttype", "rect");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("shadowok", "f");
+    LXLSX_PUSH_ATTRIBUTES_STR("o:extrusionok", "f");
+    LXLSX_PUSH_ATTRIBUTES_STR("strokeok", "f");
+    LXLSX_PUSH_ATTRIBUTES_STR("fillok", "f");
+    LXLSX_PUSH_ATTRIBUTES_STR("o:connecttype", "rect");
 
-    lxw_xml_empty_tag(self->file, "v:path", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:path", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shape> element for buttons.
  */
 STATIC void
-_vml_write_button_shape(lxw_vml *self, uint32_t vml_shape_id,
-                        uint32_t z_index, lxw_vml_obj *vml_obj)
+_vml_write_button_shape(lxlsx_vml *self, uint32_t lxlsx_vml_shape_id,
+                        uint32_t z_index, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char type[] = "#_x0000_t201";
     char o_button[] = "t";
     char fillcolor[] = "buttonFace [67]";
     char strokecolor[] = "windowText [64]";
     char o_insetmode[] = "auto";
 
-    char id[LXW_ATTR_32];
-    char margin_left[LXW_ATTR_32];
-    char margin_top[LXW_ATTR_32];
-    char width[LXW_ATTR_32];
-    char height[LXW_ATTR_32];
-    char style[LXW_MAX_ATTRIBUTE_LENGTH];
+    char id[LXLSX_ATTR_32];
+    char margin_left[LXLSX_ATTR_32];
+    char margin_top[LXLSX_ATTR_32];
+    char width[LXLSX_ATTR_32];
+    char height[LXLSX_ATTR_32];
+    char style[LXLSX_MAX_ATTRIBUTE_LENGTH];
 
-    lxw_sprintf_dbl(margin_left, vml_obj->col_absolute * 0.75);
-    lxw_sprintf_dbl(margin_top, vml_obj->row_absolute * 0.75);
-    lxw_sprintf_dbl(width, vml_obj->width * 0.75);
-    lxw_sprintf_dbl(height, vml_obj->height * 0.75);
+    lxlsx_sprintf_dbl(margin_left, lxlsx_vml_obj->col_absolute * 0.75);
+    lxlsx_sprintf_dbl(margin_top, lxlsx_vml_obj->row_absolute * 0.75);
+    lxlsx_sprintf_dbl(width, lxlsx_vml_obj->width * 0.75);
+    lxlsx_sprintf_dbl(height, lxlsx_vml_obj->height * 0.75);
 
-    lxw_snprintf(id, LXW_ATTR_32, "_x0000_s%d", vml_shape_id);
+    lxlsx_snprintf(id, LXLSX_ATTR_32, "_x0000_s%d", lxlsx_vml_shape_id);
 
-    lxw_snprintf(style,
-                 LXW_MAX_ATTRIBUTE_LENGTH,
+    lxlsx_snprintf(style,
+                 LXLSX_MAX_ATTRIBUTE_LENGTH,
                  "position:absolute;"
                  "margin-left:%spt;"
                  "margin-top:%spt;"
@@ -628,20 +628,20 @@ _vml_write_button_shape(lxw_vml *self, uint32_t vml_shape_id,
                  "mso-wrap-style:tight",
                  margin_left, margin_top, width, height, z_index);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", id);
-    LXW_PUSH_ATTRIBUTES_STR("type", type);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", id);
+    LXLSX_PUSH_ATTRIBUTES_STR("type", type);
 
-    if (vml_obj->text)
-        LXW_PUSH_ATTRIBUTES_STR("alt", vml_obj->text);
+    if (lxlsx_vml_obj->text)
+        LXLSX_PUSH_ATTRIBUTES_STR("alt", lxlsx_vml_obj->text);
 
-    LXW_PUSH_ATTRIBUTES_STR("style", style);
-    LXW_PUSH_ATTRIBUTES_STR("o:button", o_button);
-    LXW_PUSH_ATTRIBUTES_STR("fillcolor", fillcolor);
-    LXW_PUSH_ATTRIBUTES_STR("strokecolor", strokecolor);
-    LXW_PUSH_ATTRIBUTES_STR("o:insetmode", o_insetmode);
+    LXLSX_PUSH_ATTRIBUTES_STR("style", style);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:button", o_button);
+    LXLSX_PUSH_ATTRIBUTES_STR("fillcolor", fillcolor);
+    LXLSX_PUSH_ATTRIBUTES_STR("strokecolor", strokecolor);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:insetmode", o_insetmode);
 
-    lxw_xml_start_tag(self->file, "v:shape", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shape", &attributes);
 
     /* Write the v:fill element. */
     _vml_write_button_fill(self);
@@ -650,36 +650,36 @@ _vml_write_button_shape(lxw_vml *self, uint32_t vml_shape_id,
     _vml_write_rotation_lock(self);
 
     /* Write the v:textbox element. */
-    _vml_write_button_textbox(self, vml_obj);
+    _vml_write_button_textbox(self, lxlsx_vml_obj);
 
     /* Write the x:ClientData element. */
-    _vml_write_button_client_data(self, vml_obj);
+    _vml_write_button_client_data(self, lxlsx_vml_obj);
 
-    lxw_xml_end_tag(self->file, "v:shape");
+    lxlsx_xml_end_tag(self->file, "v:shape");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shapetype> element for buttons.
  */
 STATIC void
-_vml_write_button_shapetype(lxw_vml *self)
+_vml_write_button_shapetype(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char id[] = "_x0000_t201";
     char coordsize[] = "21600,21600";
     char o_spt[] = "201";
     char path[] = "m,l,21600r21600,l21600,xe";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", id);
-    LXW_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
-    LXW_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
-    LXW_PUSH_ATTRIBUTES_STR("path", path);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", id);
+    LXLSX_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
+    LXLSX_PUSH_ATTRIBUTES_STR("path", path);
 
-    lxw_xml_start_tag(self->file, "v:shapetype", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shapetype", &attributes);
 
     /* Write the v:stroke element. */
     _vml_write_stroke(self);
@@ -690,24 +690,24 @@ _vml_write_button_shapetype(lxw_vml *self)
     /* Write the o:lock element. */
     _vml_write_shapetype_lock(self);
 
-    lxw_xml_end_tag(self->file, "v:shapetype");
+    lxlsx_xml_end_tag(self->file, "v:shapetype");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <x:ClientData> element.
  */
 STATIC void
-_vml_write_comment_client_data(lxw_vml *self, lxw_vml_obj *vml_obj)
+_vml_write_comment_client_data(lxlsx_vml *self, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("ObjectType", "Note");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("ObjectType", "Note");
 
-    lxw_xml_start_tag(self->file, "x:ClientData", &attributes);
+    lxlsx_xml_start_tag(self->file, "x:ClientData", &attributes);
 
     /* Write the <x:MoveWithCells> element. */
     _vml_write_move_with_cells(self);
@@ -716,148 +716,148 @@ _vml_write_comment_client_data(lxw_vml *self, lxw_vml_obj *vml_obj)
     _vml_write_size_with_cells(self);
 
     /* Write the <x:Anchor> element. */
-    _vml_write_anchor(self, vml_obj);
+    _vml_write_anchor(self, lxlsx_vml_obj);
 
     /* Write the <x:AutoFill> element. */
     _vml_write_auto_fill(self);
 
     /* Write the <x:Row> element. */
-    _vml_write_row(self, vml_obj);
+    _vml_write_row(self, lxlsx_vml_obj);
 
     /* Write the <x:Column> element. */
-    _vml_write_column(self, vml_obj);
+    _vml_write_column(self, lxlsx_vml_obj);
 
     /* Write the x:Visible element. */
-    if (vml_obj->visible == LXW_COMMENT_DISPLAY_VISIBLE)
+    if (lxlsx_vml_obj->visible == LXLSX_COMMENT_DISPLAY_VISIBLE)
         _vml_write_visible(self);
 
-    lxw_xml_end_tag(self->file, "x:ClientData");
+    lxlsx_xml_end_tag(self->file, "x:ClientData");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <div> element.
  */
 STATIC void
-_vml_write_comment_div(lxw_vml *self)
+_vml_write_comment_div(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("style", "text-align:left");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("style", "text-align:left");
 
-    lxw_xml_start_tag(self->file, "div", &attributes);
+    lxlsx_xml_start_tag(self->file, "div", &attributes);
 
-    lxw_xml_end_tag(self->file, "div");
+    lxlsx_xml_end_tag(self->file, "div");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:textbox> element.
  */
 STATIC void
-_vml_write_comment_textbox(lxw_vml *self)
+_vml_write_comment_textbox(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("style", "mso-direction-alt:auto");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("style", "mso-direction-alt:auto");
 
-    lxw_xml_start_tag(self->file, "v:textbox", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:textbox", &attributes);
 
     /* Write the div element. */
     _vml_write_comment_div(self);
 
-    lxw_xml_end_tag(self->file, "v:textbox");
+    lxlsx_xml_end_tag(self->file, "v:textbox");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:fill> element.
  */
 STATIC void
-_vml_write_comment_fill(lxw_vml *self)
+_vml_write_comment_fill(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("color2", "#ffffe1");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("color2", "#ffffe1");
 
-    lxw_xml_empty_tag(self->file, "v:fill", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:fill", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:path> element.
  */
 STATIC void
-_vml_write_comment_path(lxw_vml *self, uint8_t has_gradient, char *type)
+_vml_write_comment_path(lxlsx_vml *self, uint8_t has_gradient, char *type)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
+    LXLSX_INIT_ATTRIBUTES();
 
     if (has_gradient)
-        LXW_PUSH_ATTRIBUTES_STR("gradientshapeok", "t");
+        LXLSX_PUSH_ATTRIBUTES_STR("gradientshapeok", "t");
 
-    LXW_PUSH_ATTRIBUTES_STR("o:connecttype", type);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:connecttype", type);
 
-    lxw_xml_empty_tag(self->file, "v:path", &attributes);
+    lxlsx_xml_empty_tag(self->file, "v:path", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shape> element for comments.
  */
 STATIC void
-_vml_write_comment_shape(lxw_vml *self, uint32_t vml_shape_id,
-                         uint32_t z_index, lxw_vml_obj *vml_obj)
+_vml_write_comment_shape(lxlsx_vml *self, uint32_t lxlsx_vml_shape_id,
+                         uint32_t z_index, lxlsx_vml_obj *lxlsx_vml_obj)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
-    char id[LXW_ATTR_32];
-    char margin_left[LXW_ATTR_32];
-    char margin_top[LXW_ATTR_32];
-    char width[LXW_ATTR_32];
-    char height[LXW_ATTR_32];
-    char visible[LXW_ATTR_32];
-    char fillcolor[LXW_ATTR_32];
-    char style[LXW_MAX_ATTRIBUTE_LENGTH];
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
+    char id[LXLSX_ATTR_32];
+    char margin_left[LXLSX_ATTR_32];
+    char margin_top[LXLSX_ATTR_32];
+    char width[LXLSX_ATTR_32];
+    char height[LXLSX_ATTR_32];
+    char visible[LXLSX_ATTR_32];
+    char fillcolor[LXLSX_ATTR_32];
+    char style[LXLSX_MAX_ATTRIBUTE_LENGTH];
     char type[] = "#_x0000_t202";
     char o_insetmode[] = "auto";
 
-    lxw_sprintf_dbl(margin_left, vml_obj->col_absolute * 0.75);
-    lxw_sprintf_dbl(margin_top, vml_obj->row_absolute * 0.75);
-    lxw_sprintf_dbl(width, vml_obj->width * 0.75);
-    lxw_sprintf_dbl(height, vml_obj->height * 0.75);
+    lxlsx_sprintf_dbl(margin_left, lxlsx_vml_obj->col_absolute * 0.75);
+    lxlsx_sprintf_dbl(margin_top, lxlsx_vml_obj->row_absolute * 0.75);
+    lxlsx_sprintf_dbl(width, lxlsx_vml_obj->width * 0.75);
+    lxlsx_sprintf_dbl(height, lxlsx_vml_obj->height * 0.75);
 
-    lxw_snprintf(id, LXW_ATTR_32, "_x0000_s%d", vml_shape_id);
+    lxlsx_snprintf(id, LXLSX_ATTR_32, "_x0000_s%d", lxlsx_vml_shape_id);
 
-    if (vml_obj->visible == LXW_COMMENT_DISPLAY_DEFAULT)
-        vml_obj->visible = self->comment_display_default;
+    if (lxlsx_vml_obj->visible == LXLSX_COMMENT_DISPLAY_DEFAULT)
+        lxlsx_vml_obj->visible = self->comment_display_default;
 
-    if (vml_obj->visible == LXW_COMMENT_DISPLAY_VISIBLE)
-        lxw_snprintf(visible, LXW_ATTR_32, "visible");
+    if (lxlsx_vml_obj->visible == LXLSX_COMMENT_DISPLAY_VISIBLE)
+        lxlsx_snprintf(visible, LXLSX_ATTR_32, "visible");
     else
-        lxw_snprintf(visible, LXW_ATTR_32, "hidden");
+        lxlsx_snprintf(visible, LXLSX_ATTR_32, "hidden");
 
-    if (vml_obj->color)
-        lxw_snprintf(fillcolor, LXW_ATTR_32, "#%06x",
-                     vml_obj->color & LXW_COLOR_MASK);
+    if (lxlsx_vml_obj->color)
+        lxlsx_snprintf(fillcolor, LXLSX_ATTR_32, "#%06x",
+                     lxlsx_vml_obj->color & LXLSX_COLOR_MASK);
     else
-        lxw_snprintf(fillcolor, LXW_ATTR_32, "#%06x", 0xffffe1);
+        lxlsx_snprintf(fillcolor, LXLSX_ATTR_32, "#%06x", 0xffffe1);
 
-    lxw_snprintf(style,
-                 LXW_MAX_ATTRIBUTE_LENGTH,
+    lxlsx_snprintf(style,
+                 LXLSX_MAX_ATTRIBUTE_LENGTH,
                  "position:absolute;"
                  "margin-left:%spt;"
                  "margin-top:%spt;"
@@ -867,14 +867,14 @@ _vml_write_comment_shape(lxw_vml *self, uint32_t vml_shape_id,
                  "visibility:%s",
                  margin_left, margin_top, width, height, z_index, visible);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", id);
-    LXW_PUSH_ATTRIBUTES_STR("type", type);
-    LXW_PUSH_ATTRIBUTES_STR("style", style);
-    LXW_PUSH_ATTRIBUTES_STR("fillcolor", fillcolor);
-    LXW_PUSH_ATTRIBUTES_STR("o:insetmode", o_insetmode);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", id);
+    LXLSX_PUSH_ATTRIBUTES_STR("type", type);
+    LXLSX_PUSH_ATTRIBUTES_STR("style", style);
+    LXLSX_PUSH_ATTRIBUTES_STR("fillcolor", fillcolor);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:insetmode", o_insetmode);
 
-    lxw_xml_start_tag(self->file, "v:shape", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shape", &attributes);
 
     /* Write the v:fill element. */
     _vml_write_comment_fill(self);
@@ -883,105 +883,105 @@ _vml_write_comment_shape(lxw_vml *self, uint32_t vml_shape_id,
     _vml_write_shadow(self);
 
     /* Write the v:path element. */
-    _vml_write_comment_path(self, LXW_FALSE, "none");
+    _vml_write_comment_path(self, LXLSX_FALSE, "none");
 
     /* Write the v:textbox element. */
     _vml_write_comment_textbox(self);
 
     /* Write the x:ClientData element. */
-    _vml_write_comment_client_data(self, vml_obj);
+    _vml_write_comment_client_data(self, lxlsx_vml_obj);
 
-    lxw_xml_end_tag(self->file, "v:shape");
+    lxlsx_xml_end_tag(self->file, "v:shape");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <v:shapetype> element for comments.
  */
 STATIC void
-_vml_write_comment_shapetype(lxw_vml *self)
+_vml_write_comment_shapetype(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char id[] = "_x0000_t202";
     char coordsize[] = "21600,21600";
     char o_spt[] = "202";
     char path[] = "m,l,21600r21600,l21600,xe";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("id", id);
-    LXW_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
-    LXW_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
-    LXW_PUSH_ATTRIBUTES_STR("path", path);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("id", id);
+    LXLSX_PUSH_ATTRIBUTES_STR("coordsize", coordsize);
+    LXLSX_PUSH_ATTRIBUTES_STR("o:spt", o_spt);
+    LXLSX_PUSH_ATTRIBUTES_STR("path", path);
 
-    lxw_xml_start_tag(self->file, "v:shapetype", &attributes);
+    lxlsx_xml_start_tag(self->file, "v:shapetype", &attributes);
 
     /* Write the v:stroke element. */
     _vml_write_stroke(self);
 
     /* Write the v:path element. */
-    _vml_write_comment_path(self, LXW_TRUE, "rect");
+    _vml_write_comment_path(self, LXLSX_TRUE, "rect");
 
-    lxw_xml_end_tag(self->file, "v:shapetype");
+    lxlsx_xml_end_tag(self->file, "v:shapetype");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <o:idmap> element.
  */
 STATIC void
-_vml_write_idmap(lxw_vml *self)
+_vml_write_idmap(lxlsx_vml *self)
 {
-    /* Since the vml_data_id_str may exceed the LXW_MAX_ATTRIBUTE_LENGTH we
+    /* Since the lxlsx_vml_data_id_str may exceed the LXLSX_MAX_ATTRIBUTE_LENGTH we
      * write it directly without the xml helper functions. */
     fprintf(self->file, "<o:idmap v:ext=\"edit\" data=\"%s\"/>",
-            self->vml_data_id_str);
+            self->lxlsx_vml_data_id_str);
 }
 
 /*
  * Write the <o:shapelayout> element.
  */
 STATIC void
-_vml_write_shapelayout(lxw_vml *self)
+_vml_write_shapelayout(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("v:ext", "edit");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("v:ext", "edit");
 
-    lxw_xml_start_tag(self->file, "o:shapelayout", &attributes);
+    lxlsx_xml_start_tag(self->file, "o:shapelayout", &attributes);
 
     /* Write the o:idmap element. */
     _vml_write_idmap(self);
 
-    lxw_xml_end_tag(self->file, "o:shapelayout");
+    lxlsx_xml_end_tag(self->file, "o:shapelayout");
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <xml> element.
  */
 STATIC void
-_vml_write_xml_namespace(lxw_vml *self)
+_vml_write_xml_namespace(lxlsx_vml *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char xmlns_v[] = "urn:schemas-microsoft-com:vml";
     char xmlns_o[] = "urn:schemas-microsoft-com:office:office";
     char xmlns_x[] = "urn:schemas-microsoft-com:office:excel";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:v", xmlns_v);
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:o", xmlns_o);
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:x", xmlns_x);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:v", xmlns_v);
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:o", xmlns_o);
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:x", xmlns_x);
 
-    lxw_xml_start_tag(self->file, "xml", &attributes);
+    lxlsx_xml_start_tag(self->file, "xml", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*****************************************************************************
@@ -994,11 +994,11 @@ _vml_write_xml_namespace(lxw_vml *self)
  * Assemble and write the XML file.
  */
 void
-lxw_vml_assemble_xml_file(lxw_vml *self)
+lxlsx_vml_assemble_xml_file(lxlsx_vml *self)
 {
-    lxw_vml_obj *comment_obj;
-    lxw_vml_obj *button_obj;
-    lxw_vml_obj *image_obj;
+    lxlsx_vml_obj *comment_obj;
+    lxlsx_vml_obj *button_obj;
+    lxlsx_vml_obj *image_obj;
     uint32_t z_index = 1;
 
     /* Write the xml namespace element. Note, the VML files have no
@@ -1013,10 +1013,10 @@ lxw_vml_assemble_xml_file(lxw_vml *self)
         _vml_write_button_shapetype(self);
 
         STAILQ_FOREACH(button_obj, self->button_objs, list_pointers) {
-            self->vml_shape_id++;
+            self->lxlsx_vml_shape_id++;
 
             /* Write the <v:shape> element. */
-            _vml_write_button_shape(self, self->vml_shape_id, z_index,
+            _vml_write_button_shape(self, self->lxlsx_vml_shape_id, z_index,
                                     button_obj);
 
             z_index++;
@@ -1028,10 +1028,10 @@ lxw_vml_assemble_xml_file(lxw_vml *self)
         _vml_write_comment_shapetype(self);
 
         STAILQ_FOREACH(comment_obj, self->comment_objs, list_pointers) {
-            self->vml_shape_id++;
+            self->lxlsx_vml_shape_id++;
 
             /* Write the <v:shape> element. */
-            _vml_write_comment_shape(self, self->vml_shape_id, z_index,
+            _vml_write_comment_shape(self, self->lxlsx_vml_shape_id, z_index,
                                      comment_obj);
 
             z_index++;
@@ -1043,17 +1043,17 @@ lxw_vml_assemble_xml_file(lxw_vml *self)
         _vml_write_image_shapetype(self);
 
         STAILQ_FOREACH(image_obj, self->image_objs, list_pointers) {
-            self->vml_shape_id++;
+            self->lxlsx_vml_shape_id++;
 
             /* Write the <v:shape> element. */
-            _vml_write_image_shape(self, self->vml_shape_id, z_index,
+            _vml_write_image_shape(self, self->lxlsx_vml_shape_id, z_index,
                                    image_obj);
 
             z_index++;
         }
     }
 
-    lxw_xml_end_tag(self->file, "xml");
+    lxlsx_xml_end_tag(self->file, "xml");
 }
 
 /*****************************************************************************

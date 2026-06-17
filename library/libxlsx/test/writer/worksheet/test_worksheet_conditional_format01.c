@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_condtional_format01) {
+CTEST(worksheet, lxlsx_worksheet_condtional_format01) {
 
     char* got;
     char exp[] =
@@ -54,32 +54,32 @@ CTEST(worksheet, worksheet_condtional_format01) {
               "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
-    worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
-    worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
-    worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_CELL;
-    conditional_format->criteria = LXW_CONDITIONAL_CRITERIA_GREATER_THAN;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_CELL;
+    conditional_format->criteria = LXLSX_CONDITIONAL_CRITERIA_GREATER_THAN;
     conditional_format->value    = 5;
     conditional_format->format   = NULL;
-    worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
 
     free(conditional_format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 

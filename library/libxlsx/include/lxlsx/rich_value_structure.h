@@ -3,25 +3,25 @@
  *
  * Copyright 2014-2026, John McNamara, jmcnamara@cpan.org. See LICENSE.txt.
  *
- * rich_value_structure - A libxlsxwriter library for creating Excel XLSX rich_value_structure files.
+ * lxlsx_rich_value_structure - A libxlsxwriter library for creating Excel XLSX lxlsx_rich_value_structure files.
  *
  */
-#ifndef __LXW_RICH_VALUE_STRUCTURE_H__
-#define __LXW_RICH_VALUE_STRUCTURE_H__
+#ifndef __LXLSX_RICH_VALUE_STRUCTURE_H__
+#define __LXLSX_RICH_VALUE_STRUCTURE_H__
 
 #include <stdint.h>
 
 #include "common.h"
 
 /*
- * Struct to represent a rich_value_structure object.
+ * Struct to represent a lxlsx_rich_value_structure object.
  */
-typedef struct lxw_rich_value_structure {
+typedef struct lxlsx_rich_value_structure {
 
     FILE *file;
     uint8_t has_embedded_image_descriptions;
 
-} lxw_rich_value_structure;
+} lxlsx_rich_value_structure;
 
 
 /* *INDENT-OFF* */
@@ -30,16 +30,16 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_rich_value_structure *lxw_rich_value_structure_new(void);
-void lxw_rich_value_structure_free(lxw_rich_value_structure
-                                   *rich_value_structure);
-void lxw_rich_value_structure_assemble_xml_file(lxw_rich_value_structure
+lxlsx_rich_value_structure *lxlsx_rich_value_structure_new(void);
+void lxlsx_rich_value_structure_free(lxlsx_rich_value_structure
+                                   *lxlsx_rich_value_structure);
+void lxlsx_rich_value_structure_assemble_xml_file(lxlsx_rich_value_structure
                                                 *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _rich_value_structure_xml_declaration(lxw_rich_value_structure
+STATIC void _rich_value_structure_xml_declaration(lxlsx_rich_value_structure
                                                   *self);
 
 #endif /* TESTING */
@@ -50,4 +50,4 @@ STATIC void _rich_value_structure_xml_declaration(lxw_rich_value_structure
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_RICH_VALUE_STRUCTURE_H__ */
+#endif /* __LXLSX_RICH_VALUE_STRUCTURE_H__ */

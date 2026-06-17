@@ -16,10 +16,10 @@ CTEST(styles, write_fonts01) {
 
     char* got;
     char exp[] = "<fonts count=\"1\"><font><sz val=\"11\"/><color theme=\"1\"/><name val=\"Calibri\"/><family val=\"2\"/><scheme val=\"minor\"/></font></fonts>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
-    lxw_format *format = lxw_format_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
+    lxlsx_format *format = lxlsx_format_new();
 
     format->has_font = 1;
 
@@ -32,5 +32,5 @@ CTEST(styles, write_fonts01) {
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }

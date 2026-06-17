@@ -25,7 +25,7 @@
 #include "lxlsx/third_party/emyg_dtoa.h"
 #endif
 
-char *error_strings[LXW_MAX_ERRNO + 1] = {
+char *error_strings[LXLSX_MAX_ERRNO + 1] = {
     "No error.",
     "Memory error, failed to malloc() required memory.",
     "Error creating output xlsx file. Usually a permissions error.",
@@ -59,10 +59,10 @@ char *error_strings[LXW_MAX_ERRNO + 1] = {
 };
 
 char *
-lxw_strerror(lxw_error error_num)
+lxlsx_strerror(lxlsx_error error_num)
 {
-    if (error_num > LXW_MAX_ERRNO)
-        error_num = LXW_MAX_ERRNO;
+    if (error_num > LXLSX_MAX_ERRNO)
+        error_num = LXLSX_MAX_ERRNO;
 
     return error_strings[error_num];
 }
@@ -71,7 +71,7 @@ lxw_strerror(lxw_error error_num)
  * Convert Excel A-XFD style column name to zero based number.
  */
 void
-lxw_col_to_name(char *col_name, lxw_col_t col_num, uint8_t absolute)
+lxlsx_col_to_name(char *col_name, lxlsx_col_t col_num, uint8_t absolute)
 {
     uint8_t pos = 0;
     size_t len;
@@ -115,18 +115,18 @@ lxw_col_to_name(char *col_name, lxw_col_t col_num, uint8_t absolute)
  * Convert zero indexed row and column to an Excel style A1 cell reference.
  */
 void
-lxw_rowcol_to_cell(char *cell_name, lxw_row_t row, lxw_col_t col)
+lxlsx_rowcol_to_cell(char *cell_name, lxlsx_row_t row, lxlsx_col_t col)
 {
     size_t pos;
 
     /* Add the column to the cell. */
-    lxw_col_to_name(cell_name, col, 0);
+    lxlsx_col_to_name(cell_name, col, 0);
 
     /* Get the end of the cell. */
     pos = strlen(cell_name);
 
     /* Add the row to the cell. */
-    lxw_snprintf(&cell_name[pos], LXW_MAX_ROW_NAME_LENGTH, "%d", ++row);
+    lxlsx_snprintf(&cell_name[pos], LXLSX_MAX_ROW_NAME_LENGTH, "%d", ++row);
 }
 
 /*
@@ -134,13 +134,13 @@ lxw_rowcol_to_cell(char *cell_name, lxw_row_t row, lxw_col_t col)
  * an absolute reference.
  */
 void
-lxw_rowcol_to_cell_abs(char *cell_name, lxw_row_t row, lxw_col_t col,
+lxlsx_rowcol_to_cell_abs(char *cell_name, lxlsx_row_t row, lxlsx_col_t col,
                        uint8_t abs_row, uint8_t abs_col)
 {
     size_t pos;
 
     /* Add the column to the cell. */
-    lxw_col_to_name(cell_name, col, abs_col);
+    lxlsx_col_to_name(cell_name, col, abs_col);
 
     /* Get the end of the cell. */
     pos = strlen(cell_name);
@@ -149,7 +149,7 @@ lxw_rowcol_to_cell_abs(char *cell_name, lxw_row_t row, lxw_col_t col,
         cell_name[pos++] = '$';
 
     /* Add the row to the cell. */
-    lxw_snprintf(&cell_name[pos], LXW_MAX_ROW_NAME_LENGTH, "%d", ++row);
+    lxlsx_snprintf(&cell_name[pos], LXLSX_MAX_ROW_NAME_LENGTH, "%d", ++row);
 }
 
 /*
@@ -157,14 +157,14 @@ lxw_rowcol_to_cell_abs(char *cell_name, lxw_row_t row, lxw_col_t col,
  * range reference.
  */
 void
-lxw_rowcol_to_range(char *range,
-                    lxw_row_t first_row, lxw_col_t first_col,
-                    lxw_row_t last_row, lxw_col_t last_col)
+lxlsx_rowcol_to_range(char *range,
+                    lxlsx_row_t first_row, lxlsx_col_t first_col,
+                    lxlsx_row_t last_row, lxlsx_col_t last_col)
 {
     size_t pos;
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell(range, first_row, first_col);
+    lxlsx_rowcol_to_cell(range, first_row, first_col);
 
     /* If the start and end cells are the same just return a single cell. */
     if (first_row == last_row && first_col == last_col)
@@ -177,7 +177,7 @@ lxw_rowcol_to_range(char *range,
     range[pos++] = ':';
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell(&range[pos], last_row, last_col);
+    lxlsx_rowcol_to_cell(&range[pos], last_row, last_col);
 }
 
 /*
@@ -185,14 +185,14 @@ lxw_rowcol_to_range(char *range,
  * range reference with absolute values.
  */
 void
-lxw_rowcol_to_range_abs(char *range,
-                        lxw_row_t first_row, lxw_col_t first_col,
-                        lxw_row_t last_row, lxw_col_t last_col)
+lxlsx_rowcol_to_range_abs(char *range,
+                        lxlsx_row_t first_row, lxlsx_col_t first_col,
+                        lxlsx_row_t last_row, lxlsx_col_t last_col)
 {
     size_t pos;
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell_abs(range, first_row, first_col, 1, 1);
+    lxlsx_rowcol_to_cell_abs(range, first_row, first_col, 1, 1);
 
     /* If the start and end cells are the same just return a single cell. */
     if (first_row == last_row && first_col == last_col)
@@ -205,7 +205,7 @@ lxw_rowcol_to_range_abs(char *range,
     range[pos++] = ':';
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell_abs(&range[pos], last_row, last_col, 1, 1);
+    lxlsx_rowcol_to_cell_abs(&range[pos], last_row, last_col, 1, 1);
 }
 
 /*
@@ -213,14 +213,14 @@ lxw_rowcol_to_range_abs(char *range,
  * Sheet1!$A$1:$C$5 formula reference with absolute values.
  */
 void
-lxw_rowcol_to_formula_abs(char *formula, const char *sheetname,
-                          lxw_row_t first_row, lxw_col_t first_col,
-                          lxw_row_t last_row, lxw_col_t last_col)
+lxlsx_rowcol_to_formula_abs(char *formula, const char *sheetname,
+                          lxlsx_row_t first_row, lxlsx_col_t first_col,
+                          lxlsx_row_t last_row, lxlsx_col_t last_col)
 {
     size_t pos;
-    char *quoted_name = lxw_quote_sheetname(sheetname);
+    char *quoted_name = lxlsx_quote_sheetname(sheetname);
 
-    strncpy(formula, quoted_name, LXW_MAX_FORMULA_RANGE_LENGTH - 1);
+    strncpy(formula, quoted_name, LXLSX_MAX_FORMULA_RANGE_LENGTH - 1);
     free(quoted_name);
 
     /* Get the end of the sheetname. */
@@ -230,7 +230,7 @@ lxw_rowcol_to_formula_abs(char *formula, const char *sheetname,
     formula[pos++] = '!';
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell_abs(&formula[pos], first_row, first_col, 1, 1);
+    lxlsx_rowcol_to_cell_abs(&formula[pos], first_row, first_col, 1, 1);
 
     /* If the start and end cells are the same just return a single cell. */
     if (first_row == last_row && first_col == last_col)
@@ -243,16 +243,16 @@ lxw_rowcol_to_formula_abs(char *formula, const char *sheetname,
     formula[pos++] = ':';
 
     /* Add the first cell to the range. */
-    lxw_rowcol_to_cell_abs(&formula[pos], last_row, last_col, 1, 1);
+    lxlsx_rowcol_to_cell_abs(&formula[pos], last_row, last_col, 1, 1);
 }
 
 /*
  * Convert an Excel style A1 cell reference to a zero indexed row number.
  */
-lxw_row_t
-lxw_name_to_row(const char *row_str)
+lxlsx_row_t
+lxlsx_name_to_row(const char *row_str)
 {
-    lxw_row_t row_num = 0;
+    lxlsx_row_t row_num = 0;
 
     if (!row_str)
         return row_num;
@@ -275,7 +275,7 @@ lxw_name_to_row(const char *row_str)
  * Convert the second row of an Excel range ref to a zero indexed number.
  */
 uint32_t
-lxw_name_to_row_2(const char *row_str)
+lxlsx_name_to_row_2(const char *row_str)
 {
     if (!row_str)
         return 0;
@@ -285,7 +285,7 @@ lxw_name_to_row_2(const char *row_str)
         row_str++;
 
     if (*row_str)
-        return lxw_name_to_row(++row_str);
+        return lxlsx_name_to_row(++row_str);
     else
         return 0;
 }
@@ -293,10 +293,10 @@ lxw_name_to_row_2(const char *row_str)
 /*
  * Convert an Excel style A1 cell reference to a zero indexed column number.
  */
-lxw_col_t
-lxw_name_to_col(const char *col_str)
+lxlsx_col_t
+lxlsx_name_to_col(const char *col_str)
 {
-    lxw_col_t col_num = 0;
+    lxlsx_col_t col_num = 0;
 
     if (!col_str)
         return col_num;
@@ -318,7 +318,7 @@ lxw_name_to_col(const char *col_str)
  * Convert the second column of an Excel range ref to a zero indexed number.
  */
 uint16_t
-lxw_name_to_col_2(const char *col_str)
+lxlsx_name_to_col_2(const char *col_str)
 {
     if (!col_str)
         return 0;
@@ -328,16 +328,16 @@ lxw_name_to_col_2(const char *col_str)
         col_str++;
 
     if (*col_str)
-        return lxw_name_to_col(++col_str);
+        return lxlsx_name_to_col(++col_str);
     else
         return 0;
 }
 
-lxw_error
-lxw_datetime_validate(lxw_datetime *datetime)
+lxlsx_error
+lxlsx_datetime_validate(lxlsx_datetime *datetime)
 {
     if (!datetime)
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
 
     /*
      * Excel uses the year 1900 as the default epoch but it uses 1899-12-31 as
@@ -349,59 +349,59 @@ lxw_datetime_validate(lxw_datetime *datetime)
         !(datetime->year == 1899 &&
           datetime->month == 12 && datetime->day == 31)) {
 
-        LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid year: %d. "
+        LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid year: %d. "
                          "Valid range is 1900-9999.", datetime->year);
 
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
     }
 
     if (datetime->year > 9999) {
-        LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid year: %d. "
+        LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid year: %d. "
                          "Valid range is 1900-9999.", datetime->year);
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
     }
 
     if (datetime->year != 0) {
         if (datetime->month < 1 || datetime->month > 12) {
-            LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid month: %d. "
+            LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid month: %d. "
                              "Valid range is 1-12.", datetime->month);
-            return LXW_ERROR_DATETIME_VALIDATION;
+            return LXLSX_ERROR_DATETIME_VALIDATION;
         }
 
         if (datetime->day < 1 || datetime->day > 31) {
-            LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid day: %d. "
+            LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid day: %d. "
                              "Valid range is 1-31.", datetime->day);
-            return LXW_ERROR_DATETIME_VALIDATION;
+            return LXLSX_ERROR_DATETIME_VALIDATION;
         }
     }
 
     if (datetime->hour < 0 || datetime->hour > 23) {
-        LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid hour: %d. "
+        LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid hour: %d. "
                          "Valid range is 0-23.", datetime->hour);
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
     }
 
     if (datetime->min < 0 || datetime->min > 59) {
-        LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid minute: %d. "
+        LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid minute: %d. "
                          "Valid range is 0-59.", datetime->min);
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
     }
 
     if (datetime->sec < 0.0 || datetime->sec >= 60.0) {
-        LXW_WARN_FORMAT1("lxw_datetime_validate(): invalid seconds: %.3f. "
+        LXLSX_WARN_FORMAT1("lxlsx_datetime_validate(): invalid seconds: %.3f. "
                          "Valid range is 0.0-59.999.", datetime->sec);
-        return LXW_ERROR_DATETIME_VALIDATION;
+        return LXLSX_ERROR_DATETIME_VALIDATION;
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
- * Convert a lxw_datetime struct to an Excel serial date, with a 1900
+ * Convert a lxlsx_datetime struct to an Excel serial date, with a 1900
  * or 1904 epoch.
  */
 double
-lxw_datetime_to_excel_date_with_epoch(lxw_datetime *datetime,
+lxlsx_datetime_to_excel_date_with_epoch(lxlsx_datetime *datetime,
                                       uint8_t use_1904_epoch)
 {
     int year = datetime->year;
@@ -421,7 +421,7 @@ lxw_datetime_to_excel_date_with_epoch(lxw_datetime *datetime,
     int days = 0;
     int i;
 
-    if (lxw_datetime_validate(datetime) != LXW_NO_ERROR)
+    if (lxlsx_datetime_validate(datetime) != LXLSX_NO_ERROR)
         return 0.0;
 
     /* For times without dates set the default date for the epoch. */
@@ -498,12 +498,12 @@ lxw_datetime_to_excel_date_with_epoch(lxw_datetime *datetime,
 }
 
 /*
- * Convert a lxw_datetime struct to an Excel serial date, for the 1900 epoch.
+ * Convert a lxlsx_datetime struct to an Excel serial date, for the 1900 epoch.
  */
 double
-lxw_datetime_to_excel_datetime(lxw_datetime *datetime)
+lxlsx_datetime_to_excel_datetime(lxlsx_datetime *datetime)
 {
-    return lxw_datetime_to_excel_date_with_epoch(datetime, LXW_FALSE);
+    return lxlsx_datetime_to_excel_date_with_epoch(datetime, LXLSX_FALSE);
 }
 
 /*
@@ -511,9 +511,9 @@ lxw_datetime_to_excel_datetime(lxw_datetime *datetime)
  * 1900 epoch.
  */
 double
-lxw_unixtime_to_excel_date(int64_t unixtime)
+lxlsx_unixtime_to_excel_date(int64_t unixtime)
 {
-    return lxw_unixtime_to_excel_date_with_epoch(unixtime, LXW_FALSE);
+    return lxlsx_unixtime_to_excel_date_with_epoch(unixtime, LXLSX_FALSE);
 }
 
 /*
@@ -521,7 +521,7 @@ lxw_unixtime_to_excel_date(int64_t unixtime)
  * 1900 or 1904 epoch.
  */
 double
-lxw_unixtime_to_excel_date_with_epoch(int64_t unixtime,
+lxlsx_unixtime_to_excel_date_with_epoch(int64_t unixtime,
                                       uint8_t use_1904_epoch)
 {
     double excel_datetime = 0.0;
@@ -537,7 +537,7 @@ lxw_unixtime_to_excel_date_with_epoch(int64_t unixtime,
 
 /* Simple strdup() implementation since it isn't ANSI C. */
 char *
-lxw_strdup(const char *str)
+lxlsx_strdup(const char *str)
 {
     size_t len;
     char *copy;
@@ -556,20 +556,20 @@ lxw_strdup(const char *str)
 
 /* Simple function to strdup() a formula string without the leading "=". */
 char *
-lxw_strdup_formula(const char *formula)
+lxlsx_strdup_formula(const char *formula)
 {
     if (!formula)
         return NULL;
 
     if (formula[0] == '=')
-        return lxw_strdup(formula + 1);
+        return lxlsx_strdup(formula + 1);
     else
-        return lxw_strdup(formula);
+        return lxlsx_strdup(formula);
 }
 
 /* Simple strlen that counts UTF-8 characters. Assumes well formed UTF-8. */
 size_t
-lxw_utf8_strlen(const char *str)
+lxlsx_utf8_strlen(const char *str)
 {
     size_t byte_count = 0;
     size_t char_count = 0;
@@ -586,7 +586,7 @@ lxw_utf8_strlen(const char *str)
 
 /* Simple tolower() for strings. */
 void
-lxw_str_tolower(char *str)
+lxlsx_str_tolower(char *str)
 {
     int i;
 
@@ -596,7 +596,7 @@ lxw_str_tolower(char *str)
 
 /* Simple check for empty strings. */
 uint8_t
-lxw_str_is_empty(const char *str)
+lxlsx_str_is_empty(const char *str)
 {
     if (str[0] == '\0')
         return 1;
@@ -607,7 +607,7 @@ lxw_str_is_empty(const char *str)
 /* Create a quoted version of the worksheet name, or return an unmodified
  * copy if it doesn't required quoting. */
 char *
-lxw_quote_sheetname(const char *str)
+lxlsx_quote_sheetname(const char *str)
 {
 
     uint8_t needs_quoting = 0;
@@ -617,7 +617,7 @@ lxw_quote_sheetname(const char *str)
 
     /* Don't quote the sheetname if it is already quoted. */
     if (str[0] == '\'')
-        return lxw_strdup(str);
+        return lxlsx_strdup(str);
 
     /* Check if the sheetname contains any characters that require it
      * to be quoted. Also check for single quotes within the string. */
@@ -633,7 +633,7 @@ lxw_quote_sheetname(const char *str)
     }
 
     if (!needs_quoting) {
-        return lxw_strdup(str);
+        return lxlsx_strdup(str);
     }
     else {
         /* Add single quotes to the start and end of the string. */
@@ -662,7 +662,7 @@ lxw_quote_sheetname(const char *str)
  * version if required for safety or portability.
  */
 FILE *
-lxw_tmpfile(const char *tmpdir)
+lxlsx_tmpfile(const char *tmpdir)
 {
 #ifndef USE_STANDARD_TMPFILE
     return tmpfileplus(tmpdir, NULL, NULL, 0);
@@ -676,7 +676,7 @@ lxw_tmpfile(const char *tmpdir)
  * Return a memory-backed file if supported, otherwise a temporary one
  */
 FILE *
-lxw_get_filehandle(char **buf, size_t *size, const char *tmpdir)
+lxlsx_get_filehandle(char **buf, size_t *size, const char *tmpdir)
 {
     static size_t s;
     if (!size)
@@ -687,7 +687,7 @@ lxw_get_filehandle(char **buf, size_t *size, const char *tmpdir)
     (void) tmpdir;
     return open_memstream(buf, size);
 #else
-    return lxw_tmpfile(tmpdir);
+    return lxlsx_tmpfile(tmpdir);
 #endif
 }
 
@@ -697,7 +697,7 @@ lxw_get_filehandle(char **buf, size_t *size, const char *tmpdir)
  */
 #ifdef USE_DTOA_LIBRARY
 int
-lxw_sprintf_dbl(char *data, double number)
+lxlsx_sprintf_dbl(char *data, double number)
 {
     emyg_dtoa(number, data);
     return 0;
@@ -708,18 +708,18 @@ lxw_sprintf_dbl(char *data, double number)
  * Retrieve runtime library version.
  */
 const char *
-lxw_version(void)
+lxlsx_version(void)
 {
-    return LXW_VERSION;
+    return LXLSX_VERSION;
 }
 
 /*
  * Retrieve runtime library version ID.
  */
 uint16_t
-lxw_version_id(void)
+lxlsx_version_id(void)
 {
-    return LXW_VERSION_ID;
+    return LXLSX_VERSION_ID;
 }
 
 /*
@@ -728,7 +728,7 @@ lxw_version_id(void)
  * Additional attributes for workbookProtection element (Part 1, §18.2.29).
  */
 uint16_t
-lxw_hash_password(const char *password)
+lxlsx_hash_password(const char *password)
 {
     uint16_t byte_count = (uint16_t) strlen(password);
     uint16_t hash = 0;
@@ -759,7 +759,7 @@ lxw_hash_password(const char *password)
 #include <windows.h>
 
 FILE *
-lxw_fopen(const char *filename, const char *mode)
+lxlsx_fopen(const char *filename, const char *mode)
 {
     int n;
     wchar_t wide_filename[_MAX_PATH + 1] = L"";
@@ -769,7 +769,7 @@ lxw_fopen(const char *filename, const char *mode)
                             wide_filename, _MAX_PATH);
 
     if (n == 0) {
-        LXW_ERROR("MultiByteToWideChar error: filename");
+        LXLSX_ERROR("MultiByteToWideChar error: filename");
         return NULL;
     }
 
@@ -777,7 +777,7 @@ lxw_fopen(const char *filename, const char *mode)
                             wide_mode, _MAX_PATH);
 
     if (n == 0) {
-        LXW_ERROR("MultiByteToWideChar error: mode");
+        LXLSX_ERROR("MultiByteToWideChar error: mode");
         return NULL;
     }
 
@@ -785,7 +785,7 @@ lxw_fopen(const char *filename, const char *mode)
 }
 #else
 FILE *
-lxw_fopen(const char *filename, const char *mode)
+lxlsx_fopen(const char *filename, const char *mode)
 {
     return fopen(filename, mode);
 }

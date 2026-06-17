@@ -11,18 +11,18 @@
 #include "lxlsx/rich_value_types.h"
 
 // Test _xml_declaration().
-CTEST(rich_value_types, xml_declaration) {
+CTEST(lxlsx_rich_value_types, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     FILE* testfile = tmpfile();
 
-    lxw_rich_value_types *rich_value_types = lxw_rich_value_types_new();
-    rich_value_types->file = testfile;
+    lxlsx_rich_value_types *lxlsx_rich_value_types = lxlsx_rich_value_types_new();
+    lxlsx_rich_value_types->file = testfile;
 
-    _rich_value_types_xml_declaration(rich_value_types);
+    _rich_value_types_xml_declaration(lxlsx_rich_value_types);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_rich_value_types_free(rich_value_types);
+    lxlsx_rich_value_types_free(lxlsx_rich_value_types);
 }

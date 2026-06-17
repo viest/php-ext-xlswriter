@@ -17,15 +17,15 @@ CTEST(workbook, write_calc_pr) {
 
     char* got;
     char exp[] = "<calcPr calcId=\"124519\" fullCalcOnLoad=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
     _write_calc_pr(workbook);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 

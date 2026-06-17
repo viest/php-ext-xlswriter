@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/drawing.h"
 
 // Test _xml_declaration().
-CTEST(drawing, xml_declaration) {
+CTEST(drawing, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_drawing *drawing = lxw_drawing_new();
+    lxlsx_drawing *drawing = lxlsx_drawing_new();
     drawing->file = testfile;
 
     _drawing_xml_declaration(drawing);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_drawing_free(drawing);
+    lxlsx_drawing_free(drawing);
 }

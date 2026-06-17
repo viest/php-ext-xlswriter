@@ -29,24 +29,24 @@ CTEST(sst, sst01) {
           "</si>"
         "</sst>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_sst *sst = lxw_sst_new();
+    lxlsx_sst *sst = lxlsx_sst_new();
     sst->file = testfile;
 
-    lxw_get_sst_index(sst, "neptune", LXW_FALSE);
-    lxw_get_sst_index(sst, "neptune", LXW_FALSE);
-    lxw_get_sst_index(sst, "neptune", LXW_FALSE);
-    lxw_get_sst_index(sst, "mars", LXW_FALSE);
-    lxw_get_sst_index(sst, "mars", LXW_FALSE);
-    lxw_get_sst_index(sst, "venus", LXW_FALSE);
-    lxw_get_sst_index(sst, "venus", LXW_FALSE);
+    lxlsx_get_sst_index(sst, "neptune", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "neptune", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "neptune", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "mars", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "mars", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "venus", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "venus", LXLSX_FALSE);
 
-    lxw_sst_assemble_xml_file(sst);
+    lxlsx_sst_assemble_xml_file(sst);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_sst_free(sst);
+    lxlsx_sst_free(sst);
 }
 
 // Test assembling a complete SharedStrings file.
@@ -67,19 +67,19 @@ CTEST(sst, sst02) {
           "</si>"
         "</sst>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_sst *sst = lxw_sst_new();
+    lxlsx_sst *sst = lxlsx_sst_new();
     sst->file = testfile;
 
     // Test strings with whitespace that must be preserved.
-    lxw_get_sst_index(sst, "abcdefg", LXW_FALSE);
-    lxw_get_sst_index(sst, "   abcdefg", LXW_FALSE);
-    lxw_get_sst_index(sst, "abcdefg   ", LXW_FALSE);
+    lxlsx_get_sst_index(sst, "abcdefg", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "   abcdefg", LXLSX_FALSE);
+    lxlsx_get_sst_index(sst, "abcdefg   ", LXLSX_FALSE);
 
-    lxw_sst_assemble_xml_file(sst);
+    lxlsx_sst_assemble_xml_file(sst);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_sst_free(sst);
+    lxlsx_sst_free(sst);
 }

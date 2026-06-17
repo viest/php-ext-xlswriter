@@ -57,10 +57,10 @@ CTEST(styles, styles01) {
           "<tableStyles count=\"0\" defaultTableStyle=\"TableStyleMedium9\" defaultPivotStyle=\"PivotStyleLight16\"/>"
         "</styleSheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
-    lxw_format *format = lxw_format_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
+    lxlsx_format *format = lxlsx_format_new();
 
     format->has_font   = 1;
     format->has_border = 1;
@@ -73,11 +73,11 @@ CTEST(styles, styles01) {
 
     STAILQ_INSERT_TAIL(styles->xf_formats, format, list_pointers);
 
-    lxw_styles_assemble_xml_file(styles);
+    lxlsx_styles_assemble_xml_file(styles);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 
 // Test assembling a complete Styles file.
@@ -154,13 +154,13 @@ CTEST(styles, styles02) {
           "<tableStyles count=\"0\" defaultTableStyle=\"TableStyleMedium9\" defaultPivotStyle=\"PivotStyleLight16\"/>"
         "</styleSheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
-    lxw_format *format1 = lxw_format_new();
-    lxw_format *format2 = lxw_format_new();
-    lxw_format *format3 = lxw_format_new();
-    lxw_format *format4 = lxw_format_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
+    lxlsx_format *format1 = lxlsx_format_new();
+    lxlsx_format *format2 = lxlsx_format_new();
+    lxlsx_format *format3 = lxlsx_format_new();
+    lxlsx_format *format4 = lxlsx_format_new();
 
 
     format1->has_font = 1;
@@ -190,9 +190,9 @@ CTEST(styles, styles02) {
     STAILQ_INSERT_TAIL(styles->xf_formats, format3, list_pointers);
     STAILQ_INSERT_TAIL(styles->xf_formats, format4, list_pointers);
 
-    lxw_styles_assemble_xml_file(styles);
+    lxlsx_styles_assemble_xml_file(styles);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }

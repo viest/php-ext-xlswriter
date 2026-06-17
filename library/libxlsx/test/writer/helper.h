@@ -51,70 +51,70 @@
 
 
 #define TEST_COL_TO_NAME(num, abs, exp)                             \
-    lxw_col_to_name(got, num, abs);                                 \
+    lxlsx_col_to_name(got, num, abs);                                 \
     ASSERT_STR(exp, got);
 
 
 #define TEST_ROWCOL_TO_CELL(row, col, exp)                          \
-    lxw_rowcol_to_cell(got, row, col);                              \
+    lxlsx_rowcol_to_cell(got, row, col);                              \
     ASSERT_STR(exp, got);
 
 
 #define TEST_ROWCOL_TO_CELL_ABS(row, col, row_abs, col_abs, exp)    \
-    lxw_rowcol_to_cell_abs(got, row, col, row_abs, col_abs);        \
+    lxlsx_rowcol_to_cell_abs(got, row, col, row_abs, col_abs);        \
     ASSERT_STR(exp, got);
 
 
 #define TEST_ROWCOL_TO_RANGE(row1, col1, row2, col2, exp)           \
-    lxw_rowcol_to_range(got, row1, col1, row2, col2);               \
+    lxlsx_rowcol_to_range(got, row1, col1, row2, col2);               \
     ASSERT_STR(exp, got);
 
 
 #define TEST_ROWCOL_TO_RANGE_ABS(row1, col1, row2, col2, exp)       \
-    lxw_rowcol_to_range_abs(got, row1, col1, row2, col2);           \
+    lxlsx_rowcol_to_range_abs(got, row1, col1, row2, col2);           \
     ASSERT_STR(exp, got);
 
 
 #define TEST_ROWCOL_TO_FORMULA_ABS(sheet, row1, col1, row2, col2, exp) \
-    lxw_rowcol_to_formula_abs(got, sheet, row1, col1, row2, col2);     \
+    lxlsx_rowcol_to_formula_abs(got, sheet, row1, col1, row2, col2);     \
     ASSERT_STR(exp, got);
 
 
 #define TEST_DATETIME_TIME(_hour, _min, _sec, exp)                  \
-    datetime = (lxw_datetime*)calloc(1, sizeof(lxw_datetime));      \
+    datetime = (lxlsx_datetime*)calloc(1, sizeof(lxlsx_datetime));      \
     datetime->hour  = _hour;                                        \
     datetime->min   = _min;                                         \
     datetime->sec   = _sec;                                         \
                                                                     \
-    got = lxw_datetime_to_excel_datetime(datetime);                 \
+    got = lxlsx_datetime_to_excel_datetime(datetime);                 \
                                                                     \
     ASSERT_DBL_NEAR(exp, got);                                      \
     free(datetime);
 
 #define TEST_DATETIME_DATE(_year, _month, _day, exp)                \
-    datetime = (lxw_datetime*)calloc(1, sizeof(lxw_datetime));      \
+    datetime = (lxlsx_datetime*)calloc(1, sizeof(lxlsx_datetime));      \
     datetime->year  = _year;                                        \
     datetime->month = _month;                                       \
     datetime->day   = _day;                                         \
                                                                     \
-    got = lxw_datetime_to_excel_datetime(datetime);                 \
+    got = lxlsx_datetime_to_excel_datetime(datetime);                 \
                                                                     \
     ASSERT_DBL_NEAR(exp, got);                                      \
     free(datetime);
 
 #define TEST_DATETIME_DATE_1904(_year, _month, _day, exp)           \
-    datetime = (lxw_datetime*)calloc(1, sizeof(lxw_datetime));      \
+    datetime = (lxlsx_datetime*)calloc(1, sizeof(lxlsx_datetime));      \
     datetime->year  = _year;                                        \
     datetime->month = _month;                                       \
     datetime->day   = _day;                                         \
                                                                     \
-    got = lxw_datetime_to_excel_date_with_epoch(datetime, 1);            \
+    got = lxlsx_datetime_to_excel_date_with_epoch(datetime, 1);            \
                                                                     \
     ASSERT_DBL_NEAR(exp, got);                                      \
     free(datetime);
 
 #define TEST_DATETIME(_year, _month, _day, _hour, _min, _sec, exp)  \
-    datetime = (lxw_datetime*)calloc(1, sizeof(lxw_datetime));      \
+    datetime = (lxlsx_datetime*)calloc(1, sizeof(lxlsx_datetime));      \
     datetime->year  = _year;                                        \
     datetime->month = _month;                                       \
     datetime->day   = _day;                                         \
@@ -122,16 +122,16 @@
     datetime->min   = _min;                                         \
     datetime->sec   = _sec;                                         \
                                                                     \
-    got = lxw_datetime_to_excel_datetime(datetime);                 \
+    got = lxlsx_datetime_to_excel_datetime(datetime);                 \
                                                                     \
     ASSERT_DBL_NEAR(exp, got);                                      \
     free(datetime);
 
 #define TEST_UNIXTIME(_unixtime, exp)                               \
-    got = lxw_unixtime_to_excel_date(_unixtime);                    \
+    got = lxlsx_unixtime_to_excel_date(_unixtime);                    \
     ASSERT_DBL_NEAR(exp, got);
 
 #define TEST_UNIXTIME_1904(_unixtime, exp)                          \
-    got = lxw_unixtime_to_excel_date_with_epoch(_unixtime, 1);           \
+    got = lxlsx_unixtime_to_excel_date_with_epoch(_unixtime, 1);           \
     ASSERT_DBL_NEAR(exp, got);
 

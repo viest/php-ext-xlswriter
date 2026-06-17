@@ -28,17 +28,17 @@ CTEST(worksheet, worksheet01) {
           "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
         "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test assembling a complete Worksheet file.
@@ -63,19 +63,19 @@ CTEST(worksheet, worksheet02) {
           "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
         "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, 0, 0, 123, NULL);
+    lxlsx_worksheet_write_number(worksheet, 0, 0, 123, NULL);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test assembling a complete Worksheet file.
@@ -115,24 +115,24 @@ CTEST(worksheet, worksheet03) {
           "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
         "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet->sst = lxw_sst_new();
-    worksheet_select(worksheet);
+    worksheet->sst = lxlsx_sst_new();
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_string(worksheet, 0, 0, "Foo", NULL);
-    worksheet_write_number(worksheet, 1, 2, 123, NULL);
-    worksheet_write_string(worksheet, 3, 1, "Bar", NULL);
-    worksheet_write_number(worksheet, 8, 4, 890, NULL);
+    lxlsx_worksheet_write_string(worksheet, 0, 0, "Foo", NULL);
+    lxlsx_worksheet_write_number(worksheet, 1, 2, 123, NULL);
+    lxlsx_worksheet_write_string(worksheet, 3, 1, "Bar", NULL);
+    lxlsx_worksheet_write_number(worksheet, 8, 4, 890, NULL);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_sst_free(worksheet->sst);
-    lxw_worksheet_free(worksheet);
+    lxlsx_sst_free(worksheet->sst);
+    lxlsx_worksheet_free(worksheet);
 }
 
 

@@ -16,17 +16,17 @@ CTEST(styles, write_border) {
 
     char* got;
     char exp[] = "<border><left/><right/><top/><bottom/><diagonal/></border>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
-    lxw_format *format = lxw_format_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
+    lxlsx_format *format = lxlsx_format_new();
 
     styles->file = testfile;
 
-    _write_border(styles, format, LXW_FALSE);
+    _write_border(styles, format, LXLSX_FALSE);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

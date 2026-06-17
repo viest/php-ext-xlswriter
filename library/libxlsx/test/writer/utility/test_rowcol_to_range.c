@@ -11,10 +11,10 @@
 
 #include "../../../include/lxlsx/utility.h"
 
-// Test lxw_rowcol_to_range().
-CTEST(utility, lxw_rowcol_to_range) {
+// Test lxlsx_rowcol_to_range().
+CTEST(utility, lxlsx_rowcol_to_range) {
 
-    char got[LXW_MAX_CELL_RANGE_LENGTH];
+    char got[LXLSX_MAX_CELL_RANGE_LENGTH];
 
     TEST_ROWCOL_TO_RANGE(0, 0, 0, 1, "A1:B1");
     TEST_ROWCOL_TO_RANGE(0, 2, 0, 9, "C1:J1");
@@ -32,10 +32,10 @@ CTEST(utility, lxw_rowcol_to_range) {
 
 }
 
-// Test lxw_rowcol_to_range_abs().
-CTEST(utility, lxw_rowcol_to_range_abs) {
+// Test lxlsx_rowcol_to_range_abs().
+CTEST(utility, lxlsx_rowcol_to_range_abs) {
 
-    char got[LXW_MAX_CELL_RANGE_LENGTH];
+    char got[LXLSX_MAX_CELL_RANGE_LENGTH];
 
     TEST_ROWCOL_TO_RANGE_ABS(0, 0, 0, 1, "$A$1:$B$1");
     TEST_ROWCOL_TO_RANGE_ABS(0, 2, 0, 9, "$C$1:$J$1");

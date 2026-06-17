@@ -16,15 +16,15 @@ CTEST(workbook, write_workbook_pr) {
 
     char* got;
     char exp[] = "<workbookPr defaultThemeVersion=\"124226\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
     _write_workbook_pr(workbook);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 

@@ -7,8 +7,8 @@
  * vml - A libxlsxwriter library for creating Excel XLSX vml files.
  *
  */
-#ifndef __LXW_VML_H__
-#define __LXW_VML_H__
+#ifndef __LXLSX_VML_H__
+#define __LXLSX_VML_H__
 
 #include <stdint.h>
 
@@ -18,18 +18,18 @@
 /*
  * Struct to represent a vml object.
  */
-typedef struct lxw_vml {
+typedef struct lxlsx_vml {
 
     FILE *file;
     uint8_t type;
-    struct lxw_comment_objs *button_objs;
-    struct lxw_comment_objs *comment_objs;
-    struct lxw_comment_objs *image_objs;
-    char *vml_data_id_str;
-    uint32_t vml_shape_id;
+    struct lxlsx_comment_objs *button_objs;
+    struct lxlsx_comment_objs *comment_objs;
+    struct lxlsx_comment_objs *image_objs;
+    char *lxlsx_vml_data_id_str;
+    uint32_t lxlsx_vml_shape_id;
     uint8_t comment_display_default;
 
-} lxw_vml;
+} lxlsx_vml;
 
 
 /* *INDENT-OFF* */
@@ -38,9 +38,9 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_vml *lxw_vml_new(void);
-void lxw_vml_free(lxw_vml *vml);
-void lxw_vml_assemble_xml_file(lxw_vml *self);
+lxlsx_vml *lxlsx_vml_new(void);
+void lxlsx_vml_free(lxlsx_vml *vml);
+void lxlsx_vml_assemble_xml_file(lxlsx_vml *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
@@ -53,4 +53,4 @@ void lxw_vml_assemble_xml_file(lxw_vml *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_VML_H__ */
+#endif /* __LXLSX_VML_H__ */

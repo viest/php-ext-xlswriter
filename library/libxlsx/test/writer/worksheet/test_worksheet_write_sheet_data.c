@@ -16,15 +16,15 @@ CTEST(worksheet, write_sheet_data) {
 
     char* got;
     char exp[] = "<sheetData/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
     _worksheet_write_sheet_data(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 

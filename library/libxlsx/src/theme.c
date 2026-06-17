@@ -14,7 +14,7 @@
 #include "lxlsx/theme.h"
 #include "lxlsx/utility.h"
 
-const char *theme_strs[] = {
+const char *lxlsx_theme_strs[] = {
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n",
     "<a:theme xmlns:a=\"http://schemas.openxmlformats.org/",
     "drawingml/2006/main\" name=\"Office Theme\">",
@@ -289,16 +289,16 @@ const char *theme_strs[] = {
 /*
  * Create a new theme object.
  */
-lxw_theme *
-lxw_theme_new(void)
+lxlsx_theme *
+lxlsx_theme_new(void)
 {
-    lxw_theme *theme = calloc(1, sizeof(lxw_theme));
+    lxlsx_theme *theme = calloc(1, sizeof(lxlsx_theme));
     GOTO_LABEL_ON_MEM_ERROR(theme, mem_error);
 
     return theme;
 
 mem_error:
-    lxw_theme_free(theme);
+    lxlsx_theme_free(theme);
     return NULL;
 }
 
@@ -306,7 +306,7 @@ mem_error:
  * Free a theme object.
  */
 void
-lxw_theme_free(lxw_theme *theme)
+lxlsx_theme_free(lxlsx_theme *theme)
 {
     if (!theme)
         return;
@@ -332,12 +332,12 @@ lxw_theme_free(lxw_theme *theme)
  * Assemble and write the XML file.
  */
 void
-lxw_theme_assemble_xml_file(lxw_theme *self)
+lxlsx_theme_assemble_xml_file(lxlsx_theme *self)
 {
     int i = 0;
 
-    while (strlen(theme_strs[i])) {
-        fprintf(self->file, "%s", theme_strs[i]);
+    while (strlen(lxlsx_theme_strs[i])) {
+        fprintf(self->file, "%s", lxlsx_theme_strs[i]);
         i++;
     }
 }

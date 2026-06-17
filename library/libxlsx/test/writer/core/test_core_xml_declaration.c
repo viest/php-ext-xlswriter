@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/core.h"
 
 // Test _xml_declaration().
-CTEST(core, xml_declaration) {
+CTEST(core, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_core *core = lxw_core_new();
+    lxlsx_core *core = lxlsx_core_new();
     core->file = testfile;
 
     _core_xml_declaration(core);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_core_free(core);
+    lxlsx_core_free(core);
 }

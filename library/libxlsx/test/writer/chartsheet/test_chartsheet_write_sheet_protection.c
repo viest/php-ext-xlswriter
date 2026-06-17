@@ -16,18 +16,18 @@
 CTEST(chartsheet, write_write_sheet_protection01) {
     char* got;
     char exp[] = "<sheetProtection content=\"1\" objects=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    chartsheet_protect(chartsheet, NULL, NULL);
+    lxlsx_chartsheet_protect(chartsheet, NULL, NULL);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 
@@ -35,38 +35,38 @@ CTEST(chartsheet, write_write_sheet_protection01) {
 CTEST(chartsheet, write_write_sheet_protection02) {
     char* got;
     char exp[] = "<sheetProtection password=\"83AF\" content=\"1\" objects=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    chartsheet_protect(chartsheet, "password", NULL);
+    lxlsx_chartsheet_protect(chartsheet, "password", NULL);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 /* 3. Test the _write_sheet_protection() method. */
 CTEST(chartsheet, write_write_sheet_protection03) {
     char* got;
     char exp[] = "<sheetProtection content=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    lxw_protection options = {.no_objects = 1};
+    lxlsx_protection options = {.no_objects = 1};
 
-    chartsheet_protect(chartsheet, NULL, &options);
+    lxlsx_chartsheet_protect(chartsheet, NULL, &options);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 
@@ -74,20 +74,20 @@ CTEST(chartsheet, write_write_sheet_protection03) {
 CTEST(chartsheet, write_write_sheet_protection04) {
     char* got;
     char exp[] = "<sheetProtection objects=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    lxw_protection options = {.no_content = 1};
+    lxlsx_protection options = {.no_content = 1};
 
-    chartsheet_protect(chartsheet, NULL, &options);
+    lxlsx_chartsheet_protect(chartsheet, NULL, &options);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 
@@ -95,20 +95,20 @@ CTEST(chartsheet, write_write_sheet_protection04) {
 CTEST(chartsheet, write_write_sheet_protection05) {
     char* got;
     char exp[] = "";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    lxw_protection options = {.no_content = 1, .no_objects = 1};
+    lxlsx_protection options = {.no_content = 1, .no_objects = 1};
 
-    chartsheet_protect(chartsheet, NULL, &options);
+    lxlsx_chartsheet_protect(chartsheet, NULL, &options);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 
@@ -116,20 +116,20 @@ CTEST(chartsheet, write_write_sheet_protection05) {
 CTEST(chartsheet, write_write_sheet_protection06) {
     char* got;
     char exp[] = "<sheetProtection password=\"83AF\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    lxw_protection options = {.no_content = 1, .no_objects = 1};
+    lxlsx_protection options = {.no_content = 1, .no_objects = 1};
 
-    chartsheet_protect(chartsheet, "password", &options);
+    lxlsx_chartsheet_protect(chartsheet, "password", &options);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }
 
 
@@ -137,18 +137,18 @@ CTEST(chartsheet, write_write_sheet_protection06) {
 CTEST(chartsheet, write_write_sheet_protection07) {
     char* got;
     char exp[] = "<sheetProtection password=\"83AF\" content=\"1\" objects=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
     chartsheet->worksheet->file = testfile;
 
-    lxw_protection options = {
+    lxlsx_protection options = {
         .objects                  = 1,
         .scenarios                = 1,
-        .format_cells             = 1,
-        .format_columns           = 1,
-        .format_rows              = 1,
+        .lxlsx_format_cells             = 1,
+        .lxlsx_format_columns           = 1,
+        .lxlsx_format_rows              = 1,
         .insert_columns           = 1,
         .insert_rows              = 1,
         .insert_hyperlinks        = 1,
@@ -161,10 +161,10 @@ CTEST(chartsheet, write_write_sheet_protection07) {
         .no_select_unlocked_cells = 1,
     };
 
-    chartsheet_protect(chartsheet, "password", &options);
+    lxlsx_chartsheet_protect(chartsheet, "password", &options);
     _chartsheet_write_sheet_protection(chartsheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }

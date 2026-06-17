@@ -16,16 +16,16 @@
 CTEST(worksheet, write_page_setup01) {
     char* got;
     char exp[] = "";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
     _worksheet_write_page_setup(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -33,17 +33,17 @@ CTEST(worksheet, write_page_setup01) {
 CTEST(worksheet, write_page_setup02) {
     char* got;
     char exp[] = "<pageSetup orientation=\"landscape\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_set_landscape(worksheet);
+    lxlsx_worksheet_set_landscape(worksheet);
     _worksheet_write_page_setup(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -51,17 +51,17 @@ CTEST(worksheet, write_page_setup02) {
 CTEST(worksheet, write_page_setup03) {
     char* got;
     char exp[] = "<pageSetup orientation=\"portrait\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_set_portrait(worksheet);
+    lxlsx_worksheet_set_portrait(worksheet);
     _worksheet_write_page_setup(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -69,17 +69,17 @@ CTEST(worksheet, write_page_setup03) {
 CTEST(worksheet, write_page_setup04) {
     char* got;
     char exp[] = "<pageSetup paperSize=\"9\" orientation=\"portrait\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_set_paper(worksheet, 9);
+    lxlsx_worksheet_set_paper(worksheet, 9);
     _worksheet_write_page_setup(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -87,15 +87,15 @@ CTEST(worksheet, write_page_setup04) {
 CTEST(worksheet, write_page_setup05) {
     char* got;
     char exp[] = "<pageSetup pageOrder=\"overThenDown\" orientation=\"portrait\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_print_across(worksheet);
+    lxlsx_worksheet_print_across(worksheet);
     _worksheet_write_page_setup(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

@@ -16,15 +16,15 @@ CTEST(content_types, write_override) {
 
     char* got;
     char exp[] = "<Override PartName=\"/docProps/core.xml\" ContentType=\"app...\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_content_types *content_types = lxw_content_types_new();
+    lxlsx_content_types *content_types = lxlsx_content_types_new();
     content_types->file = testfile;
 
     _write_override(content_types, "/docProps/core.xml", "app...");
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_content_types_free(content_types);
+    lxlsx_content_types_free(content_types);
 }
 

@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_condtional_format16) {
+CTEST(worksheet, lxlsx_worksheet_condtional_format16) {
 
     char* got;
     char exp[] =
@@ -101,39 +101,39 @@ CTEST(worksheet, worksheet_condtional_format16) {
               "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, CELL("A1"),   1, NULL);
-    worksheet_write_number(worksheet, CELL("A2"),   2, NULL);
-    worksheet_write_number(worksheet, CELL("A3"),   3, NULL);
-    worksheet_write_number(worksheet, CELL("A4"),   4, NULL);
-    worksheet_write_number(worksheet, CELL("A5"),   5, NULL);
-    worksheet_write_number(worksheet, CELL("A6"),   6, NULL);
-    worksheet_write_number(worksheet, CELL("A7"),   7, NULL);
-    worksheet_write_number(worksheet, CELL("A8"),   8, NULL);
-    worksheet_write_number(worksheet, CELL("A9"),   9, NULL);
-    worksheet_write_number(worksheet, CELL("A10"), 10, NULL);
-    worksheet_write_number(worksheet, CELL("A11"), 11, NULL);
-    worksheet_write_number(worksheet, CELL("A12"), 12, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A1"),   1, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A2"),   2, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A3"),   3, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A4"),   4, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A5"),   5, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A6"),   6, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A7"),   7, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A8"),   8, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A9"),   9, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A10"), 10, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A11"), 11, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A12"), 12, NULL);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type             = LXW_CONDITIONAL_3_COLOR_SCALE;
+    conditional_format->type             = LXLSX_CONDITIONAL_3_COLOR_SCALE;
     conditional_format->min_color        = 0xC5D9F1;
     conditional_format->mid_color        = 0x8DB4E3;
     conditional_format->max_color        = 0x538ED5;
 
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A12"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A12"), conditional_format);
 
     free(conditional_format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

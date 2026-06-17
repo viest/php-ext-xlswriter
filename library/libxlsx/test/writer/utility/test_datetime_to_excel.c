@@ -16,7 +16,7 @@
 CTEST(utility, test_datetime_date_and_time) {
 
     double got;
-    lxw_datetime *datetime;
+    lxlsx_datetime *datetime;
 
     TEST_DATETIME(1899, 12, 31,  0,  0,  0.000, 0);
     TEST_DATETIME(1982,  8, 25,  0, 15, 20.213, 30188.010650613425);
@@ -121,7 +121,7 @@ CTEST(utility, test_datetime_date_and_time) {
 CTEST(utility, test_datetime_date_only) {
 
     double got;
-    lxw_datetime *datetime;
+    lxlsx_datetime *datetime;
 
     // Params = (year, month, day, excel_date).
     TEST_DATETIME_DATE(1899, 12, 31, 0);
@@ -328,7 +328,7 @@ CTEST(utility, test_datetime_date_only) {
 CTEST(utility, test_datetime_date_only_1904) {
 
     double got;
-    lxw_datetime *datetime;
+    lxlsx_datetime *datetime;
 
     // Params = (year, month, day, excel_date).
     TEST_DATETIME_DATE_1904(1904,  1,  1, 0);
@@ -536,7 +536,7 @@ CTEST(utility, test_datetime_date_only_1904) {
 CTEST(utility, test_datetime_time_only) {
 
     double got;
-    lxw_datetime *datetime;
+    lxlsx_datetime *datetime;
 
     TEST_DATETIME_TIME( 0,  0,  0.000, 0);
     TEST_DATETIME_TIME( 0, 15, 20.213, 1.0650613425925924E-2);

@@ -25,13 +25,13 @@
 #include <stdint.h>
 #include "utility.h"
 
-#define LXW_MAX_ATTRIBUTE_LENGTH 2080   /* Max URL length. */
-#define LXW_ATTR_32              32
+#define LXLSX_MAX_ATTRIBUTE_LENGTH 2080   /* Max URL length. */
+#define LXLSX_ATTR_32              32
 
-#define LXW_ATTRIBUTE_COPY(dst, src)                    \
+#define LXLSX_ATTRIBUTE_COPY(dst, src)                    \
     do{                                                 \
-        strncpy(dst, src, LXW_MAX_ATTRIBUTE_LENGTH -1); \
-        dst[LXW_MAX_ATTRIBUTE_LENGTH - 1] = '\0';       \
+        strncpy(dst, src, LXLSX_MAX_ATTRIBUTE_LENGTH -1); \
+        dst[LXLSX_MAX_ATTRIBUTE_LENGTH - 1] = '\0';       \
     } while (0)
 
 
@@ -42,50 +42,50 @@ extern "C" {
 /* *INDENT-ON* */
 
 /* Attribute used in XML elements. */
-struct xml_attribute {
-    char key[LXW_MAX_ATTRIBUTE_LENGTH];
-    char value[LXW_MAX_ATTRIBUTE_LENGTH];
+struct lxlsx_xml_attribute {
+    char key[LXLSX_MAX_ATTRIBUTE_LENGTH];
+    char value[LXLSX_MAX_ATTRIBUTE_LENGTH];
 
     /* Make the struct a queue.h list element. */
-    STAILQ_ENTRY (xml_attribute) list_entries;
+    STAILQ_ENTRY (lxlsx_xml_attribute) list_entries;
 };
 
-/* Use queue.h macros to define the xml_attribute_list type. */
-STAILQ_HEAD(xml_attribute_list, xml_attribute);
+/* Use queue.h macros to define the lxlsx_xml_attribute_list type. */
+STAILQ_HEAD(lxlsx_xml_attribute_list, lxlsx_xml_attribute);
 
-/* Create a new attribute struct to add to a xml_attribute_list. */
-struct xml_attribute *lxw_new_attribute_str(const char *key,
+/* Create a new attribute struct to add to a lxlsx_xml_attribute_list. */
+struct lxlsx_xml_attribute *lxlsx_new_attribute_str(const char *key,
                                             const char *value);
-struct xml_attribute *lxw_new_attribute_int(const char *key, int32_t value);
-struct xml_attribute *lxw_new_attribute_dbl(const char *key, double value);
+struct lxlsx_xml_attribute *lxlsx_new_attribute_int(const char *key, int32_t value);
+struct lxlsx_xml_attribute *lxlsx_new_attribute_dbl(const char *key, double value);
 
-/* Macro to initialize the xml_attribute_list pointers. */
-#define LXW_INIT_ATTRIBUTES()                                 \
+/* Macro to initialize the lxlsx_xml_attribute_list pointers. */
+#define LXLSX_INIT_ATTRIBUTES()                                 \
     STAILQ_INIT(&attributes)
 
-/* Macro to add attribute string elements to xml_attribute_list. */
-#define LXW_PUSH_ATTRIBUTES_STR(key, value)                   \
+/* Macro to add attribute string elements to lxlsx_xml_attribute_list. */
+#define LXLSX_PUSH_ATTRIBUTES_STR(key, value)                   \
     do {                                                      \
-    attribute = lxw_new_attribute_str((key), (value));        \
+    attribute = lxlsx_new_attribute_str((key), (value));        \
     STAILQ_INSERT_TAIL(&attributes, attribute, list_entries); \
     } while (0)
 
-/* Macro to add attribute int values to xml_attribute_list. */
-#define LXW_PUSH_ATTRIBUTES_INT(key, value)                   \
+/* Macro to add attribute int values to lxlsx_xml_attribute_list. */
+#define LXLSX_PUSH_ATTRIBUTES_INT(key, value)                   \
     do {                                                      \
-    attribute = lxw_new_attribute_int((key), (value));        \
+    attribute = lxlsx_new_attribute_int((key), (value));        \
     STAILQ_INSERT_TAIL(&attributes, attribute, list_entries); \
     } while (0)
 
-/* Macro to add attribute double values to xml_attribute_list. */
-#define LXW_PUSH_ATTRIBUTES_DBL(key, value)                   \
+/* Macro to add attribute double values to lxlsx_xml_attribute_list. */
+#define LXLSX_PUSH_ATTRIBUTES_DBL(key, value)                   \
     do {                                                      \
-    attribute = lxw_new_attribute_dbl((key), (value));        \
+    attribute = lxlsx_new_attribute_dbl((key), (value));        \
     STAILQ_INSERT_TAIL(&attributes, attribute, list_entries); \
     } while (0)
 
-/* Macro to free xml_attribute_list and attribute. */
-#define LXW_FREE_ATTRIBUTES()                                 \
+/* Macro to free lxlsx_xml_attribute_list and attribute. */
+#define LXLSX_FREE_ATTRIBUTES()                                 \
     do {                                                      \
         while (!STAILQ_EMPTY(&attributes)) {                  \
             attribute = STAILQ_FIRST(&attributes);            \
@@ -99,7 +99,7 @@ struct xml_attribute *lxw_new_attribute_dbl(const char *key, double value);
  *
  * @param xmlfile A FILE pointer to the output XML file.
  */
-void lxw_xml_declaration(FILE *xmlfile);
+void lxlsx_xml_declaration(FILE *xmlfile);
 
 /**
  * Write an XML start tag with optional attributes.
@@ -108,9 +108,9 @@ void lxw_xml_declaration(FILE *xmlfile);
  * @param tag        The XML tag to write.
  * @param attributes An optional list of attributes to add to the tag.
  */
-void lxw_xml_start_tag(FILE *xmlfile,
+void lxlsx_xml_start_tag(FILE *xmlfile,
                        const char *tag,
-                       struct xml_attribute_list *attributes);
+                       struct lxlsx_xml_attribute_list *attributes);
 
 /**
  * Write an XML start tag with optional un-encoded attributes.
@@ -120,9 +120,9 @@ void lxw_xml_start_tag(FILE *xmlfile,
  * @param tag        The XML tag to write.
  * @param attributes An optional list of attributes to add to the tag.
  */
-void lxw_xml_start_tag_unencoded(FILE *xmlfile,
+void lxlsx_xml_start_tag_unencoded(FILE *xmlfile,
                                  const char *tag,
-                                 struct xml_attribute_list *attributes);
+                                 struct lxlsx_xml_attribute_list *attributes);
 
 /**
  * Write an XML end tag.
@@ -130,7 +130,7 @@ void lxw_xml_start_tag_unencoded(FILE *xmlfile,
  * @param xmlfile    A FILE pointer to the output XML file.
  * @param tag        The XML tag to write.
  */
-void lxw_xml_end_tag(FILE *xmlfile, const char *tag);
+void lxlsx_xml_end_tag(FILE *xmlfile, const char *tag);
 
 /**
  * Write an XML empty tag with optional attributes.
@@ -139,9 +139,9 @@ void lxw_xml_end_tag(FILE *xmlfile, const char *tag);
  * @param tag        The XML tag to write.
  * @param attributes An optional list of attributes to add to the tag.
  */
-void lxw_xml_empty_tag(FILE *xmlfile,
+void lxlsx_xml_empty_tag(FILE *xmlfile,
                        const char *tag,
-                       struct xml_attribute_list *attributes);
+                       struct lxlsx_xml_attribute_list *attributes);
 
 /**
  * Write an XML empty tag with optional un-encoded attributes.
@@ -151,9 +151,9 @@ void lxw_xml_empty_tag(FILE *xmlfile,
  * @param tag        The XML tag to write.
  * @param attributes An optional list of attributes to add to the tag.
  */
-void lxw_xml_empty_tag_unencoded(FILE *xmlfile,
+void lxlsx_xml_empty_tag_unencoded(FILE *xmlfile,
                                  const char *tag,
-                                 struct xml_attribute_list *attributes);
+                                 struct lxlsx_xml_attribute_list *attributes);
 
 /**
  * Write an XML element containing data and optional attributes.
@@ -163,18 +163,18 @@ void lxw_xml_empty_tag_unencoded(FILE *xmlfile,
  * @param data       The data section of the XML element.
  * @param attributes An optional list of attributes to add to the tag.
  */
-void lxw_xml_data_element(FILE *xmlfile,
+void lxlsx_xml_data_element(FILE *xmlfile,
                           const char *tag,
                           const char *data,
-                          struct xml_attribute_list *attributes);
+                          struct lxlsx_xml_attribute_list *attributes);
 
-void lxw_xml_rich_si_element(FILE *xmlfile, const char *string);
+void lxlsx_xml_rich_si_element(FILE *xmlfile, const char *string);
 
-uint8_t lxw_has_control_characters(const char *string);
-char *lxw_escape_control_characters(const char *string);
-char *lxw_escape_url_characters(const char *string, uint8_t escape_hash);
+uint8_t lxlsx_has_control_characters(const char *string);
+char *lxlsx_escape_control_characters(const char *string);
+char *lxlsx_escape_url_characters(const char *string, uint8_t escape_hash);
 
-char *lxw_escape_data(const char *data);
+char *lxlsx_escape_data(const char *data);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

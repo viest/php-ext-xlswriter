@@ -17,7 +17,7 @@
 #include "../../../include/lxlsx/worksheet.h"
 
 // Test assembling a complete Drawing file.
-CTEST(drawing, drawing_image01) {
+CTEST(drawing, lxlsx_drawing_image01) {
 
     char* got;
     char exp[] =
@@ -63,44 +63,44 @@ CTEST(drawing, drawing_image01) {
           "</xdr:twoCellAnchor>"
         "</xdr:wsDr>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_drawing *drawing = lxw_drawing_new();
+    lxlsx_drawing *drawing = lxlsx_drawing_new();
     drawing->file = testfile;
 
-    drawing->embedded = LXW_TRUE;
+    drawing->embedded = LXLSX_TRUE;
 
-    lxw_drawing_object *drawing_object = calloc(1, sizeof(lxw_drawing_object));
+    lxlsx_drawing_object *lxlsx_drawing_object = calloc(1, sizeof(*lxlsx_drawing_object));
 
-    drawing_object->type = LXW_DRAWING_IMAGE;
-    drawing_object->anchor = LXW_OBJECT_MOVE_DONT_SIZE;
+    lxlsx_drawing_object->type = LXLSX_DRAWING_IMAGE;
+    lxlsx_drawing_object->anchor = LXLSX_OBJECT_MOVE_DONT_SIZE;
 
-    drawing_object->from.col = 2;
-    drawing_object->from.col_offset = 0;
-    drawing_object->from.row = 1;
-    drawing_object->from.row_offset = 0;
+    lxlsx_drawing_object->from.col = 2;
+    lxlsx_drawing_object->from.col_offset = 0;
+    lxlsx_drawing_object->from.row = 1;
+    lxlsx_drawing_object->from.row_offset = 0;
 
-    drawing_object->to.col = 3;
-    drawing_object->to.col_offset = 533257;
-    drawing_object->to.row = 6;
-    drawing_object->to.row_offset = 190357;
+    lxlsx_drawing_object->to.col = 3;
+    lxlsx_drawing_object->to.col_offset = 533257;
+    lxlsx_drawing_object->to.row = 6;
+    lxlsx_drawing_object->to.row_offset = 190357;
 
-    drawing_object->description = strdup("republic.png");
+    lxlsx_drawing_object->description = strdup("republic.png");
 
-    drawing_object->col_absolute = 1219200;
-    drawing_object->row_absolute = 190500;
+    lxlsx_drawing_object->col_absolute = 1219200;
+    lxlsx_drawing_object->row_absolute = 190500;
 
-    drawing_object->width  = 1142857;
-    drawing_object->height = 1142857;
+    lxlsx_drawing_object->width  = 1142857;
+    lxlsx_drawing_object->height = 1142857;
 
-    drawing_object->rel_index = 1;
+    lxlsx_drawing_object->rel_index = 1;
 
-    lxw_add_drawing_object(drawing, drawing_object);
+    lxlsx_add_drawing_object(drawing, lxlsx_drawing_object);
 
-    lxw_drawing_assemble_xml_file(drawing);
+    lxlsx_drawing_assemble_xml_file(drawing);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_drawing_free(drawing);
+    lxlsx_drawing_free(drawing);
 }
 

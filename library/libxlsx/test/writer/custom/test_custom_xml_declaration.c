@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/custom.h"
 
 // Test _xml_declaration().
-CTEST(custom, xml_declaration) {
+CTEST(custom, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_custom *custom = lxw_custom_new();
+    lxlsx_custom *custom = lxlsx_custom_new();
     custom->file = testfile;
 
     _custom_xml_declaration(custom);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_custom_free(custom);
+    lxlsx_custom_free(custom);
 }

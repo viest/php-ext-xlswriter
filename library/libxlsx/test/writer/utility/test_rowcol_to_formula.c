@@ -12,10 +12,10 @@
 #include "../../../include/lxlsx/utility.h"
 
 
-// Test lxw_rowcol_to_formula_abs().
-CTEST(utility, lxw_rowcol_to_formula_abs) {
+// Test lxlsx_rowcol_to_formula_abs().
+CTEST(utility, lxlsx_rowcol_to_formula_abs) {
 
-    char got[LXW_MAX_FORMULA_RANGE_LENGTH];
+    char got[LXLSX_MAX_FORMULA_RANGE_LENGTH];
 
     TEST_ROWCOL_TO_FORMULA_ABS("Sheet1", 0, 0, 0, 1, "Sheet1!$A$1:$B$1");
     TEST_ROWCOL_TO_FORMULA_ABS("Sheet1", 0, 2, 0, 9, "Sheet1!$C$1:$J$1");

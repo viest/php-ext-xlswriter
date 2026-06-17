@@ -24,16 +24,16 @@
 /*
  * Create a new rich_value object.
  */
-lxw_rich_value *
-lxw_rich_value_new(void)
+lxlsx_rich_value *
+lxlsx_rich_value_new(void)
 {
-    lxw_rich_value *rich_value = calloc(1, sizeof(lxw_rich_value));
+    lxlsx_rich_value *rich_value = calloc(1, sizeof(lxlsx_rich_value));
     GOTO_LABEL_ON_MEM_ERROR(rich_value, mem_error);
 
     return rich_value;
 
 mem_error:
-    lxw_rich_value_free(rich_value);
+    lxlsx_rich_value_free(rich_value);
     return NULL;
 }
 
@@ -41,7 +41,7 @@ mem_error:
  * Free a rich_value object.
  */
 void
-lxw_rich_value_free(lxw_rich_value *rich_value)
+lxlsx_rich_value_free(lxlsx_rich_value *rich_value)
 {
     if (!rich_value)
         return;
@@ -59,9 +59,9 @@ lxw_rich_value_free(lxw_rich_value *rich_value)
  * Write the XML declaration.
  */
 STATIC void
-_rich_value_xml_declaration(lxw_rich_value *self)
+_rich_value_xml_declaration(lxlsx_rich_value *self)
 {
-    lxw_xml_declaration(self->file);
+    lxlsx_xml_declaration(self->file);
 }
 
 /*****************************************************************************
@@ -74,9 +74,9 @@ _rich_value_xml_declaration(lxw_rich_value *self)
  * Write the <v> element.
  */
 STATIC void
-_rich_value_write_v(lxw_rich_value *self, char *value)
+_rich_value_write_v(lxlsx_rich_value *self, char *value)
 {
-    lxw_xml_data_element(self->file, "v", value, NULL);
+    lxlsx_xml_data_element(self->file, "v", value, NULL);
 
 }
 
@@ -84,31 +84,31 @@ _rich_value_write_v(lxw_rich_value *self, char *value)
  * Write the <rv> element.
  */
 STATIC void
-_rich_value_write_rv(lxw_rich_value *self)
+_rich_value_write_rv(lxlsx_rich_value *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("s", "0");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("s", "0");
 
-    lxw_xml_start_tag(self->file, "rv", &attributes);
+    lxlsx_xml_start_tag(self->file, "rv", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the metadata for each embedded image.
  */
 void
-lxw_rich_value_write_images(lxw_rich_value *self)
+lxlsx_rich_value_write_images(lxlsx_rich_value *self)
 {
 
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_object_properties *object_props;
-    char value[LXW_UINT32_T_LENGTH];
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_object_properties *object_props;
+    char value[LXLSX_UINT32_T_LENGTH];
     uint32_t index = 0;
     uint8_t type = 5;
 
@@ -131,16 +131,16 @@ lxw_rich_value_write_images(lxw_rich_value *self)
             _rich_value_write_rv(self);
 
             /* Write the v element. */
-            lxw_snprintf(value, LXW_UINT32_T_LENGTH, "%u", index);
+            lxlsx_snprintf(value, LXLSX_UINT32_T_LENGTH, "%u", index);
             _rich_value_write_v(self, value);
 
-            lxw_snprintf(value, LXW_UINT32_T_LENGTH, "%u", type);
+            lxlsx_snprintf(value, LXLSX_UINT32_T_LENGTH, "%u", type);
             _rich_value_write_v(self, value);
 
             if (object_props->description && *object_props->description)
                 _rich_value_write_v(self, object_props->description);
 
-            lxw_xml_end_tag(self->file, "rv");
+            lxlsx_xml_end_tag(self->file, "rv");
 
             index++;
         }
@@ -151,27 +151,27 @@ lxw_rich_value_write_images(lxw_rich_value *self)
  * Write the <rvData> element.
  */
 STATIC void
-_rich_value_write_rv_data(lxw_rich_value *self)
+_rich_value_write_rv_data(lxlsx_rich_value *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char xmlns[] =
         "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xmlns", xmlns);
-    LXW_PUSH_ATTRIBUTES_INT("count", self->workbook->num_embedded_images);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns", xmlns);
+    LXLSX_PUSH_ATTRIBUTES_INT("count", self->workbook->num_embedded_images);
 
-    lxw_xml_start_tag(self->file, "rvData", &attributes);
+    lxlsx_xml_start_tag(self->file, "rvData", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Assemble and write the XML file.
  */
 void
-lxw_rich_value_assemble_xml_file(lxw_rich_value *self)
+lxlsx_rich_value_assemble_xml_file(lxlsx_rich_value *self)
 {
     /* Write the XML declaration. */
     _rich_value_xml_declaration(self);
@@ -179,9 +179,9 @@ lxw_rich_value_assemble_xml_file(lxw_rich_value *self)
     /* Write the rvData element. */
     _rich_value_write_rv_data(self);
 
-    lxw_rich_value_write_images(self);
+    lxlsx_rich_value_write_images(self);
 
-    lxw_xml_end_tag(self->file, "rvData");
+    lxlsx_xml_end_tag(self->file, "rvData");
 }
 
 /*****************************************************************************

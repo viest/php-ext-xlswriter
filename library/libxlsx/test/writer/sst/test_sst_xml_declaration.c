@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test _xml_declaration().
-CTEST(sst, xml_declaration) {
+CTEST(sst, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_sst *sst = lxw_sst_new();
+    lxlsx_sst *sst = lxlsx_sst_new();
     sst->file = testfile;
 
     _sst_xml_declaration(sst);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_sst_free(sst);
+    lxlsx_sst_free(sst);
 }

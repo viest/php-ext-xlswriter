@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/table.h"
 
 // Test assembling a complete Table file.
-CTEST(worksheet, worksheet_table03) {
+CTEST(worksheet, lxlsx_worksheet_table03) {
 
     char* got;
     char exp[] =
@@ -27,29 +27,29 @@ CTEST(worksheet, worksheet_table03) {
               "<tableStyleInfo name=\"TableStyleMedium9\" showFirstColumn=\"1\" showLastColumn=\"1\" showRowStripes=\"0\" showColumnStripes=\"1\"/>"
             "</table>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
-    FILE* testfile2 = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
+    FILE* testfile2 = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile2;
-    worksheet->sst = lxw_sst_new();
+    worksheet->sst = lxlsx_sst_new();
 
-    lxw_table *table = lxw_table_new();
+    lxlsx_table *table = lxlsx_table_new();
     table->file = testfile;
 
-    lxw_table_options options = {.first_column = LXW_TRUE, .last_column = LXW_TRUE, .no_banded_rows = LXW_TRUE, .banded_columns = LXW_TRUE};
+    lxlsx_table_options options = {.first_column = LXLSX_TRUE, .last_column = LXLSX_TRUE, .no_banded_rows = LXLSX_TRUE, .banded_columns = LXLSX_TRUE};
 
-    worksheet_add_table(worksheet, RANGE("C5:D16"), &options);
+    lxlsx_worksheet_add_table(worksheet, RANGE("C5:D16"), &options);
 
-    table->table_obj = STAILQ_FIRST(worksheet->table_objs);
-    table->table_obj->id = 1;
+    table->lxlsx_table_obj = STAILQ_FIRST(worksheet->lxlsx_table_objs);
+    table->lxlsx_table_obj->id = 1;
 
-    lxw_table_assemble_xml_file(table);
+    lxlsx_table_assemble_xml_file(table);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
-    lxw_table_free(table);
+    lxlsx_worksheet_free(worksheet);
+    lxlsx_table_free(table);
 }
 
 

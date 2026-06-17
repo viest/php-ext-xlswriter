@@ -8,29 +8,29 @@
  *                 content_types files.
  *
  */
-#ifndef __LXW_CONTENT_TYPES_H__
-#define __LXW_CONTENT_TYPES_H__
+#ifndef __LXLSX_CONTENT_TYPES_H__
+#define __LXLSX_CONTENT_TYPES_H__
 
 #include <stdint.h>
 #include <string.h>
 
 #include "common.h"
 
-#define LXW_APP_PACKAGE  "application/vnd.openxmlformats-package."
-#define LXW_APP_DOCUMENT "application/vnd.openxmlformats-officedocument."
-#define LXW_APP_MSEXCEL  "application/vnd.ms-excel."
+#define LXLSX_APP_PACKAGE  "application/vnd.openxmlformats-package."
+#define LXLSX_APP_DOCUMENT "application/vnd.openxmlformats-officedocument."
+#define LXLSX_APP_MSEXCEL  "application/vnd.ms-excel."
 
 /*
  * Struct to represent a content_types.
  */
-typedef struct lxw_content_types {
+typedef struct lxlsx_content_types {
 
     FILE *file;
 
-    struct lxw_tuples *default_types;
-    struct lxw_tuples *overrides;
+    struct lxlsx_tuples *default_types;
+    struct lxlsx_tuples *overrides;
 
-} lxw_content_types;
+} lxlsx_content_types;
 
 
 /* *INDENT-OFF* */
@@ -39,40 +39,40 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_content_types *lxw_content_types_new(void);
-void lxw_content_types_free(lxw_content_types *content_types);
-void lxw_content_types_assemble_xml_file(lxw_content_types *content_types);
-void lxw_ct_add_default(lxw_content_types *content_types, const char *key,
+lxlsx_content_types *lxlsx_content_types_new(void);
+void lxlsx_content_types_free(lxlsx_content_types *content_types);
+void lxlsx_content_types_assemble_xml_file(lxlsx_content_types *content_types);
+void lxlsx_ct_add_default(lxlsx_content_types *content_types, const char *key,
                         const char *value);
-void lxw_ct_add_override(lxw_content_types *content_types, const char *key,
+void lxlsx_ct_add_override(lxlsx_content_types *content_types, const char *key,
                          const char *value);
-void lxw_ct_add_worksheet_name(lxw_content_types *content_types,
+void lxlsx_ct_add_worksheet_name(lxlsx_content_types *content_types,
                                const char *name);
-void lxw_ct_add_chartsheet_name(lxw_content_types *content_types,
+void lxlsx_ct_add_chartsheet_name(lxlsx_content_types *content_types,
                                 const char *name);
-void lxw_ct_add_chart_name(lxw_content_types *content_types,
+void lxlsx_ct_add_chart_name(lxlsx_content_types *content_types,
                            const char *name);
-void lxw_ct_add_drawing_name(lxw_content_types *content_types,
+void lxlsx_ct_add_drawing_name(lxlsx_content_types *content_types,
                              const char *name);
-void lxw_ct_add_table_name(lxw_content_types *content_types,
+void lxlsx_ct_add_table_name(lxlsx_content_types *content_types,
                            const char *name);
-void lxw_ct_add_comment_name(lxw_content_types *content_types,
+void lxlsx_ct_add_comment_name(lxlsx_content_types *content_types,
                              const char *name);
-void lxw_ct_add_vml_name(lxw_content_types *content_types);
+void lxlsx_ct_add_vml_name(lxlsx_content_types *content_types);
 
-void lxw_ct_add_shared_strings(lxw_content_types *content_types);
-void lxw_ct_add_calc_chain(lxw_content_types *content_types);
-void lxw_ct_add_custom_properties(lxw_content_types *content_types);
-void lxw_ct_add_metadata(lxw_content_types *content_types);
-void lxw_ct_add_rich_value(lxw_content_types *content_types);
+void lxlsx_ct_add_shared_strings(lxlsx_content_types *content_types);
+void lxlsx_ct_add_calc_chain(lxlsx_content_types *content_types);
+void lxlsx_ct_add_custom_properties(lxlsx_content_types *content_types);
+void lxlsx_ct_add_metadata(lxlsx_content_types *content_types);
+void lxlsx_ct_add_rich_value(lxlsx_content_types *content_types);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _content_types_xml_declaration(lxw_content_types *self);
-STATIC void _write_default(lxw_content_types *self, const char *ext,
+STATIC void _content_types_xml_declaration(lxlsx_content_types *self);
+STATIC void _write_default(lxlsx_content_types *self, const char *ext,
                            const char *type);
-STATIC void _write_override(lxw_content_types *self, const char *part_name,
+STATIC void _write_override(lxlsx_content_types *self, const char *part_name,
                             const char *type);
 
 #endif /* TESTING */
@@ -83,4 +83,4 @@ STATIC void _write_override(lxw_content_types *self, const char *part_name,
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_CONTENT_TYPES_H__ */
+#endif /* __LXLSX_CONTENT_TYPES_H__ */

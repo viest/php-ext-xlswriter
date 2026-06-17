@@ -6,8 +6,8 @@
  * rich_value - A libxlsxwriter library for creating Excel XLSX rich_value files.
  *
  */
-#ifndef __LXW_RICH_VALUE_H__
-#define __LXW_RICH_VALUE_H__
+#ifndef __LXLSX_RICH_VALUE_H__
+#define __LXLSX_RICH_VALUE_H__
 
 #include <stdint.h>
 
@@ -17,12 +17,12 @@
 /*
  * Struct to represent a rich_value object.
  */
-typedef struct lxw_rich_value {
+typedef struct lxlsx_rich_value {
 
     FILE *file;
-    lxw_workbook *workbook;
+    lxlsx_workbook *workbook;
 
-} lxw_rich_value;
+} lxlsx_rich_value;
 
 
 /* *INDENT-OFF* */
@@ -31,14 +31,14 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_rich_value *lxw_rich_value_new(void);
-void lxw_rich_value_free(lxw_rich_value *rich_value);
-void lxw_rich_value_assemble_xml_file(lxw_rich_value *self);
+lxlsx_rich_value *lxlsx_rich_value_new(void);
+void lxlsx_rich_value_free(lxlsx_rich_value *rich_value);
+void lxlsx_rich_value_assemble_xml_file(lxlsx_rich_value *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _rich_value_xml_declaration(lxw_rich_value *self);
+STATIC void _rich_value_xml_declaration(lxlsx_rich_value *self);
 
 #endif /* TESTING */
 
@@ -48,4 +48,4 @@ STATIC void _rich_value_xml_declaration(lxw_rich_value *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_RICH_VALUE_H__ */
+#endif /* __LXLSX_RICH_VALUE_H__ */

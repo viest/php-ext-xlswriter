@@ -7,8 +7,8 @@
  * table - A libxlsxwriter library for creating Excel XLSX table files.
  *
  */
-#ifndef __LXW_TABLE_H__
-#define __LXW_TABLE_H__
+#ifndef __LXLSX_TABLE_H__
+#define __LXLSX_TABLE_H__
 
 #include <stdint.h>
 
@@ -17,13 +17,13 @@
 /*
  * Struct to represent a table object.
  */
-typedef struct lxw_table {
+typedef struct lxlsx_table {
 
     FILE *file;
 
-    struct lxw_table_obj *table_obj;
+    struct lxlsx_table_obj *lxlsx_table_obj;
 
-} lxw_table;
+} lxlsx_table;
 
 
 /* *INDENT-OFF* */
@@ -32,14 +32,14 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_table *lxw_table_new(void);
-void lxw_table_free(lxw_table *table);
-void lxw_table_assemble_xml_file(lxw_table *self);
+lxlsx_table *lxlsx_table_new(void);
+void lxlsx_table_free(lxlsx_table *table);
+void lxlsx_table_assemble_xml_file(lxlsx_table *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _table_xml_declaration(lxw_table *self);
+STATIC void _table_xml_declaration(lxlsx_table *self);
 
 #endif /* TESTING */
 
@@ -49,4 +49,4 @@ STATIC void _table_xml_declaration(lxw_table *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_TABLE_H__ */
+#endif /* __LXLSX_TABLE_H__ */

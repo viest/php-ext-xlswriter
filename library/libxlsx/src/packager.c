@@ -50,18 +50,18 @@
 #include "lxlsx/hash_table.h"
 #include "lxlsx/utility.h"
 
-STATIC lxw_error _add_file_to_zip(lxw_packager *self, FILE *file,
+STATIC lxlsx_error _add_file_to_zip(lxlsx_packager *self, FILE *file,
                                   const char *filename);
 
-STATIC lxw_error _add_buffer_to_zip(lxw_packager *self, const char *buffer,
+STATIC lxlsx_error _add_buffer_to_zip(lxlsx_packager *self, const char *buffer,
                                     size_t buffer_size, const char *filename);
 
-STATIC lxw_error _add_to_zip(lxw_packager *self, FILE *file,
+STATIC lxlsx_error _add_to_zip(lxlsx_packager *self, FILE *file,
                              char **buffer, size_t *buffer_size,
                              const char *filename);
 
-STATIC lxw_error _write_vml_drawing_rels_file(lxw_packager *self,
-                                              lxw_worksheet *worksheet,
+STATIC lxlsx_error _write_vml_drawing_rels_file(lxlsx_packager *self,
+                                              lxlsx_worksheet *worksheet,
                                               uint32_t index);
 
 /*
@@ -106,7 +106,7 @@ _open_zipfile_win32(const char *filename)
                             wide_filename, _MAX_PATH);
 
     if (n == 0) {
-        LXW_ERROR("MultiByteToWideChar error");
+        LXLSX_ERROR("MultiByteToWideChar error");
         return NULL;
     }
 
@@ -121,10 +121,10 @@ _open_zipfile_win32(const char *filename)
 STATIC voidpf ZCALLBACK
 _fopen_memstream(voidpf opaque, const char *filename, int mode)
 {
-    lxw_packager *packager = (lxw_packager *) opaque;
+    lxlsx_packager *packager = (lxlsx_packager *) opaque;
     (void) filename;
     (void) mode;
-    return lxw_get_filehandle(&packager->output_buffer,
+    return lxlsx_get_filehandle(&packager->output_buffer,
                               &packager->output_buffer_size,
                               packager->tmpdir);
 }
@@ -132,7 +132,7 @@ _fopen_memstream(voidpf opaque, const char *filename, int mode)
 STATIC int ZCALLBACK
 _fclose_memstream(voidpf opaque, voidpf stream)
 {
-    lxw_packager *packager = (lxw_packager *) opaque;
+    lxlsx_packager *packager = (lxlsx_packager *) opaque;
     FILE *file = (FILE *) stream;
     long size;
 
@@ -170,25 +170,25 @@ mem_error:
 /*
  * Create a new packager object.
  */
-lxw_packager *
-lxw_packager_new(const char *filename, const char *tmpdir, uint8_t use_zip64)
+lxlsx_packager *
+lxlsx_packager_new(const char *filename, const char *tmpdir, uint8_t use_zip64)
 {
     zlib_filefunc_def filefunc;
-    lxw_packager *packager = calloc(1, sizeof(lxw_packager));
+    lxlsx_packager *packager = calloc(1, sizeof(lxlsx_packager));
     GOTO_LABEL_ON_MEM_ERROR(packager, mem_error);
 
-    packager->buffer = calloc(1, LXW_ZIP_BUFFER_SIZE);
+    packager->buffer = calloc(1, LXLSX_ZIP_BUFFER_SIZE);
     GOTO_LABEL_ON_MEM_ERROR(packager->buffer, mem_error);
 
     packager->filename = NULL;
     packager->tmpdir = tmpdir;
 
     if (filename) {
-        packager->filename = lxw_strdup(filename);
+        packager->filename = lxlsx_strdup(filename);
         GOTO_LABEL_ON_MEM_ERROR(packager->filename, mem_error);
     }
 
-    packager->buffer_size = LXW_ZIP_BUFFER_SIZE;
+    packager->buffer_size = LXLSX_ZIP_BUFFER_SIZE;
     packager->use_zip64 = use_zip64;
 
     /* Initialize the zip_fileinfo struct to Jan 1 1980 like Excel. */
@@ -227,7 +227,7 @@ lxw_packager_new(const char *filename, const char *tmpdir, uint8_t use_zip64)
     return packager;
 
 mem_error:
-    lxw_packager_free(packager);
+    lxlsx_packager_free(packager);
     return NULL;
 }
 
@@ -235,7 +235,7 @@ mem_error:
  * Free a packager object.
  */
 void
-lxw_packager_free(lxw_packager *packager)
+lxlsx_packager_free(lxlsx_packager *packager)
 {
     if (!packager)
         return;
@@ -253,19 +253,19 @@ lxw_packager_free(lxw_packager *packager)
 /*
  * Write the workbook.xml file.
  */
-STATIC lxw_error
-_write_workbook_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_workbook_file(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_error err;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_error err;
 
     char *buffer = NULL;
     size_t buffer_size = 0;
-    workbook->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    workbook->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!workbook->file)
-        return LXW_ERROR_CREATING_TMPFILE;
+        return LXLSX_ERROR_CREATING_TMPFILE;
 
-    lxw_workbook_assemble_xml_file(workbook);
+    lxlsx_workbook_assemble_xml_file(workbook);
 
     err = _add_to_zip(self, workbook->file, &buffer, &buffer_size,
                       "xl/workbook.xml");
@@ -273,23 +273,23 @@ _write_workbook_file(lxw_packager *self)
     free(buffer);
     RETURN_ON_ERROR(err);
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the worksheet files.
  */
-STATIC lxw_error
-_write_worksheet_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_worksheet_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -297,18 +297,18 @@ _write_worksheet_files(lxw_packager *self)
         else
             worksheet = sheet->u.worksheet;
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/worksheets/sheet%d.xml", index++);
 
         if (worksheet->optimize_row)
-            lxw_worksheet_write_single_row(worksheet);
+            lxlsx_worksheet_write_single_row(worksheet);
 
-        worksheet->file = lxw_get_filehandle(&buffer, &buffer_size,
+        worksheet->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                              self->tmpdir);
         if (!worksheet->file)
-            return LXW_ERROR_CREATING_TMPFILE;
+            return LXLSX_ERROR_CREATING_TMPFILE;
 
-        lxw_worksheet_assemble_xml_file(worksheet);
+        lxlsx_worksheet_assemble_xml_file(worksheet);
 
         err = _add_to_zip(self, worksheet->file, &buffer, &buffer_size,
                           sheetname);
@@ -317,23 +317,23 @@ _write_worksheet_files(lxw_packager *self)
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the chartsheet files.
  */
-STATIC lxw_error
-_write_chartsheet_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_chartsheet_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_chartsheet *chartsheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_chartsheet *chartsheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -341,15 +341,15 @@ _write_chartsheet_files(lxw_packager *self)
         else
             continue;
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/chartsheets/sheet%d.xml", index++);
 
-        chartsheet->file = lxw_get_filehandle(&buffer, &buffer_size,
+        chartsheet->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                               self->tmpdir);
         if (!chartsheet->file)
-            return LXW_ERROR_CREATING_TMPFILE;
+            return LXLSX_ERROR_CREATING_TMPFILE;
 
-        lxw_chartsheet_assemble_xml_file(chartsheet);
+        lxlsx_chartsheet_assemble_xml_file(chartsheet);
 
         err = _add_to_zip(self, chartsheet->file, &buffer, &buffer_size,
                           sheetname);
@@ -358,23 +358,23 @@ _write_chartsheet_files(lxw_packager *self)
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the /xl/media/image?.xml files.
  */
-STATIC lxw_error
-_write_image_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_image_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_object_properties *object_props;
-    lxw_error err;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_object_properties *object_props;
+    lxlsx_error err;
     FILE *image_stream;
 
-    char filename[LXW_FILENAME_LENGTH] = { 0 };
+    char filename[LXLSX_FILENAME_LENGTH] = { 0 };
     uint32_t index = 1;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
@@ -393,18 +393,18 @@ _write_image_files(lxw_packager *self)
             if (object_props->is_duplicate)
                 continue;
 
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/media/image%d.%s", index++,
                          object_props->extension);
 
             if (!object_props->is_image_buffer) {
                 /* Check that the image file exists and can be opened. */
-                image_stream = lxw_fopen(object_props->filename, "rb");
+                image_stream = lxlsx_fopen(object_props->filename, "rb");
                 if (!image_stream) {
-                    LXW_WARN_FORMAT1("Error adding image to xlsx file: file "
+                    LXLSX_WARN_FORMAT1("Error adding image to xlsx file: file "
                                      "doesn't exist or can't be opened: %s.",
                                      object_props->filename);
-                    return LXW_ERROR_CREATING_TMPFILE;
+                    return LXLSX_ERROR_CREATING_TMPFILE;
                 }
 
                 err = _add_file_to_zip(self, image_stream, filename);
@@ -425,18 +425,18 @@ _write_image_files(lxw_packager *self)
             if (object_props->is_duplicate)
                 continue;
 
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/media/image%d.%s", index++,
                          object_props->extension);
 
             if (!object_props->is_image_buffer) {
                 /* Check that the image file exists and can be opened. */
-                image_stream = lxw_fopen(object_props->filename, "rb");
+                image_stream = lxlsx_fopen(object_props->filename, "rb");
                 if (!image_stream) {
-                    LXW_WARN_FORMAT1("Error adding image to xlsx file: file "
+                    LXLSX_WARN_FORMAT1("Error adding image to xlsx file: file "
                                      "doesn't exist or can't be opened: %s.",
                                      object_props->filename);
-                    return LXW_ERROR_CREATING_TMPFILE;
+                    return LXLSX_ERROR_CREATING_TMPFILE;
                 }
 
                 err = _add_file_to_zip(self, image_stream, filename);
@@ -453,91 +453,91 @@ _write_image_files(lxw_packager *self)
         }
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the xl/vbaProject.bin file.
  */
-STATIC lxw_error
-_add_vba_project(lxw_packager *self)
+STATIC lxlsx_error
+_add_vba_project(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_error err;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_error err;
     FILE *image_stream;
 
     if (!workbook->vba_project)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
     /* Check that the image file exists and can be opened. */
-    image_stream = lxw_fopen(workbook->vba_project, "rb");
+    image_stream = lxlsx_fopen(workbook->vba_project, "rb");
     if (!image_stream) {
-        LXW_WARN_FORMAT1("Error adding vbaProject.bin to xlsx file: "
+        LXLSX_WARN_FORMAT1("Error adding vbaProject.bin to xlsx file: "
                          "file doesn't exist or can't be opened: %s.",
                          workbook->vba_project);
-        return LXW_ERROR_CREATING_TMPFILE;
+        return LXLSX_ERROR_CREATING_TMPFILE;
     }
 
     err = _add_file_to_zip(self, image_stream, "xl/vbaProject.bin");
     fclose(image_stream);
     RETURN_ON_ERROR(err);
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the xl/vbaProjectSignature.bin file.
  */
-STATIC lxw_error
-_add_vba_project_signature(lxw_packager *self)
+STATIC lxlsx_error
+_add_vba_project_signature(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_error err;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_error err;
     FILE *image_stream;
 
     if (!workbook->vba_project_signature)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
     /* Check that the image file exists and can be opened. */
-    image_stream = lxw_fopen(workbook->vba_project_signature, "rb");
+    image_stream = lxlsx_fopen(workbook->vba_project_signature, "rb");
     if (!image_stream) {
-        LXW_WARN_FORMAT1("Error adding vbaProjectSignature.bin to xlsx file: "
+        LXLSX_WARN_FORMAT1("Error adding vbaProjectSignature.bin to xlsx file: "
                          "file doesn't exist or can't be opened: %s.",
                          workbook->vba_project_signature);
-        return LXW_ERROR_CREATING_TMPFILE;
+        return LXLSX_ERROR_CREATING_TMPFILE;
     }
 
     err = _add_file_to_zip(self, image_stream, "xl/vbaProjectSignature.bin");
     fclose(image_stream);
     RETURN_ON_ERROR(err);
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the chart files.
  */
-STATIC lxw_error
-_write_chart_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_chart_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_chart *chart;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_chart *chart;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(chart, workbook->ordered_charts, ordered_list_pointers) {
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/charts/chart%d.xml", index++);
 
-        chart->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+        chart->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
         if (!chart->file)
-            return LXW_ERROR_CREATING_TMPFILE;
+            return LXLSX_ERROR_CREATING_TMPFILE;
 
-        lxw_chart_assemble_xml_file(chart);
+        lxlsx_chart_assemble_xml_file(chart);
 
         err = _add_to_zip(self, chart->file, &buffer, &buffer_size,
                           sheetname);
@@ -546,41 +546,41 @@ _write_chart_files(lxw_packager *self)
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Count the chart files.
  */
 uint32_t
-_get_chart_count(lxw_packager *self)
+_get_chart_count(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_chart *chart;
-    uint32_t chart_count = 0;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_chart *chart;
+    uint32_t lxlsx_chart_count = 0;
 
     STAILQ_FOREACH(chart, workbook->ordered_charts, ordered_list_pointers) {
-        chart_count++;
+        lxlsx_chart_count++;
     }
 
-    return chart_count;
+    return lxlsx_chart_count;
 }
 
 /*
  * Write the drawing files.
  */
-STATIC lxw_error
-_write_drawing_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_drawing_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_drawing *drawing;
-    char filename[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_drawing *drawing;
+    char filename[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -591,15 +591,15 @@ _write_drawing_files(lxw_packager *self)
         drawing = worksheet->drawing;
 
         if (drawing) {
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/drawings/drawing%d.xml", index++);
 
-            drawing->file = lxw_get_filehandle(&buffer, &buffer_size,
+            drawing->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                                self->tmpdir);
             if (!drawing->file)
-                return LXW_ERROR_CREATING_TMPFILE;
+                return LXLSX_ERROR_CREATING_TMPFILE;
 
-            lxw_drawing_assemble_xml_file(drawing);
+            lxlsx_drawing_assemble_xml_file(drawing);
 
             err = _add_to_zip(self, drawing->file, &buffer, &buffer_size,
                               filename);
@@ -609,20 +609,20 @@ _write_drawing_files(lxw_packager *self)
         }
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Count  the drawing files.
  */
 uint32_t
-_get_drawing_count(lxw_packager *self)
+_get_drawing_count(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_drawing *drawing;
-    uint32_t drawing_count = 0;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_drawing *drawing;
+    uint32_t lxlsx_drawing_count = 0;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -633,26 +633,26 @@ _get_drawing_count(lxw_packager *self)
         drawing = worksheet->drawing;
 
         if (drawing)
-            drawing_count++;
+            lxlsx_drawing_count++;
     }
 
-    return drawing_count;
+    return lxlsx_drawing_count;
 }
 
 /*
  * Write the worksheet table files.
  */
-STATIC lxw_error
-_write_table_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_table_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_table *table;
-    lxw_table_obj *table_obj;
-    lxw_error err;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_table *table;
+    lxlsx_table_obj *lxlsx_table_obj;
+    lxlsx_error err;
 
-    char filename[LXW_FILENAME_LENGTH] = { 0 };
+    char filename[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
@@ -663,53 +663,53 @@ _write_table_files(lxw_packager *self)
         else
             worksheet = sheet->u.worksheet;
 
-        if (STAILQ_EMPTY(worksheet->table_objs))
+        if (STAILQ_EMPTY(worksheet->lxlsx_table_objs))
             continue;
 
-        STAILQ_FOREACH(table_obj, worksheet->table_objs, list_pointers) {
+        STAILQ_FOREACH(lxlsx_table_obj, worksheet->lxlsx_table_objs, list_pointers) {
 
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/tables/table%d.xml", index++);
 
-            table = lxw_table_new();
+            table = lxlsx_table_new();
             if (!table) {
-                err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
                 RETURN_ON_ERROR(err);
             }
 
-            table->file = lxw_get_filehandle(&buffer, &buffer_size,
+            table->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                              self->tmpdir);
             if (!table->file) {
-                lxw_table_free(table);
-                return LXW_ERROR_CREATING_TMPFILE;
+                lxlsx_table_free(table);
+                return LXLSX_ERROR_CREATING_TMPFILE;
             }
 
-            table->table_obj = table_obj;
+            table->lxlsx_table_obj = lxlsx_table_obj;
 
-            lxw_table_assemble_xml_file(table);
+            lxlsx_table_assemble_xml_file(table);
 
             err = _add_to_zip(self, table->file, &buffer, &buffer_size,
                               filename);
             fclose(table->file);
             free(buffer);
-            lxw_table_free(table);
+            lxlsx_table_free(table);
             RETURN_ON_ERROR(err);
         }
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Count  the table files.
  */
 uint32_t
-_get_table_count(lxw_packager *self)
+_get_table_count(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    uint32_t table_count = 0;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    uint32_t lxlsx_table_count = 0;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -717,27 +717,27 @@ _get_table_count(lxw_packager *self)
         else
             worksheet = sheet->u.worksheet;
 
-        table_count += worksheet->table_count;
+        lxlsx_table_count += worksheet->lxlsx_table_count;
     }
 
-    return table_count;
+    return lxlsx_table_count;
 }
 
 /*
  * Write the comment/header VML files.
  */
-STATIC lxw_error
-_write_vml_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_vml_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_vml *vml;
-    char filename[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_vml *vml;
+    char filename[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -750,43 +750,43 @@ _write_vml_files(lxw_packager *self)
 
         if (worksheet->has_vml) {
 
-            vml = lxw_vml_new();
+            vml = lxlsx_vml_new();
             if (!vml)
-                return LXW_ERROR_MEMORY_MALLOC_FAILED;
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/drawings/vmlDrawing%d.vml", index++);
 
-            vml->file = lxw_get_filehandle(&buffer, &buffer_size,
+            vml->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                            self->tmpdir);
             if (!vml->file) {
-                lxw_vml_free(vml);
-                return LXW_ERROR_CREATING_TMPFILE;
+                lxlsx_vml_free(vml);
+                return LXLSX_ERROR_CREATING_TMPFILE;
             }
 
             vml->comment_objs = worksheet->comment_objs;
             vml->button_objs = worksheet->button_objs;
-            vml->vml_shape_id = worksheet->vml_shape_id;
+            vml->lxlsx_vml_shape_id = worksheet->lxlsx_vml_shape_id;
             vml->comment_display_default = worksheet->comment_display_default;
 
-            if (worksheet->vml_data_id_str) {
-                vml->vml_data_id_str = worksheet->vml_data_id_str;
+            if (worksheet->lxlsx_vml_data_id_str) {
+                vml->lxlsx_vml_data_id_str = worksheet->lxlsx_vml_data_id_str;
             }
             else {
                 fclose(vml->file);
                 free(buffer);
-                lxw_vml_free(vml);
-                return LXW_ERROR_MEMORY_MALLOC_FAILED;
+                lxlsx_vml_free(vml);
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             }
 
-            lxw_vml_assemble_xml_file(vml);
+            lxlsx_vml_assemble_xml_file(vml);
 
             err = _add_to_zip(self, vml->file, &buffer, &buffer_size,
                               filename);
 
             fclose(vml->file);
             free(buffer);
-            lxw_vml_free(vml);
+            lxlsx_vml_free(vml);
 
             RETURN_ON_ERROR(err);
         }
@@ -796,64 +796,64 @@ _write_vml_files(lxw_packager *self)
             err = _write_vml_drawing_rels_file(self, worksheet, index);
             RETURN_ON_ERROR(err);
 
-            vml = lxw_vml_new();
+            vml = lxlsx_vml_new();
             if (!vml)
-                return LXW_ERROR_MEMORY_MALLOC_FAILED;
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                          "xl/drawings/vmlDrawing%d.vml", index++);
 
-            vml->file = lxw_get_filehandle(&buffer, &buffer_size,
+            vml->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                            self->tmpdir);
             if (!vml->file) {
-                lxw_vml_free(vml);
-                return LXW_ERROR_CREATING_TMPFILE;
+                lxlsx_vml_free(vml);
+                return LXLSX_ERROR_CREATING_TMPFILE;
             }
 
             vml->image_objs = worksheet->header_image_objs;
-            vml->vml_shape_id = worksheet->vml_header_id * 1024;
+            vml->lxlsx_vml_shape_id = worksheet->lxlsx_vml_header_id * 1024;
 
-            if (worksheet->vml_header_id_str) {
-                vml->vml_data_id_str = worksheet->vml_header_id_str;
+            if (worksheet->lxlsx_vml_header_id_str) {
+                vml->lxlsx_vml_data_id_str = worksheet->lxlsx_vml_header_id_str;
             }
             else {
                 fclose(vml->file);
                 free(buffer);
-                lxw_vml_free(vml);
-                return LXW_ERROR_MEMORY_MALLOC_FAILED;
+                lxlsx_vml_free(vml);
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             }
 
-            lxw_vml_assemble_xml_file(vml);
+            lxlsx_vml_assemble_xml_file(vml);
 
             err = _add_to_zip(self, vml->file, &buffer, &buffer_size,
                               filename);
 
             fclose(vml->file);
             free(buffer);
-            lxw_vml_free(vml);
+            lxlsx_vml_free(vml);
 
             RETURN_ON_ERROR(err);
         }
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the comment files.
  */
-STATIC lxw_error
-_write_comment_files(lxw_packager *self)
+STATIC lxlsx_error
+_write_comment_files(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_comment *comment;
-    char filename[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_comment *comment;
+    char filename[LXLSX_FILENAME_LENGTH] = { 0 };
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -864,58 +864,58 @@ _write_comment_files(lxw_packager *self)
         if (!worksheet->has_comments)
             continue;
 
-        comment = lxw_comment_new();
+        comment = lxlsx_comment_new();
         if (!comment)
-            return LXW_ERROR_MEMORY_MALLOC_FAILED;
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
-        lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                      "xl/comments%d.xml", index++);
 
-        comment->file = lxw_get_filehandle(&buffer, &buffer_size,
+        comment->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                            self->tmpdir);
         if (!comment->file) {
-            lxw_comment_free(comment);
-            return LXW_ERROR_CREATING_TMPFILE;
+            lxlsx_comment_free(comment);
+            return LXLSX_ERROR_CREATING_TMPFILE;
         }
 
         comment->comment_objs = worksheet->comment_objs;
         comment->comment_author = worksheet->comment_author;
 
-        lxw_comment_assemble_xml_file(comment);
+        lxlsx_comment_assemble_xml_file(comment);
 
         err = _add_to_zip(self, comment->file, &buffer, &buffer_size,
                           filename);
 
         fclose(comment->file);
         free(buffer);
-        lxw_comment_free(comment);
+        lxlsx_comment_free(comment);
 
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the sharedStrings.xml file.
  */
-STATIC lxw_error
-_write_shared_strings_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_shared_strings_file(lxlsx_packager *self)
 {
-    lxw_sst *sst = self->workbook->sst;
+    lxlsx_sst *sst = self->workbook->sst;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_error err;
+    lxlsx_error err;
 
     /* Skip the sharedStrings file if there are no shared strings. */
     if (!sst->string_count)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    sst->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    sst->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!sst->file)
-        return LXW_ERROR_CREATING_TMPFILE;
+        return LXLSX_ERROR_CREATING_TMPFILE;
 
-    lxw_sst_assemble_xml_file(sst);
+    lxlsx_sst_assemble_xml_file(sst);
 
     err = _add_to_zip(self, sst->file, &buffer, &buffer_size,
                       "xl/sharedStrings.xml");
@@ -923,64 +923,64 @@ _write_shared_strings_file(lxw_packager *self)
     free(buffer);
     RETURN_ON_ERROR(err);
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the app.xml file.
  */
-STATIC lxw_error
-_write_app_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_app_file(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_chartsheet *chartsheet;
-    lxw_defined_name *defined_name;
-    lxw_app *app;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_chartsheet *chartsheet;
+    lxlsx_defined_name *defined_name;
+    lxlsx_app *app;
     char *buffer = NULL;
     size_t buffer_size = 0;
     uint32_t named_range_count = 0;
     char *autofilter;
     char *has_range;
-    char number[LXW_ATTR_32] = { 0 };
-    lxw_error err = LXW_NO_ERROR;
+    char number[LXLSX_ATTR_32] = { 0 };
+    lxlsx_error err = LXLSX_NO_ERROR;
 
-    app = lxw_app_new();
+    app = lxlsx_app_new();
     if (!app) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    app->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    app->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!app->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
     if (self->workbook->num_worksheets) {
-        lxw_snprintf(number, LXW_ATTR_32, "%d",
+        lxlsx_snprintf(number, LXLSX_ATTR_32, "%d",
                      self->workbook->num_worksheets);
-        lxw_app_add_heading_pair(app, "Worksheets", number);
+        lxlsx_app_add_heading_pair(app, "Worksheets", number);
     }
 
     if (self->workbook->num_chartsheets) {
-        lxw_snprintf(number, LXW_ATTR_32, "%d",
+        lxlsx_snprintf(number, LXLSX_ATTR_32, "%d",
                      self->workbook->num_chartsheets);
-        lxw_app_add_heading_pair(app, "Charts", number);
+        lxlsx_app_add_heading_pair(app, "Charts", number);
     }
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (!sheet->is_chartsheet) {
             worksheet = sheet->u.worksheet;
-            lxw_app_add_part_name(app, worksheet->name);
+            lxlsx_app_add_part_name(app, worksheet->name);
         }
     }
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet) {
             chartsheet = sheet->u.chartsheet;
-            lxw_app_add_part_name(app, chartsheet->name);
+            lxlsx_app_add_part_name(app, chartsheet->name);
         }
     }
 
@@ -988,19 +988,19 @@ _write_app_file(lxw_packager *self)
     TAILQ_FOREACH(defined_name, workbook->defined_names, list_pointers) {
 
         has_range = strchr(defined_name->formula, '!');
-        autofilter = strstr(defined_name->app_name, "_FilterDatabase");
+        autofilter = strstr(defined_name->lxlsx_app_name, "_FilterDatabase");
 
         /* Only store defined names with ranges (except for autofilters). */
         if (has_range && !autofilter) {
-            lxw_app_add_part_name(app, defined_name->app_name);
+            lxlsx_app_add_part_name(app, defined_name->lxlsx_app_name);
             named_range_count++;
         }
     }
 
     /* Add the Named Range heading pairs. */
     if (named_range_count) {
-        lxw_snprintf(number, LXW_ATTR_32, "%d", named_range_count);
-        lxw_app_add_heading_pair(app, "Named Ranges", number);
+        lxlsx_snprintf(number, LXLSX_ATTR_32, "%d", named_range_count);
+        lxlsx_app_add_heading_pair(app, "Named Ranges", number);
     }
 
     /* Set the app/doc properties. */
@@ -1008,7 +1008,7 @@ _write_app_file(lxw_packager *self)
 
     app->doc_security = workbook->read_only;
 
-    lxw_app_assemble_xml_file(app);
+    lxlsx_app_assemble_xml_file(app);
 
     err = _add_to_zip(self, app->file, &buffer, &buffer_size,
                       "docProps/app.xml");
@@ -1017,7 +1017,7 @@ _write_app_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_app_free(app);
+    lxlsx_app_free(app);
 
     return err;
 }
@@ -1025,28 +1025,28 @@ mem_error:
 /*
  * Write the core.xml file.
  */
-STATIC lxw_error
-_write_core_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_core_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_core *core = lxw_core_new();
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_core *core = lxlsx_core_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!core) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    core->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    core->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!core->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
     core->properties = self->workbook->properties;
 
-    lxw_core_assemble_xml_file(core);
+    lxlsx_core_assemble_xml_file(core);
 
     err = _add_to_zip(self, core->file, &buffer, &buffer_size,
                       "docProps/core.xml");
@@ -1055,7 +1055,7 @@ _write_core_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_core_free(core);
+    lxlsx_core_free(core);
 
     return err;
 }
@@ -1063,27 +1063,27 @@ mem_error:
 /*
  * Write the metadata.xml file.
  */
-STATIC lxw_error
-_write_metadata_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_metadata_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_metadata *metadata;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_metadata *metadata;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!self->workbook->has_metadata)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    metadata = lxw_metadata_new();
+    metadata = lxlsx_metadata_new();
 
     if (!metadata) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    metadata->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    metadata->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!metadata->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
@@ -1091,7 +1091,7 @@ _write_metadata_file(lxw_packager *self)
     metadata->num_embedded_images = self->workbook->num_embedded_images;
     metadata->has_dynamic_functions = self->workbook->has_dynamic_functions;
 
-    lxw_metadata_assemble_xml_file(metadata);
+    lxlsx_metadata_assemble_xml_file(metadata);
 
     err = _add_to_zip(self, metadata->file, &buffer, &buffer_size,
                       "xl/metadata.xml");
@@ -1100,7 +1100,7 @@ _write_metadata_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_metadata_free(metadata);
+    lxlsx_metadata_free(metadata);
 
     return err;
 }
@@ -1108,33 +1108,33 @@ mem_error:
 /*
  * Write the rdrichvalue.xml file.
  */
-STATIC lxw_error
-_write_rich_value_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_rich_value_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_rich_value *rich_value;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_rich_value *rich_value;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!self->workbook->has_embedded_images)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rich_value = lxw_rich_value_new();
+    rich_value = lxlsx_rich_value_new();
     if (!rich_value) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
     rich_value->workbook = self->workbook;
 
     rich_value->file =
-        lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+        lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rich_value->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_rich_value_assemble_xml_file(rich_value);
+    lxlsx_rich_value_assemble_xml_file(rich_value);
 
     err = _add_to_zip(self, rich_value->file, &buffer, &buffer_size,
                       "xl/richData/rdrichvalue.xml");
@@ -1143,7 +1143,7 @@ _write_rich_value_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_rich_value_free(rich_value);
+    lxlsx_rich_value_free(rich_value);
 
     return err;
 }
@@ -1151,42 +1151,42 @@ mem_error:
 /*
  * Write the richValueRel.xml file.
  */
-STATIC lxw_error
-_write_rich_value_rel_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_rich_value_rel_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_rich_value_rel *rich_value_rel;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_rich_value_rel *lxlsx_rich_value_rel;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!self->workbook->has_embedded_images)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rich_value_rel = lxw_rich_value_rel_new();
-    if (!rich_value_rel) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+    lxlsx_rich_value_rel = lxlsx_rich_value_rel_new();
+    if (!lxlsx_rich_value_rel) {
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rich_value_rel->num_embedded_images = self->workbook->num_embedded_images;
+    lxlsx_rich_value_rel->num_embedded_images = self->workbook->num_embedded_images;
 
-    rich_value_rel->file =
-        lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
-    if (!rich_value_rel->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+    lxlsx_rich_value_rel->file =
+        lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    if (!lxlsx_rich_value_rel->file) {
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_rich_value_rel_assemble_xml_file(rich_value_rel);
+    lxlsx_rich_value_rel_assemble_xml_file(lxlsx_rich_value_rel);
 
-    err = _add_to_zip(self, rich_value_rel->file, &buffer, &buffer_size,
+    err = _add_to_zip(self, lxlsx_rich_value_rel->file, &buffer, &buffer_size,
                       "xl/richData/richValueRel.xml");
 
-    fclose(rich_value_rel->file);
+    fclose(lxlsx_rich_value_rel->file);
     free(buffer);
 
 mem_error:
-    lxw_rich_value_rel_free(rich_value_rel);
+    lxlsx_rich_value_rel_free(lxlsx_rich_value_rel);
 
     return err;
 }
@@ -1194,40 +1194,40 @@ mem_error:
 /*
  * Write the rdRichValueTypes.xml file.
  */
-STATIC lxw_error
-_write_rich_value_types_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_rich_value_types_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_rich_value_types *rich_value_types;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_rich_value_types *lxlsx_rich_value_types;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!self->workbook->has_embedded_images)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rich_value_types = lxw_rich_value_types_new();
-    if (!rich_value_types) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+    lxlsx_rich_value_types = lxlsx_rich_value_types_new();
+    if (!lxlsx_rich_value_types) {
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rich_value_types->file =
-        lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
-    if (!rich_value_types->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+    lxlsx_rich_value_types->file =
+        lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    if (!lxlsx_rich_value_types->file) {
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_rich_value_types_assemble_xml_file(rich_value_types);
+    lxlsx_rich_value_types_assemble_xml_file(lxlsx_rich_value_types);
 
-    err = _add_to_zip(self, rich_value_types->file, &buffer, &buffer_size,
+    err = _add_to_zip(self, lxlsx_rich_value_types->file, &buffer, &buffer_size,
                       "xl/richData/rdRichValueTypes.xml");
 
-    fclose(rich_value_types->file);
+    fclose(lxlsx_rich_value_types->file);
     free(buffer);
 
 mem_error:
-    lxw_rich_value_types_free(rich_value_types);
+    lxlsx_rich_value_types_free(lxlsx_rich_value_types);
 
     return err;
 }
@@ -1235,43 +1235,43 @@ mem_error:
 /*
  * Write the rdrichvaluestructure.xml file.
  */
-STATIC lxw_error
-_write_rich_value_structure_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_rich_value_structure_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_rich_value_structure *rich_value_structure;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_rich_value_structure *lxlsx_rich_value_structure;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!self->workbook->has_embedded_images)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rich_value_structure = lxw_rich_value_structure_new();
-    if (!rich_value_structure) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+    lxlsx_rich_value_structure = lxlsx_rich_value_structure_new();
+    if (!lxlsx_rich_value_structure) {
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rich_value_structure->has_embedded_image_descriptions =
+    lxlsx_rich_value_structure->has_embedded_image_descriptions =
         self->workbook->has_embedded_image_descriptions;
 
-    rich_value_structure->file =
-        lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
-    if (!rich_value_structure->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+    lxlsx_rich_value_structure->file =
+        lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    if (!lxlsx_rich_value_structure->file) {
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_rich_value_structure_assemble_xml_file(rich_value_structure);
+    lxlsx_rich_value_structure_assemble_xml_file(lxlsx_rich_value_structure);
 
-    err = _add_to_zip(self, rich_value_structure->file, &buffer, &buffer_size,
+    err = _add_to_zip(self, lxlsx_rich_value_structure->file, &buffer, &buffer_size,
                       "xl/richData/rdrichvaluestructure.xml");
 
-    fclose(rich_value_structure->file);
+    fclose(lxlsx_rich_value_structure->file);
     free(buffer);
 
 mem_error:
-    lxw_rich_value_structure_free(rich_value_structure);
+    lxlsx_rich_value_structure_free(lxlsx_rich_value_structure);
 
     return err;
 }
@@ -1279,32 +1279,32 @@ mem_error:
 /*
  * Write the custom.xml file.
  */
-STATIC lxw_error
-_write_custom_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_custom_file(lxlsx_packager *self)
 {
-    lxw_custom *custom;
+    lxlsx_custom *custom;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_error err = LXLSX_NO_ERROR;
 
-    if (STAILQ_EMPTY(self->workbook->custom_properties))
-        return LXW_NO_ERROR;
+    if (STAILQ_EMPTY(self->workbook->lxlsx_custom_properties))
+        return LXLSX_NO_ERROR;
 
-    custom = lxw_custom_new();
+    custom = lxlsx_custom_new();
     if (!custom) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    custom->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    custom->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!custom->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    custom->custom_properties = self->workbook->custom_properties;
+    custom->lxlsx_custom_properties = self->workbook->lxlsx_custom_properties;
 
-    lxw_custom_assemble_xml_file(custom);
+    lxlsx_custom_assemble_xml_file(custom);
 
     err = _add_to_zip(self, custom->file, &buffer, &buffer_size,
                       "docProps/custom.xml");
@@ -1313,33 +1313,33 @@ _write_custom_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_custom_free(custom);
+    lxlsx_custom_free(custom);
     return err;
 }
 
 /*
  * Write the theme.xml file.
  */
-STATIC lxw_error
-_write_theme_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_theme_file(lxlsx_packager *self)
 {
-    lxw_error err = LXW_NO_ERROR;
-    lxw_theme *theme = lxw_theme_new();
+    lxlsx_error err = LXLSX_NO_ERROR;
+    lxlsx_theme *theme = lxlsx_theme_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!theme) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    theme->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    theme->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!theme->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_theme_assemble_xml_file(theme);
+    lxlsx_theme_assemble_xml_file(theme);
 
     err = _add_to_zip(self, theme->file, &buffer, &buffer_size,
                       "xl/theme/theme1.xml");
@@ -1348,7 +1348,7 @@ _write_theme_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_theme_free(theme);
+    lxlsx_theme_free(theme);
 
     return err;
 }
@@ -1356,47 +1356,47 @@ mem_error:
 /*
  * Write the styles.xml file.
  */
-STATIC lxw_error
-_write_styles_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_styles_file(lxlsx_packager *self)
 {
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_hash_element *hash_element;
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_hash_element *hash_element;
+    lxlsx_error err = LXLSX_NO_ERROR;
 
     if (!styles) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
     /* Copy the unique and in-use formats from the workbook to the styles
      * xf_format list. */
-    LXW_FOREACH_ORDERED(hash_element, self->workbook->used_xf_formats) {
-        lxw_format *workbook_format = (lxw_format *) hash_element->value;
-        lxw_format *style_format = lxw_format_new();
+    LXLSX_FOREACH_ORDERED(hash_element, self->workbook->used_xf_formats) {
+        lxlsx_format *lxlsx_workbook_format = (lxlsx_format *) hash_element->value;
+        lxlsx_format *style_format = lxlsx_format_new();
 
         if (!style_format) {
-            err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             goto mem_error;
         }
 
-        memcpy(style_format, workbook_format, sizeof(lxw_format));
+        memcpy(style_format, lxlsx_workbook_format, sizeof(lxlsx_format));
         STAILQ_INSERT_TAIL(styles->xf_formats, style_format, list_pointers);
     }
 
     /* Copy the unique and in-use dxf formats from the workbook to the styles
      * dxf_format list. */
-    LXW_FOREACH_ORDERED(hash_element, self->workbook->used_dxf_formats) {
-        lxw_format *workbook_format = (lxw_format *) hash_element->value;
-        lxw_format *style_format = lxw_format_new();
+    LXLSX_FOREACH_ORDERED(hash_element, self->workbook->used_dxf_formats) {
+        lxlsx_format *lxlsx_workbook_format = (lxlsx_format *) hash_element->value;
+        lxlsx_format *style_format = lxlsx_format_new();
 
         if (!style_format) {
-            err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
             goto mem_error;
         }
 
-        memcpy(style_format, workbook_format, sizeof(lxw_format));
+        memcpy(style_format, lxlsx_workbook_format, sizeof(lxlsx_format));
         STAILQ_INSERT_TAIL(styles->dxf_formats, style_format, list_pointers);
     }
 
@@ -1408,13 +1408,13 @@ _write_styles_file(lxw_packager *self)
     styles->dxf_count = self->workbook->used_dxf_formats->unique_count;
     styles->has_comments = self->workbook->has_comments;
 
-    styles->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    styles->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!styles->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_styles_assemble_xml_file(styles);
+    lxlsx_styles_assemble_xml_file(styles);
 
     err = _add_to_zip(self, styles->file, &buffer, &buffer_size,
                       "xl/styles.xml");
@@ -1423,7 +1423,7 @@ _write_styles_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 
     return err;
 }
@@ -1431,115 +1431,115 @@ mem_error:
 /*
  * Write the ContentTypes.xml file.
  */
-STATIC lxw_error
-_write_content_types_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_content_types_file(lxlsx_packager *self)
 {
-    lxw_content_types *content_types = lxw_content_types_new();
+    lxlsx_content_types *content_types = lxlsx_content_types_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    char filename[LXW_MAX_ATTRIBUTE_LENGTH] = { 0 };
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    char filename[LXLSX_MAX_ATTRIBUTE_LENGTH] = { 0 };
     uint32_t index = 1;
-    uint32_t worksheet_index = 1;
-    uint32_t chartsheet_index = 1;
-    uint32_t drawing_count = _get_drawing_count(self);
-    uint32_t chart_count = _get_chart_count(self);
-    uint32_t table_count = _get_table_count(self);
-    lxw_error err = LXW_NO_ERROR;
+    uint32_t lxlsx_worksheet_index = 1;
+    uint32_t lxlsx_chartsheet_index = 1;
+    uint32_t lxlsx_drawing_count = _get_drawing_count(self);
+    uint32_t lxlsx_chart_count = _get_chart_count(self);
+    uint32_t lxlsx_table_count = _get_table_count(self);
+    lxlsx_error err = LXLSX_NO_ERROR;
 
     if (!content_types) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    content_types->file = lxw_get_filehandle(&buffer, &buffer_size,
+    content_types->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                              self->tmpdir);
     if (!content_types->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
     if (workbook->has_png)
-        lxw_ct_add_default(content_types, "png", "image/png");
+        lxlsx_ct_add_default(content_types, "png", "image/png");
 
     if (workbook->has_jpeg)
-        lxw_ct_add_default(content_types, "jpeg", "image/jpeg");
+        lxlsx_ct_add_default(content_types, "jpeg", "image/jpeg");
 
     if (workbook->has_bmp)
-        lxw_ct_add_default(content_types, "bmp", "image/bmp");
+        lxlsx_ct_add_default(content_types, "bmp", "image/bmp");
 
     if (workbook->has_gif)
-        lxw_ct_add_default(content_types, "gif", "image/gif");
+        lxlsx_ct_add_default(content_types, "gif", "image/gif");
 
     if (workbook->vba_project)
-        lxw_ct_add_default(content_types, "bin",
+        lxlsx_ct_add_default(content_types, "bin",
                            "application/vnd.ms-office.vbaProject");
 
     if (workbook->vba_project)
-        lxw_ct_add_override(content_types, "/xl/workbook.xml",
-                            LXW_APP_MSEXCEL "sheet.macroEnabled.main+xml");
+        lxlsx_ct_add_override(content_types, "/xl/workbook.xml",
+                            LXLSX_APP_MSEXCEL "sheet.macroEnabled.main+xml");
     else
-        lxw_ct_add_override(content_types, "/xl/workbook.xml",
-                            LXW_APP_DOCUMENT "spreadsheetml.sheet.main+xml");
+        lxlsx_ct_add_override(content_types, "/xl/workbook.xml",
+                            LXLSX_APP_DOCUMENT "spreadsheetml.sheet.main+xml");
 
     if (workbook->vba_project_signature)
-        lxw_ct_add_override(content_types, "/xl/vbaProjectSignature.bin",
+        lxlsx_ct_add_override(content_types, "/xl/vbaProjectSignature.bin",
                             "application/vnd.ms-office.vbaProjectSignature");
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet) {
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
-                         "/xl/chartsheets/sheet%d.xml", chartsheet_index++);
-            lxw_ct_add_chartsheet_name(content_types, filename);
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
+                         "/xl/chartsheets/sheet%d.xml", lxlsx_chartsheet_index++);
+            lxlsx_ct_add_chartsheet_name(content_types, filename);
         }
         else {
-            lxw_snprintf(filename, LXW_FILENAME_LENGTH,
-                         "/xl/worksheets/sheet%d.xml", worksheet_index++);
-            lxw_ct_add_worksheet_name(content_types, filename);
+            lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
+                         "/xl/worksheets/sheet%d.xml", lxlsx_worksheet_index++);
+            lxlsx_ct_add_worksheet_name(content_types, filename);
         }
     }
 
-    for (index = 1; index <= chart_count; index++) {
-        lxw_snprintf(filename, LXW_FILENAME_LENGTH, "/xl/charts/chart%d.xml",
+    for (index = 1; index <= lxlsx_chart_count; index++) {
+        lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH, "/xl/charts/chart%d.xml",
                      index);
-        lxw_ct_add_chart_name(content_types, filename);
+        lxlsx_ct_add_chart_name(content_types, filename);
     }
 
-    for (index = 1; index <= drawing_count; index++) {
-        lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+    for (index = 1; index <= lxlsx_drawing_count; index++) {
+        lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                      "/xl/drawings/drawing%d.xml", index);
-        lxw_ct_add_drawing_name(content_types, filename);
+        lxlsx_ct_add_drawing_name(content_types, filename);
     }
 
-    for (index = 1; index <= table_count; index++) {
-        lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+    for (index = 1; index <= lxlsx_table_count; index++) {
+        lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                      "/xl/tables/table%d.xml", index);
-        lxw_ct_add_table_name(content_types, filename);
+        lxlsx_ct_add_table_name(content_types, filename);
     }
 
     if (workbook->has_vml)
-        lxw_ct_add_vml_name(content_types);
+        lxlsx_ct_add_vml_name(content_types);
 
     for (index = 1; index <= workbook->comment_count; index++) {
-        lxw_snprintf(filename, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(filename, LXLSX_FILENAME_LENGTH,
                      "/xl/comments%d.xml", index);
-        lxw_ct_add_comment_name(content_types, filename);
+        lxlsx_ct_add_comment_name(content_types, filename);
     }
 
     if (workbook->sst->string_count)
-        lxw_ct_add_shared_strings(content_types);
+        lxlsx_ct_add_shared_strings(content_types);
 
-    if (!STAILQ_EMPTY(self->workbook->custom_properties))
-        lxw_ct_add_custom_properties(content_types);
+    if (!STAILQ_EMPTY(self->workbook->lxlsx_custom_properties))
+        lxlsx_ct_add_custom_properties(content_types);
 
     if (workbook->has_metadata)
-        lxw_ct_add_metadata(content_types);
+        lxlsx_ct_add_metadata(content_types);
 
     if (workbook->has_embedded_images)
-        lxw_ct_add_rich_value(content_types);
+        lxlsx_ct_add_rich_value(content_types);
 
-    lxw_content_types_assemble_xml_file(content_types);
+    lxlsx_content_types_assemble_xml_file(content_types);
 
     err = _add_to_zip(self, content_types->file, &buffer, &buffer_size,
                       "[Content_Types].xml");
@@ -1548,7 +1548,7 @@ _write_content_types_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_content_types_free(content_types);
+    lxlsx_content_types_free(content_types);
 
     return err;
 }
@@ -1556,63 +1556,63 @@ mem_error:
 /*
  * Write the workbook .rels xml file.
  */
-STATIC lxw_error
-_write_workbook_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_workbook_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels = lxw_relationships_new();
+    lxlsx_relationships *rels = lxlsx_relationships_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
-    uint32_t worksheet_index = 1;
-    uint32_t chartsheet_index = 1;
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
+    uint32_t lxlsx_worksheet_index = 1;
+    uint32_t lxlsx_chartsheet_index = 1;
+    lxlsx_error err = LXLSX_NO_ERROR;
 
     if (!rels) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rels->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet) {
-            lxw_snprintf(sheetname,
-                         LXW_FILENAME_LENGTH,
-                         "chartsheets/sheet%d.xml", chartsheet_index++);
-            lxw_add_document_relationship(rels, "/chartsheet", sheetname);
+            lxlsx_snprintf(sheetname,
+                         LXLSX_FILENAME_LENGTH,
+                         "chartsheets/sheet%d.xml", lxlsx_chartsheet_index++);
+            lxlsx_add_document_relationship(rels, "/chartsheet", sheetname);
         }
         else {
-            lxw_snprintf(sheetname,
-                         LXW_FILENAME_LENGTH,
-                         "worksheets/sheet%d.xml", worksheet_index++);
-            lxw_add_document_relationship(rels, "/worksheet", sheetname);
+            lxlsx_snprintf(sheetname,
+                         LXLSX_FILENAME_LENGTH,
+                         "worksheets/sheet%d.xml", lxlsx_worksheet_index++);
+            lxlsx_add_document_relationship(rels, "/worksheet", sheetname);
         }
     }
 
-    lxw_add_document_relationship(rels, "/theme", "theme/theme1.xml");
-    lxw_add_document_relationship(rels, "/styles", "styles.xml");
+    lxlsx_add_document_relationship(rels, "/theme", "theme/theme1.xml");
+    lxlsx_add_document_relationship(rels, "/styles", "styles.xml");
 
     if (workbook->sst->string_count)
-        lxw_add_document_relationship(rels, "/sharedStrings",
+        lxlsx_add_document_relationship(rels, "/sharedStrings",
                                       "sharedStrings.xml");
 
     if (workbook->vba_project)
-        lxw_add_ms_package_relationship(rels, "/vbaProject",
+        lxlsx_add_ms_package_relationship(rels, "/vbaProject",
                                         "vbaProject.bin");
 
     if (workbook->has_metadata)
-        lxw_add_document_relationship(rels, "/sheetMetadata", "metadata.xml");
+        lxlsx_add_document_relationship(rels, "/sheetMetadata", "metadata.xml");
 
     if (workbook->has_embedded_images)
-        lxw_add_rich_value_relationship(rels);
+        lxlsx_add_rich_value_relationship(rels);
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     err = _add_to_zip(self, rels->file, &buffer, &buffer_size,
                       "xl/_rels/workbook.xml.rels");
@@ -1621,7 +1621,7 @@ _write_workbook_rels_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 
     return err;
 }
@@ -1630,19 +1630,19 @@ mem_error:
  * Write the worksheet .rels files for worksheets that contain links to
  * external data such as hyperlinks or drawings.
  */
-STATIC lxw_error
-_write_worksheet_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_worksheet_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels;
+    lxlsx_relationships *rels;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_rel_tuple *rel;
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_rel_tuple *rel;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     uint32_t index = 0;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -1661,83 +1661,83 @@ _write_worksheet_rels_file(lxw_packager *self)
             !worksheet->external_comment_link)
             continue;
 
-        rels = lxw_relationships_new();
+        rels = lxlsx_relationships_new();
 
-        rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+        rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
         if (!rels->file) {
-            lxw_free_relationships(rels);
-            return LXW_ERROR_CREATING_TMPFILE;
+            lxlsx_free_relationships(rels);
+            return LXLSX_ERROR_CREATING_TMPFILE;
         }
 
         STAILQ_FOREACH(rel, worksheet->external_hyperlinks, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
         }
 
         STAILQ_FOREACH(rel, worksheet->external_drawing_links, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
         }
 
         rel = worksheet->external_vml_comment_link;
         if (rel)
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
 
         rel = worksheet->external_vml_header_link;
         if (rel)
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
 
         rel = worksheet->external_background_link;
         if (rel)
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
 
         STAILQ_FOREACH(rel, worksheet->external_table_links, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
         }
 
         rel = worksheet->external_comment_link;
         if (rel)
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/worksheets/_rels/sheet%d.xml.rels", index);
 
-        lxw_relationships_assemble_xml_file(rels);
+        lxlsx_relationships_assemble_xml_file(rels);
 
         err = _add_to_zip(self, rels->file, &buffer, &buffer_size, sheetname);
 
         fclose(rels->file);
         free(buffer);
-        lxw_free_relationships(rels);
+        lxlsx_free_relationships(rels);
 
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the chartsheet .rels files for chartsheets that contain links to
  * external data such as drawings.
  */
-STATIC lxw_error
-_write_chartsheet_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_chartsheet_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels;
+    lxlsx_relationships *rels;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_rel_tuple *rel;
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_rel_tuple *rel;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     uint32_t index = 0;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -1750,58 +1750,58 @@ _write_chartsheet_rels_file(lxw_packager *self)
         if (STAILQ_EMPTY(worksheet->external_drawing_links))
             continue;
 
-        rels = lxw_relationships_new();
+        rels = lxlsx_relationships_new();
 
-        rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+        rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
         if (!rels->file) {
-            lxw_free_relationships(rels);
-            return LXW_ERROR_CREATING_TMPFILE;
+            lxlsx_free_relationships(rels);
+            return LXLSX_ERROR_CREATING_TMPFILE;
         }
 
         STAILQ_FOREACH(rel, worksheet->external_hyperlinks, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
         }
 
         STAILQ_FOREACH(rel, worksheet->external_drawing_links, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
         }
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/chartsheets/_rels/sheet%d.xml.rels", index);
 
-        lxw_relationships_assemble_xml_file(rels);
+        lxlsx_relationships_assemble_xml_file(rels);
 
         err = _add_to_zip(self, rels->file, &buffer, &buffer_size, sheetname);
 
         fclose(rels->file);
         free(buffer);
-        lxw_free_relationships(rels);
+        lxlsx_free_relationships(rels);
 
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the drawing .rels files for worksheets that contain charts or
  * drawings.
  */
-STATIC lxw_error
-_write_drawing_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_drawing_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels;
+    lxlsx_relationships *rels;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_rel_tuple *rel;
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
+    lxlsx_rel_tuple *rel;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
     uint32_t index = 1;
-    lxw_error err;
+    lxlsx_error err;
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
         if (sheet->is_chartsheet)
@@ -1809,79 +1809,79 @@ _write_drawing_rels_file(lxw_packager *self)
         else
             worksheet = sheet->u.worksheet;
 
-        if (STAILQ_EMPTY(worksheet->drawing_links))
+        if (STAILQ_EMPTY(worksheet->lxlsx_drawing_links))
             continue;
 
-        rels = lxw_relationships_new();
+        rels = lxlsx_relationships_new();
 
-        rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+        rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
         if (!rels->file) {
-            lxw_free_relationships(rels);
-            return LXW_ERROR_CREATING_TMPFILE;
+            lxlsx_free_relationships(rels);
+            return LXLSX_ERROR_CREATING_TMPFILE;
         }
 
-        STAILQ_FOREACH(rel, worksheet->drawing_links, list_pointers) {
-            lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+        STAILQ_FOREACH(rel, worksheet->lxlsx_drawing_links, list_pointers) {
+            lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                            rel->target_mode);
 
         }
 
-        lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+        lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/drawings/_rels/drawing%d.xml.rels", index++);
 
-        lxw_relationships_assemble_xml_file(rels);
+        lxlsx_relationships_assemble_xml_file(rels);
 
         err = _add_to_zip(self, rels->file, &buffer, &buffer_size, sheetname);
 
         fclose(rels->file);
         free(buffer);
-        lxw_free_relationships(rels);
+        lxlsx_free_relationships(rels);
 
         RETURN_ON_ERROR(err);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Write the vmlDrawing .rels files for worksheets that contain images in
  * headers or footers.
  */
-STATIC lxw_error
-_write_vml_drawing_rels_file(lxw_packager *self, lxw_worksheet *worksheet,
+STATIC lxlsx_error
+_write_vml_drawing_rels_file(lxlsx_packager *self, lxlsx_worksheet *worksheet,
                              uint32_t index)
 {
-    lxw_relationships *rels;
+    lxlsx_relationships *rels;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_rel_tuple *rel;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_rel_tuple *rel;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
+    lxlsx_error err = LXLSX_NO_ERROR;
 
-    rels = lxw_relationships_new();
+    rels = lxlsx_relationships_new();
 
-    rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rels->file) {
-        lxw_free_relationships(rels);
-        return LXW_ERROR_CREATING_TMPFILE;
+        lxlsx_free_relationships(rels);
+        return LXLSX_ERROR_CREATING_TMPFILE;
     }
 
-    STAILQ_FOREACH(rel, worksheet->vml_drawing_links, list_pointers) {
-        lxw_add_worksheet_relationship(rels, rel->type, rel->target,
+    STAILQ_FOREACH(rel, worksheet->lxlsx_vml_drawing_links, list_pointers) {
+        lxlsx_add_worksheet_relationship(rels, rel->type, rel->target,
                                        rel->target_mode);
 
     }
 
-    lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+    lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                  "xl/drawings/_rels/vmlDrawing%d.vml.rels", index);
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     err = _add_to_zip(self, rels->file, &buffer, &buffer_size, sheetname);
 
     fclose(rels->file);
     free(buffer);
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 
     return err;
 }
@@ -1889,34 +1889,34 @@ _write_vml_drawing_rels_file(lxw_packager *self, lxw_worksheet *worksheet,
 /*
  * Write the vbaProject .rels xml file.
  */
-STATIC lxw_error
-_write_vba_project_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_vba_project_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels;
-    lxw_workbook *workbook = self->workbook;
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_relationships *rels;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_error err = LXLSX_NO_ERROR;
     char *buffer = NULL;
     size_t buffer_size = 0;
 
     if (!workbook->vba_project_signature)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rels = lxw_relationships_new();
+    rels = lxlsx_relationships_new();
     if (!rels) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rels->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_add_ms_package_relationship(rels, "/vbaProjectSignature",
+    lxlsx_add_ms_package_relationship(rels, "/vbaProjectSignature",
                                     "vbaProjectSignature.bin");
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     err = _add_to_zip(self, rels->file, &buffer, &buffer_size,
                       "xl/_rels/vbaProject.bin.rels");
@@ -1925,7 +1925,7 @@ _write_vba_project_rels_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 
     return err;
 }
@@ -1933,31 +1933,31 @@ mem_error:
 /*
  * Write the richValueRel.xml.rels files for embedded images.
  */
-STATIC lxw_error
-_write_rich_value_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_rich_value_rels_file(lxlsx_packager *self)
 {
-    lxw_workbook *workbook = self->workbook;
-    lxw_sheet *sheet;
-    lxw_worksheet *worksheet;
-    lxw_object_properties *object_props;
+    lxlsx_workbook *workbook = self->workbook;
+    lxlsx_sheet *sheet;
+    lxlsx_worksheet *worksheet;
+    lxlsx_object_properties *object_props;
 
-    lxw_relationships *rels;
+    lxlsx_relationships *rels;
     char *buffer = NULL;
     size_t buffer_size = 0;
-    char sheetname[LXW_FILENAME_LENGTH] = { 0 };
-    char target[LXW_FILENAME_LENGTH] = { 0 };
-    lxw_error err = LXW_NO_ERROR;
+    char sheetname[LXLSX_FILENAME_LENGTH] = { 0 };
+    char target[LXLSX_FILENAME_LENGTH] = { 0 };
+    lxlsx_error err = LXLSX_NO_ERROR;
     uint32_t index = 1;
 
     if (!workbook->has_embedded_images)
-        return LXW_NO_ERROR;
+        return LXLSX_NO_ERROR;
 
-    rels = lxw_relationships_new();
+    rels = lxlsx_relationships_new();
 
-    rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rels->file) {
-        lxw_free_relationships(rels);
-        return LXW_ERROR_CREATING_TMPFILE;
+        lxlsx_free_relationships(rels);
+        return LXLSX_ERROR_CREATING_TMPFILE;
     }
 
     STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
@@ -1975,26 +1975,26 @@ _write_rich_value_rels_file(lxw_packager *self)
             if (object_props->is_duplicate)
                 continue;
 
-            lxw_snprintf(target, LXW_FILENAME_LENGTH,
+            lxlsx_snprintf(target, LXLSX_FILENAME_LENGTH,
                          "../media/image%d.%s", index++,
                          object_props->extension);
 
-            lxw_add_document_relationship(rels, "/image", target);
+            lxlsx_add_document_relationship(rels, "/image", target);
 
         }
 
     }
 
-    lxw_snprintf(sheetname, LXW_FILENAME_LENGTH,
+    lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                  "xl/richData/_rels/richValueRel.xml.rels");
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     err = _add_to_zip(self, rels->file, &buffer, &buffer_size, sheetname);
 
     fclose(rels->file);
     free(buffer);
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 
     return err;
 }
@@ -2002,40 +2002,40 @@ _write_rich_value_rels_file(lxw_packager *self)
 /*
  * Write the _rels/.rels xml file.
  */
-STATIC lxw_error
-_write_root_rels_file(lxw_packager *self)
+STATIC lxlsx_error
+_write_root_rels_file(lxlsx_packager *self)
 {
-    lxw_relationships *rels = lxw_relationships_new();
+    lxlsx_relationships *rels = lxlsx_relationships_new();
     char *buffer = NULL;
     size_t buffer_size = 0;
-    lxw_error err = LXW_NO_ERROR;
+    lxlsx_error err = LXLSX_NO_ERROR;
 
     if (!rels) {
-        err = LXW_ERROR_MEMORY_MALLOC_FAILED;
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto mem_error;
     }
 
-    rels->file = lxw_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    rels->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!rels->file) {
-        err = LXW_ERROR_CREATING_TMPFILE;
+        err = LXLSX_ERROR_CREATING_TMPFILE;
         goto mem_error;
     }
 
-    lxw_add_document_relationship(rels, "/officeDocument", "xl/workbook.xml");
+    lxlsx_add_document_relationship(rels, "/officeDocument", "xl/workbook.xml");
 
-    lxw_add_package_relationship(rels,
+    lxlsx_add_package_relationship(rels,
                                  "/metadata/core-properties",
                                  "docProps/core.xml");
 
-    lxw_add_document_relationship(rels,
+    lxlsx_add_document_relationship(rels,
                                   "/extended-properties", "docProps/app.xml");
 
-    if (!STAILQ_EMPTY(self->workbook->custom_properties))
-        lxw_add_document_relationship(rels,
+    if (!STAILQ_EMPTY(self->workbook->lxlsx_custom_properties))
+        lxlsx_add_document_relationship(rels,
                                       "/custom-properties",
                                       "docProps/custom.xml");
 
-    lxw_relationships_assemble_xml_file(rels);
+    lxlsx_relationships_assemble_xml_file(rels);
 
     err = _add_to_zip(self, rels->file, &buffer, &buffer_size, "_rels/.rels");
 
@@ -2043,7 +2043,7 @@ _write_root_rels_file(lxw_packager *self)
     free(buffer);
 
 mem_error:
-    lxw_free_relationships(rels);
+    lxlsx_free_relationships(rels);
 
     return err;
 }
@@ -2054,8 +2054,8 @@ mem_error:
  *
  ****************************************************************************/
 
-STATIC lxw_error
-_add_file_to_zip(lxw_packager *self, FILE *file, const char *filename)
+STATIC lxlsx_error
+_add_file_to_zip(lxlsx_packager *self, FILE *file, const char *filename)
 {
     int16_t error = ZIP_OK;
     size_t size_read;
@@ -2070,8 +2070,8 @@ _add_file_to_zip(lxw_packager *self, FILE *file, const char *filename)
                                     self->use_zip64);
 
     if (error != ZIP_OK) {
-        LXW_ERROR("Error adding member to zipfile");
-        RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+        LXLSX_ERROR("Error adding member to zipfile");
+        RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
     }
 
     fflush(file);
@@ -2083,8 +2083,8 @@ _add_file_to_zip(lxw_packager *self, FILE *file, const char *filename)
 
         if (size_read < self->buffer_size) {
             if (ferror(file)) {
-                LXW_ERROR("Error reading member file data");
-                RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+                LXLSX_ERROR("Error reading member file data");
+                RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
             }
         }
 
@@ -2092,8 +2092,8 @@ _add_file_to_zip(lxw_packager *self, FILE *file, const char *filename)
                                     self->buffer, (unsigned int) size_read);
 
         if (error < 0) {
-            LXW_ERROR("Error in writing member in the zipfile");
-            RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+            LXLSX_ERROR("Error in writing member in the zipfile");
+            RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
         }
 
         size_read =
@@ -2102,15 +2102,15 @@ _add_file_to_zip(lxw_packager *self, FILE *file, const char *filename)
 
     error = zipCloseFileInZip(self->zipfile);
     if (error != ZIP_OK) {
-        LXW_ERROR("Error in closing member in the zipfile");
-        RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+        LXLSX_ERROR("Error in closing member in the zipfile");
+        RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
-STATIC lxw_error
-_add_buffer_to_zip(lxw_packager *self, const char *buffer, size_t buffer_size,
+STATIC lxlsx_error
+_add_buffer_to_zip(lxlsx_packager *self, const char *buffer, size_t buffer_size,
                    const char *filename)
 {
     int16_t error = ZIP_OK;
@@ -2125,29 +2125,29 @@ _add_buffer_to_zip(lxw_packager *self, const char *buffer, size_t buffer_size,
                                     self->use_zip64);
 
     if (error != ZIP_OK) {
-        LXW_ERROR("Error adding member to zipfile");
-        RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+        LXLSX_ERROR("Error adding member to zipfile");
+        RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
     }
 
     error = zipWriteInFileInZip(self->zipfile,
                                 buffer, (unsigned int) buffer_size);
 
     if (error < 0) {
-        LXW_ERROR("Error in writing member in the zipfile");
-        RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+        LXLSX_ERROR("Error in writing member in the zipfile");
+        RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
     }
 
     error = zipCloseFileInZip(self->zipfile);
     if (error != ZIP_OK) {
-        LXW_ERROR("Error in closing member in the zipfile");
-        RETURN_ON_ZIP_ERROR(error, LXW_ERROR_ZIP_FILE_ADD);
+        LXLSX_ERROR("Error in closing member in the zipfile");
+        RETURN_ON_ZIP_ERROR(error, LXLSX_ERROR_ZIP_FILE_ADD);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
-STATIC lxw_error
-_add_to_zip(lxw_packager *self, FILE *file, char **buffer,
+STATIC lxlsx_error
+_add_to_zip(lxlsx_packager *self, FILE *file, char **buffer,
             size_t *buffer_size, const char *filename)
 {
     /* Flush to ensure buffer is updated when using a memory-backed file. */
@@ -2160,10 +2160,10 @@ _add_to_zip(lxw_packager *self, FILE *file, char **buffer,
 /*
  * Write the xml files that make up the XLSX OPC package.
  */
-lxw_error
-lxw_create_package(lxw_packager *self)
+lxlsx_error
+lxlsx_create_package(lxlsx_packager *self)
 {
-    lxw_error error;
+    lxlsx_error error;
     int8_t zip_error;
 
     error = _write_content_types_file(self);
@@ -2258,8 +2258,8 @@ lxw_create_package(lxw_packager *self)
 
     zip_error = zipClose(self->zipfile, NULL);
     if (zip_error) {
-        RETURN_ON_ZIP_ERROR(zip_error, LXW_ERROR_ZIP_CLOSE);
+        RETURN_ON_ZIP_ERROR(zip_error, LXLSX_ERROR_ZIP_CLOSE);
     }
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }

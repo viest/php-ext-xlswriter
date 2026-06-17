@@ -7,8 +7,8 @@
  * custom - A libxlsxwriter library for creating Excel custom property files.
  *
  */
-#ifndef __LXW_CUSTOM_H__
-#define __LXW_CUSTOM_H__
+#ifndef __LXLSX_CUSTOM_H__
+#define __LXLSX_CUSTOM_H__
 
 #include <stdint.h>
 
@@ -17,14 +17,14 @@
 /*
  * Struct to represent a custom property file object.
  */
-typedef struct lxw_custom {
+typedef struct lxlsx_custom {
 
     FILE *file;
 
-    struct lxw_custom_properties *custom_properties;
+    struct lxlsx_custom_properties *lxlsx_custom_properties;
     uint32_t pid;
 
-} lxw_custom;
+} lxlsx_custom;
 
 
 /* *INDENT-OFF* */
@@ -33,14 +33,14 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_custom *lxw_custom_new(void);
-void lxw_custom_free(lxw_custom *custom);
-void lxw_custom_assemble_xml_file(lxw_custom *self);
+lxlsx_custom *lxlsx_custom_new(void);
+void lxlsx_custom_free(lxlsx_custom *custom);
+void lxlsx_custom_assemble_xml_file(lxlsx_custom *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _custom_xml_declaration(lxw_custom *self);
+STATIC void _custom_xml_declaration(lxlsx_custom *self);
 
 #endif /* TESTING */
 
@@ -50,4 +50,4 @@ STATIC void _custom_xml_declaration(lxw_custom *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_CUSTOM_H__ */
+#endif /* __LXLSX_CUSTOM_H__ */

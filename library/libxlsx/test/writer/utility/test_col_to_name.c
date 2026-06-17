@@ -12,9 +12,9 @@
 #include "../../../include/lxlsx/utility.h"
 
 // Test _xl_col_to_name().
-CTEST(utility, lxw_col_to_name) {
+CTEST(utility, lxlsx_col_to_name) {
 
-    char got[LXW_MAX_COL_NAME_LENGTH];
+    char got[LXLSX_MAX_COL_NAME_LENGTH];
 
     TEST_COL_TO_NAME(0, 0, "A");
     TEST_COL_TO_NAME(1, 0, "B");

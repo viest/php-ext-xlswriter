@@ -16,15 +16,15 @@ CTEST(content_types, write_default) {
 
     char* got;
     char exp[] = "<Default Extension=\"xml\" ContentType=\"application/xml\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_content_types *content_types = lxw_content_types_new();
+    lxlsx_content_types *content_types = lxlsx_content_types_new();
     content_types->file = testfile;
 
     _write_default(content_types, "xml", "application/xml");
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_content_types_free(content_types);
+    lxlsx_content_types_free(content_types);
 }
 

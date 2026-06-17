@@ -16,19 +16,19 @@ CTEST(worksheet, write_print_options1) {
 
     char* got;
     char exp[] = "<printOptions horizontalCentered=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_center_horizontally(worksheet);
+    lxlsx_worksheet_center_horizontally(worksheet);
 
     _worksheet_write_print_options(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test the _write_print_options() function.
@@ -36,19 +36,19 @@ CTEST(worksheet, write_print_options2) {
 
     char* got;
     char exp[] = "<printOptions verticalCentered=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_center_vertically(worksheet);
+    lxlsx_worksheet_center_vertically(worksheet);
 
     _worksheet_write_print_options(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test the _write_print_options() function.
@@ -56,20 +56,20 @@ CTEST(worksheet, write_print_options3) {
 
     char* got;
     char exp[] = "<printOptions horizontalCentered=\"1\" verticalCentered=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_center_horizontally(worksheet);
-    worksheet_center_vertically(worksheet);
+    lxlsx_worksheet_center_horizontally(worksheet);
+    lxlsx_worksheet_center_vertically(worksheet);
 
     _worksheet_write_print_options(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -78,18 +78,18 @@ CTEST(worksheet, write_print_options4) {
 
     char* got;
     char exp[] = "<printOptions gridLines=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_gridlines(worksheet, LXW_SHOW_PRINT_GRIDLINES);
+    lxlsx_worksheet_gridlines(worksheet, LXLSX_SHOW_PRINT_GRIDLINES);
 
     _worksheet_write_print_options(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 

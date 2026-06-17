@@ -14,8 +14,8 @@
 // Test assembling a complete Chart file.
 CTEST(chart, chart01) {
 
-    lxw_chart_series *series1;
-    lxw_chart_series *series2;
+    lxlsx_chart_series *series1;
+    lxlsx_chart_series *series2;
 
     uint8_t data[5][3] = {
         {1, 2,  3},
@@ -137,21 +137,21 @@ CTEST(chart, chart01) {
           "</c:printSettings>"
         "</c:chartSpace>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chart *chart = lxw_chart_new(LXW_CHART_BAR);
+    lxlsx_chart *chart = lxlsx_chart_new(LXLSX_CHART_BAR);
     chart->file = testfile;
 
-    series1 = chart_add_series(chart, NULL, "Sheet1!$A$1:$A$5");
-    series2 = chart_add_series(chart, NULL, "Sheet1!$B$1:$B$5");
+    series1 = lxlsx_chart_add_series(chart, NULL, "Sheet1!$A$1:$A$5");
+    series2 = lxlsx_chart_add_series(chart, NULL, "Sheet1!$B$1:$B$5");
 
-    lxw_chart_add_data_cache(series1->values, data[0], 5, 3, 0);
-    lxw_chart_add_data_cache(series2->values, data[0], 5, 3, 1);
+    lxlsx_chart_add_data_cache(series1->values, data[0], 5, 3, 0);
+    lxlsx_chart_add_data_cache(series2->values, data[0], 5, 3, 1);
 
-    lxw_chart_assemble_xml_file(chart);
+    lxlsx_chart_assemble_xml_file(chart);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_chart_free(chart);
+    lxlsx_chart_free(chart);
 }
 

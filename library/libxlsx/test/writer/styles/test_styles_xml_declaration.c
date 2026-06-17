@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/styles.h"
 
 // Test _xml_declaration().
-CTEST(styles, xml_declaration) {
+CTEST(styles, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     styles->file = testfile;
 
     _styles_xml_declaration(styles);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }

@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/comment.h"
 
 // Test _xml_declaration().
-CTEST(comment, xml_declaration) {
+CTEST(comment, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     FILE* testfile = tmpfile();
 
-    lxw_comment *comment = lxw_comment_new();
+    lxlsx_comment *comment = lxlsx_comment_new();
     comment->file = testfile;
 
     _comment_xml_declaration(comment);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_comment_free(comment);
+    lxlsx_comment_free(comment);
 }

@@ -7,8 +7,8 @@
  * theme - A libxlsxwriter library for creating Excel XLSX theme files.
  *
  */
-#ifndef __LXW_THEME_H__
-#define __LXW_THEME_H__
+#ifndef __LXLSX_THEME_H__
+#define __LXLSX_THEME_H__
 
 #include <stdint.h>
 
@@ -17,10 +17,10 @@
 /*
  * Struct to represent a theme.
  */
-typedef struct lxw_theme {
+typedef struct lxlsx_theme {
 
     FILE *file;
-} lxw_theme;
+} lxlsx_theme;
 
 
 /* *INDENT-OFF* */
@@ -29,10 +29,10 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_theme *lxw_theme_new(void);
-void lxw_theme_free(lxw_theme *theme);
-void lxw_theme_xml_declaration(lxw_theme *self);
-void lxw_theme_assemble_xml_file(lxw_theme *self);
+lxlsx_theme *lxlsx_theme_new(void);
+void lxlsx_theme_free(lxlsx_theme *theme);
+void lxlsx_theme_xml_declaration(lxlsx_theme *self);
+void lxlsx_theme_assemble_xml_file(lxlsx_theme *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
@@ -45,4 +45,4 @@ void lxw_theme_assemble_xml_file(lxw_theme *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_THEME_H__ */
+#endif /* __LXLSX_THEME_H__ */

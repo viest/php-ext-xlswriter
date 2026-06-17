@@ -7,8 +7,8 @@
  * core - A libxlsxwriter library for creating Excel XLSX core files.
  *
  */
-#ifndef __LXW_CORE_H__
-#define __LXW_CORE_H__
+#ifndef __LXLSX_CORE_H__
+#define __LXLSX_CORE_H__
 
 #include <stdint.h>
 
@@ -18,12 +18,12 @@
 /*
  * Struct to represent a core.
  */
-typedef struct lxw_core {
+typedef struct lxlsx_core {
 
     FILE *file;
-    lxw_doc_properties *properties;
+    lxlsx_doc_properties *properties;
 
-} lxw_core;
+} lxlsx_core;
 
 
 /* *INDENT-OFF* */
@@ -32,14 +32,14 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_core *lxw_core_new(void);
-void lxw_core_free(lxw_core *core);
-void lxw_core_assemble_xml_file(lxw_core *self);
+lxlsx_core *lxlsx_core_new(void);
+void lxlsx_core_free(lxlsx_core *core);
+void lxlsx_core_assemble_xml_file(lxlsx_core *self);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _core_xml_declaration(lxw_core *self);
+STATIC void _core_xml_declaration(lxlsx_core *self);
 
 #endif /* TESTING */
 
@@ -49,4 +49,4 @@ STATIC void _core_xml_declaration(lxw_core *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_CORE_H__ */
+#endif /* __LXLSX_CORE_H__ */

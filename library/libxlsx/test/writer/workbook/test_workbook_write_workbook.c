@@ -16,15 +16,15 @@ CTEST(workbook, write_workbook) {
 
     char* got;
     char exp[] = "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
     _write_workbook(workbook);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 

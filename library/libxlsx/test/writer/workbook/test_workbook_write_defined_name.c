@@ -15,17 +15,17 @@
 CTEST(workbook, write_defined_name) {
     char* got;
     char exp[] = "<definedName name=\"_xlnm.Print_Titles\" localSheetId=\"0\">Sheet1!$1:$1</definedName>";
-    FILE* testfile = lxw_tmpfile(NULL);
-    lxw_defined_name defined_name = {0, 0, "_xlnm.Print_Titles", "", "Sheet1!$1:$1", "", "", {NULL, NULL}};
+    FILE* testfile = lxlsx_tmpfile(NULL);
+    lxlsx_defined_name defined_name = {0, 0, "_xlnm.Print_Titles", "", "Sheet1!$1:$1", "", "", {NULL, NULL}};
 
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
     _write_defined_name(workbook, &defined_name);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 

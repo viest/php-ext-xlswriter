@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_condtional_format22) {
+CTEST(worksheet, lxlsx_worksheet_condtional_format22) {
 
     char* got;
     char exp[] =
@@ -162,67 +162,67 @@ CTEST(worksheet, worksheet_condtional_format22) {
               "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, CELL("A1"),   1, NULL);
-    worksheet_write_number(worksheet, CELL("A2"),   2, NULL);
-    worksheet_write_number(worksheet, CELL("A3"),   3, NULL);
-    worksheet_write_number(worksheet, CELL("A4"),   4, NULL);
-    worksheet_write_number(worksheet, CELL("A5"),   5, NULL);
-    worksheet_write_number(worksheet, CELL("A6"),   6, NULL);
-    worksheet_write_number(worksheet, CELL("A7"),   7, NULL);
-    worksheet_write_number(worksheet, CELL("A8"),   8, NULL);
-    worksheet_write_number(worksheet, CELL("A9"),   9, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A1"),   1, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A2"),   2, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A3"),   3, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A4"),   4, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A5"),   5, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A6"),   6, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A7"),   7, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A8"),   8, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A9"),   9, NULL);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_3_ARROWS_COLORED;
-    worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_3_ARROWS_COLORED;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_3_FLAGS;
-    worksheet_conditional_format_cell(worksheet, CELL("A2"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_3_FLAGS;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A2"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_3_TRAFFIC_LIGHTS_RIMMED;
-    worksheet_conditional_format_cell(worksheet, CELL("A3"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_3_TRAFFIC_LIGHTS_RIMMED;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A3"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_3_SYMBOLS_CIRCLED;
-    worksheet_conditional_format_cell(worksheet, CELL("A4"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_3_SYMBOLS_CIRCLED;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A4"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_4_ARROWS_COLORED;
-    worksheet_conditional_format_cell(worksheet, CELL("A5"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_4_ARROWS_COLORED;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A5"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_4_RED_TO_BLACK;
-    worksheet_conditional_format_cell(worksheet, CELL("A6"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_4_RED_TO_BLACK;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A6"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_4_TRAFFIC_LIGHTS;
-    worksheet_conditional_format_cell(worksheet, CELL("A7"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_4_TRAFFIC_LIGHTS;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A7"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_5_ARROWS_GRAY;
-    worksheet_conditional_format_cell(worksheet, CELL("A8"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_5_ARROWS_GRAY;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A8"), conditional_format);
 
-    conditional_format->type       = LXW_CONDITIONAL_TYPE_ICON_SETS;
-    conditional_format->icon_style = LXW_CONDITIONAL_ICONS_5_QUARTERS;
-    worksheet_conditional_format_cell(worksheet, CELL("A9"), conditional_format);
+    conditional_format->type       = LXLSX_CONDITIONAL_TYPE_ICON_SETS;
+    conditional_format->icon_style = LXLSX_CONDITIONAL_ICONS_5_QUARTERS;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A9"), conditional_format);
 
     free(conditional_format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 

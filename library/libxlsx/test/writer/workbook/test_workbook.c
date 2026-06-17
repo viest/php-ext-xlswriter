@@ -30,18 +30,18 @@ CTEST(workbook, workbook01) {
           "<calcPr calcId=\"124519\" fullCalcOnLoad=\"1\"/>"
         "</workbook>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
-    workbook_add_worksheet(workbook, NULL);
+    lxlsx_workbook_add_worksheet(workbook, NULL);
 
-    lxw_workbook_assemble_xml_file(workbook);
+    lxlsx_workbook_assemble_xml_file(workbook);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 
 // Test assembling a complete Workbook file.
@@ -63,19 +63,19 @@ CTEST(workbook, workbook02) {
           "<calcPr calcId=\"124519\" fullCalcOnLoad=\"1\"/>"
         "</workbook>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
-    workbook_add_worksheet(workbook, NULL);
-    workbook_add_worksheet(workbook, NULL);
+    lxlsx_workbook_add_worksheet(workbook, NULL);
+    lxlsx_workbook_add_worksheet(workbook, NULL);
 
-    lxw_workbook_assemble_xml_file(workbook);
+    lxlsx_workbook_assemble_xml_file(workbook);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }
 
 // Test assembling a complete Workbook file.
@@ -97,17 +97,17 @@ CTEST(workbook, workbook03) {
           "<calcPr calcId=\"124519\" fullCalcOnLoad=\"1\"/>"
         "</workbook>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
     workbook->file = testfile;
 
-    workbook_add_worksheet(workbook, "Non Default Name");
-    workbook_add_worksheet(workbook, "Another Name");
+    lxlsx_workbook_add_worksheet(workbook, "Non Default Name");
+    lxlsx_workbook_add_worksheet(workbook, "Another Name");
 
-    lxw_workbook_assemble_xml_file(workbook);
+    lxlsx_workbook_assemble_xml_file(workbook);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_workbook_free(workbook);
+    lxlsx_workbook_free(workbook);
 }

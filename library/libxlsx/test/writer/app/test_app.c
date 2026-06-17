@@ -44,19 +44,19 @@ CTEST(app, app01) {
           "<AppVersion>12.0000</AppVersion>"
         "</Properties>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_app *app = lxw_app_new();
+    lxlsx_app *app = lxlsx_app_new();
     app->file = testfile;
 
-    lxw_app_add_part_name(app,"Sheet1");
-    lxw_app_add_heading_pair(app, "Worksheets", "1");
+    lxlsx_app_add_part_name(app,"Sheet1");
+    lxlsx_app_add_heading_pair(app, "Worksheets", "1");
 
-    lxw_app_assemble_xml_file(app);
+    lxlsx_app_assemble_xml_file(app);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_app_free(app);
+    lxlsx_app_free(app);
 }
 
 // Test assembling a complete App file.
@@ -93,20 +93,20 @@ CTEST(app, app02) {
           "<AppVersion>12.0000</AppVersion>"
         "</Properties>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_app *app = lxw_app_new();
+    lxlsx_app *app = lxlsx_app_new();
     app->file = testfile;
 
-    lxw_app_add_part_name(app,"Sheet1");
-    lxw_app_add_part_name(app,"Sheet2");
-    lxw_app_add_heading_pair(app, "Worksheets", "2");
+    lxlsx_app_add_part_name(app,"Sheet1");
+    lxlsx_app_add_part_name(app,"Sheet2");
+    lxlsx_app_add_heading_pair(app, "Worksheets", "2");
 
-    lxw_app_assemble_xml_file(app);
+    lxlsx_app_assemble_xml_file(app);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_app_free(app);
+    lxlsx_app_free(app);
 }
 
 
@@ -150,20 +150,20 @@ CTEST(app, app03) {
           "<AppVersion>12.0000</AppVersion>"
         "</Properties>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_app *app = lxw_app_new();
+    lxlsx_app *app = lxlsx_app_new();
     app->file = testfile;
 
-    lxw_app_add_part_name(app,"Sheet1");
-    lxw_app_add_part_name(app,"Sheet1!Print_Titles");
-    lxw_app_add_heading_pair(app, "Worksheets", "1");
-    lxw_app_add_heading_pair(app, "Named Ranges", "1");
+    lxlsx_app_add_part_name(app,"Sheet1");
+    lxlsx_app_add_part_name(app,"Sheet1!Print_Titles");
+    lxlsx_app_add_heading_pair(app, "Worksheets", "1");
+    lxlsx_app_add_heading_pair(app, "Named Ranges", "1");
 
-    lxw_app_assemble_xml_file(app);
+    lxlsx_app_assemble_xml_file(app);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_app_free(app);
+    lxlsx_app_free(app);
 }
 

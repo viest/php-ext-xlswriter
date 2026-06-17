@@ -11,18 +11,18 @@
 #include "lxlsx/rich_value_rel.h"
 
 // Test _xml_declaration().
-CTEST(rich_value_rel, xml_declaration) {
+CTEST(lxlsx_rich_value_rel, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     FILE* testfile = tmpfile();
 
-    lxw_rich_value_rel *rich_value_rel = lxw_rich_value_rel_new();
-    rich_value_rel->file = testfile;
+    lxlsx_rich_value_rel *lxlsx_rich_value_rel = lxlsx_rich_value_rel_new();
+    lxlsx_rich_value_rel->file = testfile;
 
-    _rich_value_rel_xml_declaration(rich_value_rel);
+    _rich_value_rel_xml_declaration(lxlsx_rich_value_rel);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_rich_value_rel_free(rich_value_rel);
+    lxlsx_rich_value_rel_free(lxlsx_rich_value_rel);
 }

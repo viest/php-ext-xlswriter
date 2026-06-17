@@ -25,15 +25,15 @@
 /*
  * Create a new chartsheet object.
  */
-lxw_chartsheet *
-lxw_chartsheet_new(lxw_worksheet_init_data *init_data)
+lxlsx_chartsheet *
+lxlsx_chartsheet_new(lxlsx_worksheet_init_data *init_data)
 {
-    lxw_chartsheet *chartsheet = calloc(1, sizeof(lxw_chartsheet));
+    lxlsx_chartsheet *chartsheet = calloc(1, sizeof(lxlsx_chartsheet));
     GOTO_LABEL_ON_MEM_ERROR(chartsheet, mem_error);
 
     /* Use an embedded worksheet instance to write XML records that are
      * shared with worksheet.c. */
-    chartsheet->worksheet = lxw_worksheet_new(NULL);
+    chartsheet->worksheet = lxlsx_worksheet_new(NULL);
     GOTO_LABEL_ON_MEM_ERROR(chartsheet->worksheet, mem_error);
 
     if (init_data) {
@@ -46,14 +46,14 @@ lxw_chartsheet_new(lxw_worksheet_init_data *init_data)
         chartsheet->first_sheet = init_data->first_sheet;
     }
 
-    chartsheet->worksheet->is_chartsheet = LXW_TRUE;
-    chartsheet->worksheet->zoom_scale_normal = LXW_FALSE;
-    chartsheet->worksheet->orientation = LXW_LANDSCAPE;
+    chartsheet->worksheet->is_chartsheet = LXLSX_TRUE;
+    chartsheet->worksheet->zoom_scale_normal = LXLSX_FALSE;
+    chartsheet->worksheet->orientation = LXLSX_LANDSCAPE;
 
     return chartsheet;
 
 mem_error:
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
     return NULL;
 }
 
@@ -61,12 +61,12 @@ mem_error:
  * Free a chartsheet object.
  */
 void
-lxw_chartsheet_free(lxw_chartsheet *chartsheet)
+lxlsx_chartsheet_free(lxlsx_chartsheet *chartsheet)
 {
     if (!chartsheet)
         return;
 
-    lxw_worksheet_free(chartsheet->worksheet);
+    lxlsx_worksheet_free(chartsheet->worksheet);
     free((void *) chartsheet->name);
     free((void *) chartsheet->quoted_name);
     free(chartsheet);
@@ -82,93 +82,93 @@ lxw_chartsheet_free(lxw_chartsheet *chartsheet)
  * Write the XML declaration.
  */
 STATIC void
-_chartsheet_xml_declaration(lxw_chartsheet *self)
+_chartsheet_xml_declaration(lxlsx_chartsheet *self)
 {
-    lxw_xml_declaration(self->file);
+    lxlsx_xml_declaration(self->file);
 }
 
 /*
  * Write the <chartsheet> element.
  */
 STATIC void
-_chartsheet_write_chartsheet(lxw_chartsheet *self)
+_chartsheet_write_chartsheet(lxlsx_chartsheet *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
     char xmlns[] = "http://schemas.openxmlformats.org/"
         "spreadsheetml/2006/main";
     char xmlns_r[] = "http://schemas.openxmlformats.org/"
         "officeDocument/2006/relationships";
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xmlns", xmlns);
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:r", xmlns_r);
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns", xmlns);
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:r", xmlns_r);
 
-    lxw_xml_start_tag(self->file, "chartsheet", &attributes);
-    LXW_FREE_ATTRIBUTES();
+    lxlsx_xml_start_tag(self->file, "chartsheet", &attributes);
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <sheetPr> element.
  */
 STATIC void
-_chartsheet_write_sheet_pr(lxw_chartsheet *self)
+_chartsheet_write_sheet_pr(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_sheet_pr(self->worksheet);
+    lxlsx_worksheet_write_sheet_pr(self->worksheet);
 }
 
 /*
  * Write the <sheetViews> element.
  */
 STATIC void
-_chartsheet_write_sheet_views(lxw_chartsheet *self)
+_chartsheet_write_sheet_views(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_sheet_views(self->worksheet);
+    lxlsx_worksheet_write_sheet_views(self->worksheet);
 }
 
 /*
  * Write the <pageMargins> element.
  */
 STATIC void
-_chartsheet_write_page_margins(lxw_chartsheet *self)
+_chartsheet_write_page_margins(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_page_margins(self->worksheet);
+    lxlsx_worksheet_write_page_margins(self->worksheet);
 }
 
 /*
  * Write the <drawing> elements.
  */
 STATIC void
-_chartsheet_write_drawings(lxw_chartsheet *self)
+_chartsheet_write_drawings(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_drawings(self->worksheet);
+    lxlsx_worksheet_write_drawings(self->worksheet);
 }
 
 /*
  * Write the <sheetProtection> element.
  */
 STATIC void
-_chartsheet_write_sheet_protection(lxw_chartsheet *self)
+_chartsheet_write_sheet_protection(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_sheet_protection(self->worksheet, &self->protection);
+    lxlsx_worksheet_write_sheet_protection(self->worksheet, &self->protection);
 }
 
 /*
  * Write the <pageSetup> element.
  */
 STATIC void
-_chartsheet_write_page_setup(lxw_chartsheet *self)
+_chartsheet_write_page_setup(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_page_setup(self->worksheet);
+    lxlsx_worksheet_write_page_setup(self->worksheet);
 }
 
 /*
  * Write the <headerFooter> element.
  */
 STATIC void
-_chartsheet_write_header_footer(lxw_chartsheet *self)
+_chartsheet_write_header_footer(lxlsx_chartsheet *self)
 {
-    lxw_worksheet_write_header_footer(self->worksheet);
+    lxlsx_worksheet_write_header_footer(self->worksheet);
 }
 
 /*****************************************************************************
@@ -181,7 +181,7 @@ _chartsheet_write_header_footer(lxw_chartsheet *self)
  * Assemble and write the XML file.
  */
 void
-lxw_chartsheet_assemble_xml_file(lxw_chartsheet *self)
+lxlsx_chartsheet_assemble_xml_file(lxlsx_chartsheet *self)
 {
     /* Set the embedded worksheet filehandle to the same as the chartsheet. */
     self->worksheet->file = self->file;
@@ -213,7 +213,7 @@ lxw_chartsheet_assemble_xml_file(lxw_chartsheet *self)
     /* Write the drawing element. */
     _chartsheet_write_drawings(self);
 
-    lxw_xml_end_tag(self->file, "chartsheet");
+    lxlsx_xml_end_tag(self->file, "chartsheet");
 }
 
 /*****************************************************************************
@@ -224,46 +224,46 @@ lxw_chartsheet_assemble_xml_file(lxw_chartsheet *self)
 /*
  * Set a chartsheet chart, with options.
  */
-lxw_error
-chartsheet_set_chart_opt(lxw_chartsheet *self,
-                         lxw_chart *chart, lxw_chart_options *user_options)
+lxlsx_error
+lxlsx_chartsheet_set_chart_opt(lxlsx_chartsheet *self,
+                         lxlsx_chart *chart, lxlsx_chart_options *user_options)
 {
-    lxw_object_properties *object_props;
-    lxw_chart_series *series;
+    lxlsx_object_properties *object_props;
+    lxlsx_chart_series *series;
 
     if (!chart) {
-        LXW_WARN("chartsheet_set_chart()/_opt(): chart must be non-NULL.");
-        return LXW_ERROR_NULL_PARAMETER_IGNORED;
+        LXLSX_WARN("lxlsx_chartsheet_set_chart()/_opt(): chart must be non-NULL.");
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
     }
 
     /* Check that the chart isn't being used more than once. */
     if (chart->in_use) {
-        LXW_WARN("chartsheet_set_chart()/_opt(): the same chart object "
+        LXLSX_WARN("lxlsx_chartsheet_set_chart()/_opt(): the same chart object "
                  "cannot be set for a chartsheet more than once.");
 
-        return LXW_ERROR_PARAMETER_VALIDATION;
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
     }
 
     /* Check that the chart has a data series. */
     if (STAILQ_EMPTY(chart->series_list)) {
-        LXW_WARN("chartsheet_set_chart()/_opt(): chart must have a series.");
+        LXLSX_WARN("lxlsx_chartsheet_set_chart()/_opt(): chart must have a series.");
 
-        return LXW_ERROR_PARAMETER_VALIDATION;
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
     }
 
     /* Check that the chart has a 'values' series. */
     STAILQ_FOREACH(series, chart->series_list, list_pointers) {
         if (!series->values->formula && !series->values->sheetname) {
-            LXW_WARN("chartsheet_set_chart()/_opt(): chart must have a "
+            LXLSX_WARN("lxlsx_chartsheet_set_chart()/_opt(): chart must have a "
                      "'values' series.");
 
-            return LXW_ERROR_PARAMETER_VALIDATION;
+            return LXLSX_ERROR_PARAMETER_VALIDATION;
         }
     }
 
     /* Create a new object to hold the chart image properties. */
-    object_props = calloc(1, sizeof(lxw_object_properties));
-    RETURN_ON_MEM_ERROR(object_props, LXW_ERROR_MEMORY_MALLOC_FAILED);
+    object_props = calloc(1, sizeof(lxlsx_object_properties));
+    RETURN_ON_MEM_ERROR(object_props, LXLSX_ERROR_MEMORY_MALLOC_FAILED);
 
     if (user_options) {
         object_props->x_offset = user_options->x_offset;
@@ -285,26 +285,26 @@ chartsheet_set_chart_opt(lxw_chartsheet *self,
     object_props->chart = chart;
 
     /* Store the chart data in the embedded worksheet. */
-    STAILQ_INSERT_TAIL(self->worksheet->chart_data, object_props,
+    STAILQ_INSERT_TAIL(self->worksheet->lxlsx_chart_data, object_props,
                        list_pointers);
 
-    chart->in_use = LXW_TRUE;
-    chart->is_chartsheet = LXW_TRUE;
+    chart->in_use = LXLSX_TRUE;
+    chart->is_chartsheet = LXLSX_TRUE;
 
     chart->is_protected = self->is_protected;
 
     self->chart = chart;
 
-    return LXW_NO_ERROR;
+    return LXLSX_NO_ERROR;
 }
 
 /*
  * Set a chartsheet charts.
  */
-lxw_error
-chartsheet_set_chart(lxw_chartsheet *self, lxw_chart *chart)
+lxlsx_error
+lxlsx_chartsheet_set_chart(lxlsx_chartsheet *self, lxlsx_chart *chart)
 {
-    return chartsheet_set_chart_opt(self, chart, NULL);
+    return lxlsx_chartsheet_set_chart_opt(self, chart, NULL);
 }
 
 /*
@@ -312,12 +312,12 @@ chartsheet_set_chart(lxw_chartsheet *self, lxw_chart *chart)
  * highlighted.
  */
 void
-chartsheet_select(lxw_chartsheet *self)
+lxlsx_chartsheet_select(lxlsx_chartsheet *self)
 {
-    self->selected = LXW_TRUE;
+    self->selected = LXLSX_TRUE;
 
     /* Selected worksheet can't be hidden. */
-    self->hidden = LXW_FALSE;
+    self->hidden = LXLSX_FALSE;
 }
 
 /*
@@ -325,13 +325,13 @@ chartsheet_select(lxw_chartsheet *self)
  * displayed when the workbook is opened. Also set it as selected.
  */
 void
-chartsheet_activate(lxw_chartsheet *self)
+lxlsx_chartsheet_activate(lxlsx_chartsheet *self)
 {
-    self->worksheet->selected = LXW_TRUE;
-    self->worksheet->active = LXW_TRUE;
+    self->worksheet->selected = LXLSX_TRUE;
+    self->worksheet->active = LXLSX_TRUE;
 
     /* Active worksheet can't be hidden. */
-    self->worksheet->hidden = LXW_FALSE;
+    self->worksheet->hidden = LXLSX_FALSE;
 
     *self->active_sheet = self->index;
 }
@@ -342,10 +342,10 @@ chartsheet_activate(lxw_chartsheet *self)
  * worksheet is not visible on the screen.
  */
 void
-chartsheet_set_first_sheet(lxw_chartsheet *self)
+lxlsx_chartsheet_set_first_sheet(lxlsx_chartsheet *self)
 {
     /* Active worksheet can't be hidden. */
-    self->hidden = LXW_FALSE;
+    self->hidden = LXLSX_FALSE;
 
     *self->first_sheet = self->index;
 }
@@ -354,12 +354,12 @@ chartsheet_set_first_sheet(lxw_chartsheet *self)
  * Hide this chartsheet.
  */
 void
-chartsheet_hide(lxw_chartsheet *self)
+lxlsx_chartsheet_hide(lxlsx_chartsheet *self)
 {
-    self->hidden = LXW_TRUE;
+    self->hidden = LXLSX_TRUE;
 
     /* A hidden worksheet shouldn't be active or selected. */
-    self->selected = LXW_FALSE;
+    self->selected = LXLSX_FALSE;
 
     /* If this is active_sheet or first_sheet reset the workbook value. */
     if (*self->first_sheet == self->index)
@@ -373,7 +373,7 @@ chartsheet_hide(lxw_chartsheet *self)
  * Set the color of the chartsheet tab.
  */
 void
-chartsheet_set_tab_color(lxw_chartsheet *self, lxw_color_t color)
+lxlsx_chartsheet_set_tab_color(lxlsx_chartsheet *self, lxlsx_color_t color)
 {
     self->worksheet->tab_color = color;
 }
@@ -383,10 +383,10 @@ chartsheet_set_tab_color(lxw_chartsheet *self, lxw_color_t color)
  * objects.
  */
 void
-chartsheet_protect(lxw_chartsheet *self, const char *password,
-                   lxw_protection *options)
+lxlsx_chartsheet_protect(lxlsx_chartsheet *self, const char *password,
+                   lxlsx_protection *options)
 {
-    struct lxw_protection_obj *protect = &self->protection;
+    struct lxlsx_protection_obj *protect = &self->protection;
 
     /* Copy any user parameters to the internal structure. */
     if (options) {
@@ -394,38 +394,38 @@ chartsheet_protect(lxw_chartsheet *self, const char *password,
         protect->no_content = options->no_content;
     }
     else {
-        protect->objects = LXW_FALSE;
-        protect->no_content = LXW_FALSE;
+        protect->objects = LXLSX_FALSE;
+        protect->no_content = LXLSX_FALSE;
     }
 
     if (password) {
-        uint16_t hash = lxw_hash_password(password);
-        lxw_snprintf(protect->hash, 5, "%X", hash);
+        uint16_t hash = lxlsx_hash_password(password);
+        lxlsx_snprintf(protect->hash, 5, "%X", hash);
     }
     else {
         if (protect->objects && protect->no_content)
             return;
     }
 
-    protect->no_sheet = LXW_TRUE;
-    protect->scenarios = LXW_TRUE;
-    protect->is_configured = LXW_TRUE;
+    protect->no_sheet = LXLSX_TRUE;
+    protect->scenarios = LXLSX_TRUE;
+    protect->is_configured = LXLSX_TRUE;
 
     if (self->chart)
-        self->chart->is_protected = LXW_TRUE;
+        self->chart->is_protected = LXLSX_TRUE;
     else
-        self->is_protected = LXW_TRUE;
+        self->is_protected = LXLSX_TRUE;
 }
 
 /*
  * Set the chartsheet zoom factor.
  */
 void
-chartsheet_set_zoom(lxw_chartsheet *self, uint16_t scale)
+lxlsx_chartsheet_set_zoom(lxlsx_chartsheet *self, uint16_t scale)
 {
     /* Confine the scale to Excel"s range */
     if (scale < 10 || scale > 400) {
-        LXW_WARN("chartsheet_set_zoom(): "
+        LXLSX_WARN("lxlsx_chartsheet_set_zoom(): "
                  "Zoom factor scale outside range: 10 <= zoom <= 400.");
         return;
     }
@@ -437,73 +437,73 @@ chartsheet_set_zoom(lxw_chartsheet *self, uint16_t scale)
  * Set the page orientation as portrait.
  */
 void
-chartsheet_set_portrait(lxw_chartsheet *self)
+lxlsx_chartsheet_set_portrait(lxlsx_chartsheet *self)
 {
-    worksheet_set_portrait(self->worksheet);
+    lxlsx_worksheet_set_portrait(self->worksheet);
 }
 
 /*
  * Set the page orientation as landscape.
  */
 void
-chartsheet_set_landscape(lxw_chartsheet *self)
+lxlsx_chartsheet_set_landscape(lxlsx_chartsheet *self)
 {
-    worksheet_set_landscape(self->worksheet);
+    lxlsx_worksheet_set_landscape(self->worksheet);
 }
 
 /*
  * Set the paper type. Example. 1 = US Letter, 9 = A4
  */
 void
-chartsheet_set_paper(lxw_chartsheet *self, uint8_t paper_size)
+lxlsx_chartsheet_set_paper(lxlsx_chartsheet *self, uint8_t paper_size)
 {
-    worksheet_set_paper(self->worksheet, paper_size);
+    lxlsx_worksheet_set_paper(self->worksheet, paper_size);
 }
 
 /*
  * Set all the page margins in inches.
  */
 void
-chartsheet_set_margins(lxw_chartsheet *self, double left, double right,
+lxlsx_chartsheet_set_margins(lxlsx_chartsheet *self, double left, double right,
                        double top, double bottom)
 {
-    worksheet_set_margins(self->worksheet, left, right, top, bottom);
+    lxlsx_worksheet_set_margins(self->worksheet, left, right, top, bottom);
 }
 
 /*
  * Set the page header caption and options.
  */
-lxw_error
-chartsheet_set_header_opt(lxw_chartsheet *self, const char *string,
-                          lxw_header_footer_options *options)
+lxlsx_error
+lxlsx_chartsheet_set_header_opt(lxlsx_chartsheet *self, const char *string,
+                          lxlsx_header_footer_options *options)
 {
-    return worksheet_set_header_opt(self->worksheet, string, options);
+    return lxlsx_worksheet_set_header_opt(self->worksheet, string, options);
 }
 
 /*
  * Set the page footer caption and options.
  */
-lxw_error
-chartsheet_set_footer_opt(lxw_chartsheet *self, const char *string,
-                          lxw_header_footer_options *options)
+lxlsx_error
+lxlsx_chartsheet_set_footer_opt(lxlsx_chartsheet *self, const char *string,
+                          lxlsx_header_footer_options *options)
 {
-    return worksheet_set_footer_opt(self->worksheet, string, options);
+    return lxlsx_worksheet_set_footer_opt(self->worksheet, string, options);
 }
 
 /*
  * Set the page header caption.
  */
-lxw_error
-chartsheet_set_header(lxw_chartsheet *self, const char *string)
+lxlsx_error
+lxlsx_chartsheet_set_header(lxlsx_chartsheet *self, const char *string)
 {
-    return chartsheet_set_header_opt(self, string, NULL);
+    return lxlsx_chartsheet_set_header_opt(self, string, NULL);
 }
 
 /*
  * Set the page footer caption.
  */
-lxw_error
-chartsheet_set_footer(lxw_chartsheet *self, const char *string)
+lxlsx_error
+lxlsx_chartsheet_set_footer(lxlsx_chartsheet *self, const char *string)
 {
-    return chartsheet_set_footer_opt(self, string, NULL);
+    return lxlsx_chartsheet_set_footer_opt(self, string, NULL);
 }

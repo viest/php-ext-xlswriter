@@ -17,15 +17,15 @@ CTEST(styles, write_color) {
 
     char* got;
     char exp[] = "<color theme=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     styles->file = testfile;
 
     _write_font_color_theme(styles, 1);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

@@ -16,9 +16,9 @@
 CTEST(worksheet, write_write_sheet_pr01) {
     char* got;
     char exp[] = "<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
     worksheet->fit_page = 1;
 
@@ -26,7 +26,7 @@ CTEST(worksheet, write_write_sheet_pr01) {
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -34,17 +34,17 @@ CTEST(worksheet, write_write_sheet_pr01) {
 CTEST(worksheet, write_write_sheet_pr02) {
     char* got;
     char exp[] = "<sheetPr><tabColor rgb=\"FFFF0000\"/></sheetPr>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    worksheet_set_tab_color(worksheet, LXW_COLOR_RED);
+    lxlsx_worksheet_set_tab_color(worksheet, LXLSX_COLOR_RED);
     _worksheet_write_sheet_pr(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 
@@ -52,18 +52,18 @@ CTEST(worksheet, write_write_sheet_pr02) {
 CTEST(worksheet, write_write_sheet_pr03) {
     char* got;
     char exp[] = "<sheetPr><tabColor rgb=\"FFFF0000\"/><pageSetUpPr fitToPage=\"1\"/></sheetPr>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
     worksheet->fit_page = 1;
 
-    worksheet_set_tab_color(worksheet, LXW_COLOR_RED);
+    lxlsx_worksheet_set_tab_color(worksheet, LXLSX_COLOR_RED);
     _worksheet_write_sheet_pr(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 

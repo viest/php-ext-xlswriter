@@ -30,10 +30,10 @@ CTEST(core, core01) {
           "<dcterms:modified xsi:type=\"dcterms:W3CDTF\">2010-01-01T00:00:00Z</dcterms:modified>"
         "</cp:coreProperties>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_core *core = lxw_core_new();
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_core *core = lxlsx_core_new();
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
 
     core->file = testfile;
     core->properties = workbook->properties;
@@ -51,12 +51,12 @@ CTEST(core, core01) {
     core->properties->created = timegm(&tmp_tm);
     core->properties->author  = strdup("A User");
 
-    lxw_core_assemble_xml_file(core);
+    lxlsx_core_assemble_xml_file(core);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_workbook_free(workbook);
-    lxw_core_free(core);
+    lxlsx_workbook_free(workbook);
+    lxlsx_core_free(core);
 }
 
 
@@ -79,10 +79,10 @@ CTEST(core, core02) {
           "<cp:contentStatus>Quo</cp:contentStatus>"
         "</cp:coreProperties>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_core *core = lxw_core_new();
-    lxw_workbook *workbook = workbook_new(NULL);
+    lxlsx_core *core = lxlsx_core_new();
+    lxlsx_workbook *workbook = lxlsx_workbook_new(NULL);
 
     core->file = testfile;
     core->properties = workbook->properties;
@@ -106,10 +106,10 @@ CTEST(core, core02) {
     core->properties->category = strdup("Example spreadsheets");
     core->properties->status   = strdup("Quo");
 
-    lxw_core_assemble_xml_file(core);
+    lxlsx_core_assemble_xml_file(core);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_workbook_free(workbook);
-    lxw_core_free(core);
+    lxlsx_workbook_free(workbook);
+    lxlsx_core_free(core);
 }

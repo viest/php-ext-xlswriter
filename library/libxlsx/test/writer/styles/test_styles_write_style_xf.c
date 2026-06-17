@@ -16,15 +16,15 @@ CTEST(styles, write_style_xf) {
 
     char* got;
     char exp[] = "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     styles->file = testfile;
 
-    _write_style_xf(styles, LXW_FALSE, 0);
+    _write_style_xf(styles, LXLSX_FALSE, 0);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

@@ -38,22 +38,22 @@ CTEST(merged_range, merged_range01) {
           "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
         "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet->sst = lxw_sst_new();
-    worksheet_select(worksheet);
+    worksheet->sst = lxlsx_sst_new();
+    lxlsx_worksheet_select(worksheet);
 
-    lxw_format *format = lxw_format_new();
+    lxlsx_format *format = lxlsx_format_new();
     format->xf_index = 1;
 
-    worksheet_merge_range(worksheet, 2, 1, 2, 2, "Foo", format);
+    lxlsx_worksheet_merge_range(worksheet, 2, 1, 2, 2, "Foo", format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_sst_free(worksheet->sst);
-    lxw_worksheet_free(worksheet);
+    lxlsx_sst_free(worksheet->sst);
+    lxlsx_worksheet_free(worksheet);
 }

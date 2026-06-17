@@ -11,16 +11,16 @@
  * xlsxwriter - A library for creating Excel XLSX files.
  *
  */
-#ifndef __LXW_XLSXWRITER_H__
-#define __LXW_XLSXWRITER_H__
+#ifndef __LXLSX_XLSXWRITER_H__
+#define __LXLSX_XLSXWRITER_H__
 
 #include "lxlsx/workbook.h"
 #include "lxlsx/worksheet.h"
 #include "lxlsx/format.h"
 #include "lxlsx/utility.h"
 
-#define LXW_VERSION "1.2.4"
-#define LXW_VERSION_ID 124
-#define LXW_SOVERSION "11"
+#define LXLSX_VERSION "1.2.4"
+#define LXLSX_VERSION_ID 124
+#define LXLSX_SOVERSION "11"
 
-#endif /* __LXW_XLSXWRITER_H__ */
+#endif /* __LXLSX_XLSXWRITER_H__ */

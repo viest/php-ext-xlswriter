@@ -16,17 +16,17 @@ CTEST(worksheet, write_sheet_view1) {
 
     char* got;
     char exp[] = "<sheetView tabSelected=\"1\" workbookViewId=\"0\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
     _worksheet_write_sheet_view(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test the _write_sheet_view() function.
@@ -34,19 +34,19 @@ CTEST(worksheet, write_sheet_view2) {
 
     char* got;
     char exp[] = "<sheetView showGridLines=\"0\" tabSelected=\"1\" workbookViewId=\"0\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_gridlines(worksheet, LXW_HIDE_ALL_GRIDLINES);
+    lxlsx_worksheet_gridlines(worksheet, LXLSX_HIDE_ALL_GRIDLINES);
 
     _worksheet_write_sheet_view(worksheet);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 

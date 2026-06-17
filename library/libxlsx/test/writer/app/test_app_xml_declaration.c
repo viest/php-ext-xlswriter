@@ -12,18 +12,18 @@
 #include "../../../include/lxlsx/app.h"
 
 // Test _xml_declaration().
-CTEST(app, xml_declaration) {
+CTEST(app, lxlsx_xml_declaration) {
 
     char* got;
     char exp[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_app *app = lxw_app_new();
+    lxlsx_app *app = lxlsx_app_new();
     app->file = testfile;
 
     _app_xml_declaration(app);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_app_free(app);
+    lxlsx_app_free(app);
 }

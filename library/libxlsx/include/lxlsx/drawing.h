@@ -7,45 +7,45 @@
  * drawing - A libxlsxwriter library for creating Excel XLSX drawing files.
  *
  */
-#ifndef __LXW_DRAWING_H__
-#define __LXW_DRAWING_H__
+#ifndef __LXLSX_DRAWING_H__
+#define __LXLSX_DRAWING_H__
 
 #include <stdint.h>
 #include <string.h>
 
 #include "common.h"
 
-STAILQ_HEAD(lxw_drawing_objects, lxw_drawing_object);
+STAILQ_HEAD(lxlsx_drawing_objects, lxlsx_drawing_object);
 
-enum lxw_drawing_types {
-    LXW_DRAWING_NONE = 0,
-    LXW_DRAWING_IMAGE,
-    LXW_DRAWING_CHART,
-    LXW_DRAWING_SHAPE
+enum lxlsx_drawing_types {
+    LXLSX_DRAWING_NONE = 0,
+    LXLSX_DRAWING_IMAGE,
+    LXLSX_DRAWING_CHART,
+    LXLSX_DRAWING_SHAPE
 };
 
 enum image_types {
-    LXW_IMAGE_UNKNOWN = 0,
-    LXW_IMAGE_PNG,
-    LXW_IMAGE_JPEG,
-    LXW_IMAGE_BMP,
-    LXW_IMAGE_GIF
+    LXLSX_IMAGE_UNKNOWN = 0,
+    LXLSX_IMAGE_PNG,
+    LXLSX_IMAGE_JPEG,
+    LXLSX_IMAGE_BMP,
+    LXLSX_IMAGE_GIF
 };
 
 /* Coordinates used in a drawing object. */
-typedef struct lxw_drawing_coords {
+typedef struct lxlsx_drawing_coords {
     uint32_t col;
     uint32_t row;
     double col_offset;
     double row_offset;
-} lxw_drawing_coords;
+} lxlsx_drawing_coords;
 
 /* Object to represent the properties of a drawing. */
-typedef struct lxw_drawing_object {
+typedef struct lxlsx_drawing_object {
     uint8_t type;
     uint8_t anchor;
-    struct lxw_drawing_coords from;
-    struct lxw_drawing_coords to;
+    struct lxlsx_drawing_coords from;
+    struct lxlsx_drawing_coords to;
     uint64_t col_absolute;
     uint64_t row_absolute;
     uint32_t width;
@@ -57,23 +57,23 @@ typedef struct lxw_drawing_object {
     char *tip;
     uint8_t decorative;
 
-    STAILQ_ENTRY (lxw_drawing_object) list_pointers;
+    STAILQ_ENTRY (lxlsx_drawing_object) list_pointers;
 
-} lxw_drawing_object;
+} lxlsx_drawing_object;
 
 /*
  * Struct to represent a collection of drawings.
  */
-typedef struct lxw_drawing {
+typedef struct lxlsx_drawing {
 
     FILE *file;
 
     uint8_t embedded;
     uint8_t orientation;
 
-    struct lxw_drawing_objects *drawing_objects;
+    struct lxlsx_drawing_objects *lxlsx_drawing_objects;
 
-} lxw_drawing;
+} lxlsx_drawing;
 
 
 /* *INDENT-OFF* */
@@ -82,17 +82,17 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-lxw_drawing *lxw_drawing_new(void);
-void lxw_drawing_free(lxw_drawing *drawing);
-void lxw_drawing_assemble_xml_file(lxw_drawing *self);
-void lxw_free_drawing_object(struct lxw_drawing_object *drawing_object);
-void lxw_add_drawing_object(lxw_drawing *drawing,
-                            lxw_drawing_object *drawing_object);
+lxlsx_drawing *lxlsx_drawing_new(void);
+void lxlsx_drawing_free(lxlsx_drawing *drawing);
+void lxlsx_drawing_assemble_xml_file(lxlsx_drawing *self);
+void lxlsx_free_drawing_object(struct lxlsx_drawing_object *lxlsx_drawing_object);
+void lxlsx_add_drawing_object(lxlsx_drawing *drawing,
+                            lxlsx_drawing_object *lxlsx_drawing_object);
 
 /* Declarations required for unit testing. */
 #ifdef TESTING
 
-STATIC void _drawing_xml_declaration(lxw_drawing *self);
+STATIC void _drawing_xml_declaration(lxlsx_drawing *self);
 #endif /* TESTING */
 
 /* *INDENT-OFF* */
@@ -101,4 +101,4 @@ STATIC void _drawing_xml_declaration(lxw_drawing *self);
 #endif
 /* *INDENT-ON* */
 
-#endif /* __LXW_DRAWING_H__ */
+#endif /* __LXLSX_DRAWING_H__ */

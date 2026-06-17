@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_condtional_format06) {
+CTEST(worksheet, lxlsx_worksheet_condtional_format06) {
 
     char* got;
     char exp[] =
@@ -55,49 +55,49 @@ CTEST(worksheet, worksheet_condtional_format06) {
               "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
-    worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
-    worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
-    worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_TOP;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_TOP;
     conditional_format->value    = 15;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_BOTTOM;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_BOTTOM;
     conditional_format->value    = 16;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_TOP;
-    conditional_format->criteria = LXW_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_TOP;
+    conditional_format->criteria = LXLSX_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
     conditional_format->value    = 17;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_BOTTOM;
-    conditional_format->criteria = LXW_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_BOTTOM;
+    conditional_format->criteria = LXLSX_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
     conditional_format->value    = 18;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
 
     free(conditional_format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 
 // Test int truncation.
-CTEST(worksheet, worksheet_condtional_format06b) {
+CTEST(worksheet, lxlsx_worksheet_condtional_format06b) {
 
     char* got;
     char exp[] =
@@ -139,44 +139,44 @@ CTEST(worksheet, worksheet_condtional_format06b) {
               "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
-    worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
-    worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
-    worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A1"), 10, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A2"), 20, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A3"), 30, NULL);
+    lxlsx_worksheet_write_number(worksheet, CELL("A4"), 40, NULL);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_TOP;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_TOP;
     conditional_format->value    = 10.1;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_BOTTOM;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_BOTTOM;
     conditional_format->value    = 10.2;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_TOP;
-    conditional_format->criteria = LXW_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_TOP;
+    conditional_format->criteria = LXLSX_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
     conditional_format->value    = 10.3;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
-    conditional_format->type     = LXW_CONDITIONAL_TYPE_BOTTOM;
-    conditional_format->criteria = LXW_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
+    conditional_format->type     = LXLSX_CONDITIONAL_TYPE_BOTTOM;
+    conditional_format->criteria = LXLSX_CONDITIONAL_CRITERIA_TOP_OR_BOTTOM_PERCENT;
     conditional_format->value    = 10.4;
-    worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
+    lxlsx_worksheet_conditional_format_range(worksheet, RANGE("A1:A4"), conditional_format);
 
 
     free(conditional_format);
 
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }
 

@@ -25,16 +25,16 @@
 /*
  * Create a new core object.
  */
-lxw_core *
-lxw_core_new(void)
+lxlsx_core *
+lxlsx_core_new(void)
 {
-    lxw_core *core = calloc(1, sizeof(lxw_core));
+    lxlsx_core *core = calloc(1, sizeof(lxlsx_core));
     GOTO_LABEL_ON_MEM_ERROR(core, mem_error);
 
     return core;
 
 mem_error:
-    lxw_core_free(core);
+    lxlsx_core_free(core);
     return NULL;
 }
 
@@ -42,7 +42,7 @@ mem_error:
  * Free a core object.
  */
 void
-lxw_core_free(lxw_core *core)
+lxlsx_core_free(lxlsx_core *core)
 {
     if (!core)
         return;
@@ -77,46 +77,46 @@ _datetime_to_iso8601_date(time_t *timer, char *str, size_t size)
  * Write the XML declaration.
  */
 STATIC void
-_core_xml_declaration(lxw_core *self)
+_core_xml_declaration(lxlsx_core *self)
 {
-    lxw_xml_declaration(self->file);
+    lxlsx_xml_declaration(self->file);
 }
 
 /*
  * Write the <cp:coreProperties> element.
  */
 STATIC void
-_write_cp_core_properties(lxw_core *self)
+_write_cp_core_properties(lxlsx_core *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:cp",
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:cp",
                             "http://schemas.openxmlformats.org/package/2006/metadata/core-properties");
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:dc", "http://purl.org/dc/elements/1.1/");
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:dcterms", "http://purl.org/dc/terms/");
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:dcmitype", "http://purl.org/dc/dcmitype/");
-    LXW_PUSH_ATTRIBUTES_STR("xmlns:xsi",
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:dc", "http://purl.org/dc/elements/1.1/");
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:dcterms", "http://purl.org/dc/terms/");
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:dcmitype", "http://purl.org/dc/dcmitype/");
+    LXLSX_PUSH_ATTRIBUTES_STR("xmlns:xsi",
                             "http://www.w3.org/2001/XMLSchema-instance");
 
-    lxw_xml_start_tag(self->file, "cp:coreProperties", &attributes);
+    lxlsx_xml_start_tag(self->file, "cp:coreProperties", &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <dc:creator> element.
  */
 STATIC void
-_write_dc_creator(lxw_core *self)
+_write_dc_creator(lxlsx_core *self)
 {
     if (self->properties->author) {
-        lxw_xml_data_element(self->file, "dc:creator",
+        lxlsx_xml_data_element(self->file, "dc:creator",
                              self->properties->author, NULL);
     }
     else {
-        lxw_xml_data_element(self->file, "dc:creator", "", NULL);
+        lxlsx_xml_data_element(self->file, "dc:creator", "", NULL);
     }
 }
 
@@ -124,14 +124,14 @@ _write_dc_creator(lxw_core *self)
  * Write the <cp:lastModifiedBy> element.
  */
 STATIC void
-_write_cp_last_modified_by(lxw_core *self)
+_write_cp_last_modified_by(lxlsx_core *self)
 {
     if (self->properties->author) {
-        lxw_xml_data_element(self->file, "cp:lastModifiedBy",
+        lxlsx_xml_data_element(self->file, "cp:lastModifiedBy",
                              self->properties->author, NULL);
     }
     else {
-        lxw_xml_data_element(self->file, "cp:lastModifiedBy", "", NULL);
+        lxlsx_xml_data_element(self->file, "cp:lastModifiedBy", "", NULL);
     }
 }
 
@@ -139,56 +139,56 @@ _write_cp_last_modified_by(lxw_core *self)
  * Write the <dcterms:created> element.
  */
 STATIC void
-_write_dcterms_created(lxw_core *self)
+_write_dcterms_created(lxlsx_core *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
-    char datetime[LXW_ATTR_32];
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
+    char datetime[LXLSX_ATTR_32];
 
     _datetime_to_iso8601_date(&self->properties->created, datetime,
-                              LXW_ATTR_32);
+                              LXLSX_ATTR_32);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xsi:type", "dcterms:W3CDTF");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xsi:type", "dcterms:W3CDTF");
 
-    lxw_xml_data_element(self->file, "dcterms:created", datetime,
+    lxlsx_xml_data_element(self->file, "dcterms:created", datetime,
                          &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <dcterms:modified> element.
  */
 STATIC void
-_write_dcterms_modified(lxw_core *self)
+_write_dcterms_modified(lxlsx_core *self)
 {
-    struct xml_attribute_list attributes;
-    struct xml_attribute *attribute;
-    char datetime[LXW_ATTR_32];
+    struct lxlsx_xml_attribute_list attributes;
+    struct lxlsx_xml_attribute *attribute;
+    char datetime[LXLSX_ATTR_32];
 
     _datetime_to_iso8601_date(&self->properties->created, datetime,
-                              LXW_ATTR_32);
+                              LXLSX_ATTR_32);
 
-    LXW_INIT_ATTRIBUTES();
-    LXW_PUSH_ATTRIBUTES_STR("xsi:type", "dcterms:W3CDTF");
+    LXLSX_INIT_ATTRIBUTES();
+    LXLSX_PUSH_ATTRIBUTES_STR("xsi:type", "dcterms:W3CDTF");
 
-    lxw_xml_data_element(self->file, "dcterms:modified", datetime,
+    lxlsx_xml_data_element(self->file, "dcterms:modified", datetime,
                          &attributes);
 
-    LXW_FREE_ATTRIBUTES();
+    LXLSX_FREE_ATTRIBUTES();
 }
 
 /*
  * Write the <dc:title> element.
  */
 STATIC void
-_write_dc_title(lxw_core *self)
+_write_dc_title(lxlsx_core *self)
 {
     if (!self->properties->title)
         return;
 
-    lxw_xml_data_element(self->file, "dc:title", self->properties->title,
+    lxlsx_xml_data_element(self->file, "dc:title", self->properties->title,
                          NULL);
 }
 
@@ -196,12 +196,12 @@ _write_dc_title(lxw_core *self)
  * Write the <dc:subject> element.
  */
 STATIC void
-_write_dc_subject(lxw_core *self)
+_write_dc_subject(lxlsx_core *self)
 {
     if (!self->properties->subject)
         return;
 
-    lxw_xml_data_element(self->file, "dc:subject", self->properties->subject,
+    lxlsx_xml_data_element(self->file, "dc:subject", self->properties->subject,
                          NULL);
 }
 
@@ -209,12 +209,12 @@ _write_dc_subject(lxw_core *self)
  * Write the <cp:keywords> element.
  */
 STATIC void
-_write_cp_keywords(lxw_core *self)
+_write_cp_keywords(lxlsx_core *self)
 {
     if (!self->properties->keywords)
         return;
 
-    lxw_xml_data_element(self->file, "cp:keywords",
+    lxlsx_xml_data_element(self->file, "cp:keywords",
                          self->properties->keywords, NULL);
 }
 
@@ -222,12 +222,12 @@ _write_cp_keywords(lxw_core *self)
  * Write the <dc:description> element.
  */
 STATIC void
-_write_dc_description(lxw_core *self)
+_write_dc_description(lxlsx_core *self)
 {
     if (!self->properties->comments)
         return;
 
-    lxw_xml_data_element(self->file, "dc:description",
+    lxlsx_xml_data_element(self->file, "dc:description",
                          self->properties->comments, NULL);
 }
 
@@ -235,12 +235,12 @@ _write_dc_description(lxw_core *self)
  * Write the <cp:category> element.
  */
 STATIC void
-_write_cp_category(lxw_core *self)
+_write_cp_category(lxlsx_core *self)
 {
     if (!self->properties->category)
         return;
 
-    lxw_xml_data_element(self->file, "cp:category",
+    lxlsx_xml_data_element(self->file, "cp:category",
                          self->properties->category, NULL);
 }
 
@@ -248,12 +248,12 @@ _write_cp_category(lxw_core *self)
  * Write the <cp:contentStatus> element.
  */
 STATIC void
-_write_cp_content_status(lxw_core *self)
+_write_cp_content_status(lxlsx_core *self)
 {
     if (!self->properties->status)
         return;
 
-    lxw_xml_data_element(self->file, "cp:contentStatus",
+    lxlsx_xml_data_element(self->file, "cp:contentStatus",
                          self->properties->status, NULL);
 }
 
@@ -267,7 +267,7 @@ _write_cp_content_status(lxw_core *self)
  * Assemble and write the XML file.
  */
 void
-lxw_core_assemble_xml_file(lxw_core *self)
+lxlsx_core_assemble_xml_file(lxlsx_core *self)
 {
     /* Write the XML declaration. */
     _core_xml_declaration(self);
@@ -284,7 +284,7 @@ lxw_core_assemble_xml_file(lxw_core *self)
     _write_cp_category(self);
     _write_cp_content_status(self);
 
-    lxw_xml_end_tag(self->file, "cp:coreProperties");
+    lxlsx_xml_end_tag(self->file, "cp:coreProperties");
 }
 
 /*****************************************************************************

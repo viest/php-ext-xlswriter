@@ -21,17 +21,17 @@
 /*
  * Create a new format object.
  */
-lxw_format *
-lxw_format_new(void)
+lxlsx_format *
+lxlsx_format_new(void)
 {
-    lxw_format *format = calloc(1, sizeof(lxw_format));
+    lxlsx_format *format = calloc(1, sizeof(lxlsx_format));
     GOTO_LABEL_ON_MEM_ERROR(format, mem_error);
 
     format->xf_format_indices = NULL;
     format->dxf_format_indices = NULL;
 
-    format->xf_index = LXW_PROPERTY_UNSET;
-    format->dxf_index = LXW_PROPERTY_UNSET;
+    format->xf_index = LXLSX_PROPERTY_UNSET;
+    format->dxf_index = LXLSX_PROPERTY_UNSET;
     format->xf_id = 0;
 
     format->font_name[0] = '\0';
@@ -39,72 +39,72 @@ lxw_format_new(void)
     format->num_format[0] = '\0';
     format->num_format_index = 0;
     format->font_index = 0;
-    format->has_font = LXW_FALSE;
-    format->has_dxf_font = LXW_FALSE;
+    format->has_font = LXLSX_FALSE;
+    format->has_dxf_font = LXLSX_FALSE;
     format->font_size = 11.0;
-    format->bold = LXW_FALSE;
-    format->italic = LXW_FALSE;
-    format->font_color = LXW_COLOR_UNSET;
-    format->underline = LXW_UNDERLINE_NONE;
-    format->font_strikeout = LXW_FALSE;
-    format->font_outline = LXW_FALSE;
-    format->font_shadow = LXW_FALSE;
-    format->font_script = LXW_FALSE;
-    format->font_family = LXW_DEFAULT_FONT_FAMILY;
-    format->font_charset = LXW_FALSE;
-    format->font_condense = LXW_FALSE;
-    format->font_extend = LXW_FALSE;
+    format->bold = LXLSX_FALSE;
+    format->italic = LXLSX_FALSE;
+    format->font_color = LXLSX_COLOR_UNSET;
+    format->underline = LXLSX_UNDERLINE_NONE;
+    format->font_strikeout = LXLSX_FALSE;
+    format->font_outline = LXLSX_FALSE;
+    format->font_shadow = LXLSX_FALSE;
+    format->font_script = LXLSX_FALSE;
+    format->font_family = LXLSX_DEFAULT_FONT_FAMILY;
+    format->font_charset = LXLSX_FALSE;
+    format->font_condense = LXLSX_FALSE;
+    format->font_extend = LXLSX_FALSE;
     format->theme = 0;
-    format->hyperlink = LXW_FALSE;
+    format->hyperlink = LXLSX_FALSE;
 
-    format->hidden = LXW_FALSE;
-    format->locked = LXW_TRUE;
+    format->hidden = LXLSX_FALSE;
+    format->locked = LXLSX_TRUE;
 
-    format->text_h_align = LXW_ALIGN_NONE;
-    format->text_wrap = LXW_FALSE;
-    format->text_v_align = LXW_ALIGN_NONE;
-    format->text_justlast = LXW_FALSE;
+    format->text_h_align = LXLSX_ALIGN_NONE;
+    format->text_wrap = LXLSX_FALSE;
+    format->text_v_align = LXLSX_ALIGN_NONE;
+    format->text_justlast = LXLSX_FALSE;
     format->rotation = 0;
 
-    format->fg_color = LXW_COLOR_UNSET;
-    format->bg_color = LXW_COLOR_UNSET;
-    format->pattern = LXW_PATTERN_NONE;
-    format->has_fill = LXW_FALSE;
-    format->has_dxf_fill = LXW_FALSE;
+    format->fg_color = LXLSX_COLOR_UNSET;
+    format->bg_color = LXLSX_COLOR_UNSET;
+    format->pattern = LXLSX_PATTERN_NONE;
+    format->has_fill = LXLSX_FALSE;
+    format->has_dxf_fill = LXLSX_FALSE;
     format->fill_index = 0;
     format->fill_count = 0;
 
     format->border_index = 0;
-    format->has_border = LXW_FALSE;
-    format->has_dxf_border = LXW_FALSE;
+    format->has_border = LXLSX_FALSE;
+    format->has_dxf_border = LXLSX_FALSE;
     format->border_count = 0;
 
-    format->bottom = LXW_BORDER_NONE;
-    format->left = LXW_BORDER_NONE;
-    format->right = LXW_BORDER_NONE;
-    format->top = LXW_BORDER_NONE;
-    format->diag_border = LXW_BORDER_NONE;
-    format->diag_type = LXW_BORDER_NONE;
-    format->bottom_color = LXW_COLOR_UNSET;
-    format->left_color = LXW_COLOR_UNSET;
-    format->right_color = LXW_COLOR_UNSET;
-    format->top_color = LXW_COLOR_UNSET;
-    format->diag_color = LXW_COLOR_UNSET;
+    format->bottom = LXLSX_BORDER_NONE;
+    format->left = LXLSX_BORDER_NONE;
+    format->right = LXLSX_BORDER_NONE;
+    format->top = LXLSX_BORDER_NONE;
+    format->diag_border = LXLSX_BORDER_NONE;
+    format->diag_type = LXLSX_BORDER_NONE;
+    format->bottom_color = LXLSX_COLOR_UNSET;
+    format->left_color = LXLSX_COLOR_UNSET;
+    format->right_color = LXLSX_COLOR_UNSET;
+    format->top_color = LXLSX_COLOR_UNSET;
+    format->diag_color = LXLSX_COLOR_UNSET;
 
     format->indent = 0;
-    format->shrink = LXW_FALSE;
-    format->merge_range = LXW_FALSE;
+    format->shrink = LXLSX_FALSE;
+    format->merge_range = LXLSX_FALSE;
     format->reading_order = 0;
-    format->just_distrib = LXW_FALSE;
-    format->color_indexed = LXW_FALSE;
-    format->font_only = LXW_FALSE;
+    format->just_distrib = LXLSX_FALSE;
+    format->color_indexed = LXLSX_FALSE;
+    format->font_only = LXLSX_FALSE;
 
-    format->quote_prefix = LXW_FALSE;
+    format->quote_prefix = LXLSX_FALSE;
 
     return format;
 
 mem_error:
-    lxw_format_free(format);
+    lxlsx_format_free(format);
     return NULL;
 }
 
@@ -112,7 +112,7 @@ mem_error:
  * Free a format object.
  */
 void
-lxw_format_free(lxw_format *format)
+lxlsx_format_free(lxlsx_format *format)
 {
     if (!format)
         return;
@@ -127,10 +127,10 @@ lxw_format_free(lxw_format *format)
 STATIC uint8_t
 _check_border(uint8_t border)
 {
-    if (border >= LXW_BORDER_THIN && border <= LXW_BORDER_SLANT_DASH_DOT)
+    if (border >= LXLSX_BORDER_THIN && border <= LXLSX_BORDER_SLANT_DASH_DOT)
         return border;
     else
-        return LXW_BORDER_NONE;
+        return LXLSX_BORDER_NONE;
 }
 
 /*****************************************************************************
@@ -143,13 +143,13 @@ _check_border(uint8_t border)
  * Returns a format struct suitable for hashing as a lookup key. This is
  * mainly a memcpy with any pointer members set to NULL.
  */
-STATIC lxw_format *
-_get_format_key(lxw_format *self)
+STATIC lxlsx_format *
+_get_format_key(lxlsx_format *self)
 {
-    lxw_format *key = calloc(1, sizeof(lxw_format));
+    lxlsx_format *key = calloc(1, sizeof(lxlsx_format));
     GOTO_LABEL_ON_MEM_ERROR(key, mem_error);
 
-    memcpy(key, self, sizeof(lxw_format));
+    memcpy(key, self, sizeof(lxlsx_format));
 
     /* Set pointer members to NULL since they aren't part of the comparison. */
     key->xf_format_indices = NULL;
@@ -167,13 +167,13 @@ mem_error:
 /*
  * Returns a font struct suitable for hashing as a lookup key.
  */
-lxw_font *
-lxw_format_get_font_key(lxw_format *self)
+lxlsx_font *
+lxlsx_format_get_font_key(lxlsx_format *self)
 {
-    lxw_font *key = calloc(1, sizeof(lxw_font));
+    lxlsx_font *key = calloc(1, sizeof(lxlsx_font));
     GOTO_LABEL_ON_MEM_ERROR(key, mem_error);
 
-    LXW_FORMAT_FIELD_COPY(key->font_name, self->font_name);
+    LXLSX_FORMAT_FIELD_COPY(key->font_name, self->font_name);
     key->font_size = self->font_size;
     key->bold = self->bold;
     key->italic = self->italic;
@@ -198,10 +198,10 @@ mem_error:
 /*
  * Returns a border struct suitable for hashing as a lookup key.
  */
-lxw_border *
-lxw_format_get_border_key(lxw_format *self)
+lxlsx_border *
+lxlsx_format_get_border_key(lxlsx_format *self)
 {
-    lxw_border *key = calloc(1, sizeof(lxw_border));
+    lxlsx_border *key = calloc(1, sizeof(lxlsx_border));
     GOTO_LABEL_ON_MEM_ERROR(key, mem_error);
 
     key->bottom = self->bottom;
@@ -225,10 +225,10 @@ mem_error:
 /*
  * Returns a pattern fill struct suitable for hashing as a lookup key.
  */
-lxw_fill *
-lxw_format_get_fill_key(lxw_format *self)
+lxlsx_fill *
+lxlsx_format_get_fill_key(lxlsx_format *self)
 {
-    lxw_fill *key = calloc(1, sizeof(lxw_fill));
+    lxlsx_fill *key = calloc(1, sizeof(lxlsx_fill));
     GOTO_LABEL_ON_MEM_ERROR(key, mem_error);
 
     key->fg_color = self->fg_color;
@@ -245,12 +245,12 @@ mem_error:
  * Returns the XF index number used by Excel to identify a format.
  */
 int32_t
-lxw_format_get_xf_index(lxw_format *self)
+lxlsx_format_get_xf_index(lxlsx_format *self)
 {
-    lxw_format *format_key;
-    lxw_format *existing_format;
-    lxw_hash_element *hash_element;
-    lxw_hash_table *formats_hash_table = self->xf_format_indices;
+    lxlsx_format *lxlsx_format_key;
+    lxlsx_format *existing_format;
+    lxlsx_hash_element *hash_element;
+    lxlsx_hash_table *formats_hash_table = self->xf_format_indices;
     int32_t index;
 
     /* Note: The formats_hash_table/xf_format_indices contains the unique and
@@ -258,27 +258,27 @@ lxw_format_get_xf_index(lxw_format *self)
      */
 
     /* Format already has an index number so return it. */
-    if (self->xf_index != LXW_PROPERTY_UNSET) {
+    if (self->xf_index != LXLSX_PROPERTY_UNSET) {
         return self->xf_index;
     }
 
     /* Otherwise, the format doesn't have an index number so we assign one.
      * First generate a unique key to identify the format in the hash table.
      */
-    format_key = _get_format_key(self);
+    lxlsx_format_key = _get_format_key(self);
 
     /* Return the default format index if the key generation failed. */
-    if (!format_key)
+    if (!lxlsx_format_key)
         return 0;
 
     /* Look up the format in the hash table. */
     hash_element =
-        lxw_hash_key_exists(formats_hash_table, format_key,
-                            sizeof(lxw_format));
+        lxlsx_hash_key_exists(formats_hash_table, lxlsx_format_key,
+                            sizeof(lxlsx_format));
 
     if (hash_element) {
         /* Format matches existing format with an index. */
-        free(format_key);
+        free(lxlsx_format_key);
         existing_format = hash_element->value;
         return existing_format->xf_index;
     }
@@ -286,8 +286,8 @@ lxw_format_get_xf_index(lxw_format *self)
         /* New format requiring an index. */
         index = formats_hash_table->unique_count;
         self->xf_index = index;
-        lxw_insert_hash_element(formats_hash_table, format_key, self,
-                                sizeof(lxw_format));
+        lxlsx_insert_hash_element(formats_hash_table, lxlsx_format_key, self,
+                                sizeof(lxlsx_format));
         return index;
     }
 }
@@ -296,12 +296,12 @@ lxw_format_get_xf_index(lxw_format *self)
  * Returns the DXF index number used by Excel to identify a format.
  */
 int32_t
-lxw_format_get_dxf_index(lxw_format *self)
+lxlsx_format_get_dxf_index(lxlsx_format *self)
 {
-    lxw_format *format_key;
-    lxw_format *existing_format;
-    lxw_hash_element *hash_element;
-    lxw_hash_table *formats_hash_table = self->dxf_format_indices;
+    lxlsx_format *lxlsx_format_key;
+    lxlsx_format *existing_format;
+    lxlsx_hash_element *hash_element;
+    lxlsx_hash_table *formats_hash_table = self->dxf_format_indices;
     int32_t index;
 
     /* Note: The formats_hash_table/dxf_format_indices contains the unique and
@@ -309,27 +309,27 @@ lxw_format_get_dxf_index(lxw_format *self)
      */
 
     /* Format already has an index number so return it. */
-    if (self->dxf_index != LXW_PROPERTY_UNSET) {
+    if (self->dxf_index != LXLSX_PROPERTY_UNSET) {
         return self->dxf_index;
     }
 
     /* Otherwise, the format doesn't have an index number so we assign one.
      * First generate a unique key to identify the format in the hash table.
      */
-    format_key = _get_format_key(self);
+    lxlsx_format_key = _get_format_key(self);
 
     /* Return the default format index if the key generation failed. */
-    if (!format_key)
+    if (!lxlsx_format_key)
         return 0;
 
     /* Look up the format in the hash table. */
     hash_element =
-        lxw_hash_key_exists(formats_hash_table, format_key,
-                            sizeof(lxw_format));
+        lxlsx_hash_key_exists(formats_hash_table, lxlsx_format_key,
+                            sizeof(lxlsx_format));
 
     if (hash_element) {
         /* Format matches existing format with an index. */
-        free(format_key);
+        free(lxlsx_format_key);
         existing_format = hash_element->value;
         return existing_format->dxf_index;
     }
@@ -337,8 +337,8 @@ lxw_format_get_dxf_index(lxw_format *self)
         /* New format requiring an index. */
         index = formats_hash_table->unique_count;
         self->dxf_index = index;
-        lxw_insert_hash_element(formats_hash_table, format_key, self,
-                                sizeof(lxw_format));
+        lxlsx_insert_hash_element(formats_hash_table, lxlsx_format_key, self,
+                                sizeof(lxlsx_format));
         return index;
     }
 }
@@ -347,19 +347,19 @@ lxw_format_get_dxf_index(lxw_format *self)
  * Set the font_name property.
  */
 void
-format_set_font_name(lxw_format *self, const char *font_name)
+lxlsx_format_set_font_name(lxlsx_format *self, const char *font_name)
 {
-    LXW_FORMAT_FIELD_COPY(self->font_name, font_name);
+    LXLSX_FORMAT_FIELD_COPY(self->font_name, font_name);
 }
 
 /*
  * Set the font_size property.
  */
 void
-format_set_font_size(lxw_format *self, double size)
+lxlsx_format_set_font_size(lxlsx_format *self, double size)
 {
 
-    if (size >= LXW_MIN_FONT_SIZE && size <= LXW_MAX_FONT_SIZE)
+    if (size >= LXLSX_MIN_FONT_SIZE && size <= LXLSX_MAX_FONT_SIZE)
         self->font_size = size;
 }
 
@@ -367,7 +367,7 @@ format_set_font_size(lxw_format *self, double size)
  * Set the font_color property.
  */
 void
-format_set_font_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_font_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->font_color = color;
 }
@@ -376,9 +376,9 @@ format_set_font_color(lxw_format *self, lxw_color_t color)
  * Set the bold property.
  */
 void
-format_set_bold(lxw_format *self)
+lxlsx_format_set_bold(lxlsx_format *self)
 {
-    self->bold = LXW_TRUE;
+    self->bold = LXLSX_TRUE;
 }
 
 /*
@@ -386,19 +386,19 @@ format_set_bold(lxw_format *self)
  */
 
 void
-format_set_italic(lxw_format *self)
+lxlsx_format_set_italic(lxlsx_format *self)
 {
-    self->italic = LXW_TRUE;
+    self->italic = LXLSX_TRUE;
 }
 
 /*
  * Set the underline property.
  */
 void
-format_set_underline(lxw_format *self, uint8_t style)
+lxlsx_format_set_underline(lxlsx_format *self, uint8_t style)
 {
-    if (style >= LXW_UNDERLINE_SINGLE
-        && style <= LXW_UNDERLINE_DOUBLE_ACCOUNTING)
+    if (style >= LXLSX_UNDERLINE_SINGLE
+        && style <= LXLSX_UNDERLINE_DOUBLE_ACCOUNTING)
         self->underline = style;
 }
 
@@ -406,18 +406,18 @@ format_set_underline(lxw_format *self, uint8_t style)
  * Set the font_strikeout property.
  */
 void
-format_set_font_strikeout(lxw_format *self)
+lxlsx_format_set_font_strikeout(lxlsx_format *self)
 {
-    self->font_strikeout = LXW_TRUE;
+    self->font_strikeout = LXLSX_TRUE;
 }
 
 /*
  * Set the font_script property.
  */
 void
-format_set_font_script(lxw_format *self, uint8_t style)
+lxlsx_format_set_font_script(lxlsx_format *self, uint8_t style)
 {
-    if (style >= LXW_FONT_SUPERSCRIPT && style <= LXW_FONT_SUBSCRIPT)
+    if (style >= LXLSX_FONT_SUPERSCRIPT && style <= LXLSX_FONT_SUBSCRIPT)
         self->font_script = style;
 }
 
@@ -425,59 +425,59 @@ format_set_font_script(lxw_format *self, uint8_t style)
  * Set the font_outline property.
  */
 void
-format_set_font_outline(lxw_format *self)
+lxlsx_format_set_font_outline(lxlsx_format *self)
 {
-    self->font_outline = LXW_TRUE;
+    self->font_outline = LXLSX_TRUE;
 }
 
 /*
  * Set the font_shadow property.
  */
 void
-format_set_font_shadow(lxw_format *self)
+lxlsx_format_set_font_shadow(lxlsx_format *self)
 {
-    self->font_shadow = LXW_TRUE;
+    self->font_shadow = LXLSX_TRUE;
 }
 
 /*
  * Set the num_format property.
  */
 void
-format_set_num_format(lxw_format *self, const char *num_format)
+lxlsx_format_set_num_format(lxlsx_format *self, const char *num_format)
 {
-    LXW_FORMAT_FIELD_COPY(self->num_format, num_format);
+    LXLSX_FORMAT_FIELD_COPY(self->num_format, num_format);
 }
 
 /*
  * Set the unlocked property.
  */
 void
-format_set_unlocked(lxw_format *self)
+lxlsx_format_set_unlocked(lxlsx_format *self)
 {
-    self->locked = LXW_FALSE;
+    self->locked = LXLSX_FALSE;
 }
 
 /*
  * Set the hidden property.
  */
 void
-format_set_hidden(lxw_format *self)
+lxlsx_format_set_hidden(lxlsx_format *self)
 {
-    self->hidden = LXW_TRUE;
+    self->hidden = LXLSX_TRUE;
 }
 
 /*
  * Set the align property.
  */
 void
-format_set_align(lxw_format *self, uint8_t value)
+lxlsx_format_set_align(lxlsx_format *self, uint8_t value)
 {
-    if (value >= LXW_ALIGN_LEFT && value <= LXW_ALIGN_DISTRIBUTED) {
+    if (value >= LXLSX_ALIGN_LEFT && value <= LXLSX_ALIGN_DISTRIBUTED) {
         self->text_h_align = value;
     }
 
-    if (value >= LXW_ALIGN_VERTICAL_TOP
-        && value <= LXW_ALIGN_VERTICAL_DISTRIBUTED) {
+    if (value >= LXLSX_ALIGN_VERTICAL_TOP
+        && value <= LXLSX_ALIGN_VERTICAL_DISTRIBUTED) {
         self->text_v_align = value;
     }
 }
@@ -486,16 +486,16 @@ format_set_align(lxw_format *self, uint8_t value)
  * Set the text_wrap property.
  */
 void
-format_set_text_wrap(lxw_format *self)
+lxlsx_format_set_text_wrap(lxlsx_format *self)
 {
-    self->text_wrap = LXW_TRUE;
+    self->text_wrap = LXLSX_TRUE;
 }
 
 /*
  * Set the rotation property.
  */
 void
-format_set_rotation(lxw_format *self, int16_t angle)
+lxlsx_format_set_rotation(lxlsx_format *self, int16_t angle)
 {
     /* Convert user angle to Excel angle. */
     if (angle == 270) {
@@ -508,7 +508,7 @@ format_set_rotation(lxw_format *self, int16_t angle)
         self->rotation = angle;
     }
     else {
-        LXW_WARN("Rotation rotation outside range: -90 <= angle <= 90.");
+        LXLSX_WARN("Rotation rotation outside range: -90 <= angle <= 90.");
         self->rotation = 0;
     }
 }
@@ -517,7 +517,7 @@ format_set_rotation(lxw_format *self, int16_t angle)
  * Set the indent property.
  */
 void
-format_set_indent(lxw_format *self, uint8_t value)
+lxlsx_format_set_indent(lxlsx_format *self, uint8_t value)
 {
     self->indent = value;
 }
@@ -526,28 +526,28 @@ format_set_indent(lxw_format *self, uint8_t value)
  * Set the shrink property.
  */
 void
-format_set_shrink(lxw_format *self)
+lxlsx_format_set_shrink(lxlsx_format *self)
 {
-    self->shrink = LXW_TRUE;
+    self->shrink = LXLSX_TRUE;
 }
 
 /*
  * Set the text_justlast property.
  */
 void
-format_set_text_justlast(lxw_format *self)
+lxlsx_format_set_text_justlast(lxlsx_format *self)
 {
-    self->text_justlast = LXW_TRUE;
+    self->text_justlast = LXLSX_TRUE;
 }
 
 /*
  * Set the pattern property.
  */
 void
-format_set_pattern(lxw_format *self, uint8_t value)
+lxlsx_format_set_pattern(lxlsx_format *self, uint8_t value)
 {
-    if (value > LXW_PATTERN_GRAY_0625) {
-        LXW_WARN_FORMAT1("format_set_pattern(): invalid pattern value: %d",
+    if (value > LXLSX_PATTERN_GRAY_0625) {
+        LXLSX_WARN_FORMAT1("lxlsx_format_set_pattern(): invalid pattern value: %d",
                          value);
         return;
     }
@@ -559,7 +559,7 @@ format_set_pattern(lxw_format *self, uint8_t value)
  * Set the bg_color property.
  */
 void
-format_set_bg_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_bg_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->bg_color = color;
 }
@@ -568,7 +568,7 @@ format_set_bg_color(lxw_format *self, lxw_color_t color)
  * Set the fg_color property.
  */
 void
-format_set_fg_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_fg_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->fg_color = color;
 }
@@ -577,7 +577,7 @@ format_set_fg_color(lxw_format *self, lxw_color_t color)
  * Set the border property.
  */
 void
-format_set_border(lxw_format *self, uint8_t style)
+lxlsx_format_set_border(lxlsx_format *self, uint8_t style)
 {
     style = _check_border(style);
     self->bottom = style;
@@ -590,7 +590,7 @@ format_set_border(lxw_format *self, uint8_t style)
  * Set the border_color property.
  */
 void
-format_set_border_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_border_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->bottom_color = color;
     self->top_color = color;
@@ -602,7 +602,7 @@ format_set_border_color(lxw_format *self, lxw_color_t color)
  * Set the bottom property.
  */
 void
-format_set_bottom(lxw_format *self, uint8_t style)
+lxlsx_format_set_bottom(lxlsx_format *self, uint8_t style)
 {
     self->bottom = _check_border(style);
 }
@@ -611,7 +611,7 @@ format_set_bottom(lxw_format *self, uint8_t style)
  * Set the bottom_color property.
  */
 void
-format_set_bottom_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_bottom_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->bottom_color = color;
 }
@@ -620,7 +620,7 @@ format_set_bottom_color(lxw_format *self, lxw_color_t color)
  * Set the left property.
  */
 void
-format_set_left(lxw_format *self, uint8_t style)
+lxlsx_format_set_left(lxlsx_format *self, uint8_t style)
 {
     self->left = _check_border(style);
 }
@@ -629,7 +629,7 @@ format_set_left(lxw_format *self, uint8_t style)
  * Set the left_color property.
  */
 void
-format_set_left_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_left_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->left_color = color;
 }
@@ -638,7 +638,7 @@ format_set_left_color(lxw_format *self, lxw_color_t color)
  * Set the right property.
  */
 void
-format_set_right(lxw_format *self, uint8_t style)
+lxlsx_format_set_right(lxlsx_format *self, uint8_t style)
 {
     self->right = _check_border(style);
 }
@@ -647,7 +647,7 @@ format_set_right(lxw_format *self, uint8_t style)
  * Set the right_color property.
  */
 void
-format_set_right_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_right_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->right_color = color;
 }
@@ -656,7 +656,7 @@ format_set_right_color(lxw_format *self, lxw_color_t color)
  * Set the top property.
  */
 void
-format_set_top(lxw_format *self, uint8_t style)
+lxlsx_format_set_top(lxlsx_format *self, uint8_t style)
 {
     self->top = _check_border(style);
 }
@@ -665,7 +665,7 @@ format_set_top(lxw_format *self, uint8_t style)
  * Set the top_color property.
  */
 void
-format_set_top_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_top_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->top_color = color;
 }
@@ -674,9 +674,9 @@ format_set_top_color(lxw_format *self, lxw_color_t color)
  * Set the diag_type property.
  */
 void
-format_set_diag_type(lxw_format *self, uint8_t type)
+lxlsx_format_set_diag_type(lxlsx_format *self, uint8_t type)
 {
-    if (type >= LXW_DIAGONAL_BORDER_UP && type <= LXW_DIAGONAL_BORDER_UP_DOWN)
+    if (type >= LXLSX_DIAGONAL_BORDER_UP && type <= LXLSX_DIAGONAL_BORDER_UP_DOWN)
         self->diag_type = type;
 }
 
@@ -684,7 +684,7 @@ format_set_diag_type(lxw_format *self, uint8_t type)
  * Set the diag_color property.
  */
 void
-format_set_diag_color(lxw_format *self, lxw_color_t color)
+lxlsx_format_set_diag_color(lxlsx_format *self, lxlsx_color_t color)
 {
     self->diag_color = color;
 }
@@ -693,10 +693,10 @@ format_set_diag_color(lxw_format *self, lxw_color_t color)
  * Set the diag_border property.
  */
 void
-format_set_diag_border(lxw_format *self, uint8_t style)
+lxlsx_format_set_diag_border(lxlsx_format *self, uint8_t style)
 {
-    if (style > LXW_BORDER_SLANT_DASH_DOT) {
-        LXW_WARN_FORMAT1("format_set_diag_border(): invalid border style: %d",
+    if (style > LXLSX_BORDER_SLANT_DASH_DOT) {
+        LXLSX_WARN_FORMAT1("lxlsx_format_set_diag_border(): invalid border style: %d",
                          style);
         return;
     }
@@ -708,7 +708,7 @@ format_set_diag_border(lxw_format *self, uint8_t style)
  * Set the num_format_index property.
  */
 void
-format_set_num_format_index(lxw_format *self, uint8_t value)
+lxlsx_format_set_num_format_index(lxlsx_format *self, uint8_t value)
 {
     self->num_format_index = value;
 }
@@ -717,11 +717,11 @@ format_set_num_format_index(lxw_format *self, uint8_t value)
  * Set the valign property.
  */
 void
-format_set_valign(lxw_format *self, uint8_t value)
+lxlsx_format_set_valign(lxlsx_format *self, uint8_t value)
 {
-    if (value > LXW_ALIGN_VERTICAL_DISTRIBUTED) {
-        LXW_WARN_FORMAT1
-            ("format_set_valign(): invalid vertical alignment value: %d",
+    if (value > LXLSX_ALIGN_VERTICAL_DISTRIBUTED) {
+        LXLSX_WARN_FORMAT1
+            ("lxlsx_format_set_valign(): invalid vertical alignment value: %d",
              value);
         return;
     }
@@ -733,7 +733,7 @@ format_set_valign(lxw_format *self, uint8_t value)
  * Set the reading_order property.
  */
 void
-format_set_reading_order(lxw_format *self, uint8_t value)
+lxlsx_format_set_reading_order(lxlsx_format *self, uint8_t value)
 {
     self->reading_order = value;
 }
@@ -742,7 +742,7 @@ format_set_reading_order(lxw_format *self, uint8_t value)
  * Set the font_family property.
  */
 void
-format_set_font_family(lxw_format *self, uint8_t value)
+lxlsx_format_set_font_family(lxlsx_format *self, uint8_t value)
 {
     self->font_family = value;
 }
@@ -751,7 +751,7 @@ format_set_font_family(lxw_format *self, uint8_t value)
  * Set the font_charset property.
  */
 void
-format_set_font_charset(lxw_format *self, uint8_t value)
+lxlsx_format_set_font_charset(lxlsx_format *self, uint8_t value)
 {
     self->font_charset = value;
 }
@@ -760,34 +760,34 @@ format_set_font_charset(lxw_format *self, uint8_t value)
  * Set the font_scheme property.
  */
 void
-format_set_font_scheme(lxw_format *self, const char *font_scheme)
+lxlsx_format_set_font_scheme(lxlsx_format *self, const char *font_scheme)
 {
-    LXW_FORMAT_FIELD_COPY(self->font_scheme, font_scheme);
+    LXLSX_FORMAT_FIELD_COPY(self->font_scheme, font_scheme);
 }
 
 /*
  * Set the font_condense property.
  */
 void
-format_set_font_condense(lxw_format *self)
+lxlsx_format_set_font_condense(lxlsx_format *self)
 {
-    self->font_condense = LXW_TRUE;
+    self->font_condense = LXLSX_TRUE;
 }
 
 /*
  * Set the font_extend property.
  */
 void
-format_set_font_extend(lxw_format *self)
+lxlsx_format_set_font_extend(lxlsx_format *self)
 {
-    self->font_extend = LXW_TRUE;
+    self->font_extend = LXLSX_TRUE;
 }
 
 /*
  * Set the theme property.
  */
 void
-format_set_theme(lxw_format *self, uint8_t value)
+lxlsx_format_set_theme(lxlsx_format *self, uint8_t value)
 {
     self->theme = value;
 }
@@ -796,7 +796,7 @@ format_set_theme(lxw_format *self, uint8_t value)
  * Set the color_indexed property.
  */
 void
-format_set_color_indexed(lxw_format *self, uint8_t value)
+lxlsx_format_set_color_indexed(lxlsx_format *self, uint8_t value)
 {
     self->color_indexed = value;
 }
@@ -805,20 +805,20 @@ format_set_color_indexed(lxw_format *self, uint8_t value)
  * Set the font_only property.
  */
 void
-format_set_font_only(lxw_format *self)
+lxlsx_format_set_font_only(lxlsx_format *self)
 {
-    self->font_only = LXW_TRUE;
+    self->font_only = LXLSX_TRUE;
 }
 
 /*
  * Set the theme property.
  */
 void
-format_set_hyperlink(lxw_format *self)
+lxlsx_format_set_hyperlink(lxlsx_format *self)
 {
-    self->hyperlink = LXW_TRUE;
+    self->hyperlink = LXLSX_TRUE;
     self->xf_id = 1;
-    self->underline = LXW_UNDERLINE_SINGLE;
+    self->underline = LXLSX_UNDERLINE_SINGLE;
     self->theme = 10;
 }
 
@@ -826,7 +826,7 @@ format_set_hyperlink(lxw_format *self)
  * Set the quote_prefix property.
  */
 void
-format_set_quote_prefix(lxw_format *self)
+lxlsx_format_set_quote_prefix(lxlsx_format *self)
 {
-    self->quote_prefix = LXW_TRUE;
+    self->quote_prefix = LXLSX_TRUE;
 }

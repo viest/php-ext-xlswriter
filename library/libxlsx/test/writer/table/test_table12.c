@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/table.h"
 
 // Test assembling a complete Table file.
-CTEST(worksheet, worksheet_table12) {
+CTEST(worksheet, lxlsx_worksheet_table12) {
 
     char* got;
     char exp[] =
@@ -29,29 +29,29 @@ CTEST(worksheet, worksheet_table12) {
               "<tableStyleInfo name=\"TableStyleMedium1\" showFirstColumn=\"0\" showLastColumn=\"0\" showRowStripes=\"1\" showColumnStripes=\"0\"/>"
             "</table>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
-    FILE* testfile2 = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
+    FILE* testfile2 = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile2;
-    worksheet->sst = lxw_sst_new();
+    worksheet->sst = lxlsx_sst_new();
 
-    lxw_table *table = lxw_table_new();
+    lxlsx_table *table = lxlsx_table_new();
     table->file = testfile;
 
-    lxw_table_options options = {.style_type = LXW_TABLE_STYLE_TYPE_MEDIUM, .style_type_number = 1};
+    lxlsx_table_options options = {.style_type = LXLSX_TABLE_STYLE_TYPE_MEDIUM, .style_type_number = 1};
 
-    worksheet_add_table(worksheet, RANGE("C3:F13"), &options);
+    lxlsx_worksheet_add_table(worksheet, RANGE("C3:F13"), &options);
 
-    table->table_obj = STAILQ_FIRST(worksheet->table_objs);
-    table->table_obj->id = 1;
+    table->lxlsx_table_obj = STAILQ_FIRST(worksheet->lxlsx_table_objs);
+    table->lxlsx_table_obj->id = 1;
 
-    lxw_table_assemble_xml_file(table);
+    lxlsx_table_assemble_xml_file(table);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
-    lxw_table_free(table);
+    lxlsx_worksheet_free(worksheet);
+    lxlsx_table_free(table);
 }
 
 

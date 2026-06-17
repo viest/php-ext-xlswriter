@@ -12,9 +12,9 @@
 #include "../../../include/lxlsx/utility.h"
 
 // Test xl_rowcol_to_cell().
-CTEST(utility, lxw_rowcol_to_cell) {
+CTEST(utility, lxlsx_rowcol_to_cell) {
 
-    char got[LXW_MAX_CELL_NAME_LENGTH];
+    char got[LXLSX_MAX_CELL_NAME_LENGTH];
 
     TEST_ROWCOL_TO_CELL(0, 0, "A1");
     TEST_ROWCOL_TO_CELL(0, 1, "B1");
@@ -34,9 +34,9 @@ CTEST(utility, lxw_rowcol_to_cell) {
 }
 
 // Test xl_rowcol_to_cell_abs().
-CTEST(utility, lxw_rowcol_to_cell_abs) {
+CTEST(utility, lxlsx_rowcol_to_cell_abs) {
 
-    char got[LXW_MAX_CELL_NAME_LENGTH];
+    char got[LXLSX_MAX_CELL_NAME_LENGTH];
 
     TEST_ROWCOL_TO_CELL_ABS(0, 0, 0, 0, "A1");
     TEST_ROWCOL_TO_CELL_ABS(0, 1, 0, 0, "B1");

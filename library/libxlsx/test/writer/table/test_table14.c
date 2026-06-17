@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/table.h"
 
 // Test assembling a complete Table file.
-CTEST(worksheet, worksheet_table14) {
+CTEST(worksheet, lxlsx_worksheet_table14) {
 
     char* got;
     char exp[] =
@@ -33,41 +33,41 @@ CTEST(worksheet, worksheet_table14) {
               "<tableStyleInfo name=\"TableStyleMedium9\" showFirstColumn=\"0\" showLastColumn=\"0\" showRowStripes=\"1\" showColumnStripes=\"0\"/>"
             "</table>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
-    FILE* testfile2 = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
+    FILE* testfile2 = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile2;
-    worksheet->sst = lxw_sst_new();
+    worksheet->sst = lxlsx_sst_new();
 
-    lxw_table *table = lxw_table_new();
+    lxlsx_table *table = lxlsx_table_new();
     table->file = testfile;
 
     /* Set the table options. */
-    lxw_table_column col8_1 = {.header = "Product"};
-    lxw_table_column col8_2 = {.header = "Quarter 1"};
-    lxw_table_column col8_3 = {.header = "Quarter 2"};
-    lxw_table_column col8_4 = {.header = "Quarter 3"};
-    lxw_table_column col8_5 = {.header = "Quarter 4"};
-    lxw_table_column col8_6 = {.header = "Year",
+    lxlsx_table_column col8_1 = {.header = "Product"};
+    lxlsx_table_column col8_2 = {.header = "Quarter 1"};
+    lxlsx_table_column col8_3 = {.header = "Quarter 2"};
+    lxlsx_table_column col8_4 = {.header = "Quarter 3"};
+    lxlsx_table_column col8_5 = {.header = "Quarter 4"};
+    lxlsx_table_column col8_6 = {.header = "Year",
                                .formula = "=SUM(Table1[@[Quarter 1]:[Quarter 4]])"};
 
-    lxw_table_column *columns8[] = {&col8_1, &col8_2, &col8_3, &col8_4, &col8_5, &col8_6, NULL};
+    lxlsx_table_column *columns8[] = {&col8_1, &col8_2, &col8_3, &col8_4, &col8_5, &col8_6, NULL};
 
-    lxw_table_options options8 = {.columns = columns8};
+    lxlsx_table_options options8 = {.columns = columns8};
 
     /* Add a table to the worksheet. */
-    worksheet_add_table(worksheet, RANGE("B3:G7"), &options8);
+    lxlsx_worksheet_add_table(worksheet, RANGE("B3:G7"), &options8);
 
-    table->table_obj = STAILQ_FIRST(worksheet->table_objs);
-    table->table_obj->id = 1;
+    table->lxlsx_table_obj = STAILQ_FIRST(worksheet->lxlsx_table_objs);
+    table->lxlsx_table_obj->id = 1;
 
-    lxw_table_assemble_xml_file(table);
+    lxlsx_table_assemble_xml_file(table);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
-    lxw_table_free(table);
+    lxlsx_worksheet_free(worksheet);
+    lxlsx_table_free(table);
 }
 
 

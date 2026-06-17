@@ -27,15 +27,15 @@ CTEST(chartsheet, chartsheet) {
           "<drawing r:id=\"rId1\"/>"
         "</chartsheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_chartsheet *chartsheet = lxw_chartsheet_new(NULL);
+    lxlsx_chartsheet *chartsheet = lxlsx_chartsheet_new(NULL);
     chartsheet->file = testfile;
-    chartsheet->worksheet->drawing = lxw_drawing_new();
+    chartsheet->worksheet->drawing = lxlsx_drawing_new();
 
-    lxw_chartsheet_assemble_xml_file(chartsheet);
+    lxlsx_chartsheet_assemble_xml_file(chartsheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_chartsheet_free(chartsheet);
+    lxlsx_chartsheet_free(chartsheet);
 }

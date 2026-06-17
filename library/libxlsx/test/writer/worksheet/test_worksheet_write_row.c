@@ -16,16 +16,16 @@ CTEST(worksheet, write_row) {
 
     char* got;
     char exp[] = "<row r=\"1\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
 
-    lxw_row *row = _get_row_list(worksheet->table, 0);
+    lxlsx_row *row = _get_row_list(worksheet->table, 0);
 
     _write_row(worksheet, row, NULL);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

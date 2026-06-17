@@ -17,15 +17,15 @@ CTEST(styles, write_family) {
 
     char* got;
     char exp[] = "<family val=\"2\"/>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     styles->file = testfile;
 
     _write_font_family(styles, 2);
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

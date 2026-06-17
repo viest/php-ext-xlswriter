@@ -13,7 +13,7 @@
 #include "../../../include/lxlsx/shared_strings.h"
 
 // Test assembling a complete Worksheet file.
-CTEST(worksheet, worksheet_data_bar02) {
+CTEST(worksheet, lxlsx_worksheet_data_bar02) {
 
     char* got;
     char exp[] =
@@ -61,22 +61,22 @@ CTEST(worksheet, worksheet_data_bar02) {
               "</extLst>"
             "</worksheet>";
 
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_worksheet *worksheet = lxw_worksheet_new(NULL);
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
     worksheet->file = testfile;
-    worksheet_select(worksheet);
+    lxlsx_worksheet_select(worksheet);
 
-    lxw_conditional_format *conditional_format = calloc(1, sizeof(lxw_conditional_format));
+    lxlsx_conditional_format *conditional_format = calloc(1, sizeof(lxlsx_conditional_format));
 
-    conditional_format->type            = LXW_CONDITIONAL_DATA_BAR;
-    conditional_format->data_bar_2010   = LXW_TRUE;
-    worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
+    conditional_format->type            = LXLSX_CONDITIONAL_DATA_BAR;
+    conditional_format->data_bar_2010   = LXLSX_TRUE;
+    lxlsx_worksheet_conditional_format_cell(worksheet, CELL("A1"), conditional_format);
 
     free(conditional_format);
-    lxw_worksheet_assemble_xml_file(worksheet);
+    lxlsx_worksheet_assemble_xml_file(worksheet);
 
     RUN_XLSX_STREQ_SHORT(exp, got);
 
-    lxw_worksheet_free(worksheet);
+    lxlsx_worksheet_free(worksheet);
 }

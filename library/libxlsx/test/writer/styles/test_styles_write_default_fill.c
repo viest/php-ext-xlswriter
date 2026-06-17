@@ -16,15 +16,15 @@ CTEST(styles, write_default_fill) {
 
     char* got;
     char exp[] = "<fill><patternFill patternType=\"none\"/></fill>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
     styles->file = testfile;
 
     _write_default_fill(styles, "none");
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

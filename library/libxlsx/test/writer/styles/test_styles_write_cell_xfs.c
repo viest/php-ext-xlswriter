@@ -16,10 +16,10 @@ CTEST(styles, write_cell_xfs) {
 
     char* got;
     char exp[] = "<cellXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/></cellXfs>";
-    FILE* testfile = lxw_tmpfile(NULL);
+    FILE* testfile = lxlsx_tmpfile(NULL);
 
-    lxw_styles *styles = lxw_styles_new();
-    lxw_format *format = lxw_format_new();
+    lxlsx_styles *styles = lxlsx_styles_new();
+    lxlsx_format *format = lxlsx_format_new();
 
     STAILQ_INSERT_TAIL(styles->xf_formats, format, list_pointers);
 
@@ -31,6 +31,6 @@ CTEST(styles, write_cell_xfs) {
 
     RUN_XLSX_STREQ(exp, got);
 
-    lxw_styles_free(styles);
+    lxlsx_styles_free(styles);
 }
 

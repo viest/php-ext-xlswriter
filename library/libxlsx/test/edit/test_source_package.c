@@ -17,6 +17,8 @@ static const char *RAW_COPY_XLSX = "fixtures/edit_raw_copy.xlsx";
 static const char *DUP_ZIP = "fixtures/edit_duplicate.zip";
 static const char *DUP_NOOP_ZIP = "fixtures/edit_duplicate_noop.zip";
 
+#define ZIP_METHOD_DEFLATE 8
+
 static void assert_ok(lxlsx_error err)
 {
     TEST_ASSERT_EQUAL_INT(LXLSX_NO_ERROR, err);
@@ -197,6 +199,7 @@ static void test_replacement_preserves_untouched_raw_local_record(void)
     const char suffix[] = "\n<!-- edit replacement -->\n";
     unsigned char *replacement;
     lxlsx_source_package_replacement repl;
+    const lxlsx_source_package_entry_info *saved_sheet_info;
 
     write_source_workbook();
     remove(RAW_COPY_XLSX);
@@ -224,6 +227,11 @@ static void test_replacement_preserves_untouched_raw_local_record(void)
         source, RAW_COPY_XLSX, &repl, 1));
 
     assert_ok(lxlsx_source_package_open(RAW_COPY_XLSX, &saved));
+    saved_sheet_info = lxlsx_source_package_entry_info_at(saved,
+                                                          (size_t)sheet_index);
+    TEST_ASSERT_NOT_NULL(saved_sheet_info);
+    TEST_ASSERT_EQUAL_INT(ZIP_METHOD_DEFLATE,
+                          saved_sheet_info->compression_method);
     assert_ok(lxlsx_source_package_entry_raw_local_record(
         saved, (size_t)untouched_index, &saved_raw, &saved_raw_len));
     TEST_ASSERT_EQUAL_size_t(source_raw_len, saved_raw_len);

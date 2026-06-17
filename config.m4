@@ -34,6 +34,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libexpat/expat/lib/xmlrole.c \
     library/libexpat/expat/lib/xmltok.c \
     library/libxlsx/third_party/tmpfileplus/tmpfileplus.c \
+    library/libxlsx/third_party/dtoa/emyg_dtoa.c \
     library/libxlsx/src/app.c \
     library/libxlsx/src/chart.c \
     library/libxlsx/src/chartsheet.c \
@@ -131,9 +132,10 @@ if test "$PHP_XLSWRITER" != "no"; then
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libexpat/expat/lib])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/minizip])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/tmpfileplus])
+    PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/dtoa])
     PHP_ADD_BUILD_DIR([PHP_EXT_BUILDDIR/library/libxlsx/third_party/md5])
 
-    LIBOPT="$LIBOPT -DXML_POOR_ENTROPY"
+    LIBOPT="$LIBOPT -DXML_POOR_ENTROPY -DUSE_DTOA_LIBRARY"
 
     if test -z "$PHP_DEBUG"; then
         AC_ARG_ENABLE(debug, [--enable-debug compile with debugging system], [PHP_DEBUG=$enableval],[PHP_DEBUG=no])

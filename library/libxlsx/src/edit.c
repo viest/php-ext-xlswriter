@@ -12,11 +12,13 @@
 
 #include "libxlsx/edit.h"
 #include "libxlsx/source_package.h"
+#include "libxlsx/utility.h"
 #include "libxlsx/worksheet.h"
 #include "libxlsx/workbook.h"
 #include "libxlsx/xmlwriter.h"
 
 #include "xlsx_private.h"
+#include "xlsx_util.h"
 
 typedef enum {
     LXLSX_EDIT_CHANGE_NUMBER,
@@ -164,12 +166,7 @@ static int buf_appendf(lxlsx_edit_buf *buf, const char *fmt, ...)
 
 static char *dup_range(const char *start, size_t len)
 {
-    char *out = (char *)malloc(len + 1);
-    if (!out)
-        return NULL;
-    memcpy(out, start, len);
-    out[len] = 0;
-    return out;
+    return lxlsx_reader_strndup(start, len);
 }
 
 static int edit_buf_write_callback(void *userdata, const char *data, size_t len)
@@ -196,32 +193,16 @@ static int needs_xml_space_preserve(const char *str)
 
 static char *make_cell_ref(lxlsx_row_t row, lxlsx_col_t col)
 {
-    char col_name[16];
-    char ref[32];
-    unsigned int n = (unsigned int)col + 1;
-    int pos = 0;
-    char tmp[16];
-
-    do {
-        n--;
-        tmp[pos++] = (char)('A' + (n % 26));
-        n /= 26;
-    } while (n > 0 && pos < (int)sizeof(tmp));
-
-    n = 0;
-    while (pos > 0)
-        col_name[n++] = tmp[--pos];
-    col_name[n] = 0;
-
-    snprintf(ref, sizeof(ref), "%s%u", col_name, (unsigned int)row + 1);
-    return strdup(ref);
+    char ref[LXLSX_MAX_CELL_NAME_LENGTH];
+    lxlsx_rowcol_to_cell(ref, row, col);
+    return lxlsx_reader_strdup(ref);
 }
 
 static char *make_row_ref(lxlsx_row_t row)
 {
     char ref[32];
     snprintf(ref, sizeof(ref), "%u", (unsigned int)row + 1);
-    return strdup(ref);
+    return lxlsx_reader_strdup(ref);
 }
 
 static int parse_row_ref(const char *ref, lxlsx_row_t *out_row)

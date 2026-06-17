@@ -170,9 +170,19 @@ lxlsx_xml_rich_si_element(FILE *xmlfile, const char *string)
 STATIC char *
 _escape_attributes(struct lxlsx_xml_attribute *attribute)
 {
-    char *encoded = (char *) calloc(LXLSX_MAX_ENCODED_ATTRIBUTE_LENGTH, 1);
-    char *p_encoded = encoded;
+    size_t attr_len = strlen(attribute->value);
+    char *encoded;
+    char *p_encoded;
     char *p_attr = attribute->value;
+
+    if (attr_len > ((size_t)-1) / 6 - 1)
+        return NULL;
+
+    encoded = (char *) calloc(attr_len * 6 + 1, 1);
+    if (!encoded)
+        return NULL;
+
+    p_encoded = encoded;
 
     while (*p_attr) {
         switch (*p_attr) {

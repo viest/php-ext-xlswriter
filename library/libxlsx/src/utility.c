@@ -21,6 +21,8 @@
 #include "libxlsx/common.h"
 #include "libxlsx/third_party/tmpfileplus.h"
 
+#define LXLSX_TMPFILE_BUFFER_SIZE (64 * 1024)
+
 #ifdef USE_DTOA_LIBRARY
 #include "libxlsx/third_party/emyg_dtoa.h"
 #endif
@@ -679,6 +681,9 @@ FILE *
 lxlsx_get_filehandle(char **buf, size_t *size, const char *tmpdir)
 {
     static size_t s;
+#ifndef USE_FMEMOPEN
+    FILE *file;
+#endif
     if (!size)
         size = &s;
     *buf = NULL;
@@ -687,7 +692,10 @@ lxlsx_get_filehandle(char **buf, size_t *size, const char *tmpdir)
     (void) tmpdir;
     return open_memstream(buf, size);
 #else
-    return lxlsx_tmpfile(tmpdir);
+    file = lxlsx_tmpfile(tmpdir);
+    if (file)
+        (void)setvbuf(file, NULL, _IOFBF, LXLSX_TMPFILE_BUFFER_SIZE);
+    return file;
 #endif
 }
 

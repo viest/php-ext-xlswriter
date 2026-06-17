@@ -30,6 +30,7 @@ MINIZIP_SRCS := \
 	../third_party/minizip/zip.c
 TMPFILEPLUS_SRCS := ../third_party/tmpfileplus/tmpfileplus.c
 MD5_SRCS := ../third_party/md5/md5.c
+DTOA_SRCS := ../third_party/dtoa/emyg_dtoa.c
 EXPAT_SRCS := \
 	$(EXPAT_DIR)/loadlibrary.c \
 	$(EXPAT_DIR)/xmlparse.c \
@@ -40,8 +41,14 @@ LIBXLSX_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/libxlsx/%.o,$(LIBXLSX_SRCS)
 MINIZIP_OBJS := $(patsubst ../third_party/minizip/%.c,$(OBJ_DIR)/minizip/%.o,$(MINIZIP_SRCS))
 TMPFILEPLUS_OBJS := $(patsubst ../third_party/tmpfileplus/%.c,$(OBJ_DIR)/tmpfileplus/%.o,$(TMPFILEPLUS_SRCS))
 MD5_OBJS := $(patsubst ../third_party/md5/%.c,$(OBJ_DIR)/md5/%.o,$(MD5_SRCS))
+DTOA_OBJS :=
 EXPAT_OBJS := $(patsubst $(EXPAT_DIR)/%.c,$(OBJ_DIR)/expat/%.o,$(EXPAT_SRCS))
+ifdef USE_DTOA_LIBRARY
+CFLAGS += -DUSE_DTOA_LIBRARY
+DTOA_OBJS := $(patsubst ../third_party/dtoa/%.c,$(OBJ_DIR)/dtoa/%.o,$(DTOA_SRCS))
+endif
 LIB_OBJS := $(LIBXLSX_OBJS) $(MINIZIP_OBJS) $(TMPFILEPLUS_OBJS) $(MD5_OBJS) $(EXPAT_OBJS)
+LIB_OBJS += $(DTOA_OBJS)
 
 WRITER_TEST_DIR := writer
 WRITER_TEST_BIN := $(WRITER_TEST_DIR)/test_all
@@ -108,7 +115,7 @@ reader-fixtures: $(READER_FIXTURES)
 $(LIB_TEST): $(LIB_OBJS)
 	$(Q)$(AR) $(ARFLAGS) $@ $^
 
-$(OBJ_DIR)/libxlsx $(OBJ_DIR)/minizip $(OBJ_DIR)/tmpfileplus $(OBJ_DIR)/md5 $(OBJ_DIR)/expat:
+$(OBJ_DIR)/libxlsx $(OBJ_DIR)/minizip $(OBJ_DIR)/tmpfileplus $(OBJ_DIR)/md5 $(OBJ_DIR)/dtoa $(OBJ_DIR)/expat:
 	$(Q)mkdir -p $@
 
 $(OBJ_DIR)/libxlsx/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)/libxlsx
@@ -121,6 +128,9 @@ $(OBJ_DIR)/tmpfileplus/%.o: ../third_party/tmpfileplus/%.c | $(OBJ_DIR)/tmpfilep
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/md5/%.o: ../third_party/md5/%.c | $(OBJ_DIR)/md5
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/dtoa/%.o: ../third_party/dtoa/%.c | $(OBJ_DIR)/dtoa
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/expat/%.o: $(EXPAT_DIR)/%.c | $(OBJ_DIR)/expat

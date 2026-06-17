@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "sst.h"
+#include "xlsx_util.h"
 #include "xml_pump.h"
 
 /* Per-SI run accumulator — populated while scanning <r>...</r>. */
@@ -147,7 +148,9 @@ static int commit_string(lxlsx_reader_sst *s)
         s->strings  = ns;
         s->capacity = new_cap;
     }
-    str = s->cur_buf ? strdup(s->cur_buf) : strdup("");
+    str = s->cur_buf
+        ? lxlsx_reader_strndup(s->cur_buf, s->cur_len)
+        : lxlsx_reader_strndup("", 0);
     if (!str) return -1;
 
     /* Migrate any collected runs into the parallel runs[] table. */

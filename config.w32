@@ -12,7 +12,7 @@ if (PHP_XLSWRITER != "no") {
     if (has_headers) {
         EXTENSION("xlswriter", "xlswriter.c")
 
-        ADD_FLAG("CFLAGS_XLSWRITER", ' /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /D NOCRYPT /D NOUNCRYPT /D XML_POOR_ENTROPY /I "' + configure_module_dirname + '" /I "' + configure_module_dirname + '\\library\\libxlsx\\internal" /I "' + configure_module_dirname + '\\library\\libxlsx\\third_party\\minizip" /I "' + configure_module_dirname + '\\library\\libexpat\\expat\\lib" ');
+        ADD_FLAG("CFLAGS_XLSWRITER", ' /D USE_SYSTEM_MINIZIP /D USE_MINIZIP /D NOCRYPT /D NOUNCRYPT /D XML_POOR_ENTROPY /D USE_DTOA_LIBRARY /I "' + configure_module_dirname + '" /I "' + configure_module_dirname + '\\library\\libxlsx\\internal" /I "' + configure_module_dirname + '\\library\\libxlsx\\third_party\\minizip" /I "' + configure_module_dirname + '\\library\\libexpat\\expat\\lib" ');
 
         ADD_SOURCES(configure_module_dirname + "\\kernel", "\
                 chart.c \
@@ -42,6 +42,10 @@ if (PHP_XLSWRITER != "no") {
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsx\\third_party\\tmpfileplus", "\
                 tmpfileplus.c \
+                ", "xlswriter", "libxlsx");
+
+        ADD_SOURCES(configure_module_dirname + "\\library\\libxlsx\\third_party\\dtoa", "\
+                emyg_dtoa.c \
                 ", "xlswriter", "libxlsx");
 
         ADD_SOURCES(configure_module_dirname + "\\library\\libxlsx\\third_party\\md5", "\

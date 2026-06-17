@@ -8836,6 +8836,7 @@ mem_error:
     lxlsx_styles_free(styles);
     lxlsx_format_free(default_format);
     fclose(tmpfile);
+    free((void *) rich_string);
 
     return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 }

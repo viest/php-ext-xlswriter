@@ -210,6 +210,35 @@ lxlsx_content_types_assemble_xml_file(lxlsx_content_types *self)
     lxlsx_xml_end_tag(self->file, "Types");
 }
 
+static void
+_ct_add(struct lxlsx_tuples *items, const char *key, const char *value)
+{
+    lxlsx_tuple *tuple;
+
+    if (!items || !key || !value)
+        return;
+
+    tuple = calloc(1, sizeof(lxlsx_tuple));
+    GOTO_LABEL_ON_MEM_ERROR(tuple, mem_error);
+
+    tuple->key = lxlsx_strdup(key);
+    GOTO_LABEL_ON_MEM_ERROR(tuple->key, mem_error);
+
+    tuple->value = lxlsx_strdup(value);
+    GOTO_LABEL_ON_MEM_ERROR(tuple->value, mem_error);
+
+    STAILQ_INSERT_TAIL(items, tuple, list_pointers);
+
+    return;
+
+mem_error:
+    if (tuple) {
+        free(tuple->key);
+        free(tuple->value);
+        free(tuple);
+    }
+}
+
 /*****************************************************************************
  *
  * Public functions.
@@ -222,30 +251,9 @@ void
 lxlsx_ct_add_default(lxlsx_content_types *self, const char *key,
                    const char *value)
 {
-    lxlsx_tuple *tuple;
-
-    if (!key || !value)
+    if (!self)
         return;
-
-    tuple = calloc(1, sizeof(lxlsx_tuple));
-    GOTO_LABEL_ON_MEM_ERROR(tuple, mem_error);
-
-    tuple->key = lxlsx_strdup(key);
-    GOTO_LABEL_ON_MEM_ERROR(tuple->key, mem_error);
-
-    tuple->value = lxlsx_strdup(value);
-    GOTO_LABEL_ON_MEM_ERROR(tuple->value, mem_error);
-
-    STAILQ_INSERT_TAIL(self->default_types, tuple, list_pointers);
-
-    return;
-
-mem_error:
-    if (tuple) {
-        free(tuple->key);
-        free(tuple->value);
-        free(tuple);
-    }
+    _ct_add(self->default_types, key, value);
 }
 
 /*
@@ -255,30 +263,9 @@ void
 lxlsx_ct_add_override(lxlsx_content_types *self, const char *key,
                     const char *value)
 {
-    lxlsx_tuple *tuple;
-
-    if (!key || !value)
+    if (!self)
         return;
-
-    tuple = calloc(1, sizeof(lxlsx_tuple));
-    GOTO_LABEL_ON_MEM_ERROR(tuple, mem_error);
-
-    tuple->key = lxlsx_strdup(key);
-    GOTO_LABEL_ON_MEM_ERROR(tuple->key, mem_error);
-
-    tuple->value = lxlsx_strdup(value);
-    GOTO_LABEL_ON_MEM_ERROR(tuple->value, mem_error);
-
-    STAILQ_INSERT_TAIL(self->overrides, tuple, list_pointers);
-
-    return;
-
-mem_error:
-    if (tuple) {
-        free(tuple->key);
-        free(tuple->value);
-        free(tuple);
-    }
+    _ct_add(self->overrides, key, value);
 }
 
 /*

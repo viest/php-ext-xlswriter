@@ -23,15 +23,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "utility.h"
 
 #define LXLSX_MAX_ATTRIBUTE_LENGTH 2080   /* Max URL length. */
 #define LXLSX_ATTR_32              32
 
-#define LXLSX_ATTRIBUTE_COPY(dst, src)                    \
-    do{                                                 \
-        strncpy(dst, src, LXLSX_MAX_ATTRIBUTE_LENGTH -1); \
-        dst[LXLSX_MAX_ATTRIBUTE_LENGTH - 1] = '\0';       \
+#define LXLSX_ATTRIBUTE_COPY(dst, src)                         \
+    do{                                                        \
+        size_t lxlsx_attr_len_ = strlen(src);                  \
+        if (lxlsx_attr_len_ >= LXLSX_MAX_ATTRIBUTE_LENGTH)     \
+            lxlsx_attr_len_ = LXLSX_MAX_ATTRIBUTE_LENGTH - 1;  \
+        memcpy(dst, src, lxlsx_attr_len_);                     \
+        dst[lxlsx_attr_len_] = '\0';                           \
     } while (0)
 
 #define LXLSX_DEFINE_XML_DECLARATION(fn_name, type_name) \

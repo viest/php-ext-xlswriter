@@ -21,6 +21,11 @@
 #define ZIP_METHOD_STORE     0
 #define ZIP_METHOD_DEFLATE   8
 
+/* Editing needs raw local-file-record offsets so untouched ZIP members can be
+ * copied byte-for-byte, including their original extra fields and optional data
+ * descriptors. That is why this module keeps a small central-directory parser
+ * instead of using the reader minizip wrapper. */
+
 typedef struct {
     lxlsx_source_package_entry_info info;
 
@@ -43,6 +48,11 @@ typedef struct {
     size_t local_record_size;
     size_t data_offset;
 } lxlsx_source_entry;
+
+typedef struct {
+    size_t local_offset;
+    size_t entry_index;
+} lxlsx_source_local_order;
 
 struct lxlsx_source_package {
     unsigned char *data;
@@ -133,6 +143,20 @@ static lxlsx_error current_offset(FILE *fp, uint32_t *out)
     return LXLSX_NO_ERROR;
 }
 
+static int local_order_cmp(const void *a, const void *b)
+{
+    const lxlsx_source_local_order *left =
+        (const lxlsx_source_local_order *)a;
+    const lxlsx_source_local_order *right =
+        (const lxlsx_source_local_order *)b;
+
+    if (left->local_offset < right->local_offset)
+        return -1;
+    if (left->local_offset > right->local_offset)
+        return 1;
+    return 0;
+}
+
 static void free_entries(lxlsx_source_package *package)
 {
     size_t i;
@@ -173,43 +197,62 @@ static lxlsx_error find_eocd(const unsigned char *data, size_t len, size_t *out)
 
 static lxlsx_error parse_local_headers(lxlsx_source_package *package)
 {
+    lxlsx_source_local_order *order;
     size_t i;
-    size_t j;
+
+    if (package->entry_count == 0)
+        return LXLSX_NO_ERROR;
+
+    order = (lxlsx_source_local_order *)calloc(package->entry_count,
+                                              sizeof(*order));
+    if (!order)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
     for (i = 0; i < package->entry_count; i++) {
-        lxlsx_source_entry *e = &package->entries[i];
+        order[i].local_offset = package->entries[i].local_offset;
+        order[i].entry_index = i;
+    }
+
+    qsort(order, package->entry_count, sizeof(*order), local_order_cmp);
+
+    for (i = 0; i < package->entry_count; i++) {
+        lxlsx_source_entry *e = &package->entries[order[i].entry_index];
         size_t local_offset = e->local_offset;
         size_t name_len;
         size_t extra_len;
         size_t data_offset;
-        size_t next_offset = package->central_offset;
+        size_t next_offset = i + 1 < package->entry_count
+            ? order[i + 1].local_offset
+            : package->central_offset;
 
         if (local_offset + 30 > package->size)
-            return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
+            goto bad_zip;
+        if (next_offset <= local_offset || next_offset > package->central_offset)
+            goto bad_zip;
         if (read_le32(package->data + local_offset) != ZIP_LOCAL_FILE_SIG)
-            return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
+            goto bad_zip;
 
         name_len = read_le16(package->data + local_offset + 26);
         extra_len = read_le16(package->data + local_offset + 28);
         data_offset = local_offset + 30 + name_len + extra_len;
         if (data_offset > package->size)
-            return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
+            goto bad_zip;
         if (data_offset + (size_t)e->info.compressed_size > package->size)
-            return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
+            goto bad_zip;
 
-        for (j = 0; j < package->entry_count; j++) {
-            size_t candidate = package->entries[j].local_offset;
-            if (candidate > local_offset && candidate < next_offset)
-                next_offset = candidate;
-        }
         if (next_offset < data_offset + (size_t)e->info.compressed_size)
-            return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
+            goto bad_zip;
 
         e->data_offset = data_offset;
         e->local_record_size = next_offset - local_offset;
     }
 
+    free(order);
     return LXLSX_NO_ERROR;
+
+bad_zip:
+    free(order);
+    return LXLSX_ERROR_ZIP_BAD_ZIP_FILE;
 }
 
 static lxlsx_error parse_central_directory(lxlsx_source_package *package)
@@ -624,20 +667,79 @@ static const lxlsx_source_package_replacement *find_replacement(
     return found;
 }
 
+static lxlsx_error deflate_raw_data(const unsigned char *data,
+                                    size_t size,
+                                    unsigned char **out,
+                                    size_t *out_size)
+{
+    z_stream zs;
+    unsigned char *compressed;
+    uLong bound;
+    int zrc;
+
+    *out = NULL;
+    *out_size = 0;
+
+    if (size > UINT_MAX)
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
+    bound = compressBound((uLong)size);
+    if (bound > UINT_MAX)
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
+    compressed = (unsigned char *)malloc((size_t)bound ? (size_t)bound : 1);
+    if (!compressed)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    memset(&zs, 0, sizeof(zs));
+    zrc = deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                       -MAX_WBITS, 8, Z_DEFAULT_STRATEGY);
+    if (zrc != Z_OK) {
+        free(compressed);
+        return LXLSX_ERROR_ZIP_FILE_OPERATION;
+    }
+
+    zs.next_in = (Bytef *)data;
+    zs.avail_in = (uInt)size;
+    zs.next_out = compressed;
+    zs.avail_out = (uInt)bound;
+
+    zrc = deflate(&zs, Z_FINISH);
+    if (zrc != Z_STREAM_END) {
+        deflateEnd(&zs);
+        free(compressed);
+        return LXLSX_ERROR_ZIP_FILE_OPERATION;
+    }
+
+    *out_size = (size_t)zs.total_out;
+    deflateEnd(&zs);
+    *out = compressed;
+    return LXLSX_NO_ERROR;
+}
+
 static lxlsx_error write_replacement_local(
     FILE *fp,
     const lxlsx_source_entry *entry,
     const lxlsx_source_package_replacement *replacement,
     uint32_t *new_offset,
-    uint32_t *crc_out)
+    uint32_t *crc_out,
+    uint16_t *method_out,
+    uint16_t *version_needed_out,
+    uint32_t *compressed_size_out,
+    uint32_t *uncompressed_size_out)
 {
+    const unsigned char *payload = replacement->data;
+    unsigned char *compressed = NULL;
+    size_t payload_size = replacement->size;
     uint32_t offset;
     uint32_t crc;
+    uint16_t method;
+    uint16_t version_needed;
     lxlsx_error err;
 
     if (!replacement->data && replacement->size != 0)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
-    if (replacement->size > 0xffffffffUL)
+    if (replacement->size > UINT_MAX)
         return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
 
     err = current_offset(fp, &offset);
@@ -649,44 +751,70 @@ static lxlsx_error write_replacement_local(
     crc = crc32(crc, replacement->data, (uInt)replacement->size);
     *crc_out = crc;
 
-    if ((err = write_le32(fp, ZIP_LOCAL_FILE_SIG)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, 20)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, ZIP_METHOD_STORE)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, entry->mod_time)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, entry->mod_date)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le32(fp, crc)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le32(fp, (uint32_t)replacement->size)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le32(fp, (uint32_t)replacement->size)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, (uint16_t)entry->info.name_len)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_all(fp, entry->info.name, entry->info.name_len)) != LXLSX_NO_ERROR) return err;
-    return write_all(fp, replacement->data, replacement->size);
+    method = entry->info.compression_method;
+    version_needed = entry->version_needed > 20 ? entry->version_needed : 20;
+    if (method == ZIP_METHOD_DEFLATE) {
+        err = deflate_raw_data(replacement->data, replacement->size,
+                               &compressed, &payload_size);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+        payload = compressed;
+    } else if (method != ZIP_METHOD_STORE) {
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+    }
+
+    if (payload_size > UINT_MAX) {
+        free(compressed);
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+    }
+
+    *method_out = method;
+    *version_needed_out = version_needed;
+    *compressed_size_out = (uint32_t)payload_size;
+    *uncompressed_size_out = (uint32_t)replacement->size;
+
+    if ((err = write_le32(fp, ZIP_LOCAL_FILE_SIG)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, version_needed)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, method)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, entry->mod_time)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, entry->mod_date)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le32(fp, crc)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le32(fp, (uint32_t)payload_size)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le32(fp, (uint32_t)replacement->size)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, (uint16_t)entry->info.name_len)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_all(fp, entry->info.name, entry->info.name_len)) != LXLSX_NO_ERROR) goto done;
+    err = write_all(fp, payload, payload_size);
+
+done:
+    free(compressed);
+    return err;
 }
 
 static lxlsx_error write_replacement_central(
     FILE *fp,
     const lxlsx_source_package *package,
     const lxlsx_source_entry *entry,
-    const lxlsx_source_package_replacement *replacement,
     uint32_t new_offset,
-    uint32_t crc)
+    uint32_t crc,
+    uint16_t method,
+    uint16_t version_needed,
+    uint32_t compressed_size,
+    uint32_t uncompressed_size)
 {
     lxlsx_error err;
 
-    if (replacement->size > 0xffffffffUL)
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
-
     if ((err = write_le32(fp, ZIP_CENTRAL_FILE_SIG)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, entry->version_made_by)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, 20)) != LXLSX_NO_ERROR) return err;
+    if ((err = write_le16(fp, version_needed)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le16(fp, ZIP_METHOD_STORE)) != LXLSX_NO_ERROR) return err;
+    if ((err = write_le16(fp, method)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, entry->mod_time)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, entry->mod_date)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le32(fp, crc)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le32(fp, (uint32_t)replacement->size)) != LXLSX_NO_ERROR) return err;
-    if ((err = write_le32(fp, (uint32_t)replacement->size)) != LXLSX_NO_ERROR) return err;
+    if ((err = write_le32(fp, compressed_size)) != LXLSX_NO_ERROR) return err;
+    if ((err = write_le32(fp, uncompressed_size)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, (uint16_t)entry->info.name_len)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, (uint16_t)entry->central_comment_len)) != LXLSX_NO_ERROR) return err;
@@ -728,6 +856,10 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
     FILE *fp;
     uint32_t *new_offsets;
     uint32_t *new_crcs;
+    uint16_t *new_methods;
+    uint16_t *new_versions;
+    uint32_t *new_compressed_sizes;
+    uint32_t *new_uncompressed_sizes;
     uint32_t central_offset;
     uint32_t central_size;
     uint32_t end_offset;
@@ -741,9 +873,20 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
 
     new_offsets = (uint32_t *)calloc(package->entry_count, sizeof(*new_offsets));
     new_crcs = (uint32_t *)calloc(package->entry_count, sizeof(*new_crcs));
-    if (!new_offsets || !new_crcs) {
+    new_methods = (uint16_t *)calloc(package->entry_count, sizeof(*new_methods));
+    new_versions = (uint16_t *)calloc(package->entry_count, sizeof(*new_versions));
+    new_compressed_sizes = (uint32_t *)calloc(package->entry_count,
+                                             sizeof(*new_compressed_sizes));
+    new_uncompressed_sizes = (uint32_t *)calloc(package->entry_count,
+                                               sizeof(*new_uncompressed_sizes));
+    if (!new_offsets || !new_crcs || !new_methods || !new_versions ||
+        !new_compressed_sizes || !new_uncompressed_sizes) {
         free(new_offsets);
         free(new_crcs);
+        free(new_methods);
+        free(new_versions);
+        free(new_compressed_sizes);
+        free(new_uncompressed_sizes);
         return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
     }
 
@@ -751,6 +894,10 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
     if (!fp) {
         free(new_offsets);
         free(new_crcs);
+        free(new_methods);
+        free(new_versions);
+        free(new_compressed_sizes);
+        free(new_uncompressed_sizes);
         return LXLSX_ERROR_CREATING_XLSX_FILE;
     }
 
@@ -761,7 +908,10 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
 
         if (replacement) {
             err = write_replacement_local(fp, entry, replacement,
-                                          &new_offsets[i], &new_crcs[i]);
+                                          &new_offsets[i], &new_crcs[i],
+                                          &new_methods[i], &new_versions[i],
+                                          &new_compressed_sizes[i],
+                                          &new_uncompressed_sizes[i]);
         } else {
             err = current_offset(fp, &new_offsets[i]);
             if (err == LXLSX_NO_ERROR) {
@@ -780,8 +930,11 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
         const lxlsx_source_package_replacement *replacement =
             find_replacement(replacements, replacement_count, i);
         if (replacement) {
-            err = write_replacement_central(fp, package, entry, replacement,
-                                            new_offsets[i], new_crcs[i]);
+            err = write_replacement_central(fp, package, entry,
+                                            new_offsets[i], new_crcs[i],
+                                            new_methods[i], new_versions[i],
+                                            new_compressed_sizes[i],
+                                            new_uncompressed_sizes[i]);
         } else {
             err = write_preserved_central(fp, package, entry, new_offsets[i]);
         }
@@ -808,6 +961,10 @@ done:
         err = LXLSX_ERROR_ZIP_FILE_OPERATION;
     free(new_offsets);
     free(new_crcs);
+    free(new_methods);
+    free(new_versions);
+    free(new_compressed_sizes);
+    free(new_uncompressed_sizes);
     if (err != LXLSX_NO_ERROR)
         remove(path);
     return err;

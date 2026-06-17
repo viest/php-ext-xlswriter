@@ -1,0 +1,65 @@
+###############################################################################
+#
+# Makefile for libxlsxwriter library.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright 2014-2026, John McNamara, jmcnamara@cpan.org.
+#
+
+# Keep the output quiet by default.
+Q=@
+ifdef V
+Q=
+endif
+
+# Directory variables.
+INC_DIR        = ../../../include
+LIB_DIR        = ../../../src
+
+# Flags passed to the C compiler.
+CFLAGS += -DTESTING -DCOLOR_OK -g -Wall -Wextra -Wno-unused-parameter $(GCOV)
+
+# Make targets and objects.
+SRCS  = $(wildcard test*.c)
+TESTS = $(patsubst %.c,%,$(SRCS))
+OBJS  = $(patsubst %.c,%.o,$(SRCS))
+
+# Libs to link.
+LIBS_A = $(LIB_DIR)/libxlsxwriter_test.a
+LIBS_O = -lz
+ifdef USE_SYSTEM_MINIZIP
+LIBS_O += -lminizip
+CFLAGS += -DUSE_SYSTEM_MINIZIP
+endif
+
+# Link libcrypto if needed.
+ifdef USE_OPENSSL_MD5
+LIBS_O += -lcrypto
+endif
+
+# Use a third party double number formatting function.
+ifdef USE_DTOA_LIBRARY
+CFLAGS += -DUSE_DTOA_LIBRARY
+endif
+
+# Make all the individual tests.
+all : $(TESTS)
+
+# Clean all the things!
+clean :
+	$(Q)rm -f $(TESTS) test_all *.o *.gcno *.gcda
+
+# Build the testscases.
+%.o: %.c
+	$(Q)$(CC) -I$(INC_DIR) $(CFLAGS) -c $<
+
+test_%: main.o test_%.o $(LIBS_A)
+	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS_O)
+
+# Link all the tests into one test executable.
+test_all : main.o $(OBJS) $(LIBS_A)
+	$(Q)$(CC) $(CFLAGS) -o $@ $^ $(LIBS_O)
+
+# Run the tests.
+test : all test_all
+	$(Q)./test_all

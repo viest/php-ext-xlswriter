@@ -31,6 +31,7 @@ MINIZIP_SRCS := \
 TMPFILEPLUS_SRCS := ../third_party/tmpfileplus/tmpfileplus.c
 MD5_SRCS := ../third_party/md5/md5.c
 EXPAT_SRCS := \
+	$(EXPAT_DIR)/loadlibrary.c \
 	$(EXPAT_DIR)/xmlparse.c \
 	$(EXPAT_DIR)/xmlrole.c \
 	$(EXPAT_DIR)/xmltok.c

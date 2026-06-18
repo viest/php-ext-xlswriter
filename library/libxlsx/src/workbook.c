@@ -899,11 +899,12 @@ _populate_range_data_cache(lxlsx_workbook *self, lxlsx_series_range *range)
 
             if (cell_obj) {
                 if (cell_obj->type == NUMBER_CELL) {
-                    data_point->number = cell_obj->u.number;
+                    data_point->number = cell_obj->data.writer.value.number;
                 }
 
                 if (cell_obj->type == STRING_CELL) {
-                    data_point->string = lxlsx_strdup(cell_obj->lxlsx_sst_string);
+                    data_point->string = lxlsx_strdup(
+                        cell_obj->data.writer.value.shared_string.string);
                     data_point->is_string = LXLSX_TRUE;
                     range->has_string_cache = LXLSX_TRUE;
                 }

@@ -292,6 +292,9 @@ struct lxlsx_reader_worksheet {
     char             cell_formula_ref[64];
     int              cell_formula_si;          /* -1 if absent */
     int              cell_formula_is_dynamic;
+    /* Reused formula payload emitted through lxlsx_cell; valid until the next
+     * reader step overwrites the current cell state. */
+    lxlsx_cell_formula emitted_formula;
 
     /* Inline-string rich-run accumulator (§8.2.2). Reset when a new cell
      * starts; survives until the next cell so emit_cell sees the runs. */

@@ -165,26 +165,26 @@ static int type_cell_cb(const lxlsx_cell *c, void *ud)
     case STRING_CELL:
         s->n_string++;
         if (c->row_num == 2 && c->col_num == 1) {
-            size_t n = c->value.string.len;
+            size_t n = c->data.reader.value.string.len;
             if (n >= sizeof(s->first_string)) n = sizeof(s->first_string) - 1;
-            memcpy(s->first_string, c->value.string.ptr, n);
+            memcpy(s->first_string, c->data.reader.value.string.ptr, n);
             s->first_string[n] = 0;
         }
         if (c->row_num == 10 && c->col_num == 1) {
-            size_t n = c->value.string.len;
+            size_t n = c->data.reader.value.string.len;
             if (n >= sizeof(s->rich_text)) n = sizeof(s->rich_text) - 1;
-            memcpy(s->rich_text, c->value.string.ptr, n);
+            memcpy(s->rich_text, c->data.reader.value.string.ptr, n);
             s->rich_text[n] = 0;
         }
         break;
     case BOOLEAN_CELL:
         s->n_boolean++;
-        if (c->value.boolean) s->bool_true_seen = 1;
+        if (c->data.reader.value.boolean) s->bool_true_seen = 1;
         else                  s->bool_false_seen = 1;
         break;
     case ERROR_CELL:
         s->n_error++;
-        strncpy(s->err_code, c->value.error_code, sizeof(s->err_code) - 1);
+        strncpy(s->err_code, c->data.reader.value.error_code, sizeof(s->err_code) - 1);
         break;
     case FORMULA_CELL:   s->n_formula++;  break;
     case INLINE_STRING_CELL: s->n_inline++; break;
@@ -251,17 +251,17 @@ static void test_pull_pulls_correct_values(void)
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
     TEST_ASSERT_EQUAL_INT(NUMBER_CELL, c.type);
-    TEST_ASSERT_EQUAL_DOUBLE(42.0, c.value.number);
+    TEST_ASSERT_EQUAL_DOUBLE(42.0, c.data.reader.value.number);
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
     TEST_ASSERT_EQUAL_INT(NUMBER_CELL, c.type);
-    TEST_ASSERT_EQUAL_DOUBLE(3.14, c.value.number);
+    TEST_ASSERT_EQUAL_DOUBLE(3.14, c.data.reader.value.number);
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_ERROR_END_OF_DATA, lxlsx_reader_worksheet_next_cell(ws, &c));
 
     /* Row 2: shared strings */
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
     TEST_ASSERT_EQUAL_INT(STRING_CELL, c.type);
-    TEST_ASSERT_EQUAL_STRING_LEN("hello", c.value.string.ptr, 5);
+    TEST_ASSERT_EQUAL_STRING_LEN("hello", c.data.reader.value.string.ptr, 5);
 
     lxlsx_reader_worksheet_close(ws);
     lxlsx_reader_workbook_close(wb);
@@ -272,6 +272,7 @@ static void test_unified_cell_formula_and_style_ref(void)
     lxlsx_reader_workbook  *wb = NULL;
     lxlsx_reader_worksheet *ws = NULL;
     lxlsx_cell c;
+    const lxlsx_cell_formula *formula;
 
     lxlsx_reader_workbook_open(LXLSX_TEST_TYPES_XLSX, &wb);
     lxlsx_reader_workbook_get_worksheet_by_name(wb, "Types", LXLSX_READER_SKIP_NONE, &ws);
@@ -280,12 +281,13 @@ static void test_unified_cell_formula_and_style_ref(void)
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
     TEST_ASSERT_EQUAL_INT(FORMULA_CELL, c.type);
+    formula = c.data.reader.value.formula;
     TEST_ASSERT_EQUAL_STRING_LEN("SUM(A1:A2)",
-                                 c.value.formula.formula.ptr,
-                                 c.value.formula.formula.len);
+                                 formula->formula.ptr,
+                                 formula->formula.len);
     TEST_ASSERT_EQUAL_STRING_LEN("44",
-                                 c.value.formula.cached.ptr,
-                                 c.value.formula.cached.len);
+                                 formula->cached.ptr,
+                                 formula->cached.len);
 
     while (lxlsx_reader_worksheet_next_cell(ws, &c) == LXLSX_READER_NO_ERROR) ;
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
@@ -297,7 +299,7 @@ static void test_unified_cell_formula_and_style_ref(void)
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_row(ws));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR, lxlsx_reader_worksheet_next_cell(ws, &c));
     TEST_ASSERT_EQUAL_INT(NUMBER_CELL, c.type);
-    TEST_ASSERT_EQUAL_INT(4, (int)c.style_ref);
+    TEST_ASSERT_EQUAL_INT(4, (int)c.data.reader.style_ref);
 
     lxlsx_reader_worksheet_close(ws);
     lxlsx_reader_workbook_close(wb);

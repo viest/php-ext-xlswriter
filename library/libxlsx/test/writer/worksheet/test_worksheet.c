@@ -135,4 +135,42 @@ CTEST(worksheet, worksheet03) {
     lxlsx_worksheet_free(worksheet);
 }
 
+// Test assembling a Worksheet file with an error value metadata cell.
+CTEST(worksheet, worksheet_error_cell_vm) {
+
+    char* got;
+    char exp[] =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+        "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">"
+          "<dimension ref=\"A1\"/>"
+          "<sheetViews>"
+            "<sheetView workbookViewId=\"0\"/>"
+          "</sheetViews>"
+          "<sheetFormatPr defaultRowHeight=\"15\"/>"
+          "<sheetData>"
+            "<row r=\"1\" spans=\"1:1\">"
+              "<c r=\"A1\" t=\"e\" vm=\"7\">"
+                "<v>#VALUE!</v>"
+              "</c>"
+            "</row>"
+          "</sheetData>"
+          "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"
+        "</worksheet>";
+
+    FILE* testfile = lxlsx_tmpfile(NULL);
+    lxlsx_object_properties object_props = {0};
+
+    lxlsx_worksheet *worksheet = lxlsx_worksheet_new(NULL);
+    worksheet->file = testfile;
+
+    object_props.row = 0;
+    object_props.col = 0;
+    lxlsx_worksheet_set_error_cell(worksheet, &object_props, 7);
+
+    lxlsx_worksheet_assemble_xml_file(worksheet);
+
+    RUN_XLSX_STREQ_SHORT(exp, got);
+
+    lxlsx_worksheet_free(worksheet);
+}
 

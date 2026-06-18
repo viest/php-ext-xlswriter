@@ -5986,6 +5986,9 @@ typedef struct lxlsx_reader_worksheet lxlsx_reader_worksheet;
 void lxlsx_reader_worksheet_close(lxlsx_reader_worksheet *ws);
 
 lxlsx_reader_error lxlsx_reader_worksheet_next_row (lxlsx_reader_worksheet *ws);
+/* The returned lxlsx_cell borrows string/formula buffers owned by ws. Treat
+ * the cell contents, including data.reader.value.formula, as valid only until
+ * the next reader call that advances or closes the worksheet. */
 lxlsx_reader_error lxlsx_reader_worksheet_next_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out);
 
 size_t   lxlsx_reader_worksheet_current_row    (const lxlsx_reader_worksheet *ws);

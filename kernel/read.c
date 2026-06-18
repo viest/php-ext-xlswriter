@@ -25,8 +25,9 @@ static void cell_text_view(const lxlsx_cell *c, const char **out_ptr, size_t *ou
         *out_ptr = ""; *out_len = 0; return;
     case STRING_CELL:
     case INLINE_STRING_CELL:
-        *out_ptr = c->value.string.ptr ? c->value.string.ptr : "";
-        *out_len = c->value.string.len;
+        *out_ptr = c->data.reader.value.string.ptr
+            ? c->data.reader.value.string.ptr : "";
+        *out_len = c->data.reader.value.string.len;
         return;
     case NUMBER_CELL:
     case DATETIME_CELL:
@@ -34,8 +35,8 @@ static void cell_text_view(const lxlsx_cell *c, const char **out_ptr, size_t *ou
     case ERROR_CELL:
     case FORMULA_CELL:
     default:
-        *out_ptr = c->raw.ptr ? c->raw.ptr : "";
-        *out_len = c->raw.len;
+        *out_ptr = c->data.reader.raw.ptr ? c->data.reader.raw.ptr : "";
+        *out_len = c->data.reader.raw.len;
         return;
     }
 }

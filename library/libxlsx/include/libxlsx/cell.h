@@ -63,41 +63,69 @@ typedef struct {
     int                is_dynamic;
 } lxlsx_cell_formula;
 
-/* Shared worksheet cell representation. Writer fields are preserved for the
- * red-black tree backed write path; reader fields hold parsed cell values. */
+typedef struct {
+    const char *formula;
+    double      result;
+    const char *range;
+    const char *result_string;
+} lxlsx_cell_writer_formula;
+
+typedef struct {
+    int32_t     id;
+    const char *string;
+} lxlsx_cell_writer_shared_string;
+
+typedef struct {
+    const char *url;
+    const char *display;
+    const char *tooltip;
+} lxlsx_cell_writer_hyperlink;
+
+typedef union {
+    double                          number;
+    int                             boolean;
+    uint32_t                        object_id;
+    const char                     *string;
+    lxlsx_vml_obj                  *comment;
+    lxlsx_cell_writer_formula       formula;
+    lxlsx_cell_writer_shared_string shared_string;
+    lxlsx_cell_writer_hyperlink     hyperlink;
+} lxlsx_cell_writer_value;
+
+typedef struct {
+    lxlsx_format *format;
+    lxlsx_cell_writer_value value;
+    RB_ENTRY (lxlsx_cell) tree_pointers;
+} lxlsx_cell_writer_data;
+
+typedef union {
+    double                    number;
+    int64_t                   unix_timestamp;
+    lxlsx_str                 string;
+    int                       boolean;
+    const lxlsx_cell_formula *formula;
+    char                      error_code[8];
+} lxlsx_cell_reader_value;
+
+typedef struct {
+    uint32_t                style_id;
+    uint32_t                style_ref;
+    lxlsx_str              raw;
+    lxlsx_cell_reader_value value;
+} lxlsx_cell_reader_data;
+
+/* Shared worksheet cell representation. Writer and reader payloads are
+ * mutually exclusive: writer cells are retained in worksheet RB trees while
+ * reader cells are short-lived callback/iterator values. Keeping them in a
+ * union avoids charging every writer cell for reader-only formula/raw fields. */
 typedef struct lxlsx_cell {
     lxlsx_row_t row_num;
     lxlsx_col_t col_num;
-    enum cell_types type;
-    lxlsx_format *format;
-    lxlsx_vml_obj *comment;
-
+    uint8_t type;
     union {
-        double number;
-        int32_t string_id;
-        const char *string;
-    } u;
-
-    double formula_result;
-    char *user_data1;
-    char *user_data2;
-    char *lxlsx_sst_string;
-
-    uint32_t style_id;
-    uint32_t style_ref;
-    lxlsx_str raw;
-
-    union {
-        double number;
-        int64_t unix_timestamp;
-        lxlsx_str string;
-        int boolean;
-        lxlsx_cell_formula formula;
-        char error_code[8];
-    } value;
-
-    /* List pointers for tree.h. */
-    RB_ENTRY (lxlsx_cell) tree_pointers;
+        lxlsx_cell_writer_data writer;
+        lxlsx_cell_reader_data reader;
+    } data;
 } lxlsx_cell;
 
 #ifdef __cplusplus

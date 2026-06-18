@@ -154,7 +154,7 @@ static void assert_number_cell_in_sheet(const char *path, const char *sheet_name
                == LXLSX_READER_NO_ERROR) {
             if (cell.row_num == row && cell.col_num == col) {
                 TEST_ASSERT_EQUAL_INT(NUMBER_CELL, cell.type);
-                TEST_ASSERT_EQUAL_DOUBLE(expected, cell.value.number);
+                TEST_ASSERT_EQUAL_DOUBLE(expected, cell.data.reader.value.number);
                 found = 1;
             }
         }
@@ -191,11 +191,11 @@ static void assert_formula_cell(const char *path, size_t row, size_t col,
             if (cell.row_num == row && cell.col_num == col) {
                 TEST_ASSERT_EQUAL_INT(FORMULA_CELL, cell.type);
                 TEST_ASSERT_EQUAL_STRING_LEN(formula,
-                                             cell.value.formula.formula.ptr,
-                                             cell.value.formula.formula.len);
+                                             cell.data.reader.value.formula->formula.ptr,
+                                             cell.data.reader.value.formula->formula.len);
                 TEST_ASSERT_EQUAL_STRING_LEN(cached,
-                                             cell.value.formula.cached.ptr,
-                                             cell.value.formula.cached.len);
+                                             cell.data.reader.value.formula->cached.ptr,
+                                             cell.data.reader.value.formula->cached.len);
                 found = 1;
             }
         }
@@ -228,8 +228,8 @@ static void assert_string_cell(const char *path, size_t row, size_t col,
                 TEST_ASSERT_TRUE(cell.type == STRING_CELL ||
                                  cell.type == INLINE_STRING_CELL);
                 TEST_ASSERT_EQUAL_STRING_LEN(expected,
-                                             cell.value.string.ptr,
-                                             cell.value.string.len);
+                                             cell.data.reader.value.string.ptr,
+                                             cell.data.reader.value.string.len);
                 found = 1;
             }
         }
@@ -260,7 +260,7 @@ static void assert_boolean_cell(const char *path, size_t row, size_t col,
                == LXLSX_READER_NO_ERROR) {
             if (cell.row_num == row && cell.col_num == col) {
                 TEST_ASSERT_EQUAL_INT(BOOLEAN_CELL, cell.type);
-                TEST_ASSERT_EQUAL_INT(expected ? 1 : 0, cell.value.boolean);
+                TEST_ASSERT_EQUAL_INT(expected ? 1 : 0, cell.data.reader.value.boolean);
                 found = 1;
             }
         }

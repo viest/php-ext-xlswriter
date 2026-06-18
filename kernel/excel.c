@@ -3064,17 +3064,11 @@ PHP_METHOD(vtiful_xls, nextRowRich)
                 }
                 efree(r);
             } else {
-                /* No runs — fall back to a single plain run with the joined text. */
+                /* No runs - fall back to a single plain run with the joined text. */
                 zval entry;
-                const char *txt;
-                size_t txtlen;
-                if (cell.type == STRING_CELL) {
-                    txt    = cell.value.string.ptr ? cell.value.string.ptr : "";
-                    txtlen = cell.value.string.len;
-                } else {
-                    txt    = cell.value.string.ptr ? cell.value.string.ptr : "";
-                    txtlen = cell.value.string.len;
-                }
+                const char *txt = cell.data.reader.value.string.ptr
+                    ? cell.data.reader.value.string.ptr : "";
+                size_t txtlen = cell.data.reader.value.string.len;
                 array_init(&entry);
                 add_assoc_stringl(&entry, "text", (char *)txt, txtlen);
                 add_assoc_null  (&entry, "font");
@@ -3576,32 +3570,37 @@ static const char *cell_type_name(lxlsx_cell_type t) {
 static void cell_value_to_zval(zval *out, const lxlsx_cell *c) {
     switch (c->type) {
     case NUMBER_CELL:
-        if (c->value.number == (double)(zend_long)c->value.number) {
-            ZVAL_LONG(out, (zend_long)c->value.number);
+        if (c->data.reader.value.number ==
+            (double)(zend_long)c->data.reader.value.number) {
+            ZVAL_LONG(out, (zend_long)c->data.reader.value.number);
         } else {
-            ZVAL_DOUBLE(out, c->value.number);
+            ZVAL_DOUBLE(out, c->data.reader.value.number);
         }
         return;
     case DATETIME_CELL:
-        ZVAL_LONG(out, c->value.unix_timestamp);
+        ZVAL_LONG(out, c->data.reader.value.unix_timestamp);
         return;
     case STRING_CELL:
     case INLINE_STRING_CELL:
-        if (c->value.string.ptr) {
-            ZVAL_STRINGL(out, c->value.string.ptr, c->value.string.len);
+        if (c->data.reader.value.string.ptr) {
+            ZVAL_STRINGL(out, c->data.reader.value.string.ptr,
+                         c->data.reader.value.string.len);
         } else {
             ZVAL_EMPTY_STRING(out);
         }
         return;
     case BOOLEAN_CELL:
-        ZVAL_BOOL(out, c->value.boolean);
+        ZVAL_BOOL(out, c->data.reader.value.boolean);
         return;
     case FORMULA_CELL:
-        if (c->value.formula.cached.ptr && c->value.formula.cached.len > 0) {
+        if (c->data.reader.value.formula &&
+            c->data.reader.value.formula->cached.ptr &&
+            c->data.reader.value.formula->cached.len > 0) {
             zend_long _l = 0;
             double    _d = 0;
-            int kind = is_numeric_string(c->value.formula.cached.ptr,
-                                         c->value.formula.cached.len, &_l, &_d, 0);
+            const lxlsx_cell_formula *formula = c->data.reader.value.formula;
+            int kind = is_numeric_string(formula->cached.ptr,
+                                         formula->cached.len, &_l, &_d, 0);
             /* Braces are mandatory: on PHP 7.4 some Z_VAL_* macros expand to
              * a bare `{ ... }` block (not `do { } while (0)`), so chaining
              * `if (...) MACRO; else if (...) MACRO;` orphans the else. */
@@ -3610,15 +3609,14 @@ static void cell_value_to_zval(zval *out, const lxlsx_cell *c) {
             } else if (kind == IS_DOUBLE) {
                 ZVAL_DOUBLE(out, _d);
             } else {
-                ZVAL_STRINGL(out, c->value.formula.cached.ptr,
-                                  c->value.formula.cached.len);
+                ZVAL_STRINGL(out, formula->cached.ptr, formula->cached.len);
             }
         } else {
             ZVAL_NULL(out);
         }
         return;
     case ERROR_CELL:
-        ZVAL_STRING(out, c->value.error_code);
+        ZVAL_STRING(out, c->data.reader.value.error_code);
         return;
     case BLANK_CELL:
     default:
@@ -3645,42 +3643,46 @@ static void build_rich_cell(zval *out, const lxlsx_cell *c, const lxlsx_reader_w
     cell_value_to_zval(&value, c);
     add_assoc_zval(out, "value", &value);
     add_assoc_string(out, "type", cell_type_name(c->type));
-    add_assoc_long(out, "style_id", (zend_long)c->style_id);
+    add_assoc_long(out, "style_id", (zend_long)c->data.reader.style_id);
 
     if (c->type == FORMULA_CELL) {
+        const lxlsx_cell_formula *formula = c->data.reader.value.formula;
+
         if (!verbose) {
             /* Default shape: plain string. May be empty for shared-formula
              * follower cells (the writer only emits the master expression). */
-            if (c->value.formula.formula.ptr) {
+            if (formula && formula->formula.ptr) {
                 add_assoc_stringl(out, "formula",
-                                  c->value.formula.formula.ptr,
-                                  c->value.formula.formula.len);
+                                  formula->formula.ptr,
+                                  formula->formula.len);
             }
         } else {
             /* Verbose shape: associative array under the "formula" key. */
             zval f, cached;
             array_init(&f);
-            add_assoc_string(&f, "type", (char *)formula_kind_name(c->value.formula.kind));
-            if (c->value.formula.formula.ptr) {
+            add_assoc_string(&f, "type", (char *)formula_kind_name(
+                formula ? formula->kind : LXLSX_FORMULA_NORMAL));
+            if (formula && formula->formula.ptr) {
                 add_assoc_stringl(&f, "text",
-                                  c->value.formula.formula.ptr,
-                                  c->value.formula.formula.len);
+                                  formula->formula.ptr,
+                                  formula->formula.len);
             } else {
                 add_assoc_string(&f, "text", "");
             }
-            if (c->value.formula.ref.ptr) {
+            if (formula && formula->ref.ptr) {
                 add_assoc_stringl(&f, "ref",
-                                  c->value.formula.ref.ptr,
-                                  c->value.formula.ref.len);
+                                  formula->ref.ptr,
+                                  formula->ref.len);
             } else {
                 add_assoc_null(&f, "ref");
             }
-            if (c->value.formula.si >= 0) {
-                add_assoc_long(&f, "si", (zend_long)c->value.formula.si);
+            if (formula && formula->si >= 0) {
+                add_assoc_long(&f, "si", (zend_long)formula->si);
             } else {
                 add_assoc_null(&f, "si");
             }
-            add_assoc_bool(&f, "is_dynamic", c->value.formula.is_dynamic);
+            add_assoc_bool(&f, "is_dynamic",
+                           formula ? formula->is_dynamic : 0);
             cell_value_to_zval(&cached, c);
             add_assoc_zval(&f, "cached_value", &cached);
             add_assoc_zval(out, "formula", &f);

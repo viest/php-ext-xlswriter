@@ -47,7 +47,8 @@ static int _worksheet_string_exceeds_limit(const char *string, size_t limit);
 
 #ifndef __clang_analyzer__
 LXLSX_RB_GENERATE_ROW(lxlsx_table_rows, lxlsx_row, tree_pointers, _row_cmp);
-LXLSX_RB_GENERATE_CELL(lxlsx_table_cells, lxlsx_cell, tree_pointers, _cell_cmp);
+LXLSX_RB_GENERATE_CELL(lxlsx_table_cells, lxlsx_cell,
+                       data.writer.tree_pointers, _cell_cmp);
 LXLSX_RB_GENERATE_DRAWING_REL_IDS(lxlsx_drawing_rel_ids, lxlsx_drawing_rel_id,
                                 tree_pointers, _drawing_rel_id_cmp);
 LXLSX_RB_GENERATE_VML_DRAWING_REL_IDS(lxlsx_vml_drawing_rel_ids,
@@ -376,17 +377,33 @@ _free_cell(lxlsx_cell *cell)
     if (!cell)
         return;
 
-    if (cell->type != NUMBER_CELL && cell->type != STRING_CELL
-        && cell->type != BLANK_CELL && cell->type != BOOLEAN_CELL
-        && cell->type != ERROR_CELL) {
-
-        free((void *) cell->u.string);
+    switch (cell->type) {
+    case INLINE_STRING_CELL:
+    case INLINE_RICH_STRING_CELL:
+        free((void *) cell->data.writer.value.string);
+        break;
+    case FORMULA_CELL:
+        free((void *) cell->data.writer.value.formula.formula);
+        free((void *) cell->data.writer.value.formula.result_string);
+        break;
+    case ARRAY_FORMULA_CELL:
+    case DYNAMIC_ARRAY_FORMULA_CELL:
+        free((void *) cell->data.writer.value.formula.formula);
+        free((void *) cell->data.writer.value.formula.range);
+        break;
+    case HYPERLINK_URL:
+    case HYPERLINK_INTERNAL:
+    case HYPERLINK_EXTERNAL:
+        free((void *) cell->data.writer.value.hyperlink.url);
+        free((void *) cell->data.writer.value.hyperlink.display);
+        free((void *) cell->data.writer.value.hyperlink.tooltip);
+        break;
+    case COMMENT:
+        _free_vml_object(cell->data.writer.value.comment);
+        break;
+    default:
+        break;
     }
-
-    free(cell->user_data1);
-    free(cell->user_data2);
-
-    _free_vml_object(cell->comment);
 
     free(cell);
 }
@@ -869,8 +886,8 @@ _new_number_cell(lxlsx_row_t row_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = NUMBER_CELL;
-    cell->format = format;
-    cell->u.number = value;
+    cell->data.writer.format = format;
+    cell->data.writer.value.number = value;
 
     return cell;
 }
@@ -889,9 +906,9 @@ _new_string_cell(lxlsx_row_t row_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = STRING_CELL;
-    cell->format = format;
-    cell->u.string_id = string_id;
-    cell->lxlsx_sst_string = lxlsx_sst_string;
+    cell->data.writer.format = format;
+    cell->data.writer.value.shared_string.id = string_id;
+    cell->data.writer.value.shared_string.string = lxlsx_sst_string;
 
     return cell;
 }
@@ -909,8 +926,8 @@ _new_inline_string_cell(lxlsx_row_t row_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = INLINE_STRING_CELL;
-    cell->format = format;
-    cell->u.string = string;
+    cell->data.writer.format = format;
+    cell->data.writer.value.string = string;
 
     return cell;
 }
@@ -929,8 +946,8 @@ _new_inline_rich_string_cell(lxlsx_row_t row_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = INLINE_RICH_STRING_CELL;
-    cell->format = format;
-    cell->u.string = string;
+    cell->data.writer.format = format;
+    cell->data.writer.value.string = string;
 
     return cell;
 }
@@ -948,8 +965,8 @@ _new_formula_cell(lxlsx_row_t row_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = FORMULA_CELL;
-    cell->format = format;
-    cell->u.string = formula;
+    cell->data.writer.format = format;
+    cell->data.writer.value.formula.formula = formula;
 
     return cell;
 }
@@ -966,9 +983,9 @@ _new_array_formula_cell(lxlsx_row_t row_num, lxlsx_col_t col_num, char *formula,
 
     cell->row_num = row_num;
     cell->col_num = col_num;
-    cell->format = format;
-    cell->u.string = formula;
-    cell->user_data1 = range;
+    cell->data.writer.format = format;
+    cell->data.writer.value.formula.formula = formula;
+    cell->data.writer.value.formula.range = range;
 
     if (is_dynamic)
         cell->type = DYNAMIC_ARRAY_FORMULA_CELL;
@@ -990,7 +1007,7 @@ _new_blank_cell(lxlsx_row_t row_num, lxlsx_col_t col_num, lxlsx_format *format)
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = BLANK_CELL;
-    cell->format = format;
+    cell->data.writer.format = format;
 
     return cell;
 }
@@ -1008,8 +1025,8 @@ _new_boolean_cell(lxlsx_row_t row_num, lxlsx_col_t col_num, int value,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = BOOLEAN_CELL;
-    cell->format = format;
-    cell->u.number = value;
+    cell->data.writer.format = format;
+    cell->data.writer.value.boolean = value ? 1 : 0;
 
     return cell;
 }
@@ -1027,8 +1044,8 @@ _new_error_cell(lxlsx_row_t row_num, lxlsx_col_t col_num, uint32_t value,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = ERROR_CELL;
-    cell->format = format;
-    cell->u.number = value;
+    cell->data.writer.format = format;
+    cell->data.writer.value.object_id = value;
 
     return cell;
 }
@@ -1046,7 +1063,7 @@ _new_comment_cell(lxlsx_row_t row_num, lxlsx_col_t col_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = COMMENT;
-    cell->comment = comment_obj;
+    cell->data.writer.value.comment = comment_obj;
 
     return cell;
 }
@@ -1065,9 +1082,9 @@ _new_hyperlink_cell(lxlsx_row_t row_num, lxlsx_col_t col_num,
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = link_type;
-    cell->u.string = url;
-    cell->user_data1 = string;
-    cell->user_data2 = tooltip;
+    cell->data.writer.value.hyperlink.url = url;
+    cell->data.writer.value.hyperlink.display = string;
+    cell->data.writer.value.hyperlink.tooltip = tooltip;
 
     return cell;
 }
@@ -3731,11 +3748,12 @@ lxlsx_worksheet_prepare_vml_objects(lxlsx_worksheet *self,
 
         RB_FOREACH(cell, lxlsx_table_cells, row->cells) {
             /* Calculate the worksheet position of the comment. */
-            _worksheet_position_vml_object(self, cell->comment);
+            _worksheet_position_vml_object(self,
+                                           cell->data.writer.value.comment);
 
             /* Store comment in a simple list for use by packager. */
-            STAILQ_INSERT_TAIL(self->comment_objs, cell->comment,
-                               list_pointers);
+            STAILQ_INSERT_TAIL(self->comment_objs,
+                               cell->data.writer.value.comment, list_pointers);
             comment_count++;
         }
     }
@@ -4403,7 +4421,7 @@ _write_number_cell(lxlsx_worksheet *self, char *range,
 #ifdef USE_DTOA_LIBRARY
     char data[LXLSX_ATTR_32];
 
-    lxlsx_sprintf_dbl(data, cell->u.number);
+    lxlsx_sprintf_dbl(data, cell->data.writer.value.number);
 
     if (style_index)
         fprintf(self->file,
@@ -4415,10 +4433,11 @@ _write_number_cell(lxlsx_worksheet *self, char *range,
     if (style_index)
         fprintf(self->file,
                 "<c r=\"%s\" s=\"%d\"><v>%.16G</v></c>",
-                range, style_index, cell->u.number);
+                range, style_index, cell->data.writer.value.number);
     else
         fprintf(self->file,
-                "<c r=\"%s\"><v>%.16G</v></c>", range, cell->u.number);
+                "<c r=\"%s\"><v>%.16G</v></c>", range,
+                cell->data.writer.value.number);
 
 #endif
 }
@@ -4435,11 +4454,12 @@ _write_string_cell(lxlsx_worksheet *self, char *range,
     if (style_index)
         fprintf(self->file,
                 "<c r=\"%s\" s=\"%d\" t=\"s\"><v>%d</v></c>",
-                range, style_index, cell->u.string_id);
+                range, style_index,
+                cell->data.writer.value.shared_string.id);
     else
         fprintf(self->file,
                 "<c r=\"%s\" t=\"s\"><v>%d</v></c>",
-                range, cell->u.string_id);
+                range, cell->data.writer.value.shared_string.id);
 }
 
 /*
@@ -4450,7 +4470,7 @@ STATIC void
 _write_inline_string_cell(lxlsx_worksheet *self, char *range,
                           int32_t style_index, lxlsx_cell *cell)
 {
-    char *string = lxlsx_escape_data(cell->u.string);
+    char *string = lxlsx_escape_data(cell->data.writer.value.string);
 
     /* Add attribute to preserve leading or trailing whitespace. */
     if (isspace((unsigned char) string[0])
@@ -4489,7 +4509,7 @@ STATIC void
 _write_inline_rich_string_cell(lxlsx_worksheet *self, char *range,
                                int32_t style_index, lxlsx_cell *cell)
 {
-    const char *string = cell->u.string;
+    const char *string = cell->data.writer.value.string;
 
     if (style_index)
         fprintf(self->file,
@@ -4507,10 +4527,12 @@ _write_inline_rich_string_cell(lxlsx_worksheet *self, char *range,
 STATIC void
 _write_formula_num_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
+    const lxlsx_cell_writer_formula *formula =
+        &cell->data.writer.value.formula;
     char data[LXLSX_ATTR_32];
 
-    lxlsx_sprintf_dbl(data, cell->formula_result);
-    lxlsx_xml_data_element(self->file, "f", cell->u.string, NULL);
+    lxlsx_sprintf_dbl(data, formula->result);
+    lxlsx_xml_data_element(self->file, "f", formula->formula, NULL);
     lxlsx_xml_data_element(self->file, "v", data, NULL);
 }
 
@@ -4520,8 +4542,11 @@ _write_formula_num_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 STATIC void
 _write_formula_str_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
-    lxlsx_xml_data_element(self->file, "f", cell->u.string, NULL);
-    lxlsx_xml_data_element(self->file, "v", cell->user_data2, NULL);
+    const lxlsx_cell_writer_formula *formula =
+        &cell->data.writer.value.formula;
+
+    lxlsx_xml_data_element(self->file, "f", formula->formula, NULL);
+    lxlsx_xml_data_element(self->file, "v", formula->result_string, NULL);
 }
 
 /*
@@ -4530,17 +4555,19 @@ _write_formula_str_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 STATIC void
 _write_array_formula_num_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
+    const lxlsx_cell_writer_formula *formula =
+        &cell->data.writer.value.formula;
     struct lxlsx_xml_attribute_list attributes;
     struct lxlsx_xml_attribute *attribute;
     char data[LXLSX_ATTR_32];
 
     LXLSX_INIT_ATTRIBUTES();
     LXLSX_PUSH_ATTRIBUTES_STR("t", "array");
-    LXLSX_PUSH_ATTRIBUTES_STR("ref", cell->user_data1);
+    LXLSX_PUSH_ATTRIBUTES_STR("ref", formula->range);
 
-    lxlsx_sprintf_dbl(data, cell->formula_result);
+    lxlsx_sprintf_dbl(data, formula->result);
 
-    lxlsx_xml_data_element(self->file, "f", cell->u.string, &attributes);
+    lxlsx_xml_data_element(self->file, "f", formula->formula, &attributes);
     lxlsx_xml_data_element(self->file, "v", data, NULL);
 
     LXLSX_FREE_ATTRIBUTES();
@@ -4554,7 +4581,7 @@ _write_boolean_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
     char data[LXLSX_ATTR_32];
 
-    if (cell->u.number == 0.0)
+    if (!cell->data.writer.value.boolean)
         data[0] = '0';
     else
         data[0] = '1';
@@ -4630,8 +4657,8 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
 
     lxlsx_rowcol_to_cell(range, row_num, col_num);
 
-    if (cell->format) {
-        style_index = lxlsx_format_get_xf_index(cell->format);
+    if (cell->data.writer.format) {
+        style_index = lxlsx_format_get_xf_index(cell->data.writer.format);
     }
     else if (row_format) {
         style_index = lxlsx_format_get_xf_index(row_format);
@@ -4670,12 +4697,12 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
 
     if (cell->type == FORMULA_CELL) {
         /* If user_data2 is set then the formula has a string result. */
-        if (cell->user_data2)
+        if (cell->data.writer.value.formula.result_string)
             LXLSX_PUSH_ATTRIBUTES_STR("t", "str");
 
         lxlsx_xml_start_tag(self->file, "c", &attributes);
 
-        if (cell->user_data2)
+        if (cell->data.writer.value.formula.result_string)
             _write_formula_str_cell(self, cell);
         else
             _write_formula_num_cell(self, cell);
@@ -4683,7 +4710,7 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
         lxlsx_xml_end_tag(self->file, "c");
     }
     else if (cell->type == BLANK_CELL) {
-        if (cell->format)
+        if (cell->data.writer.format)
             lxlsx_xml_empty_tag(self->file, "c", &attributes);
     }
     else if (cell->type == BOOLEAN_CELL) {
@@ -4705,7 +4732,7 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
     }
     else if (cell->type == ERROR_CELL) {
         LXLSX_PUSH_ATTRIBUTES_STR("t", "e");
-        LXLSX_PUSH_ATTRIBUTES_DBL("vm", cell->u.number);
+        LXLSX_PUSH_ATTRIBUTES_INT("vm", cell->data.writer.value.object_id);
         lxlsx_xml_start_tag(self->file, "c", &attributes);
         _write_error_cell(self);
         lxlsx_xml_end_tag(self->file, "c");
@@ -5546,6 +5573,8 @@ _worksheet_write_hyperlinks(lxlsx_worksheet *self)
     RB_FOREACH(row, lxlsx_table_rows, self->hyperlinks) {
 
         RB_FOREACH(link, lxlsx_table_cells, row->cells) {
+            const lxlsx_cell_writer_hyperlink *hyperlink =
+                &link->data.writer.value.hyperlink;
 
             if (link->type == HYPERLINK_URL
                 || link->type == HYPERLINK_EXTERNAL) {
@@ -5558,7 +5587,7 @@ _worksheet_write_hyperlinks(lxlsx_worksheet *self)
                 relationship->type = lxlsx_strdup("/hyperlink");
                 GOTO_LABEL_ON_MEM_ERROR(relationship->type, mem_error);
 
-                relationship->target = lxlsx_strdup(link->u.string);
+                relationship->target = lxlsx_strdup(hyperlink->url);
                 GOTO_LABEL_ON_MEM_ERROR(relationship->target, mem_error);
 
                 relationship->target_mode = lxlsx_strdup("External");
@@ -5569,8 +5598,8 @@ _worksheet_write_hyperlinks(lxlsx_worksheet *self)
 
                 _worksheet_write_hyperlink_external(self, link->row_num,
                                                     link->col_num,
-                                                    link->user_data1,
-                                                    link->user_data2,
+                                                    hyperlink->display,
+                                                    hyperlink->tooltip,
                                                     self->rel_count);
             }
 
@@ -5578,9 +5607,9 @@ _worksheet_write_hyperlinks(lxlsx_worksheet *self)
 
                 _worksheet_write_hyperlink_internal(self, link->row_num,
                                                     link->col_num,
-                                                    link->u.string,
-                                                    link->user_data1,
-                                                    link->user_data2);
+                                                    hyperlink->url,
+                                                    hyperlink->display,
+                                                    hyperlink->tooltip);
             }
 
         }
@@ -8081,7 +8110,7 @@ lxlsx_worksheet_write_formula_num(lxlsx_worksheet *self,
         formula_copy = lxlsx_strdup(formula);
 
     cell = _new_formula_cell(row_num, col_num, formula_copy, format);
-    cell->formula_result = result;
+    cell->data.writer.value.formula.result = result;
 
     _insert_cell(self, row_num, col_num, cell);
 
@@ -8138,7 +8167,7 @@ lxlsx_worksheet_write_formula_str(lxlsx_worksheet *self,
         formula_copy = lxlsx_strdup(formula);
 
     cell = _new_formula_cell(row_num, col_num, formula_copy, format);
-    cell->user_data2 = lxlsx_strdup(result);
+    cell->data.writer.value.formula.result_string = lxlsx_strdup(result);
 
     _insert_cell(self, row_num, col_num, cell);
 
@@ -8242,7 +8271,7 @@ _store_array_formula(lxlsx_worksheet *self,
     cell = _new_array_formula_cell(first_row, first_col,
                                    formula_copy, range, format, is_dynamic);
 
-    cell->formula_result = result;
+    cell->data.writer.value.formula.result = result;
 
     _insert_cell(self, first_row, first_col, cell);
 
@@ -11929,10 +11958,10 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
     memset(out, 0, sizeof(*out));
     out->row_num  = (lxlsx_row_t)ws->cell_row;
     out->col_num  = (lxlsx_col_t)ws->cell_col;
-    out->style_id = ws->cell_style_id;
-    out->style_ref = ws->cell_style_id;
-    out->raw.ptr  = ws->cell_value;
-    out->raw.len  = ws->cell_value_len;
+    out->data.reader.style_id = ws->cell_style_id;
+    out->data.reader.style_ref = ws->cell_style_id;
+    out->data.reader.raw.ptr  = ws->cell_value;
+    out->data.reader.raw.len  = ws->cell_value_len;
 
     if (st) xf = lxlsx_reader_styles_get_xf(st, ws->cell_style_id);
 
@@ -11945,17 +11974,20 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
 
     if (ws->cell_has_formula) {
         out->type = FORMULA_CELL;
-        out->value.formula.formula.ptr = ws->cell_formula;
-        out->value.formula.formula.len = ws->cell_formula_len;
-        out->value.formula.cached.ptr  = ws->cell_value;
-        out->value.formula.cached.len  = ws->cell_value_len;
-        out->value.formula.kind        = ws->cell_formula_kind;
-        out->value.formula.ref.ptr     = ws->cell_formula_ref[0]
+        /* lxlsx_cell borrows this worksheet-local formula payload. The pointer
+         * is valid only until the next reader step updates the current cell. */
+        ws->emitted_formula.formula.ptr = ws->cell_formula;
+        ws->emitted_formula.formula.len = ws->cell_formula_len;
+        ws->emitted_formula.cached.ptr  = ws->cell_value;
+        ws->emitted_formula.cached.len  = ws->cell_value_len;
+        ws->emitted_formula.kind        = ws->cell_formula_kind;
+        ws->emitted_formula.ref.ptr     = ws->cell_formula_ref[0]
             ? ws->cell_formula_ref : NULL;
-        out->value.formula.ref.len     = ws->cell_formula_ref[0]
+        ws->emitted_formula.ref.len     = ws->cell_formula_ref[0]
             ? strlen(ws->cell_formula_ref) : 0;
-        out->value.formula.si          = ws->cell_formula_si;
-        out->value.formula.is_dynamic  = ws->cell_formula_is_dynamic;
+        ws->emitted_formula.si          = ws->cell_formula_si;
+        ws->emitted_formula.is_dynamic  = ws->cell_formula_is_dynamic;
+        out->data.reader.value.formula = &ws->emitted_formula;
         return;
     }
 
@@ -11965,12 +11997,13 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
                    xf->category == LXLSX_READER_FMT_CATEGORY_DATETIME)) {
             double serial = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
             out->type = DATETIME_CELL;
-            out->value.unix_timestamp =
+            out->data.reader.value.unix_timestamp =
                 lxlsx_reader_excel_serial_to_unix(serial,
                                          ws->wb ? ws->wb->uses_1904 : 0);
         } else {
             out->type = NUMBER_CELL;
-            out->value.number = ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
+            out->data.reader.value.number =
+                ws->cell_value ? strtod(ws->cell_value, NULL) : 0.0;
         }
         return;
     }
@@ -11982,49 +12015,51 @@ static void emit_cell(lxlsx_reader_worksheet *ws, lxlsx_cell *out)
             ? lxlsx_reader_sst_get(ws->wb->sst, idx) : NULL;
         out->type = STRING_CELL;
         if (s) {
-            out->value.string.ptr = s;
-            out->value.string.len = strlen(s);
+            out->data.reader.value.string.ptr = s;
+            out->data.reader.value.string.len = strlen(s);
         } else {
-            out->value.string.ptr = "";
-            out->value.string.len = 0;
+            out->data.reader.value.string.ptr = "";
+            out->data.reader.value.string.len = 0;
         }
         return;
     }
 
     if (strcmp(t, "inlineStr") == 0) {
         out->type = INLINE_STRING_CELL;
-        out->value.string.ptr = ws->cell_inline;
-        out->value.string.len = ws->cell_inline_len;
+        out->data.reader.value.string.ptr = ws->cell_inline;
+        out->data.reader.value.string.len = ws->cell_inline_len;
         return;
     }
 
     if (strcmp(t, "str") == 0) {
         out->type = STRING_CELL;
-        out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
-        out->value.string.len = ws->cell_value_len;
+        out->data.reader.value.string.ptr = ws->cell_value ? ws->cell_value : "";
+        out->data.reader.value.string.len = ws->cell_value_len;
         return;
     }
 
     if (strcmp(t, "b") == 0) {
         out->type = BOOLEAN_CELL;
-        out->value.boolean = (ws->cell_value && ws->cell_value[0] == '1') ? 1 : 0;
+        out->data.reader.value.boolean =
+            (ws->cell_value && ws->cell_value[0] == '1') ? 1 : 0;
         return;
     }
 
     if (strcmp(t, "e") == 0) {
         size_t n = ws->cell_value_len;
-        if (n >= sizeof(out->value.error_code))
-            n = sizeof(out->value.error_code) - 1;
+        if (n >= sizeof(out->data.reader.value.error_code))
+            n = sizeof(out->data.reader.value.error_code) - 1;
         out->type = ERROR_CELL;
-        if (ws->cell_value) memcpy(out->value.error_code, ws->cell_value, n);
-        out->value.error_code[n] = 0;
+        if (ws->cell_value)
+            memcpy(out->data.reader.value.error_code, ws->cell_value, n);
+        out->data.reader.value.error_code[n] = 0;
         return;
     }
 
     /* Unknown 't': fall back to string. */
     out->type = STRING_CELL;
-    out->value.string.ptr = ws->cell_value ? ws->cell_value : "";
-    out->value.string.len = ws->cell_value_len;
+    out->data.reader.value.string.ptr = ws->cell_value ? ws->cell_value : "";
+    out->data.reader.value.string.len = ws->cell_value_len;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -13999,13 +14034,13 @@ size_t lxlsx_reader_cell_string_runs(const lxlsx_reader_worksheet *ws, const lxl
     if (!ws || !c) return 0;
 
     if (c->type == STRING_CELL) {
-        /* SST cell: cell.raw holds the SST index as decimal text. */
+        /* SST cell: reader.raw holds the SST index as decimal text. */
         uint32_t idx;
         size_t   count = 0;
         const lxlsx_reader_sst_run *runs;
         size_t i;
-        if (!ws->wb || !ws->wb->sst || !c->raw.ptr) return 0;
-        idx = (uint32_t)strtoul(c->raw.ptr, NULL, 10);
+        if (!ws->wb || !ws->wb->sst || !c->data.reader.raw.ptr) return 0;
+        idx = (uint32_t)strtoul(c->data.reader.raw.ptr, NULL, 10);
         runs = lxlsx_reader_sst_get_runs(ws->wb->sst, idx, &count);
         if (count == 0) return 0;
         if (out) {

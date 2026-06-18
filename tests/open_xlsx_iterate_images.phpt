@@ -3,7 +3,6 @@ Check for vtiful presence
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';
-skip_disable_reader();
 $png = __DIR__ . '/../resource/logo.png';
 if (!is_file($png)) die('skip resource/logo.png missing');
 ?>

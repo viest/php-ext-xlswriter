@@ -26,9 +26,9 @@ xls_resource_write_t * zval_get_resource(zval *handle)
 /* }}} */
 
 /* {{{ */
-lxw_format * zval_get_format(zval *handle)
+lxlsx_format * zval_get_format(zval *handle)
 {
-    lxw_format *res = NULL;
+    lxlsx_format *res = NULL;
 
     if (handle == NULL) {
         return NULL;
@@ -38,7 +38,7 @@ lxw_format * zval_get_format(zval *handle)
         return NULL;
     }
 
-    if((res = (lxw_format *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+    if((res = (lxlsx_format *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "format resources resolution fail", 210);
     }
 
@@ -60,11 +60,11 @@ xls_resource_chart_t *zval_get_chart(zval *resource)
 /* }}} */
 
 /* {{{ */
-lxw_rich_string_tuple *zval_get_rich_string(zval *resource)
+lxlsx_rich_string_tuple *zval_get_rich_string(zval *resource)
 {
-    lxw_rich_string_tuple *res;
+    lxlsx_rich_string_tuple *res;
 
-    if((res = (lxw_rich_string_tuple *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+    if((res = (lxlsx_rich_string_tuple *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "rich string resources resolution fail", 210);
     }
 
@@ -73,11 +73,11 @@ lxw_rich_string_tuple *zval_get_rich_string(zval *resource)
 /* }}} */
 
 /* {{{ */
-lxw_data_validation *zval_get_validation(zval *resource)
+lxlsx_data_validation *zval_get_validation(zval *resource)
 {
-    lxw_data_validation *res;
+    lxlsx_data_validation *res;
 
-    if((res = (lxw_data_validation *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
+    if((res = (lxlsx_data_validation *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "validation resources resolution fail", 210);
     }
 

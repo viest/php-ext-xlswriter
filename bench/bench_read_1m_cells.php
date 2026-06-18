@@ -8,11 +8,6 @@
 require __DIR__ . '/_lib.php';
 bench_require_extension();
 
-if (!method_exists(\Vtiful\Kernel\Excel::class, 'openFile')) {
-    fwrite(STDERR, "reader not enabled in this build (--disable-reader)\n");
-    exit(0);
-}
-
 $rows = (int) (getenv('BENCH_ROWS') ?: 100000);
 $cols = (int) (getenv('BENCH_COLS') ?: 10);
 $dir  = bench_tmp_dir();

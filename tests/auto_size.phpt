@@ -3,7 +3,6 @@ Excel::autoSize() sizes columns to content width
 --SKIPIF--
 <?php
 require __DIR__ . '/include/skipif.inc';
-skip_disable_reader();
 ?>
 --FILE--
 <?php

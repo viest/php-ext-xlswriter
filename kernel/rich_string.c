@@ -63,7 +63,7 @@ static void rich_string_objects_free(zend_object *object)
  */
 ZEND_BEGIN_ARG_INFO_EX(rich_string_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, text)
-                ZEND_ARG_INFO(0, format_handle)
+                ZEND_ARG_INFO(0, lxlsx_format_handle)
 ZEND_END_ARG_INFO()
 /* }}} */
 
@@ -72,13 +72,13 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(vtiful_rich_string, __construct)
 {
     zend_string *text = NULL;
-    zval *format_handle = NULL;
+    zval *lxlsx_format_handle = NULL;
     rich_string_object *obj = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_STR(text)
             Z_PARAM_OPTIONAL
-            Z_PARAM_RESOURCE_OR_NULL(format_handle)
+            Z_PARAM_RESOURCE_OR_NULL(lxlsx_format_handle)
     ZEND_PARSE_PARAMETERS_END();
 
     ZVAL_COPY(return_value, getThis());
@@ -89,15 +89,15 @@ PHP_METHOD(vtiful_rich_string, __construct)
         return;
     }
 
-    lxw_rich_string_tuple *instance = (lxw_rich_string_tuple *)ecalloc(1, sizeof(lxw_rich_string_tuple));
+    lxlsx_rich_string_tuple *instance = (lxlsx_rich_string_tuple *)ecalloc(1, sizeof(lxlsx_rich_string_tuple));
 
     obj->ptr.text = zend_string_copy(text);
 
-    if (format_handle == NULL) {
+    if (lxlsx_format_handle == NULL) {
         instance->format = NULL;
         instance->string = ZSTR_VAL(obj->ptr.text);
     } else {
-        instance->format = zval_get_format(format_handle);
+        instance->format = zval_get_format(lxlsx_format_handle);
         instance->string = ZSTR_VAL(obj->ptr.text);
     }
 

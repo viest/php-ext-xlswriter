@@ -14,9 +14,9 @@
 
 zend_class_entry *vtiful_format_ce;
 
-/* {{{ format_objects_new
+/* {{{ lxlsx_format_objects_new
  */
-static zend_object_handlers format_handlers;
+static zend_object_handlers lxlsx_format_handlers;
 
 static zend_always_inline void *vtiful_format_object_alloc(size_t obj_size, zend_class_entry *ce) {
     void *obj = emalloc(obj_size);
@@ -24,25 +24,25 @@ static zend_always_inline void *vtiful_format_object_alloc(size_t obj_size, zend
     return obj;
 }
 
-PHP_VTIFUL_API zend_object *format_objects_new(zend_class_entry *ce)
+PHP_VTIFUL_API zend_object *lxlsx_format_objects_new(zend_class_entry *ce)
 {
-    format_object *format = vtiful_format_object_alloc(sizeof(format_object), ce);
+    lxlsx_format_object *format = vtiful_format_object_alloc(sizeof(lxlsx_format_object), ce);
 
     zend_object_std_init(&format->zo, ce);
     object_properties_init(&format->zo, ce);
 
     format->ptr.format  = NULL;
-    format->zo.handlers = &format_handlers;
+    format->zo.handlers = &lxlsx_format_handlers;
 
     return &format->zo;
 }
 /* }}} */
 
-/* {{{ format_objects_free
+/* {{{ lxlsx_format_objects_free
  */
-static void format_objects_free(zend_object *object)
+static void lxlsx_format_objects_free(zend_object *object)
 {
-    format_object *intern = php_vtiful_format_fetch_object(object);
+    lxlsx_format_object *intern = php_vtiful_format_fetch_object(object);
 
     if (intern->ptr.format != NULL) {
         // free by workbook
@@ -55,91 +55,91 @@ static void format_objects_free(zend_object *object)
 
 /* {{{ ARG_INFO
  */
-ZEND_BEGIN_ARG_INFO_EX(format_construct_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_construct_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, handle)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_wrap_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_wrap_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_bold_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_bold_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_italic_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_italic_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_underline_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_underline_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_unlocked_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_unlocked_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_locked_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_locked_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_hidden_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_hidden_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_align_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_align_arginfo, 0, 0, 1)
                 ZEND_ARG_VARIADIC_INFO(0, style)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_color_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_color_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_size_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_size_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, size)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_strikeout_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_strikeout_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_number_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_number_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, format)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_background_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_background_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, pattern)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_border_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_border_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, style)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_border_of_the_four_sides_arginfo, 0, 0, 4)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_border_of_the_four_sides_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, top)
                 ZEND_ARG_INFO(0, right)
                 ZEND_ARG_INFO(0, bottom)
                 ZEND_ARG_INFO(0, left)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_border_color_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_border_color_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, color)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_border_color_of_the_four_sides_arginfo, 0, 0, 4)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_border_color_of_the_four_sides_arginfo, 0, 0, 4)
                 ZEND_ARG_INFO(0, top_color)
                 ZEND_ARG_INFO(0, right_color)
                 ZEND_ARG_INFO(0, bottom_color)
                 ZEND_ARG_INFO(0, left_color)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_font_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_font_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, font)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_rotation_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_rotation_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, angle)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_indent_arginfo, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_indent_arginfo, 0, 0, 1)
                 ZEND_ARG_INFO(0, level)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(format_to_resource_arginfo, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(lxlsx_format_to_resource_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
 
@@ -148,7 +148,7 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(vtiful_format, __construct)
 {
     zval *handle;
-    format_object *obj;
+    lxlsx_format_object *obj;
     xls_resource_write_t *xls_res;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
@@ -161,7 +161,7 @@ PHP_METHOD(vtiful_format, __construct)
     obj     = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format == NULL) {
-        obj->ptr.format = workbook_add_format(xls_res->workbook);
+        obj->ptr.format = lxlsx_workbook_add_format(xls_res->workbook);
     }
 }
 /* }}} */
@@ -172,10 +172,10 @@ PHP_METHOD(vtiful_format, bold)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_bold(obj->ptr.format);
+        lxlsx_format_set_bold(obj->ptr.format);
     }
 }
 /* }}} */
@@ -186,10 +186,10 @@ PHP_METHOD(vtiful_format, italic)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_italic(obj->ptr.format);
+        lxlsx_format_set_italic(obj->ptr.format);
     }
 }
 /* }}} */
@@ -206,10 +206,10 @@ PHP_METHOD(vtiful_format, underline)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_underline(obj->ptr.format, style);
+        lxlsx_format_set_underline(obj->ptr.format, style);
     }
 }
 /* }}} */
@@ -220,10 +220,10 @@ PHP_METHOD(vtiful_format, unlocked)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_unlocked(obj->ptr.format);
+        lxlsx_format_set_unlocked(obj->ptr.format);
     }
 }
 /* }}} */
@@ -236,13 +236,13 @@ PHP_METHOD(vtiful_format, locked)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
-    /* libxlsxwriter has no format_set_locked() — locked is the default and
-     * format_set_unlocked() flips it to LXW_FALSE. Provide the symmetric
+    /* libxlsxwriter has no lxlsx_format_set_locked() — locked is the default and
+     * lxlsx_format_set_unlocked() flips it to LXLSX_FALSE. Provide the symmetric
      * setter by writing the field directly. */
     if (obj->ptr.format) {
-        obj->ptr.format->locked = LXW_TRUE;
+        obj->ptr.format->locked = LXLSX_TRUE;
     }
 }
 /* }}} */
@@ -255,10 +255,10 @@ PHP_METHOD(vtiful_format, hidden)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_hidden(obj->ptr.format);
+        lxlsx_format_set_hidden(obj->ptr.format);
     }
 }
 /* }}} */
@@ -276,7 +276,7 @@ PHP_METHOD(vtiful_format, align)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     for (i = 0; i < argc; ++i) {
         zval *arg = args + i;
@@ -286,7 +286,7 @@ PHP_METHOD(vtiful_format, align)
         }
 
         if (obj->ptr.format) {
-            format_set_align(obj->ptr.format, Z_LVAL_P(arg));
+            lxlsx_format_set_align(obj->ptr.format, Z_LVAL_P(arg));
         }
     }
 }
@@ -304,10 +304,10 @@ PHP_METHOD(vtiful_format, fontColor)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_color(obj->ptr.format, color);
+        lxlsx_format_set_font_color(obj->ptr.format, color);
     }
 }
 /* }}} */
@@ -324,10 +324,10 @@ PHP_METHOD(vtiful_format, number)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_num_format(obj->ptr.format, ZSTR_VAL(format));
+        lxlsx_format_set_num_format(obj->ptr.format, ZSTR_VAL(format));
     }
 }
 /* }}} */
@@ -336,7 +336,7 @@ PHP_METHOD(vtiful_format, number)
  */
 PHP_METHOD(vtiful_format, background)
 {
-    zend_long pattern = LXW_PATTERN_SOLID, color = 0;
+    zend_long pattern = LXLSX_PATTERN_SOLID, color = 0;
 
     ZEND_PARSE_PARAMETERS_START(1, 2)
             Z_PARAM_LONG(color)
@@ -346,11 +346,11 @@ PHP_METHOD(vtiful_format, background)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_pattern(obj->ptr.format, pattern);
-        format_set_bg_color(obj->ptr.format, color);
+        lxlsx_format_set_pattern(obj->ptr.format, pattern);
+        lxlsx_format_set_bg_color(obj->ptr.format, color);
     }
 }
 /* }}} */
@@ -367,10 +367,10 @@ PHP_METHOD(vtiful_format, fontSize)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_size(obj->ptr.format, size);
+        lxlsx_format_set_font_size(obj->ptr.format, size);
     }
 }
 /* }}} */
@@ -387,10 +387,10 @@ PHP_METHOD(vtiful_format, font)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_name(obj->ptr.format, ZSTR_VAL(font_name));
+        lxlsx_format_set_font_name(obj->ptr.format, ZSTR_VAL(font_name));
     }
 }
 /* }}} */
@@ -401,10 +401,10 @@ PHP_METHOD(vtiful_format, strikeout)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_font_strikeout(obj->ptr.format);
+        lxlsx_format_set_font_strikeout(obj->ptr.format);
     }
 }
 /* }}} */
@@ -415,10 +415,10 @@ PHP_METHOD(vtiful_format, wrap)
 {
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_text_wrap(obj->ptr.format);
+        lxlsx_format_set_text_wrap(obj->ptr.format);
     }
 }
 /* }}} */
@@ -435,10 +435,10 @@ PHP_METHOD(vtiful_format, border)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_border(obj->ptr.format, style);
+        lxlsx_format_set_border(obj->ptr.format, style);
     }
 }
 /* }}} */
@@ -447,7 +447,7 @@ PHP_METHOD(vtiful_format, border)
  */
 PHP_METHOD(vtiful_format, borderOfTheFourSides)
 {
-    zend_long top = LXW_BORDER_NONE, right = LXW_BORDER_NONE, bottom = LXW_BORDER_NONE, left = LXW_BORDER_NONE;
+    zend_long top = LXLSX_BORDER_NONE, right = LXLSX_BORDER_NONE, bottom = LXLSX_BORDER_NONE, left = LXLSX_BORDER_NONE;
 
     ZEND_PARSE_PARAMETERS_START(0, 4)
             Z_PARAM_OPTIONAL
@@ -459,13 +459,13 @@ PHP_METHOD(vtiful_format, borderOfTheFourSides)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
-        format_set_top(obj->ptr.format, top);
-        format_set_right(obj->ptr.format, right);
-        format_set_bottom(obj->ptr.format, bottom);
-        format_set_left(obj->ptr.format, left);
+        lxlsx_format_set_top(obj->ptr.format, top);
+        lxlsx_format_set_right(obj->ptr.format, right);
+        lxlsx_format_set_bottom(obj->ptr.format, bottom);
+        lxlsx_format_set_left(obj->ptr.format, left);
     }
 }
 /* }}} */
@@ -482,10 +482,10 @@ PHP_METHOD(vtiful_format, borderColor)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format && color > 0) {
-        format_set_border_color(obj->ptr.format, color);
+        lxlsx_format_set_border_color(obj->ptr.format, color);
     }
 }
 /* }}} */
@@ -506,23 +506,23 @@ PHP_METHOD(vtiful_format, borderColorOfTheFourSides)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format) {
         if (top > 0) {
-            format_set_top_color(obj->ptr.format, top);
+            lxlsx_format_set_top_color(obj->ptr.format, top);
         }
 
         if (right > 0) {
-            format_set_right_color(obj->ptr.format, right);
+            lxlsx_format_set_right_color(obj->ptr.format, right);
         }
 
         if (bottom > 0) {
-            format_set_bottom_color(obj->ptr.format, bottom);
+            lxlsx_format_set_bottom_color(obj->ptr.format, bottom);
         }
 
         if (left > 0) {
-            format_set_left_color(obj->ptr.format, left);
+            lxlsx_format_set_left_color(obj->ptr.format, left);
         }
     }
 }
@@ -540,10 +540,10 @@ PHP_METHOD(vtiful_format, rotation)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format && ((angle >= -90 && angle <= 90) || angle == 270)) {
-        format_set_rotation(obj->ptr.format, angle);
+        lxlsx_format_set_rotation(obj->ptr.format, angle);
     }
 }
 /* }}} */
@@ -560,10 +560,10 @@ PHP_METHOD(vtiful_format, indent)
 
     ZVAL_COPY(return_value, getThis());
 
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format && level >= 0) {
-        format_set_indent(obj->ptr.format, level);
+        lxlsx_format_set_indent(obj->ptr.format, level);
     }
 }
 /* }}} */
@@ -572,37 +572,37 @@ PHP_METHOD(vtiful_format, indent)
  */
 PHP_METHOD(vtiful_format, toResource)
 {
-    format_object *obj = Z_FORMAT_P(getThis());
+    lxlsx_format_object *obj = Z_FORMAT_P(getThis());
 
     RETURN_RES(zend_register_resource(obj->ptr.format, le_xls_writer));
 }
 /* }}} */
 
-/** {{{ format_methods
+/** {{{ lxlsx_format_methods
 */
-zend_function_entry format_methods[] = {
-        PHP_ME(vtiful_format, __construct,               format_construct_arginfo,                      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, wrap,                      format_wrap_arginfo,                           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, bold,                      format_bold_arginfo,                           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, italic,                    format_italic_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, border,                    format_border_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, borderOfTheFourSides,      format_border_of_the_four_sides_arginfo,       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, borderColor,               format_border_color_arginfo,                   ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, borderColorOfTheFourSides, format_border_color_of_the_four_sides_arginfo, ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, align,                     format_align_arginfo,                          ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, number,                    format_number_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, fontColor,                 format_color_arginfo,                          ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, font,                      format_font_arginfo,                           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, fontSize,                  format_size_arginfo,                           ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, strikeout,                 format_strikeout_arginfo,                      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, underline,                 format_underline_arginfo,                      ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, unlocked,                  format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, locked,                    format_locked_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, hidden,                    format_hidden_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, rotation,                  format_rotation_arginfo,                       ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, indent,                    format_indent_arginfo,                         ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, toResource,                format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)
-        PHP_ME(vtiful_format, background,                format_background_arginfo,                     ZEND_ACC_PUBLIC)
+zend_function_entry lxlsx_format_methods[] = {
+        PHP_ME(vtiful_format, __construct,               lxlsx_format_construct_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, wrap,                      lxlsx_format_wrap_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, bold,                      lxlsx_format_bold_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, italic,                    lxlsx_format_italic_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, border,                    lxlsx_format_border_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderOfTheFourSides,      lxlsx_format_border_of_the_four_sides_arginfo,       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderColor,               lxlsx_format_border_color_arginfo,                   ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, borderColorOfTheFourSides, lxlsx_format_border_color_of_the_four_sides_arginfo, ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, align,                     lxlsx_format_align_arginfo,                          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, number,                    lxlsx_format_number_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, fontColor,                 lxlsx_format_color_arginfo,                          ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, font,                      lxlsx_format_font_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, fontSize,                  lxlsx_format_size_arginfo,                           ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, strikeout,                 lxlsx_format_strikeout_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, underline,                 lxlsx_format_underline_arginfo,                      ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, unlocked,                  lxlsx_format_unlocked_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, locked,                    lxlsx_format_locked_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, hidden,                    lxlsx_format_hidden_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, rotation,                  lxlsx_format_rotation_arginfo,                       ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, indent,                    lxlsx_format_indent_arginfo,                         ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, toResource,                lxlsx_format_to_resource_arginfo,                    ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_format, background,                lxlsx_format_background_arginfo,                     ZEND_ACC_PUBLIC)
         PHP_FE_END
 };
 /* }}} */
@@ -612,83 +612,83 @@ zend_function_entry format_methods[] = {
 VTIFUL_STARTUP_FUNCTION(format) {
     zend_class_entry ce;
 
-    INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", format_methods);
-    ce.create_object = format_objects_new;
+    INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "Format", lxlsx_format_methods);
+    ce.create_object = lxlsx_format_objects_new;
     vtiful_format_ce = zend_register_internal_class(&ce);
 
-    memcpy(&format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    format_handlers.offset   = offsetof(format_object, zo);
-    format_handlers.free_obj = format_objects_free;
+    memcpy(&lxlsx_format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    lxlsx_format_handlers.offset   = offsetof(lxlsx_format_object, zo);
+    lxlsx_format_handlers.free_obj = lxlsx_format_objects_free;
 
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE",            LXW_UNDERLINE_SINGLE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE ",           LXW_UNDERLINE_DOUBLE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE_ACCOUNTING", LXW_UNDERLINE_SINGLE_ACCOUNTING)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE_ACCOUNTING", LXW_UNDERLINE_DOUBLE_ACCOUNTING)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE",            LXLSX_UNDERLINE_SINGLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE ",           LXLSX_UNDERLINE_DOUBLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_SINGLE_ACCOUNTING", LXLSX_UNDERLINE_SINGLE_ACCOUNTING)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "UNDERLINE_DOUBLE_ACCOUNTING", LXLSX_UNDERLINE_DOUBLE_ACCOUNTING)
 
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_LEFT",                 LXW_ALIGN_LEFT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_CENTER",               LXW_ALIGN_CENTER)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_RIGHT",                LXW_ALIGN_RIGHT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_FILL",                 LXW_ALIGN_FILL)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_JUSTIFY",              LXW_ALIGN_JUSTIFY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_CENTER_ACROSS",        LXW_ALIGN_CENTER_ACROSS)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_DISTRIBUTED",          LXW_ALIGN_DISTRIBUTED)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_TOP",         LXW_ALIGN_VERTICAL_TOP)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_BOTTOM",      LXW_ALIGN_VERTICAL_BOTTOM)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_CENTER",      LXW_ALIGN_VERTICAL_CENTER)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_JUSTIFY",     LXW_ALIGN_VERTICAL_JUSTIFY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_DISTRIBUTED", LXW_ALIGN_VERTICAL_DISTRIBUTED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_LEFT",                 LXLSX_ALIGN_LEFT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_CENTER",               LXLSX_ALIGN_CENTER)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_RIGHT",                LXLSX_ALIGN_RIGHT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_FILL",                 LXLSX_ALIGN_FILL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_JUSTIFY",              LXLSX_ALIGN_JUSTIFY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_CENTER_ACROSS",        LXLSX_ALIGN_CENTER_ACROSS)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_DISTRIBUTED",          LXLSX_ALIGN_DISTRIBUTED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_TOP",         LXLSX_ALIGN_VERTICAL_TOP)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_BOTTOM",      LXLSX_ALIGN_VERTICAL_BOTTOM)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_CENTER",      LXLSX_ALIGN_VERTICAL_CENTER)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_JUSTIFY",     LXLSX_ALIGN_VERTICAL_JUSTIFY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "FORMAT_ALIGN_VERTICAL_DISTRIBUTED", LXLSX_ALIGN_VERTICAL_DISTRIBUTED)
 
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLACK",   LXW_COLOR_BLACK)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLUE",    LXW_COLOR_BLUE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BROWN",   LXW_COLOR_BROWN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_CYAN",    LXW_COLOR_CYAN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GRAY",    LXW_COLOR_GRAY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GREEN",   LXW_COLOR_GREEN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_LIME",    LXW_COLOR_LIME)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_MAGENTA", LXW_COLOR_MAGENTA)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_NAVY",    LXW_COLOR_NAVY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_ORANGE",  LXW_COLOR_ORANGE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PINK",    LXW_COLOR_PINK)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PURPLE",  LXW_COLOR_PURPLE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_RED",     LXW_COLOR_RED)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_SILVER",  LXW_COLOR_SILVER)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_WHITE",   LXW_COLOR_WHITE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_YELLOW",  LXW_COLOR_YELLOW)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLACK",   LXLSX_COLOR_BLACK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BLUE",    LXLSX_COLOR_BLUE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_BROWN",   LXLSX_COLOR_BROWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_CYAN",    LXLSX_COLOR_CYAN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GRAY",    LXLSX_COLOR_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_GREEN",   LXLSX_COLOR_GREEN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_LIME",    LXLSX_COLOR_LIME)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_MAGENTA", LXLSX_COLOR_MAGENTA)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_NAVY",    LXLSX_COLOR_NAVY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_ORANGE",  LXLSX_COLOR_ORANGE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PINK",    LXLSX_COLOR_PINK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_PURPLE",  LXLSX_COLOR_PURPLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_RED",     LXLSX_COLOR_RED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_SILVER",  LXLSX_COLOR_SILVER)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_WHITE",   LXLSX_COLOR_WHITE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "COLOR_YELLOW",  LXLSX_COLOR_YELLOW)
 
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_NONE",             LXW_PATTERN_NONE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_SOLID",            LXW_PATTERN_SOLID)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_MEDIUM_GRAY",      LXW_PATTERN_MEDIUM_GRAY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRAY",        LXW_PATTERN_DARK_GRAY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRAY",       LXW_PATTERN_LIGHT_GRAY)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_HORIZONTAL",  LXW_PATTERN_DARK_HORIZONTAL)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_VERTICAL",    LXW_PATTERN_DARK_VERTICAL)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_DOWN",        LXW_PATTERN_DARK_DOWN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_UP",          LXW_PATTERN_DARK_UP)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRID",        LXW_PATTERN_DARK_GRID)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_TRELLIS",     LXW_PATTERN_DARK_TRELLIS)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_HORIZONTAL", LXW_PATTERN_LIGHT_HORIZONTAL)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_VERTICAL",   LXW_PATTERN_LIGHT_VERTICAL)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_DOWN",       LXW_PATTERN_LIGHT_DOWN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_UP",         LXW_PATTERN_LIGHT_UP)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRID",       LXW_PATTERN_LIGHT_GRID)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_TRELLIS",    LXW_PATTERN_LIGHT_TRELLIS)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_125",         LXW_PATTERN_GRAY_125)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_0625",        LXW_PATTERN_GRAY_0625)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_NONE",             LXLSX_PATTERN_NONE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_SOLID",            LXLSX_PATTERN_SOLID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_MEDIUM_GRAY",      LXLSX_PATTERN_MEDIUM_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRAY",        LXLSX_PATTERN_DARK_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRAY",       LXLSX_PATTERN_LIGHT_GRAY)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_HORIZONTAL",  LXLSX_PATTERN_DARK_HORIZONTAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_VERTICAL",    LXLSX_PATTERN_DARK_VERTICAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_DOWN",        LXLSX_PATTERN_DARK_DOWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_UP",          LXLSX_PATTERN_DARK_UP)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_GRID",        LXLSX_PATTERN_DARK_GRID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_DARK_TRELLIS",     LXLSX_PATTERN_DARK_TRELLIS)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_HORIZONTAL", LXLSX_PATTERN_LIGHT_HORIZONTAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_VERTICAL",   LXLSX_PATTERN_LIGHT_VERTICAL)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_DOWN",       LXLSX_PATTERN_LIGHT_DOWN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_UP",         LXLSX_PATTERN_LIGHT_UP)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_GRID",       LXLSX_PATTERN_LIGHT_GRID)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_LIGHT_TRELLIS",    LXLSX_PATTERN_LIGHT_TRELLIS)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_125",         LXLSX_PATTERN_GRAY_125)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "PATTERN_GRAY_0625",        LXLSX_PATTERN_GRAY_0625)
 
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_NONE",                 LXW_BORDER_NONE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THIN",                 LXW_BORDER_THIN)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM",               LXW_BORDER_MEDIUM)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASHED",               LXW_BORDER_DASHED)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOTTED",               LXW_BORDER_DOTTED)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THICK",                LXW_BORDER_THICK)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOUBLE",               LXW_BORDER_DOUBLE)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_HAIR",                 LXW_BORDER_HAIR)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASHED",        LXW_BORDER_MEDIUM_DASHED)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT",             LXW_BORDER_DASH_DOT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT",      LXW_BORDER_MEDIUM_DASH_DOT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT_DOT",         LXW_BORDER_DASH_DOT_DOT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT_DOT",  LXW_BORDER_MEDIUM_DASH_DOT_DOT)
-    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_SLANT_DASH_DOT",       LXW_BORDER_SLANT_DASH_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_NONE",                 LXLSX_BORDER_NONE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THIN",                 LXLSX_BORDER_THIN)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM",               LXLSX_BORDER_MEDIUM)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASHED",               LXLSX_BORDER_DASHED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOTTED",               LXLSX_BORDER_DOTTED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_THICK",                LXLSX_BORDER_THICK)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DOUBLE",               LXLSX_BORDER_DOUBLE)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_HAIR",                 LXLSX_BORDER_HAIR)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASHED",        LXLSX_BORDER_MEDIUM_DASHED)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT",             LXLSX_BORDER_DASH_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT",      LXLSX_BORDER_MEDIUM_DASH_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_DASH_DOT_DOT",         LXLSX_BORDER_DASH_DOT_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_MEDIUM_DASH_DOT_DOT",  LXLSX_BORDER_MEDIUM_DASH_DOT_DOT)
+    REGISTER_CLASS_CONST_LONG(vtiful_format_ce, "BORDER_SLANT_DASH_DOT",       LXLSX_BORDER_SLANT_DASH_DOT)
 
     return SUCCESS;
 }

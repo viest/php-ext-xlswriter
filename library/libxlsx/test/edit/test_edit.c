@@ -581,6 +581,58 @@ static void test_opened_workbook_uses_standard_write_api(void)
     assert_formula_cell(NUMBER_XLSX, 2, 3, "A2*2", "0");
 }
 
+static void test_edit_rejects_unsupported_worksheet_ops(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_datetime dt;
+
+    memset(&dt, 0, sizeof(dt));
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    TEST_ASSERT_TRUE(lxlsx_workbook_is_edit(workbook));
+
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    /* Snapshot-based editing can only patch number/string/boolean/formula
+     * cells. Everything else must report FEATURE_NOT_SUPPORTED instead of
+     * mutating in-memory state that the snapshot save never serializes. */
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_write_datetime(worksheet, 3, 0, &dt, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_write_unixtime(worksheet, 3, 1, 0, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_write_url(worksheet, 4, 0, "https://x", NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_write_comment(worksheet, 5, 0, "note"));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_insert_image_opt(worksheet, 6, 0, "x.png", NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_insert_chart(worksheet, 7, 0, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_merge_range(worksheet, 8, 0, 8, 1, "m", NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_autofilter(worksheet, 0, 0, 1, 1));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_add_table(worksheet, 0, 0, 1, 1, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_data_validation_cell(worksheet, 0, 0, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_set_column_opt(worksheet, 0, 0, 10.0, NULL, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_set_row_opt(worksheet, 0, 10.0, NULL, NULL));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_freeze_panes(worksheet, 1, 0));
+    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
+                          lxlsx_worksheet_show_comments(worksheet));
+
+    lxlsx_workbook_free(workbook);
+}
+
 static void test_edit_uses_open_time_snapshot(void)
 {
     lxlsx_edit_session *session;
@@ -614,6 +666,7 @@ int main(void)
     RUN_TEST(test_edit_expands_namespaced_self_closing_sheet_data);
     RUN_TEST(test_edit_inserts_missing_rows_inside_sheet_data_order);
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
+    RUN_TEST(test_edit_rejects_unsupported_worksheet_ops);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();
 }

@@ -364,22 +364,10 @@ void lxlsx_format_copy(lxlsx_format *new_format, lxlsx_format *other_format)
 
 void url_writer(zend_long row, zend_long columns, xls_resource_write_t *res, zend_string *url, zend_string *text, zend_string *tool_tip, lxlsx_format *format)
 {
-    if (text == NULL && tool_tip == NULL) {
-        lxlsx_worksheet_write_url_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(url), format, NULL, NULL);
-        return;
-    }
-
-    if (text == NULL && tool_tip != NULL) {
-        lxlsx_worksheet_write_url_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(url), format, NULL, ZSTR_VAL(tool_tip));
-        return;
-    }
-
-    if (text != NULL && tool_tip == NULL) {
-        lxlsx_worksheet_write_url_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(url), format, ZSTR_VAL(text), NULL);
-        return;
-    }
-
-    lxlsx_worksheet_write_url_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(url), format, ZSTR_VAL(text), ZSTR_VAL(tool_tip));
+    int error = lxlsx_worksheet_write_url_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(url), format,
+                                              text != NULL ? ZSTR_VAL(text) : NULL,
+                                              tool_tip != NULL ? ZSTR_VAL(tool_tip) : NULL);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -389,8 +377,9 @@ void image_writer(zval *value, zend_long row, zend_long columns, double width, d
 {
     lxlsx_image_options options = {.x_offset = 0, .y_offset = 0, .x_scale = width, .y_scale = height, .object_position = 2};
     zend_string *path = zval_get_string(value);
-    lxlsx_worksheet_insert_image_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(path), &options);
+    int error = lxlsx_worksheet_insert_image_opt(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(path), &options);
     zend_string_release(path);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -434,7 +423,8 @@ void dynamic_array_formula_writer(zend_string *value, zend_long first_row, zend_
  */
 void lxlsx_chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *lxlsx_chart_resource, xls_resource_write_t *res)
 {
-    lxlsx_worksheet_insert_chart(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, lxlsx_chart_resource->chart);
+    int error = lxlsx_worksheet_insert_chart(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, lxlsx_chart_resource->chart);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -442,7 +432,8 @@ void lxlsx_chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *
  */
 void datetime_writer(lxlsx_datetime *datetime, zend_long row, zend_long columns, zend_string *format, xls_resource_write_t *res, lxlsx_format *lxlsx_format_handle)
 {
-    lxlsx_worksheet_write_datetime(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, datetime, lxlsx_format_handle);
+    int error = lxlsx_worksheet_write_datetime(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, datetime, lxlsx_format_handle);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -460,7 +451,8 @@ void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_
  */
 void comment_show(xls_resource_write_t *res)
 {
-    lxlsx_worksheet_show_comments(res->worksheet);
+    int error = lxlsx_worksheet_show_comments(res->worksheet);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -475,6 +467,9 @@ void auto_filter(zend_string *range, xls_resource_write_t *res)
 
     // Worksheet row or column index out of range
     WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+
+    // Any other error, e.g. unsupported in edit mode
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -492,6 +487,9 @@ void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxl
     // Worksheet row or column index out of range
     WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
 
+    // Any other error, e.g. unsupported in edit mode
+    WORKSHEET_WRITER_EXCEPTION(error);
+
     // writer merge cell
     type_writer(value, lxlsx_name_to_row(_range), lxlsx_name_to_col(_range), res, NULL, format);
 }
@@ -508,6 +506,9 @@ void set_column(zend_string *range, double width, xls_resource_write_t *res, lxl
 
     // Worksheet row or column index out of range
     WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+
+    // Any other error, e.g. unsupported in edit mode
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
@@ -518,7 +519,9 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxlsx
     char *rows = ZSTR_VAL(range);
 
     if (strchr(rows, ':')) {
-        lxlsx_worksheet_set_rows(ROWS(rows), height, res, format, user_options);
+        int error = lxlsx_worksheet_set_rows(ROWS(rows), height, res, format, user_options);
+
+        WORKSHEET_WRITER_EXCEPTION(error);
     } else {
         int error = lxlsx_worksheet_set_row_opt(res->worksheet, ROW(rows), height, format, user_options);
 
@@ -527,6 +530,9 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxlsx
 
         // Worksheet row or column index out of range
         WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+
+        // Any other error, e.g. unsupported in edit mode
+        WORKSHEET_WRITER_EXCEPTION(error);
     }
 }
 
@@ -536,25 +542,34 @@ void set_row(zend_string *range, double height, xls_resource_write_t *res, lxlsx
 void validation(xls_resource_write_t *res, zend_string *range, lxlsx_data_validation *validation)
 {
     char *rangeStr = ZSTR_VAL(range);
-        
+    int error;
+
     if (strchr(rangeStr, ':')) {
-	    lxlsx_worksheet_data_validation_range(res->worksheet, RANGE(rangeStr), validation);
+	    error = lxlsx_worksheet_data_validation_range(res->worksheet, RANGE(rangeStr), validation);
     } else {
-	    lxlsx_worksheet_data_validation_cell(res->worksheet, CELL(rangeStr), validation);
+	    error = lxlsx_worksheet_data_validation_cell(res->worksheet, CELL(rangeStr), validation);
     }
+
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*
  * Set rows format
  */
-void lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double height, xls_resource_write_t *res, lxlsx_format *format, lxlsx_row_col_options *user_options)
+lxlsx_error lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double height, xls_resource_write_t *res, lxlsx_format *format, lxlsx_row_col_options *user_options)
 {
+    lxlsx_error error = LXLSX_NO_ERROR;
+
     while (1) {
-        lxlsx_worksheet_set_row_opt(res->worksheet, end, height, format, user_options);
+        error = lxlsx_worksheet_set_row_opt(res->worksheet, end, height, format, user_options);
+        if (error > LXLSX_NO_ERROR)
+            return error;
         if (end == start)
             break;
         end--;
     }
+
+    return LXLSX_NO_ERROR;
 }
 
 /*
@@ -562,7 +577,8 @@ void lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double height,
  */
 void freeze_panes(xls_resource_write_t *res, zend_long row, zend_long column)
 {
-    lxlsx_worksheet_freeze_panes(res->worksheet, row, column);
+    int error = lxlsx_worksheet_freeze_panes(res->worksheet, row, column);
+    WORKSHEET_WRITER_EXCEPTION(error);
 }
 
 /*

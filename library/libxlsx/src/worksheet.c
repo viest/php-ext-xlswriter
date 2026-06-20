@@ -8459,6 +8459,9 @@ lxlsx_worksheet_write_datetime(lxlsx_worksheet *self,
                          lxlsx_col_t col_num, lxlsx_datetime *datetime,
                          lxlsx_format *format)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cell *cell;
     double excel_date;
     lxlsx_error err;
@@ -8490,6 +8493,9 @@ lxlsx_worksheet_write_unixtime(lxlsx_worksheet *self,
                          lxlsx_col_t col_num,
                          int64_t unixtime, lxlsx_format *format)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cell *cell;
     double excel_date;
     lxlsx_error err;
@@ -8518,6 +8524,9 @@ lxlsx_worksheet_write_url_opt(lxlsx_worksheet *self,
                         lxlsx_format *user_format, const char *string,
                         const char *tooltip)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cell *link;
     char *string_copy = NULL;
     char *url_copy = NULL;
@@ -8733,6 +8742,9 @@ lxlsx_worksheet_write_rich_string(lxlsx_worksheet *self,
                             lxlsx_rich_string_tuple *rich_strings[],
                             lxlsx_format *format)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cell *cell;
     int32_t string_id;
     struct lxlsx_sst_element *lxlsx_sst_element;
@@ -8878,6 +8890,9 @@ lxlsx_worksheet_write_comment_opt(lxlsx_worksheet *self,
                             lxlsx_row_t row_num, lxlsx_col_t col_num,
                             const char *text, lxlsx_comment_options *options)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cell *cell;
     lxlsx_error err;
     lxlsx_vml_obj *comment;
@@ -9288,6 +9303,9 @@ lxlsx_worksheet_autofilter(lxlsx_worksheet *self, lxlsx_row_t first_row,
                      lxlsx_col_t first_col, lxlsx_row_t last_row,
                      lxlsx_col_t last_col)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_row_t tmp_row;
     lxlsx_col_t tmp_col;
     lxlsx_error err;
@@ -9583,6 +9601,9 @@ lxlsx_worksheet_add_table(lxlsx_worksheet *self, lxlsx_row_t first_row,
                     lxlsx_col_t first_col, lxlsx_row_t last_row,
                     lxlsx_col_t last_col, lxlsx_table_options *user_options)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_row_t tmp_row;
     lxlsx_col_t tmp_col;
     lxlsx_col_t num_cols;
@@ -9869,12 +9890,17 @@ lxlsx_worksheet_freeze_panes_opt(lxlsx_worksheet *self,
 /*
  * Set panes and mark them as frozen.
  */
-void
+lxlsx_error
 lxlsx_worksheet_freeze_panes(lxlsx_worksheet *self,
                        lxlsx_row_t first_row, lxlsx_col_t first_col)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_worksheet_freeze_panes_opt(self, first_row, first_col,
                                first_row, first_col, 0);
+
+    return LXLSX_NO_ERROR;
 }
 
 /*
@@ -10624,6 +10650,9 @@ lxlsx_worksheet_insert_image_opt(lxlsx_worksheet *self,
                            const char *filename,
                            lxlsx_image_options *user_options)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     FILE *image_stream;
     const char *description;
     lxlsx_object_properties *object_props;
@@ -10720,6 +10749,9 @@ lxlsx_worksheet_insert_image_buffer_opt(lxlsx_worksheet *self,
                                   size_t image_size,
                                   lxlsx_image_options *user_options)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     FILE *image_stream;
     lxlsx_object_properties *object_props;
 
@@ -11279,6 +11311,9 @@ lxlsx_error
 lxlsx_worksheet_insert_chart(lxlsx_worksheet *self,
                        lxlsx_row_t row_num, lxlsx_col_t col_num, lxlsx_chart *chart)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     return lxlsx_worksheet_insert_chart_opt(self, row_num, col_num, chart, NULL);
 }
 
@@ -11293,6 +11328,9 @@ lxlsx_worksheet_data_validation_range(lxlsx_worksheet *self, lxlsx_row_t first_r
                                 lxlsx_col_t last_col,
                                 lxlsx_data_validation *validation)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_data_val_obj *copy;
     uint8_t is_between = LXLSX_FALSE;
     uint8_t is_formula = LXLSX_FALSE;
@@ -11571,6 +11609,9 @@ lxlsx_worksheet_conditional_format_range(lxlsx_worksheet *self, lxlsx_row_t firs
                                    lxlsx_col_t last_col,
                                    lxlsx_conditional_format *user_options)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     lxlsx_cond_format_obj *cond_format;
     lxlsx_row_t tmp_row;
     lxlsx_col_t tmp_col;
@@ -11833,10 +11874,15 @@ lxlsx_worksheet_set_comments_author(lxlsx_worksheet *self, const char *author)
 /*
  * Make any comments in the worksheet visible, unless explicitly hidden.
  */
-void
+lxlsx_error
 lxlsx_worksheet_show_comments(lxlsx_worksheet *self)
 {
+    if (_worksheet_is_edit(self))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
     self->comment_display_default = LXLSX_COMMENT_DISPLAY_VISIBLE;
+
+    return LXLSX_NO_ERROR;
 }
 
 /*

@@ -4610,7 +4610,7 @@ void lxlsx_worksheet_set_first_sheet(lxlsx_worksheet *worksheet);
  * @endcode
  *
  */
-void lxlsx_worksheet_freeze_panes(lxlsx_worksheet *worksheet,
+lxlsx_error lxlsx_worksheet_freeze_panes(lxlsx_worksheet *worksheet,
                             lxlsx_row_t row, lxlsx_col_t col);
 /**
  * @brief Split a worksheet into panes.
@@ -5746,7 +5746,7 @@ lxlsx_error lxlsx_worksheet_set_vba_name(lxlsx_worksheet *worksheet, const char 
  * option of the #lxlsx_comment_options struct and the `lxlsx_worksheet_write_comment_opt()`
  * function (see above and @ref ww_comments_visible).
  */
-void lxlsx_worksheet_show_comments(lxlsx_worksheet *worksheet);
+lxlsx_error lxlsx_worksheet_show_comments(lxlsx_worksheet *worksheet);
 
 /**
  * @brief Set the default author of the cell comments.

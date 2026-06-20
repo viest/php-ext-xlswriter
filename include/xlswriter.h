@@ -454,7 +454,7 @@ void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxl
 void comment_writer(zend_string *comment, zend_long row, zend_long columns, xls_resource_write_t *res);
 void call_object_method(zval *object, const char *function_name, uint32_t param_count, zval *params, zval *ret_val);
 void lxlsx_chart_writer(zend_long row, zend_long columns, xls_resource_chart_t *lxlsx_chart_resource, xls_resource_write_t *res);
-void lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double height, xls_resource_write_t *res, lxlsx_format *format, lxlsx_row_col_options *user_options);
+lxlsx_error lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double height, xls_resource_write_t *res, lxlsx_format *format, lxlsx_row_col_options *user_options);
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
 void image_opt_writer(zval *value, zend_long row, zend_long columns, lxlsx_image_options *options, xls_resource_write_t *res);
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format);

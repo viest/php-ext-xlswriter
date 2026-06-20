@@ -31,9 +31,11 @@
 
 ## 为什么使用xlswriter
 
-请参考下方对比图；由于内存原因，PHPExcel数据量`相对较大`的情况下无法正常工作，虽然可以通过`修改memory_limit`配置来解决内存问题，但完成工作的时间可能会更长;
+下图对比了 xlswriter 与 PhpSpreadsheet（PHPExcel 的官方后续项目）导出 XLSX 的性能，数据量一直放大到 Excel 的行数上限。以 1,048,576 行 × 10 列为例，xlswriter 快约 20 倍；其固定内存模式无论写入多少行，峰值内存都稳定在约 30 MB，而纯 PHP 库的内存会随数据量持续增长（同一个文件约需 7 GB）。
 
-![php-excel](resource/performance_comparison.png)
+![xlswriter 与 PhpSpreadsheet 性能对比](resource/performance_comparison.png)
+
+> 两种 xlswriter 模式的耗时相差约 10% 以内。固定内存模式之所以略快，是因为它把每一行直接流式写入磁盘并立即释放——单趟完成，不需要在内存里先建好整个工作表、最后再二次序列化。代价是：与普通模式不同，单元格一旦写出就无法再回头修改（且字符串以内联方式存储、不做去重，文件可能略大）。普通模式会把整个工作簿保留在内存中，正因如此你才能以任意顺序写入单元格、并在保存前重新设置样式。
 
 xlswriter是一个 PHP C 扩展，可用于在 Excel 2007+ XLSX 文件中读取数据，插入多个工作表，写入文本、数字、公式、日期、图表、图片和超链接。
 

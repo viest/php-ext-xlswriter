@@ -31,9 +31,11 @@
 
 ## Why use xlswriter
 
-Please refer to the image below. PHPExcel has been unable to work properly for memory reasons at 40,000 and 100000 points, but it can be resolved by modifying the ini configuration, but the time may take longer to complete the work;
+The chart below compares xlswriter with PhpSpreadsheet (the maintained successor to PHPExcel) when exporting an XLSX file, scaled all the way to Excel's row limit. Writing 1,048,576 rows × 10 columns, xlswriter is about 20× faster, and its fixed-memory mode keeps peak memory flat at ~30 MB no matter how many rows you write — whereas a pure-PHP library's memory grows with the data (≈7 GB for the same file).
 
-![php-excel](resource/performance_comparison.png)
+![xlswriter vs PhpSpreadsheet performance](resource/performance_comparison.png)
+
+> The two xlswriter modes track within ~10% of each other on time. Fixed-memory mode is marginally faster because it streams each row straight to disk and frees it immediately — a single pass, with no full in-memory model to build up and then serialize a second time at the end. The trade-off is that, unlike normal mode, it can no longer revisit a cell once it has been written (and its strings are stored inline rather than de-duplicated, so the file can be slightly larger). Normal mode keeps the whole workbook in memory, which is what lets you write cells in any order and re-style them before saving.
 
 xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file. It supports features such as:
 

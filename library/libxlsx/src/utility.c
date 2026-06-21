@@ -699,6 +699,53 @@ lxlsx_get_filehandle(char **buf, size_t *size, const char *tmpdir)
 #endif
 }
 
+lxlsx_error
+lxlsx_capture_filehandle(FILE *fh, char *buffer, size_t buffer_size,
+                         char **out, size_t *out_len)
+{
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    *out = NULL;
+    *out_len = 0;
+
+    if (fflush(fh)) {
+        err = LXLSX_ERROR_CREATING_TMPFILE;
+        goto done;
+    }
+
+    if (buffer) {
+        /* open_memstream backend: bytes live in `buffer` after fflush. */
+        *out = malloc(buffer_size + 1);
+        if (!*out) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        memcpy(*out, buffer, buffer_size);
+        (*out)[buffer_size] = '\0';
+        *out_len = buffer_size;
+    }
+    else {
+        /* tmpfile backend: read the contents back. */
+        long size;
+        if (fseek(fh, 0L, SEEK_END)) { err = LXLSX_ERROR_CREATING_TMPFILE; goto done; }
+        size = ftell(fh);
+        if (size < 0) { err = LXLSX_ERROR_CREATING_TMPFILE; goto done; }
+        *out = malloc((size_t) size + 1);
+        if (!*out) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        rewind(fh);
+        if (size > 0 && fread(*out, (size_t) size, 1, fh) < 1) {
+            free(*out);
+            *out = NULL;
+            err = LXLSX_ERROR_CREATING_TMPFILE;
+            goto done;
+        }
+        (*out)[size] = '\0';
+        *out_len = (size_t) size;
+    }
+
+done:
+    fclose(fh);
+    free(buffer);
+    return err;
+}
+
 /*
  * Use third party function to handle sprintf of doubles for locale portable
  * code.

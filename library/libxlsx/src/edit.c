@@ -29,18 +29,20 @@ typedef enum {
 } lxlsx_edit_change_type;
 
 typedef struct {
+    /* 8-byte members first, then the 4-byte ones, to avoid padding holes
+     * (one of these per edited cell). */
     char *target;
-    lxlsx_row_t row;
-    lxlsx_col_t col;
-    lxlsx_edit_change_type type;
     double number;
     char *string;
-    int boolean;
     char *formula;
     char *cached_result;
     char *number_format;  /* requested number-format code, or NULL */
     lxlsx_format *style;   /* shallow snapshot of an applied format, or NULL */
-    int   style_index;    /* xf index assigned on save (-1 = keep existing) */
+    lxlsx_row_t row;
+    lxlsx_col_t col;
+    lxlsx_edit_change_type type;
+    int boolean;
+    int style_index;      /* xf index assigned on save (-1 = keep existing) */
 } lxlsx_edit_change;
 
 typedef struct {
@@ -2211,57 +2213,83 @@ static lxlsx_error patch_xml_with_row_dims(unsigned char **xml, size_t *xml_len,
                                            const lxlsx_edit_row_dim **rows,
                                            size_t count)
 {
-    size_t i;
-    for (i = 0; i < count; i++) {
-        const char *src = (const char *)*xml;
-        size_t srclen = *xml_len;
-        char needle[24], attr[48];
-        const char *ts, *gt, *p, *limit;
-        lxlsx_edit_buf out = {0};
-        int self_closing;
+    const char *src = (const char *)*xml;
+    const char *end = src + *xml_len;
+    const char *p = src;
+    lxlsx_edit_buf out = {0};
+    lxlsx_error err = LXLSX_NO_ERROR;
 
-        snprintf(needle, sizeof(needle), "<row r=\"%u\"", (unsigned)(rows[i]->row + 1));
-        ts = mem_find(src, srclen, needle);
-        if (!ts)
-            continue;  /* only existing rows */
-        gt = (const char *)memchr(ts, '>', srclen - (size_t)(ts - src));
-        if (!gt)
-            return LXLSX_ERROR_PARAMETER_VALIDATION;
+    if (count == 0)
+        return LXLSX_NO_ERROR;
+
+    /* Single pass over the sheet: rewrite each matching <row>'s ht /
+     * customHeight in one rebuild, instead of re-scanning + re-copying the whole
+     * sheet once per requested row (which was O(rows * sheet_size)). */
+    while (p < end) {
+        const char *ts = mem_find(p, (size_t)(end - p), "<row r=\"");
+        const char *gt, *limit, *q, *ap;
+        size_t rownum = 0, k;
+        double height = 0;
+        int self_closing, matched = 0;
+        char attr[64];
+
+        if (!ts) {
+            if (buf_append(&out, p, (size_t)(end - p)) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            break;
+        }
+        if (buf_append(&out, p, (size_t)(ts - p)) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+
+        gt = (const char *)memchr(ts, '>', (size_t)(end - ts));
+        if (!gt) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
         self_closing = (gt > ts && gt[-1] == '/');
         limit = self_closing ? gt - 1 : gt;
 
-        if (buf_append(&out, src, (size_t)(ts - src)) != 0 ||
-            buf_append_s(&out, "<row") != 0) { free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
-
-        /* Copy existing attributes, dropping any ht / customHeight. */
-        p = ts + 4;  /* past "<row" */
-        while (p < limit) {
-            if ((size_t)(limit - p) >= 4 && memcmp(p, " ht=", 4) == 0) {
-                p += 4;
-                if (p < limit && *p == '"') { p++; while (p < limit && *p != '"') p++; if (p < limit) p++; }
-                continue;
+        q = ts + 8;  /* past "<row r=\"" */
+        while (q < end && *q >= '0' && *q <= '9')
+            rownum = rownum * 10 + (size_t)(*q++ - '0');
+        for (k = 0; k < count; k++) {
+            if ((size_t)(rows[k]->row + 1) == rownum) {
+                height = rows[k]->height; matched = 1; break;
             }
-            if ((size_t)(limit - p) >= 14 && memcmp(p, " customHeight=", 14) == 0) {
-                p += 14;
-                if (p < limit && *p == '"') { p++; while (p < limit && *p != '"') p++; if (p < limit) p++; }
-                continue;
-            }
-            if (buf_append(&out, p, 1) != 0) { free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
-            p++;
         }
 
-        snprintf(attr, sizeof(attr), " ht=\"%g\" customHeight=\"1\"", rows[i]->height);
+        if (!matched) {
+            if (buf_append(&out, ts, (size_t)(gt + 1 - ts)) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            p = gt + 1;
+            continue;
+        }
+
+        /* Keep the row's attributes, dropping any existing ht / customHeight. */
+        if (buf_append_s(&out, "<row") != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        ap = ts + 4;  /* past "<row" */
+        while (ap < limit) {
+            if ((size_t)(limit - ap) >= 4 && memcmp(ap, " ht=", 4) == 0) {
+                ap += 4;
+                if (ap < limit && *ap == '"') { ap++; while (ap < limit && *ap != '"') ap++; if (ap < limit) ap++; }
+                continue;
+            }
+            if ((size_t)(limit - ap) >= 14 && memcmp(ap, " customHeight=", 14) == 0) {
+                ap += 14;
+                if (ap < limit && *ap == '"') { ap++; while (ap < limit && *ap != '"') ap++; if (ap < limit) ap++; }
+                continue;
+            }
+            if (buf_append(&out, ap, 1) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            ap++;
+        }
+        snprintf(attr, sizeof(attr), " ht=\"%g\" customHeight=\"1\"", height);
         if (buf_append_s(&out, attr) != 0 ||
-            buf_append_s(&out, self_closing ? "/>" : ">") != 0 ||
-            buf_append(&out, gt + 1, srclen - (size_t)(gt + 1 - src)) != 0) {
-            free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
-        }
-
-        free(*xml);
-        *xml = (unsigned char *)out.data;
-        *xml_len = out.len;
+            buf_append_s(&out, self_closing ? "/>" : ">") != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        p = gt + 1;
     }
-    return LXLSX_NO_ERROR;
+
+    free(*xml);
+    *xml = (unsigned char *)out.data;
+    *xml_len = out.len;
+    out.data = NULL;
+
+done:
+    free(out.data);
+    return err;
 }
 
 static int append_attr_escaped(lxlsx_edit_buf *buf, const char *s)
@@ -2383,6 +2411,30 @@ static const char *v_align_str(uint8_t a)
     case 11: return "justify"; case 12: return "distributed";
     default: return NULL;
     }
+}
+
+/*
+ * Compare only the style fields the snapshots emit into styles.xml (font, fill,
+ * border) — never the whole struct: lxlsx_format carries live pointers, xf
+ * indices and inter-field padding that memcpy doesn't normalize, so a raw
+ * memcmp made dedup unreliable (style bloat) and read padding (UB-adjacent).
+ */
+static int format_style_equal(const lxlsx_format *a, const lxlsx_format *b)
+{
+    return a->bold == b->bold && a->italic == b->italic &&
+           a->underline == b->underline &&
+           a->font_strikeout == b->font_strikeout &&
+           a->font_color == b->font_color &&
+           a->font_size == b->font_size &&
+           strcmp(a->font_name, b->font_name) == 0 &&
+           a->pattern == b->pattern &&
+           a->fg_color == b->fg_color && a->bg_color == b->bg_color &&
+           a->left == b->left && a->right == b->right &&
+           a->top == b->top && a->bottom == b->bottom &&
+           a->diag_border == b->diag_border && a->diag_type == b->diag_type &&
+           a->left_color == b->left_color && a->right_color == b->right_color &&
+           a->top_color == b->top_color && a->bottom_color == b->bottom_color &&
+           a->diag_color == b->diag_color;
 }
 
 static int fmt_has_fill(const lxlsx_format *f)
@@ -2608,7 +2660,7 @@ static lxlsx_error inject_cell_styles(
             size_t font_id, fill_id = 0, border_id = 0, num_id = 0;
             int has_num = 0, found = 0;
             for (j = 0; j < nfmt; j++) {
-                if (memcmp(fmts[j], ch->style, sizeof(lxlsx_format)) == 0) {
+                if (format_style_equal(fmts[j], ch->style)) {
                     ch->style_index = (int)fmt_xf[j];
                     found = 1; break;
                 }
@@ -2847,7 +2899,8 @@ typedef struct {
 
 typedef struct {
     lxlsx_edit_session            *session;
-    lxlsx_source_package_addition *adds;   /* names + data both owned (copied) */
+    lxlsx_source_package_addition *adds;   /* names always owned; data owned iff adds_owned[i] */
+    int                           *adds_owned;
     size_t                         add_count, add_cap;
     lxlsx_composer_patch          *patches;
     size_t                         patch_count, patch_cap;
@@ -2864,10 +2917,12 @@ static void composer_free(lxlsx_composer *c)
 {
     size_t i;
     for (i = 0; i < c->add_count; i++) {
-        free(c->adds[i].name);
-        free((void *)c->adds[i].data);
+        free((void *)(uintptr_t)c->adds[i].name);
+        if (c->adds_owned[i])
+            free((void *)(uintptr_t)c->adds[i].data);
     }
     free(c->adds);
+    free(c->adds_owned);
     for (i = 0; i < c->patch_count; i++) {
         free(c->patches[i].part);
         free(c->patches[i].close_tag);
@@ -2877,35 +2932,44 @@ static void composer_free(lxlsx_composer *c)
     memset(c, 0, sizeof(*c));
 }
 
-/* Append a brand-new part. Both `name` and `data` are copied (the composer owns
- * them), so callers may pass temporary buffers. */
+/* Append a brand-new part. `name` is always copied. `data` is copied when
+ * copy != 0 (callers passing a temporary buffer); when copy == 0 the data is
+ * borrowed and must outlive the save (session-owned buffers like image bytes or
+ * a new sheet's XML) — this avoids duplicating large payloads. */
 static void composer_add_part(lxlsx_composer *c, const char *name,
-                              const unsigned char *data, size_t size)
+                              const unsigned char *data, size_t size, int copy)
 {
     lxlsx_source_package_addition *a;
     char *name_copy;
-    unsigned char *data_copy = NULL;
+    unsigned char *data_ptr;
     if (c->oom)
         return;
     if (c->add_count >= c->add_cap) {
         size_t cap = c->add_cap ? c->add_cap * 2 : 4;
         lxlsx_source_package_addition *next = (lxlsx_source_package_addition *)
             realloc(c->adds, cap * sizeof(*next));
+        int *owned;
         if (!next) { c->oom = 1; return; }
         c->adds = next;
+        owned = (int *)realloc(c->adds_owned, cap * sizeof(*owned));
+        if (!owned) { c->oom = 1; return; }
+        c->adds_owned = owned;
         c->add_cap = cap;
     }
     name_copy = strdup(name);
     if (!name_copy) { c->oom = 1; return; }
-    if (size) {
-        data_copy = (unsigned char *)malloc(size);
-        if (!data_copy) { free(name_copy); c->oom = 1; return; }
-        memcpy(data_copy, data, size);
+    if (copy && size) {
+        data_ptr = (unsigned char *)malloc(size);
+        if (!data_ptr) { free(name_copy); c->oom = 1; return; }
+        memcpy(data_ptr, data, size);
+    } else {
+        data_ptr = (unsigned char *)data;  /* borrowed (or empty) */
     }
     a = &c->adds[c->add_count];
     a->name = name_copy;
-    a->data = data_copy;
+    a->data = data_ptr;
     a->size = size;
+    c->adds_owned[c->add_count] = (copy && size) ? 1 : 0;
     c->add_count++;
 }
 
@@ -3041,7 +3105,7 @@ static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
         size_t num = next_num + i, sid = next_sid + i, rid = next_rid + i;
 
         snprintf(fn, sizeof(fn), "xl/worksheets/sheet%zu.xml", num);
-        composer_add_part(c, fn, (const unsigned char *)s->xml, s->xml_len);
+        composer_add_part(c, fn, (const unsigned char *)s->xml, s->xml_len, 0);
 
         if (buf_append_s(wb, "<sheet name=\"") != 0 ||
             append_attr_escaped(wb, s->name) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
@@ -3176,7 +3240,7 @@ static lxlsx_error append_image_object(lxlsx_composer *c, lxlsx_edit_image *im,
 
     snprintf(media_part, sizeof(media_part),
              "xl/media/image%zu.%s", media_num, im->extension);
-    composer_add_part(c, media_part, im->data, im->size);
+    composer_add_part(c, media_part, im->data, im->size, 0);
 
     /* Default content type per extension (dedup vs existing + batch). */
     seen = (strcmp(im->extension, "png") == 0)  ? seen_png  :
@@ -3252,7 +3316,7 @@ static lxlsx_error append_chart_object(lxlsx_composer *c, lxlsx_edit_chart *ech,
         return err;
 
     snprintf(frag, sizeof(frag), "xl/charts/chart%zu.xml", chart_num);
-    composer_add_part(c, frag, (const unsigned char *)chart_xml, chart_xml_len);
+    composer_add_part(c, frag, (const unsigned char *)chart_xml, chart_xml_len, 1);
     free(chart_xml);
 
     snprintf(frag, sizeof(frag),
@@ -3382,8 +3446,8 @@ static lxlsx_error prepare_drawings(lxlsx_edit_session *session,
             err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
         if (err == LXLSX_NO_ERROR) {
-            composer_add_part(c, drawing_part, (const unsigned char *)draw.data, draw.len);
-            composer_add_part(c, drawing_rels_part, (const unsigned char *)drels.data, drels.len);
+            composer_add_part(c, drawing_part, (const unsigned char *)draw.data, draw.len, 1);
+            composer_add_part(c, drawing_rels_part, (const unsigned char *)drels.data, drels.len, 1);
         }
         free(draw.data);
         free(drels.data);
@@ -3422,7 +3486,7 @@ static lxlsx_error prepare_drawings(lxlsx_edit_session *session,
                 "<Relationship Id=\"rId1\" Type=\"" LXLSX_DRAW_REL_TYPE
                 "\" Target=\"../drawings/drawing%zu.xml\"/></Relationships>",
                 drawing_num);
-            composer_add_part(c, ws_rels_part, (const unsigned char *)skel, strlen(skel));
+            composer_add_part(c, ws_rels_part, (const unsigned char *)skel, strlen(skel), 1);
         }
 
         err = get_dirty_sheet(session, sheets, sheet_count, sheet_cap, target, &ds);

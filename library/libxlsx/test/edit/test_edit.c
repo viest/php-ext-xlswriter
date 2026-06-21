@@ -836,6 +836,33 @@ static void test_edit_add_sheet_via_workbook_api(void)
     assert_string_cell_in_sheet(ADDSHEET_XLSX, "Added", 3, 1, "second");
 }
 
+/*
+ * Add a worksheet but write NOTHING to it. The added sheet is optimize-mode, so
+ * its dimension stays undefined and the assemble takes the empty-sheetData
+ * branch — which must still release the optimize tmpfile/buffer (regression
+ * guard for the empty-sheet leak; run under leaks to verify).
+ */
+static void test_edit_add_empty_sheet(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_edit_session *session;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(ADDSHEET_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    TEST_ASSERT_NOT_NULL(lxlsx_workbook_add_worksheet(workbook, "Empty"));
+    assert_ok(lxlsx_workbook_save_as(workbook, ADDSHEET_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    session = lxlsx_edit_open(ADDSHEET_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    TEST_ASSERT_EQUAL_INT(2, (int)lxlsx_edit_sheet_count(session));
+    TEST_ASSERT_EQUAL_STRING("Empty", lxlsx_edit_sheet_name(session, 1));
+    lxlsx_edit_close(session);
+}
+
 static void write_protected_no_merge(const char *path);
 
 /* A minimal valid 1x1 RGBA PNG (no pHYs chunk, so DPI defaults to 96). */
@@ -1172,6 +1199,7 @@ int main(void)
     RUN_TEST(test_edit_sets_dimensions);
     RUN_TEST(test_edit_adds_worksheet);
     RUN_TEST(test_edit_add_sheet_via_workbook_api);
+    RUN_TEST(test_edit_add_empty_sheet);
     RUN_TEST(test_edit_inserts_image);
     RUN_TEST(test_edit_inserts_chart);
     RUN_TEST(test_edit_mixes_image_and_chart);

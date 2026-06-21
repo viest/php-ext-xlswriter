@@ -290,6 +290,17 @@ FILE *lxlsx_tmpfile(const char *tmpdir);
 FILE *lxlsx_get_filehandle(char **buf, size_t *size, const char *tmpdir);
 FILE *lxlsx_fopen(const char *filename, const char *mode);
 
+/*
+ * Capture into memory the bytes written to a handle previously obtained from
+ * lxlsx_get_filehandle(): flush, then copy them out (open_memstream backs
+ * `buffer`; the tmpfile fallback leaves buffer==NULL, so read it back). Always
+ * fcloses `fh` and frees `buffer`. On success *out is a NUL-terminated,
+ * caller-owned copy of length *out_len. Returns LXLSX_ERROR_* on failure
+ * (*out left NULL).
+ */
+lxlsx_error lxlsx_capture_filehandle(FILE *fh, char *buffer, size_t buffer_size,
+                                     char **out, size_t *out_len);
+
 /* Use the third party dtoa function to avoid locale issues with sprintf
  * double formatting. Otherwise we use a simple macro that falls back to the
  * default c-lib sprintf.

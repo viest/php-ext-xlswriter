@@ -851,13 +851,27 @@ static lxlsx_error write_preserved_central(
 #define LXLSX_ZIP_DEF_DATE  0x0021u
 #define LXLSX_ZIP_DEF_TIME  0x0000u
 
+/* Already-compressed media: deflating it again only wastes CPU and barely moves
+ * the size, so such additions are STORE'd (matches the writer's media handling). */
+static int name_is_precompressed_media(const char *name)
+{
+    const char *dot = strrchr(name, '.');
+    if (!dot)
+        return 0;
+    return strcmp(dot, ".png") == 0 || strcmp(dot, ".jpeg") == 0 ||
+           strcmp(dot, ".jpg") == 0 || strcmp(dot, ".gif") == 0 ||
+           strcmp(dot, ".bmp") == 0;
+}
+
 static lxlsx_error write_addition_local(
     FILE *fp, const lxlsx_source_package_addition *add,
     uint32_t *offset_out, uint32_t *crc_out,
-    uint32_t *comp_out, uint32_t *uncomp_out)
+    uint32_t *comp_out, uint32_t *uncomp_out, uint16_t *method_out)
 {
     unsigned char *compressed = NULL;
-    size_t comp_size = 0, name_len;
+    const unsigned char *payload;
+    size_t comp_size = 0, payload_size, name_len;
+    uint16_t method;
     uint32_t offset, crc;
     lxlsx_error err;
 
@@ -873,28 +887,46 @@ static lxlsx_error write_addition_local(
     crc = crc32(0L, Z_NULL, 0);
     crc = crc32(crc, add->data, (uInt)add->size);
 
-    err = deflate_raw_data(add->data, add->size, &compressed, &comp_size);
-    if (err != LXLSX_NO_ERROR) return err;
-    if (comp_size > UINT_MAX) { free(compressed); return LXLSX_ERROR_FEATURE_NOT_SUPPORTED; }
+    if (name_is_precompressed_media(add->name)) {
+        /* STORE outright — skip the wasted deflate pass entirely. */
+        method = ZIP_METHOD_STORE;
+        payload = add->data;
+        payload_size = add->size;
+    } else {
+        err = deflate_raw_data(add->data, add->size, &compressed, &comp_size);
+        if (err != LXLSX_NO_ERROR) return err;
+        if (comp_size > UINT_MAX) { free(compressed); return LXLSX_ERROR_FEATURE_NOT_SUPPORTED; }
+        /* Fall back to STORE if deflate didn't actually help. */
+        if (comp_size >= add->size) {
+            method = ZIP_METHOD_STORE;
+            payload = add->data;
+            payload_size = add->size;
+        } else {
+            method = ZIP_METHOD_DEFLATE;
+            payload = compressed;
+            payload_size = comp_size;
+        }
+    }
 
     *offset_out = offset;
     *crc_out = crc;
-    *comp_out = (uint32_t)comp_size;
+    *comp_out = (uint32_t)payload_size;
     *uncomp_out = (uint32_t)add->size;
+    *method_out = method;
 
     if ((err = write_le32(fp, ZIP_LOCAL_FILE_SIG)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le16(fp, 20)) != LXLSX_NO_ERROR) goto done;          /* version needed */
     if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) goto done;           /* flags */
-    if ((err = write_le16(fp, ZIP_METHOD_DEFLATE)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le16(fp, method)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le16(fp, LXLSX_ZIP_DEF_TIME)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le16(fp, LXLSX_ZIP_DEF_DATE)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le32(fp, crc)) != LXLSX_NO_ERROR) goto done;
-    if ((err = write_le32(fp, (uint32_t)comp_size)) != LXLSX_NO_ERROR) goto done;
+    if ((err = write_le32(fp, (uint32_t)payload_size)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le32(fp, (uint32_t)add->size)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le16(fp, (uint16_t)name_len)) != LXLSX_NO_ERROR) goto done;
     if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) goto done;           /* extra len */
     if ((err = write_all(fp, add->name, name_len)) != LXLSX_NO_ERROR) goto done;
-    err = write_all(fp, compressed, comp_size);
+    err = write_all(fp, payload, payload_size);
 
 done:
     free(compressed);
@@ -903,7 +935,8 @@ done:
 
 static lxlsx_error write_addition_central(
     FILE *fp, const lxlsx_source_package_addition *add,
-    uint32_t offset, uint32_t crc, uint32_t comp_size, uint32_t uncomp_size)
+    uint32_t offset, uint32_t crc, uint32_t comp_size, uint32_t uncomp_size,
+    uint16_t method)
 {
     size_t name_len = strlen(add->name);
     lxlsx_error err;
@@ -912,7 +945,7 @@ static lxlsx_error write_addition_central(
     if ((err = write_le16(fp, 20)) != LXLSX_NO_ERROR) return err;         /* version made by */
     if ((err = write_le16(fp, 20)) != LXLSX_NO_ERROR) return err;         /* version needed */
     if ((err = write_le16(fp, 0)) != LXLSX_NO_ERROR) return err;          /* flags */
-    if ((err = write_le16(fp, ZIP_METHOD_DEFLATE)) != LXLSX_NO_ERROR) return err;
+    if ((err = write_le16(fp, method)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, LXLSX_ZIP_DEF_TIME)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le16(fp, LXLSX_ZIP_DEF_DATE)) != LXLSX_NO_ERROR) return err;
     if ((err = write_le32(fp, crc)) != LXLSX_NO_ERROR) return err;
@@ -948,6 +981,7 @@ static lxlsx_error save_internal(
     uint32_t end_offset;
     uint32_t *add_offsets = NULL, *add_crcs = NULL;
     uint32_t *add_comp = NULL, *add_uncomp = NULL;
+    uint16_t *add_methods = NULL;
     size_t total_entries;
     size_t i;
     lxlsx_error err = LXLSX_NO_ERROR;
@@ -984,10 +1018,11 @@ static lxlsx_error save_internal(
         add_crcs = (uint32_t *)calloc(addition_count, sizeof(*add_crcs));
         add_comp = (uint32_t *)calloc(addition_count, sizeof(*add_comp));
         add_uncomp = (uint32_t *)calloc(addition_count, sizeof(*add_uncomp));
-        if (!add_offsets || !add_crcs || !add_comp || !add_uncomp) {
+        add_methods = (uint16_t *)calloc(addition_count, sizeof(*add_methods));
+        if (!add_offsets || !add_crcs || !add_comp || !add_uncomp || !add_methods) {
             free(new_offsets); free(new_crcs); free(new_methods);
             free(new_versions); free(new_compressed_sizes); free(new_uncompressed_sizes);
-            free(add_offsets); free(add_crcs); free(add_comp); free(add_uncomp);
+            free(add_offsets); free(add_crcs); free(add_comp); free(add_uncomp); free(add_methods);
             return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         }
     }
@@ -1000,7 +1035,7 @@ static lxlsx_error save_internal(
         free(new_versions);
         free(new_compressed_sizes);
         free(new_uncompressed_sizes);
-        free(add_offsets); free(add_crcs); free(add_comp); free(add_uncomp);
+        free(add_offsets); free(add_crcs); free(add_comp); free(add_uncomp); free(add_methods);
         return LXLSX_ERROR_CREATING_XLSX_FILE;
     }
 
@@ -1028,7 +1063,8 @@ static lxlsx_error save_internal(
     /* Append local records for brand-new parts. */
     for (i = 0; i < addition_count && err == LXLSX_NO_ERROR; i++) {
         err = write_addition_local(fp, &additions[i], &add_offsets[i],
-                                   &add_crcs[i], &add_comp[i], &add_uncomp[i]);
+                                   &add_crcs[i], &add_comp[i], &add_uncomp[i],
+                                   &add_methods[i]);
     }
 
     if (err == LXLSX_NO_ERROR)
@@ -1052,10 +1088,14 @@ static lxlsx_error save_internal(
     /* Central records for the new parts. */
     for (i = 0; i < addition_count && err == LXLSX_NO_ERROR; i++) {
         err = write_addition_central(fp, &additions[i], add_offsets[i],
-                                     add_crcs[i], add_comp[i], add_uncomp[i]);
+                                     add_crcs[i], add_comp[i], add_uncomp[i],
+                                     add_methods[i]);
     }
 
     total_entries = package->entry_count + addition_count;
+    /* The non-ZIP64 EOCD entry count is 16-bit; refuse to silently truncate. */
+    if (err == LXLSX_NO_ERROR && total_entries > 0xfffe)
+        err = LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
 
     if (err == LXLSX_NO_ERROR)
         err = current_offset(fp, &end_offset);
@@ -1086,6 +1126,7 @@ done:
     free(add_crcs);
     free(add_comp);
     free(add_uncomp);
+    free(add_methods);
     if (err != LXLSX_NO_ERROR)
         remove(path);
     return err;

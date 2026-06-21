@@ -383,20 +383,23 @@ _free_cell(lxlsx_cell *cell)
         free((void *) cell->data.writer.value.string);
         break;
     case FORMULA_CELL:
-        free((void *) cell->data.writer.value.formula.formula);
-        free((void *) cell->data.writer.value.formula.result_string);
+        free((void *) cell->data.writer.value.formula->formula);
+        free((void *) cell->data.writer.value.formula->result_string);
+        free(cell->data.writer.value.formula);
         break;
     case ARRAY_FORMULA_CELL:
     case DYNAMIC_ARRAY_FORMULA_CELL:
-        free((void *) cell->data.writer.value.formula.formula);
-        free((void *) cell->data.writer.value.formula.range);
+        free((void *) cell->data.writer.value.formula->formula);
+        free((void *) cell->data.writer.value.formula->range);
+        free(cell->data.writer.value.formula);
         break;
     case HYPERLINK_URL:
     case HYPERLINK_INTERNAL:
     case HYPERLINK_EXTERNAL:
-        free((void *) cell->data.writer.value.hyperlink.url);
-        free((void *) cell->data.writer.value.hyperlink.display);
-        free((void *) cell->data.writer.value.hyperlink.tooltip);
+        free((void *) cell->data.writer.value.hyperlink->url);
+        free((void *) cell->data.writer.value.hyperlink->display);
+        free((void *) cell->data.writer.value.hyperlink->tooltip);
+        free(cell->data.writer.value.hyperlink);
         break;
     case COMMENT:
         _free_vml_object(cell->data.writer.value.comment);
@@ -962,11 +965,18 @@ _new_formula_cell(lxlsx_row_t row_num,
     lxlsx_cell *cell = calloc(1, sizeof(lxlsx_cell));
     RETURN_ON_MEM_ERROR(cell, cell);
 
+    cell->data.writer.value.formula =
+        calloc(1, sizeof(lxlsx_cell_writer_formula));
+    if (!cell->data.writer.value.formula) {
+        free(cell);
+        return NULL;
+    }
+
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = FORMULA_CELL;
     cell->data.writer.format = format;
-    cell->data.writer.value.formula.formula = formula;
+    cell->data.writer.value.formula->formula = formula;
 
     return cell;
 }
@@ -981,11 +991,18 @@ _new_array_formula_cell(lxlsx_row_t row_num, lxlsx_col_t col_num, char *formula,
     lxlsx_cell *cell = calloc(1, sizeof(lxlsx_cell));
     RETURN_ON_MEM_ERROR(cell, cell);
 
+    cell->data.writer.value.formula =
+        calloc(1, sizeof(lxlsx_cell_writer_formula));
+    if (!cell->data.writer.value.formula) {
+        free(cell);
+        return NULL;
+    }
+
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->data.writer.format = format;
-    cell->data.writer.value.formula.formula = formula;
-    cell->data.writer.value.formula.range = range;
+    cell->data.writer.value.formula->formula = formula;
+    cell->data.writer.value.formula->range = range;
 
     if (is_dynamic)
         cell->type = DYNAMIC_ARRAY_FORMULA_CELL;
@@ -1079,12 +1096,19 @@ _new_hyperlink_cell(lxlsx_row_t row_num, lxlsx_col_t col_num,
     lxlsx_cell *cell = calloc(1, sizeof(lxlsx_cell));
     RETURN_ON_MEM_ERROR(cell, cell);
 
+    cell->data.writer.value.hyperlink =
+        calloc(1, sizeof(lxlsx_cell_writer_hyperlink));
+    if (!cell->data.writer.value.hyperlink) {
+        free(cell);
+        return NULL;
+    }
+
     cell->row_num = row_num;
     cell->col_num = col_num;
     cell->type = link_type;
-    cell->data.writer.value.hyperlink.url = url;
-    cell->data.writer.value.hyperlink.display = string;
-    cell->data.writer.value.hyperlink.tooltip = tooltip;
+    cell->data.writer.value.hyperlink->url = url;
+    cell->data.writer.value.hyperlink->display = string;
+    cell->data.writer.value.hyperlink->tooltip = tooltip;
 
     return cell;
 }
@@ -4528,7 +4552,7 @@ STATIC void
 _write_formula_num_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
     const lxlsx_cell_writer_formula *formula =
-        &cell->data.writer.value.formula;
+        cell->data.writer.value.formula;
     char data[LXLSX_ATTR_32];
 
     lxlsx_sprintf_dbl(data, formula->result);
@@ -4543,7 +4567,7 @@ STATIC void
 _write_formula_str_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
     const lxlsx_cell_writer_formula *formula =
-        &cell->data.writer.value.formula;
+        cell->data.writer.value.formula;
 
     lxlsx_xml_data_element(self->file, "f", formula->formula, NULL);
     lxlsx_xml_data_element(self->file, "v", formula->result_string, NULL);
@@ -4556,7 +4580,7 @@ STATIC void
 _write_array_formula_num_cell(lxlsx_worksheet *self, lxlsx_cell *cell)
 {
     const lxlsx_cell_writer_formula *formula =
-        &cell->data.writer.value.formula;
+        cell->data.writer.value.formula;
     struct lxlsx_xml_attribute_list attributes;
     struct lxlsx_xml_attribute *attribute;
     char data[LXLSX_ATTR_32];
@@ -4697,12 +4721,12 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
 
     if (cell->type == FORMULA_CELL) {
         /* If user_data2 is set then the formula has a string result. */
-        if (cell->data.writer.value.formula.result_string)
+        if (cell->data.writer.value.formula->result_string)
             LXLSX_PUSH_ATTRIBUTES_STR("t", "str");
 
         lxlsx_xml_start_tag(self->file, "c", &attributes);
 
-        if (cell->data.writer.value.formula.result_string)
+        if (cell->data.writer.value.formula->result_string)
             _write_formula_str_cell(self, cell);
         else
             _write_formula_num_cell(self, cell);
@@ -5574,7 +5598,7 @@ _worksheet_write_hyperlinks(lxlsx_worksheet *self)
 
         RB_FOREACH(link, lxlsx_table_cells, row->cells) {
             const lxlsx_cell_writer_hyperlink *hyperlink =
-                &link->data.writer.value.hyperlink;
+                link->data.writer.value.hyperlink;
 
             if (link->type == HYPERLINK_URL
                 || link->type == HYPERLINK_EXTERNAL) {
@@ -8110,7 +8134,7 @@ lxlsx_worksheet_write_formula_num(lxlsx_worksheet *self,
         formula_copy = lxlsx_strdup(formula);
 
     cell = _new_formula_cell(row_num, col_num, formula_copy, format);
-    cell->data.writer.value.formula.result = result;
+    cell->data.writer.value.formula->result = result;
 
     _insert_cell(self, row_num, col_num, cell);
 
@@ -8167,7 +8191,7 @@ lxlsx_worksheet_write_formula_str(lxlsx_worksheet *self,
         formula_copy = lxlsx_strdup(formula);
 
     cell = _new_formula_cell(row_num, col_num, formula_copy, format);
-    cell->data.writer.value.formula.result_string = lxlsx_strdup(result);
+    cell->data.writer.value.formula->result_string = lxlsx_strdup(result);
 
     _insert_cell(self, row_num, col_num, cell);
 
@@ -8271,7 +8295,7 @@ _store_array_formula(lxlsx_worksheet *self,
     cell = _new_array_formula_cell(first_row, first_col,
                                    formula_copy, range, format, is_dynamic);
 
-    cell->data.writer.value.formula.result = result;
+    cell->data.writer.value.formula->result = result;
 
     _insert_cell(self, first_row, first_col, cell);
 

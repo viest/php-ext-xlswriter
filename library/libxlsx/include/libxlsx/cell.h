@@ -87,9 +87,13 @@ typedef union {
     uint32_t                        object_id;
     const char                     *string;
     lxlsx_vml_obj                  *comment;
-    lxlsx_cell_writer_formula       formula;
+    /* Formula and hyperlink payloads are out-of-line pointers: they are rare
+     * but their inline structs (32 and 24 bytes) would otherwise set the size
+     * of every cell's value union. Pointerizing keeps the union at 16 bytes
+     * (the shared-string case), shrinking lxlsx_cell from 80 to 64 bytes. */
+    lxlsx_cell_writer_formula      *formula;
     lxlsx_cell_writer_shared_string shared_string;
-    lxlsx_cell_writer_hyperlink     hyperlink;
+    lxlsx_cell_writer_hyperlink    *hyperlink;
 } lxlsx_cell_writer_value;
 
 typedef struct {

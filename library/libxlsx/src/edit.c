@@ -2604,25 +2604,180 @@ static lxlsx_error part_insert_before(lxlsx_edit_session *session,
 #define LXLSX_WS_CT "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
 
 /*
- * Build the additions (new sheetN.xml parts) and the workbook.xml /
- * workbook.xml.rels / [Content_Types].xml replacements needed to register the
- * session's new worksheets. meta_reps must have room for 3 entries.
+ * Multi-part composition accumulator. Collects brand-new parts (additions) and
+ * per-part fragment insertions (materialised as replacements at finalize time),
+ * aggregating every insertion that targets the same part into ONE replacement.
+ *
+ * That aggregation is the point: several features patch the same metadata part
+ * (e.g. [Content_Types].xml gets a worksheet Override from add-sheet and an
+ * image Default from add-image). Patching it twice independently — each off the
+ * original bytes — would drop one. A brand-new rels part is just an addition, so
+ * no separate "create rels" path is needed. add-sheet uses this today;
+ * add-image/chart build on the same API. Borrowed `data` pointers handed to
+ * composer_add_part must outlive the save (callers pass session-owned buffers).
  */
-static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
-                                      lxlsx_source_package_addition **add_out,
-                                      size_t *n_add_out,
-                                      lxlsx_source_package_replacement *meta_reps,
-                                      size_t *n_meta_out)
+typedef struct {
+    char          *part;       /* host part to patch (owned) */
+    char          *close_tag;  /* token to insert the fragment before (owned) */
+    lxlsx_edit_buf frag;       /* aggregated fragment */
+} lxlsx_composer_patch;
+
+typedef struct {
+    lxlsx_edit_session            *session;
+    lxlsx_source_package_addition *adds;   /* names owned; data borrowed */
+    size_t                         add_count, add_cap;
+    lxlsx_composer_patch          *patches;
+    size_t                         patch_count, patch_cap;
+    int                            oom;    /* sticky out-of-memory flag */
+} lxlsx_composer;
+
+static void composer_init(lxlsx_composer *c, lxlsx_edit_session *session)
+{
+    memset(c, 0, sizeof(*c));
+    c->session = session;
+}
+
+static void composer_free(lxlsx_composer *c)
+{
+    size_t i;
+    for (i = 0; i < c->add_count; i++)
+        free(c->adds[i].name);
+    free(c->adds);
+    for (i = 0; i < c->patch_count; i++) {
+        free(c->patches[i].part);
+        free(c->patches[i].close_tag);
+        free(c->patches[i].frag.data);
+    }
+    free(c->patches);
+    memset(c, 0, sizeof(*c));
+}
+
+/* Append a brand-new part. `name` is copied; `data` is borrowed. */
+static void composer_add_part(lxlsx_composer *c, const char *name,
+                              const unsigned char *data, size_t size)
+{
+    lxlsx_source_package_addition *a;
+    if (c->oom)
+        return;
+    if (c->add_count >= c->add_cap) {
+        size_t cap = c->add_cap ? c->add_cap * 2 : 4;
+        lxlsx_source_package_addition *next = (lxlsx_source_package_addition *)
+            realloc(c->adds, cap * sizeof(*next));
+        if (!next) { c->oom = 1; return; }
+        c->adds = next;
+        c->add_cap = cap;
+    }
+    a = &c->adds[c->add_count];
+    a->name = strdup(name);
+    if (!a->name) { c->oom = 1; return; }
+    a->data = data;
+    a->size = size;
+    c->add_count++;
+}
+
+/* Return the aggregation buffer for `part` (created on first use), so the caller
+ * can append fragments to it. Insertions accumulate before `close_tag`. NULL on
+ * OOM (the sticky flag is also set, so callers may defer the check). */
+static lxlsx_edit_buf *composer_part_buf(lxlsx_composer *c, const char *part,
+                                         const char *close_tag)
+{
+    size_t i;
+    lxlsx_composer_patch *p;
+    if (c->oom)
+        return NULL;
+    for (i = 0; i < c->patch_count; i++) {
+        if (strcmp(c->patches[i].part, part) == 0)
+            return &c->patches[i].frag;
+    }
+    if (c->patch_count >= c->patch_cap) {
+        size_t cap = c->patch_cap ? c->patch_cap * 2 : 4;
+        lxlsx_composer_patch *next = (lxlsx_composer_patch *)
+            realloc(c->patches, cap * sizeof(*next));
+        if (!next) { c->oom = 1; return NULL; }
+        c->patches = next;
+        c->patch_cap = cap;
+    }
+    p = &c->patches[c->patch_count];
+    memset(p, 0, sizeof(*p));
+    p->part = strdup(part);
+    p->close_tag = strdup(close_tag);
+    if (!p->part || !p->close_tag) {
+        free(p->part);
+        free(p->close_tag);
+        c->oom = 1;
+        return NULL;
+    }
+    c->patch_count++;
+    return &p->frag;
+}
+
+/* Materialise: additions array (caller frees the array, not the borrowed data)
+ * plus one replacement per patched part (caller frees each .data and the
+ * array). */
+static lxlsx_error composer_finalize(lxlsx_composer *c,
+                                     lxlsx_source_package_addition **add_out,
+                                     size_t *n_add_out,
+                                     lxlsx_source_package_replacement **rep_out,
+                                     size_t *n_rep_out)
 {
     lxlsx_source_package_addition *adds = NULL;
-    lxlsx_edit_buf wb = {0}, rel = {0}, ct = {0};
+    lxlsx_source_package_replacement *reps = NULL;
+    size_t i, produced = 0;
+    lxlsx_error err;
+
+    *add_out = NULL; *n_add_out = 0; *rep_out = NULL; *n_rep_out = 0;
+    if (c->oom)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    if (c->add_count) {
+        adds = (lxlsx_source_package_addition *)calloc(c->add_count, sizeof(*adds));
+        if (!adds)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        memcpy(adds, c->adds, c->add_count * sizeof(*adds));
+    }
+    if (c->patch_count) {
+        reps = (lxlsx_source_package_replacement *)
+            calloc(c->patch_count, sizeof(*reps));
+        if (!reps) { free(adds); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
+    }
+    for (i = 0; i < c->patch_count; i++) {
+        err = part_insert_before(c->session, c->patches[i].part,
+                                 c->patches[i].close_tag,
+                                 c->patches[i].frag.data ? c->patches[i].frag.data : "",
+                                 &reps[produced]);
+        if (err != LXLSX_NO_ERROR) {
+            size_t j;
+            for (j = 0; j < produced; j++)
+                free((void *)reps[j].data);
+            free(reps);
+            free(adds);
+            return err;
+        }
+        produced++;
+    }
+
+    *add_out = adds;
+    *n_add_out = c->add_count;
+    *rep_out = reps;
+    *n_rep_out = produced;
+    return LXLSX_NO_ERROR;
+}
+
+/*
+ * Register the session's new worksheets onto a composer: a new sheetN.xml part
+ * each, plus <sheet>/<Relationship>/<Override> fragments for workbook.xml, its
+ * rels and [Content_Types].xml.
+ */
+static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
+                                      lxlsx_composer *c)
+{
+    lxlsx_edit_buf *wb, *rel, *ct;
     unsigned char *wbxml = NULL, *relxml = NULL;
     size_t wblen = 0, rellen = 0;
     size_t next_num, next_sid, next_rid, i;
     int idx;
     lxlsx_error err = LXLSX_NO_ERROR;
 
-    *add_out = NULL; *n_add_out = 0; *n_meta_out = 0;
     if (session->new_sheet_count == 0)
         return LXLSX_NO_ERROR;
 
@@ -2641,8 +2796,10 @@ static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
     if (err != LXLSX_NO_ERROR) goto done;
     next_rid = scan_max_after(relxml, rellen, "Id=\"rId") + 1;
 
-    adds = (lxlsx_source_package_addition *)calloc(session->new_sheet_count, sizeof(*adds));
-    if (!adds) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+    wb  = composer_part_buf(c, "xl/workbook.xml", "</sheets>");
+    rel = composer_part_buf(c, "xl/_rels/workbook.xml.rels", "</Relationships>");
+    ct  = composer_part_buf(c, "[Content_Types].xml", "</Types>");
+    if (!wb || !rel || !ct) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
 
     for (i = 0; i < session->new_sheet_count; i++) {
         lxlsx_edit_new_sheet *s = &session->new_sheets[i];
@@ -2650,47 +2807,30 @@ static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
         size_t num = next_num + i, sid = next_sid + i, rid = next_rid + i;
 
         snprintf(fn, sizeof(fn), "xl/worksheets/sheet%zu.xml", num);
-        free(s->filename);
-        s->filename = strdup(fn);
-        if (!s->filename) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
-        adds[i].name = s->filename;
-        adds[i].data = (const unsigned char *)s->xml;
-        adds[i].size = s->xml_len;
+        composer_add_part(c, fn, (const unsigned char *)s->xml, s->xml_len);
 
-        snprintf(frag, sizeof(frag), "<sheet name=\"");
-        if (buf_append_s(&wb, frag) != 0 || append_attr_escaped(&wb, s->name) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        if (buf_append_s(wb, "<sheet name=\"") != 0 ||
+            append_attr_escaped(wb, s->name) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
         snprintf(frag, sizeof(frag), "\" sheetId=\"%zu\" r:id=\"rId%zu\"/>", sid, rid);
-        if (buf_append_s(&wb, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        if (buf_append_s(wb, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
 
         snprintf(frag, sizeof(frag),
                  "<Relationship Id=\"rId%zu\" Type=\"%s\" Target=\"worksheets/sheet%zu.xml\"/>",
                  rid, LXLSX_WS_REL_TYPE, num);
-        if (buf_append_s(&rel, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        if (buf_append_s(rel, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
 
         snprintf(frag, sizeof(frag),
                  "<Override PartName=\"/xl/worksheets/sheet%zu.xml\" ContentType=\"%s\"/>",
                  num, LXLSX_WS_CT);
-        if (buf_append_s(&ct, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        if (buf_append_s(ct, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
     }
 
-    err = part_insert_before(session, "xl/workbook.xml", "</sheets>", wb.data, &meta_reps[0]);
-    if (err != LXLSX_NO_ERROR) goto done;
-    err = part_insert_before(session, "xl/_rels/workbook.xml.rels", "</Relationships>", rel.data, &meta_reps[1]);
-    if (err != LXLSX_NO_ERROR) { free((void *)meta_reps[0].data); goto done; }
-    err = part_insert_before(session, "[Content_Types].xml", "</Types>", ct.data, &meta_reps[2]);
-    if (err != LXLSX_NO_ERROR) { free((void *)meta_reps[0].data); free((void *)meta_reps[1].data); goto done; }
-
-    *add_out = adds; adds = NULL;
-    *n_add_out = session->new_sheet_count;
-    *n_meta_out = 3;
+    if (c->oom)
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
 
 done:
-    free(adds);
     free(wbxml);
     free(relxml);
-    free(wb.data);
-    free(rel.data);
-    free(ct.data);
     return err;
 }
 
@@ -2701,8 +2841,9 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     size_t dirty_cap = 0;
     lxlsx_source_package_replacement *replacements = NULL;
     lxlsx_source_package_replacement styles_rep;
-    lxlsx_source_package_replacement meta_reps[3];
+    lxlsx_source_package_replacement *meta_reps = NULL;
     lxlsx_source_package_addition *additions = NULL;
+    lxlsx_composer composer;
     size_t add_count = 0, meta_count = 0;
     int styles_produced = 0;
     size_t rep_count;
@@ -2710,7 +2851,6 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     size_t i;
 
     memset(&styles_rep, 0, sizeof(styles_rep));
-    memset(meta_reps, 0, sizeof(meta_reps));
 
     if (!session || !path)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
@@ -2718,6 +2858,8 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
         session->col_count == 0 && session->row_dim_count == 0 &&
         session->new_sheet_count == 0)
         return lxlsx_source_package_save_copy(session->package, path);
+
+    composer_init(&composer, session);
 
     for (i = 0; i < session->change_count; i++) {
         lxlsx_dirty_sheet *sheet = NULL;
@@ -2769,8 +2911,9 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     if (err != LXLSX_NO_ERROR)
         goto done;
 
-    /* Build new-sheet parts + their workbook/rels/content-type registrations. */
-    err = prepare_new_sheets(session, &additions, &add_count, meta_reps, &meta_count);
+    /* Build new-sheet parts + their workbook/rels/content-type registrations
+     * onto the composer (shared with future add-image/chart compositions). */
+    err = prepare_new_sheets(session, &composer);
     if (err != LXLSX_NO_ERROR)
         goto done;
 
@@ -2809,6 +2952,13 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
         }
     }
 
+    /* Turn the composer's accumulated parts/fragments into additions + one
+     * replacement per patched metadata part. */
+    err = composer_finalize(&composer, &additions, &add_count,
+                            &meta_reps, &meta_count);
+    if (err != LXLSX_NO_ERROR)
+        goto done;
+
     replacements = (lxlsx_source_package_replacement *)calloc(
         dirty_count + 1 + meta_count, sizeof(*replacements));
     if (!replacements) {
@@ -2838,7 +2988,9 @@ done:
     free((void *)styles_rep.data);
     for (i = 0; i < meta_count; i++)
         free((void *)meta_reps[i].data);
+    free(meta_reps);
     free(additions);
+    composer_free(&composer);
     free_dirty_sheets(dirty_sheets, dirty_count);
     return err;
 }

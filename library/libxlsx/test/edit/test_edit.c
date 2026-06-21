@@ -24,6 +24,8 @@ static const char *MERGE_XLSX = "fixtures/edit_merge.xlsx";
 static const char *NUMFMT_XLSX = "fixtures/edit_numfmt.xlsx";
 static const char *DIM_XLSX = "fixtures/edit_dim.xlsx";
 static const char *ADDSHEET_XLSX = "fixtures/edit_addsheet.xlsx";
+static const char *IMAGE_XLSX = "fixtures/edit_image.xlsx";
+static const char *CHART_XLSX = "fixtures/edit_chart.xlsx";
 
 static void assert_ok(lxlsx_error err)
 {
@@ -619,10 +621,8 @@ static void test_edit_rejects_unsupported_worksheet_ops(void)
                           lxlsx_worksheet_write_url(worksheet, 4, 0, "https://x", NULL));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_write_comment(worksheet, 5, 0, "note"));
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_insert_image_opt(worksheet, 6, 0, "x.png", NULL));
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_insert_chart(worksheet, 7, 0, NULL));
+    /* insert_image and insert_chart are supported in edit mode now (see the
+     * add-image / add-chart tests). */
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_autofilter(worksheet, 0, 0, 1, 1));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
@@ -836,6 +836,234 @@ static void test_edit_add_sheet_via_workbook_api(void)
     assert_string_cell_in_sheet(ADDSHEET_XLSX, "Added", 3, 1, "second");
 }
 
+static void write_protected_no_merge(const char *path);
+
+/* A minimal valid 1x1 RGBA PNG (no pHYs chunk, so DPI defaults to 96). */
+static const unsigned char PNG_1X1[] = {
+    0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A,0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52,
+    0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x06,0x00,0x00,0x00,0x1F,0x15,0xC4,
+    0x89,0x00,0x00,0x00,0x0B,0x49,0x44,0x41,0x54,0x78,0x9C,0x63,0xFA,0xCF,0x00,0x00,
+    0x02,0x07,0x01,0x02,0x9A,0x1C,0x31,0x71,0x00,0x00,0x00,0x00,0x49,0x45,0x4E,0x44,
+    0xAE,0x42,0x60,0x82
+};
+
+/*
+ * Insert an image into an existing worksheet whose _rels part does NOT exist yet
+ * (no hyperlink in the source), exercising the "create worksheet rels" branch.
+ * The media/drawing/drawing-rels parts and the content-type Default are
+ * synthesised, the worksheet gets a <drawing> ref, and — crucially — the new
+ * rels part must be complete so the reader can still parse the sheet back.
+ */
+static void test_edit_inserts_image(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_source_package *pkg = NULL;
+    unsigned char *xml = NULL;
+    size_t xml_len = 0;
+    int idx;
+
+    write_protected_no_merge(SOURCE_XLSX);  /* sheet "Edit", no _rels yet */
+    remove(IMAGE_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    assert_ok(lxlsx_worksheet_insert_image_buffer_opt(worksheet, 2, 1,
+                                                      PNG_1X1, sizeof(PNG_1X1),
+                                                      NULL));
+    assert_ok(lxlsx_workbook_save_as(workbook, IMAGE_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    assert_ok(lxlsx_source_package_open(IMAGE_XLSX, &pkg));
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/media/image1.png") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/_rels/drawing1.xml.rels") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/worksheets/_rels/sheet1.xml.rels") >= 0);
+
+    /* The worksheet references the drawing. */
+    idx = lxlsx_source_package_find_first(pkg, "xl/worksheets/sheet1.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "<drawing r:id=");
+    free(xml); xml = NULL;
+
+    /* The drawing anchors the image via a oneCellAnchor + blip. */
+    idx = lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "<xdr:oneCellAnchor>");
+    assert_xml_contains(xml, "r:embed=\"rId1\"");
+    free(xml); xml = NULL;
+
+    /* The drawing rels point at the media part. */
+    idx = lxlsx_source_package_find_first(pkg, "xl/drawings/_rels/drawing1.xml.rels");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "Target=\"../media/image1.png\"");
+    free(xml); xml = NULL;
+
+    /* Content types declare the png default. */
+    idx = lxlsx_source_package_find_first(pkg, "[Content_Types].xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "Extension=\"png\"");
+    free(xml); xml = NULL;
+
+    lxlsx_source_package_close(pkg);
+
+    /* The original cell data still reads back through the reader. */
+    assert_number_cell_in_sheet(IMAGE_XLSX, "Edit", 1, 1, 1.0);
+}
+
+static int count_chart_cb(const lxlsx_reader_chart_meta *info, void *ud)
+{
+    (void)info;
+    (*(int *)ud)++;
+    return 0;
+}
+
+/* Assert the reader parses back `expected` charts on `sheet` — this exercises
+ * the full drawing -> chart rels -> chartN.xml chain through a real XML parser,
+ * so a malformed drawing (e.g. mismatched tags) shows up as a count mismatch. */
+static void assert_chart_count_in_sheet(const char *path, const char *sheet_name,
+                                        int expected)
+{
+    lxlsx_reader_workbook *workbook = NULL;
+    lxlsx_reader_worksheet *worksheet = NULL;
+    int count = 0;
+
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_open(path, &workbook));
+    TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
+                          lxlsx_reader_workbook_get_worksheet_by_name(
+                              workbook, sheet_name, LXLSX_READER_SKIP_NONE,
+                              &worksheet));
+    lxlsx_reader_worksheet_iterate_charts(worksheet, count_chart_cb, &count);
+    TEST_ASSERT_EQUAL_INT(expected, count);
+    lxlsx_reader_worksheet_close(worksheet);
+    lxlsx_reader_workbook_close(workbook);
+}
+
+/*
+ * Insert a chart into an existing worksheet (no _rels yet). The chart is
+ * serialised to xl/charts/chart1.xml and anchored via a graphicFrame; the
+ * drawing/rels/content-types are synthesised and the original data still reads
+ * back through the reader.
+ */
+static void test_edit_inserts_chart(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_chart *chart;
+    lxlsx_source_package *pkg = NULL;
+    unsigned char *xml = NULL;
+    size_t xml_len = 0;
+    int idx;
+
+    write_protected_no_merge(SOURCE_XLSX);  /* sheet "Edit", A1 = 1.0 */
+    remove(CHART_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    chart = lxlsx_workbook_add_chart(workbook, LXLSX_CHART_COLUMN);
+    TEST_ASSERT_NOT_NULL(chart);
+    lxlsx_chart_add_series(chart, NULL, "Edit!$A$1:$A$1");
+
+    assert_ok(lxlsx_worksheet_insert_chart(worksheet, 5, 1, chart));
+    assert_ok(lxlsx_workbook_save_as(workbook, CHART_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    assert_ok(lxlsx_source_package_open(CHART_XLSX, &pkg));
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/charts/chart1.xml") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/_rels/drawing1.xml.rels") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/worksheets/_rels/sheet1.xml.rels") >= 0);
+
+    idx = lxlsx_source_package_find_first(pkg, "xl/worksheets/sheet1.xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "<drawing r:id=");
+    free(xml); xml = NULL;
+
+    idx = lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "<xdr:graphicFrame");
+    assert_xml_contains(xml, "<c:chart");
+    assert_xml_contains(xml, "r:id=\"rId1\"");
+    /* The ext must be emitted in full (guards the anchor-buffer size). */
+    assert_xml_contains(xml, "<xdr:ext cx=\"4572000\" cy=\"2743200\"/>");
+    free(xml); xml = NULL;
+
+    idx = lxlsx_source_package_find_first(pkg, "xl/drawings/_rels/drawing1.xml.rels");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "Target=\"../charts/chart1.xml\"");
+    free(xml); xml = NULL;
+
+    idx = lxlsx_source_package_find_first(pkg, "[Content_Types].xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "drawingml.chart+xml");
+    free(xml); xml = NULL;
+
+    lxlsx_source_package_close(pkg);
+
+    /* The original cell data still reads back (sheet + new rels are valid). */
+    assert_number_cell_in_sheet(CHART_XLSX, "Edit", 1, 1, 1.0);
+    /* And the reader parses the chart back through real XML parsing. */
+    assert_chart_count_in_sheet(CHART_XLSX, "Edit", 1);
+}
+
+/*
+ * An image and a chart on the SAME sheet must share one drawing part (one
+ * <drawing> ref), holding a pic anchor and a graphicFrame anchor — the shared
+ * drawing model. Previously this was rejected.
+ */
+static void test_edit_mixes_image_and_chart(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_chart *chart;
+    lxlsx_source_package *pkg = NULL;
+    unsigned char *xml = NULL;
+    size_t xml_len = 0;
+    int idx;
+
+    write_protected_no_merge(SOURCE_XLSX);
+    remove(CHART_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    assert_ok(lxlsx_worksheet_insert_image_buffer_opt(worksheet, 2, 1,
+                                                      PNG_1X1, sizeof(PNG_1X1),
+                                                      NULL));
+    chart = lxlsx_workbook_add_chart(workbook, LXLSX_CHART_COLUMN);
+    TEST_ASSERT_NOT_NULL(chart);
+    lxlsx_chart_add_series(chart, NULL, "Edit!$A$1:$A$1");
+    assert_ok(lxlsx_worksheet_insert_chart(worksheet, 6, 1, chart));
+
+    assert_ok(lxlsx_workbook_save_as(workbook, CHART_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    assert_ok(lxlsx_source_package_open(CHART_XLSX, &pkg));
+    /* Exactly one drawing, carrying both anchors. */
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml") >= 0);
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/drawings/drawing2.xml") < 0);
+    idx = lxlsx_source_package_find_first(pkg, "xl/drawings/drawing1.xml");
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &xml, &xml_len));
+    assert_xml_contains(xml, "<xdr:pic>");
+    assert_xml_contains(xml, "<xdr:graphicFrame");
+    free(xml); xml = NULL;
+    lxlsx_source_package_close(pkg);
+
+    /* Reader sees the chart; the original data still reads back. */
+    assert_chart_count_in_sheet(CHART_XLSX, "Edit", 1);
+    assert_number_cell_in_sheet(CHART_XLSX, "Edit", 1, 1, 1.0);
+}
+
 static void test_edit_sets_dimensions(void)
 {
     lxlsx_edit_session *session;
@@ -944,6 +1172,9 @@ int main(void)
     RUN_TEST(test_edit_sets_dimensions);
     RUN_TEST(test_edit_adds_worksheet);
     RUN_TEST(test_edit_add_sheet_via_workbook_api);
+    RUN_TEST(test_edit_inserts_image);
+    RUN_TEST(test_edit_inserts_chart);
+    RUN_TEST(test_edit_mixes_image_and_chart);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();
 }

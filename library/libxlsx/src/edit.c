@@ -15,6 +15,7 @@
 #include "libxlsx/utility.h"
 #include "libxlsx/worksheet.h"
 #include "libxlsx/workbook.h"
+#include "libxlsx/chart.h"
 #include "libxlsx/xmlwriter.h"
 
 #include "xlsx_private.h"
@@ -70,6 +71,27 @@ typedef struct {
     char  *filename;  /* assigned part name, e.g. xl/worksheets/sheet3.xml */
 } lxlsx_edit_new_sheet;
 
+typedef struct {
+    char         *target;       /* worksheet part path (owned) */
+    lxlsx_row_t   row;
+    lxlsx_col_t   col;
+    int32_t       x_offset;     /* pixel offset within the anchor cell */
+    int32_t       y_offset;
+    uint64_t      cx;           /* display width in EMUs */
+    uint64_t      cy;           /* display height in EMUs */
+    char         *extension;    /* "png"/"jpeg"/"bmp"/"gif" (owned) */
+    char         *description;  /* alt text, or NULL (owned) */
+    unsigned char *data;        /* image bytes (owned) */
+    size_t        size;
+} lxlsx_edit_image;
+
+typedef struct {
+    char        *target;   /* worksheet part path (owned) */
+    lxlsx_row_t  row;
+    lxlsx_col_t  col;
+    lxlsx_chart *chart;    /* borrowed; owned by the workbook */
+} lxlsx_edit_chart;
+
 struct lxlsx_edit_session {
     lxlsx_source_package *package;
     lxlsx_reader_workbook *workbook;
@@ -88,6 +110,12 @@ struct lxlsx_edit_session {
     lxlsx_edit_new_sheet *new_sheets;
     size_t new_sheet_count;
     size_t new_sheet_cap;
+    lxlsx_edit_image *images;
+    size_t image_count;
+    size_t image_cap;
+    lxlsx_edit_chart *charts;
+    size_t chart_count;
+    size_t chart_cap;
 };
 
 typedef struct {
@@ -113,6 +141,8 @@ typedef struct {
     const lxlsx_edit_row_dim **row_dims;
     size_t row_dim_count;
     size_t row_dim_cap;
+    int    has_drawing;     /* a <drawing r:id> ref must be spliced in */
+    size_t drawing_rid;     /* the worksheet-rels rId for that drawing */
 } lxlsx_dirty_sheet;
 
 #define LXLSX_EDIT_CELL_CLOSE       "</c>"
@@ -1308,6 +1338,17 @@ void lxlsx_edit_close(lxlsx_edit_session *session)
         free(session->new_sheets[i].filename);
     }
     free(session->new_sheets);
+    for (i = 0; i < session->image_count; i++) {
+        free(session->images[i].target);
+        free(session->images[i].extension);
+        free(session->images[i].description);
+        free(session->images[i].data);
+    }
+    free(session->images);
+    /* Chart objects are owned by the workbook; only free our bookkeeping. */
+    for (i = 0; i < session->chart_count; i++)
+        free(session->charts[i].target);
+    free(session->charts);
     lxlsx_reader_workbook_close(session->workbook);
     lxlsx_source_package_close(session->package);
     free(session);
@@ -1536,6 +1577,104 @@ lxlsx_error lxlsx_edit_add_sheet(lxlsx_edit_session *session,
     s->xml[xml_len] = '\0';
     s->xml_len = xml_len;
     session->new_sheet_count++;
+    return LXLSX_NO_ERROR;
+}
+
+lxlsx_error lxlsx_edit_add_image(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_row_t row, lxlsx_col_t col,
+                                 const unsigned char *data, size_t size,
+                                 const char *extension,
+                                 uint64_t cx, uint64_t cy,
+                                 int32_t x_offset, int32_t y_offset,
+                                 const char *description)
+{
+    const char *target;
+    lxlsx_edit_image *im;
+
+    if (!session || !data || !size || !extension || !*extension)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    if (session->image_count >= session->image_cap) {
+        size_t cap = session->image_cap ? session->image_cap * 2 : 4;
+        lxlsx_edit_image *next =
+            (lxlsx_edit_image *)realloc(session->images, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->images = next;
+        session->image_cap = cap;
+    }
+
+    im = &session->images[session->image_count];
+    memset(im, 0, sizeof(*im));
+    im->target = strdup(target);
+    im->extension = strdup(extension);
+    im->data = (unsigned char *)malloc(size);
+    if (!im->target || !im->extension || !im->data) {
+        free(im->target);
+        free(im->extension);
+        free(im->data);
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    memcpy(im->data, data, size);
+    im->size = size;
+    if (description) {
+        im->description = strdup(description);
+        if (!im->description) {
+            free(im->target);
+            free(im->extension);
+            free(im->data);
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        }
+    }
+    im->row = row;
+    im->col = col;
+    im->x_offset = x_offset;
+    im->y_offset = y_offset;
+    im->cx = cx;
+    im->cy = cy;
+    session->image_count++;
+    return LXLSX_NO_ERROR;
+}
+
+lxlsx_error lxlsx_edit_add_chart(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_row_t row, lxlsx_col_t col,
+                                 lxlsx_chart *chart)
+{
+    const char *target;
+    lxlsx_edit_chart *ec;
+
+    if (!session || !chart)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    if (session->chart_count >= session->chart_cap) {
+        size_t cap = session->chart_cap ? session->chart_cap * 2 : 4;
+        lxlsx_edit_chart *next =
+            (lxlsx_edit_chart *)realloc(session->charts, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->charts = next;
+        session->chart_cap = cap;
+    }
+
+    ec = &session->charts[session->chart_count];
+    memset(ec, 0, sizeof(*ec));
+    ec->target = strdup(target);
+    if (!ec->target)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    ec->row = row;
+    ec->col = col;
+    ec->chart = chart;
+    session->chart_count++;
     return LXLSX_NO_ERROR;
 }
 
@@ -2020,6 +2159,46 @@ static lxlsx_error patch_xml_with_cols(unsigned char **xml, size_t *xml_len,
 
 done:
     free(entries.data);
+    free(out.data);
+    return err;
+}
+
+/*
+ * Splice a <drawing r:id="rIdN"/> reference into the worksheet at its
+ * schema-correct position. A sheet that already has a <drawing> is rejected —
+ * merging into an existing drawing is a separate feature.
+ */
+static lxlsx_error patch_xml_with_drawing(unsigned char **xml, size_t *xml_len,
+                                          size_t rid)
+{
+    const char *src = (const char *)*xml;
+    size_t srclen = *xml_len;
+    lxlsx_edit_buf out = {0};
+    const char *at;
+    char ent[48];
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    if (find_element(src, srclen, "drawing"))
+        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+
+    at = ws_insert_point(src, srclen, "drawing");
+    if (!at)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    snprintf(ent, sizeof(ent), "<drawing r:id=\"rId%zu\"/>", rid);
+    if (buf_append(&out, src, (size_t)(at - src)) != 0 ||
+        buf_append_s(&out, ent) != 0 ||
+        buf_append(&out, at, srclen - (size_t)(at - src)) != 0) {
+        err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        goto done;
+    }
+
+    free(*xml);
+    *xml = (unsigned char *)out.data;
+    *xml_len = out.len;
+    out.data = NULL;
+
+done:
     free(out.data);
     return err;
 }
@@ -2568,6 +2747,50 @@ static size_t scan_max_after(const unsigned char *buf, size_t len, const char *n
     return maxv;
 }
 
+/* Largest integer immediately following `prefix` across all part names (e.g.
+ * "xl/media/image" -> highest existing image index, any extension). */
+static size_t max_existing_indexed(lxlsx_edit_session *session, const char *prefix)
+{
+    size_t plen = strlen(prefix);
+    size_t n = lxlsx_source_package_entry_count(session->package), i, maxv = 0;
+    for (i = 0; i < n; i++) {
+        const lxlsx_source_package_entry_info *info =
+            lxlsx_source_package_entry_info_at(session->package, i);
+        size_t pos = plen, v = 0;
+        int has = 0;
+        if (!info || info->name_len <= plen) continue;
+        if (memcmp(info->name, prefix, plen) != 0) continue;
+        while (pos < info->name_len &&
+               info->name[pos] >= '0' && info->name[pos] <= '9') {
+            v = v * 10 + (size_t)(info->name[pos] - '0'); pos++; has = 1;
+        }
+        if (has && v > maxv) maxv = v;
+    }
+    return maxv;
+}
+
+/* Package content type for a supported image extension, or NULL. */
+static const char *image_ct_for_ext(const char *ext)
+{
+    if (strcmp(ext, "png") == 0)  return "image/png";
+    if (strcmp(ext, "jpeg") == 0) return "image/jpeg";
+    if (strcmp(ext, "bmp") == 0)  return "image/bmp";
+    if (strcmp(ext, "gif") == 0)  return "image/gif";
+    return NULL;
+}
+
+/* "xl/worksheets/sheet1.xml" -> "xl/worksheets/_rels/sheet1.xml.rels". */
+static int derive_rels_path(const char *part, char *out, size_t outsz)
+{
+    const char *slash = strrchr(part, '/');
+    int n;
+    if (!slash)
+        return -1;
+    n = snprintf(out, outsz, "%.*s/_rels/%s.rels",
+                 (int)(slash - part), part, slash + 1);
+    return (n > 0 && (size_t)n < outsz) ? 0 : -1;
+}
+
 /* Read a package part, insert `insert` before `close_tag`, produce a replacement. */
 static lxlsx_error part_insert_before(lxlsx_edit_session *session,
                                       const char *part, const char *close_tag,
@@ -2624,7 +2847,7 @@ typedef struct {
 
 typedef struct {
     lxlsx_edit_session            *session;
-    lxlsx_source_package_addition *adds;   /* names owned; data borrowed */
+    lxlsx_source_package_addition *adds;   /* names + data both owned (copied) */
     size_t                         add_count, add_cap;
     lxlsx_composer_patch          *patches;
     size_t                         patch_count, patch_cap;
@@ -2640,8 +2863,10 @@ static void composer_init(lxlsx_composer *c, lxlsx_edit_session *session)
 static void composer_free(lxlsx_composer *c)
 {
     size_t i;
-    for (i = 0; i < c->add_count; i++)
+    for (i = 0; i < c->add_count; i++) {
         free(c->adds[i].name);
+        free((void *)c->adds[i].data);
+    }
     free(c->adds);
     for (i = 0; i < c->patch_count; i++) {
         free(c->patches[i].part);
@@ -2652,11 +2877,14 @@ static void composer_free(lxlsx_composer *c)
     memset(c, 0, sizeof(*c));
 }
 
-/* Append a brand-new part. `name` is copied; `data` is borrowed. */
+/* Append a brand-new part. Both `name` and `data` are copied (the composer owns
+ * them), so callers may pass temporary buffers. */
 static void composer_add_part(lxlsx_composer *c, const char *name,
                               const unsigned char *data, size_t size)
 {
     lxlsx_source_package_addition *a;
+    char *name_copy;
+    unsigned char *data_copy = NULL;
     if (c->oom)
         return;
     if (c->add_count >= c->add_cap) {
@@ -2667,10 +2895,16 @@ static void composer_add_part(lxlsx_composer *c, const char *name,
         c->adds = next;
         c->add_cap = cap;
     }
+    name_copy = strdup(name);
+    if (!name_copy) { c->oom = 1; return; }
+    if (size) {
+        data_copy = (unsigned char *)malloc(size);
+        if (!data_copy) { free(name_copy); c->oom = 1; return; }
+        memcpy(data_copy, data, size);
+    }
     a = &c->adds[c->add_count];
-    a->name = strdup(name);
-    if (!a->name) { c->oom = 1; return; }
-    a->data = data;
+    a->name = name_copy;
+    a->data = data_copy;
     a->size = size;
     c->add_count++;
 }
@@ -2834,6 +3068,378 @@ done:
     return err;
 }
 
+#define LXLSX_IMG_REL_TYPE  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+#define LXLSX_DRAW_REL_TYPE "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+#define LXLSX_DRAW_CT       "application/vnd.openxmlformats-officedocument.drawing+xml"
+#define LXLSX_PKG_RELS_NS   "http://schemas.openxmlformats.org/package/2006/relationships"
+
+/*
+ * Synthesise the parts behind the session's images: one media part per image, a
+ * drawing part + its rels per worksheet, the content-type entries, and the
+ * worksheet rels (patched or created). The worksheet's own <drawing r:id> ref
+ * is left to the dirty-sheet patch loop (so it composes with cell edits on the
+ * same sheet) — recorded here via has_drawing/drawing_rid. Images are anchored
+ * with oneCellAnchor sized from the precomputed EMU extents.
+ */
+/* Append target to the list if not already present (linear; lists are tiny). */
+static int add_unique_target(const char ***list, size_t *n, size_t *cap,
+                             const char *target)
+{
+    size_t i;
+    for (i = 0; i < *n; i++)
+        if (strcmp((*list)[i], target) == 0)
+            return 0;
+    if (*n >= *cap) {
+        size_t nc = *cap ? *cap * 2 : 4;
+        const char **nl = (const char **)realloc(*list, nc * sizeof(*nl));
+        if (!nl)
+            return -1;
+        *list = nl;
+        *cap = nc;
+    }
+    (*list)[(*n)++] = target;
+    return 0;
+}
+
+#define LXLSX_CHART_REL_TYPE "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
+#define LXLSX_CHART_CT       "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
+#define LXLSX_DML_CHART_NS   "http://schemas.openxmlformats.org/drawingml/2006/chart"
+
+/* Append one chart's oneCellAnchor + graphicFrame to a drawing buffer. Built in
+ * segments so no single fixed buffer can overflow (cf. the rels skeleton bug). */
+static int append_chart_anchor(lxlsx_edit_buf *draw, lxlsx_row_t row,
+                               lxlsx_col_t col, uint64_t cx, uint64_t cy,
+                               int anchor_id, size_t rel_idx)
+{
+    char num[256];
+
+    snprintf(num, sizeof(num),
+             "<xdr:oneCellAnchor>"
+             "<xdr:from><xdr:col>%u</xdr:col><xdr:colOff>0</xdr:colOff>"
+             "<xdr:row>%u</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>"
+             "<xdr:ext cx=\"%llu\" cy=\"%llu\"/>",
+             (unsigned)col, (unsigned)row,
+             (unsigned long long)cx, (unsigned long long)cy);
+    if (buf_append_s(draw, num) != 0)
+        return -1;
+
+    if (buf_append_s(draw, "<xdr:graphicFrame macro=\"\"><xdr:nvGraphicFramePr>") != 0)
+        return -1;
+    snprintf(num, sizeof(num),
+             "<xdr:cNvPr id=\"%d\" name=\"Chart %d\"/>", anchor_id, anchor_id);
+    if (buf_append_s(draw, num) != 0)
+        return -1;
+    if (buf_append_s(draw,
+            "<xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>"
+            "<xdr:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"0\" cy=\"0\"/></xdr:xfrm>"
+            "<a:graphic><a:graphicData uri=\"" LXLSX_DML_CHART_NS "\">"
+            "<c:chart xmlns:c=\"" LXLSX_DML_CHART_NS "\""
+            " xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"") != 0)
+        return -1;
+    snprintf(num, sizeof(num), " r:id=\"rId%zu\"/>", rel_idx);
+    if (buf_append_s(draw, num) != 0)
+        return -1;
+    if (buf_append_s(draw,
+            "</a:graphicData></a:graphic></xdr:graphicFrame>"
+            "<xdr:clientData/></xdr:oneCellAnchor>") != 0)
+        return -1;
+    return 0;
+}
+
+/*
+ * Synthesise the parts behind the session's charts: one xl/charts/chartN.xml per
+ * chart (serialised here), a drawing part per worksheet whose graphicFrames
+ * reference the charts, the drawing rels, the worksheet rels (patched/created)
+ * and the content types. Mirrors prepare_images; the <drawing> ref is recorded
+ * on the dirty sheet. Charts share the drawing numbering via next_drawing_io.
+ */
+/* Append one image's oneCellAnchor (pic) to the drawing + its rels/content-type.
+ * rel_idx/anchor_id are this drawing's running counters; next_media is global. */
+static lxlsx_error append_image_object(lxlsx_composer *c, lxlsx_edit_image *im,
+                                       lxlsx_edit_buf *draw, lxlsx_edit_buf *drels,
+                                       lxlsx_edit_buf *ct,
+                                       const unsigned char *ctxml, size_t ctlen,
+                                       int *seen_png, int *seen_jpeg,
+                                       int *seen_bmp, int *seen_gif,
+                                       size_t *next_media,
+                                       size_t rel_idx, int anchor_id)
+{
+    const char *ct_str = image_ct_for_ext(im->extension);
+    char frag[512], needle[32], media_part[64];
+    long long xoff, yoff;
+    size_t media_num;
+    int *seen;
+
+    if (!ct_str)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+    media_num = (*next_media)++;
+
+    snprintf(media_part, sizeof(media_part),
+             "xl/media/image%zu.%s", media_num, im->extension);
+    composer_add_part(c, media_part, im->data, im->size);
+
+    /* Default content type per extension (dedup vs existing + batch). */
+    seen = (strcmp(im->extension, "png") == 0)  ? seen_png  :
+           (strcmp(im->extension, "jpeg") == 0) ? seen_jpeg :
+           (strcmp(im->extension, "bmp") == 0)  ? seen_bmp  : seen_gif;
+    snprintf(needle, sizeof(needle), "Extension=\"%s\"", im->extension);
+    if (!*seen && !(ctxml && mem_find((const char *)ctxml, ctlen, needle))) {
+        snprintf(frag, sizeof(frag),
+                 "<Default Extension=\"%s\" ContentType=\"%s\"/>",
+                 im->extension, ct_str);
+        if (buf_append_s(ct, frag) != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    *seen = 1;
+
+    snprintf(frag, sizeof(frag),
+             "<Relationship Id=\"rId%zu\" Type=\"" LXLSX_IMG_REL_TYPE
+             "\" Target=\"../media/image%zu.%s\"/>",
+             rel_idx, media_num, im->extension);
+    if (buf_append_s(drels, frag) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    xoff = (long long)im->x_offset * 9525;
+    yoff = (long long)im->y_offset * 9525;
+    snprintf(frag, sizeof(frag),
+        "<xdr:oneCellAnchor>"
+        "<xdr:from><xdr:col>%u</xdr:col><xdr:colOff>%lld</xdr:colOff>"
+        "<xdr:row>%u</xdr:row><xdr:rowOff>%lld</xdr:rowOff></xdr:from>"
+        "<xdr:ext cx=\"%llu\" cy=\"%llu\"/>"
+        "<xdr:pic><xdr:nvPicPr><xdr:cNvPr id=\"%d\" name=\"Picture %d\"",
+        (unsigned)im->col, xoff, (unsigned)im->row, yoff,
+        (unsigned long long)im->cx, (unsigned long long)im->cy,
+        anchor_id, anchor_id);
+    if (buf_append_s(draw, frag) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    if (im->description && *im->description) {
+        if (buf_append_s(draw, " descr=\"") != 0 ||
+            append_attr_escaped(draw, im->description) != 0 ||
+            buf_append_s(draw, "\"") != 0)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    snprintf(frag, sizeof(frag),
+        "/><xdr:cNvPicPr><a:picLocks noChangeAspect=\"1\"/></xdr:cNvPicPr></xdr:nvPicPr>"
+        "<xdr:blipFill>"
+        "<a:blip xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:embed=\"rId%zu\"/>"
+        "<a:stretch><a:fillRect/></a:stretch></xdr:blipFill>"
+        "<xdr:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"%llu\" cy=\"%llu\"/></a:xfrm>"
+        "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></xdr:spPr>"
+        "</xdr:pic><xdr:clientData/></xdr:oneCellAnchor>",
+        rel_idx, (unsigned long long)im->cx, (unsigned long long)im->cy);
+    if (buf_append_s(draw, frag) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    return LXLSX_NO_ERROR;
+}
+
+/* Serialise one chart, add its part/rels/content-type and graphicFrame anchor. */
+static lxlsx_error append_chart_object(lxlsx_composer *c, lxlsx_edit_chart *ech,
+                                       lxlsx_edit_buf *draw, lxlsx_edit_buf *drels,
+                                       lxlsx_edit_buf *ct,
+                                       size_t *next_chart, size_t chart_seq,
+                                       size_t rel_idx, int anchor_id)
+{
+    char *chart_xml = NULL;
+    size_t chart_xml_len = 0, chart_num = (*next_chart)++;
+    char frag[256];
+    uint64_t cx, cy;
+    lxlsx_error err;
+
+    /* The chart id only needs to be unique enough for axis ids. */
+    ech->chart->id = (uint32_t)chart_seq;
+    err = lxlsx_chart_assemble_to_buffer(ech->chart, NULL, &chart_xml, &chart_xml_len);
+    if (err != LXLSX_NO_ERROR)
+        return err;
+
+    snprintf(frag, sizeof(frag), "xl/charts/chart%zu.xml", chart_num);
+    composer_add_part(c, frag, (const unsigned char *)chart_xml, chart_xml_len);
+    free(chart_xml);
+
+    snprintf(frag, sizeof(frag),
+             "<Override PartName=\"/xl/charts/chart%zu.xml\" ContentType=\"%s\"/>",
+             chart_num, LXLSX_CHART_CT);
+    if (buf_append_s(ct, frag) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    snprintf(frag, sizeof(frag),
+             "<Relationship Id=\"rId%zu\" Type=\"" LXLSX_CHART_REL_TYPE
+             "\" Target=\"../charts/chart%zu.xml\"/>",
+             rel_idx, chart_num);
+    if (buf_append_s(drels, frag) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    /* Default chart size 480x288 px in EMUs. */
+    cx = (uint64_t)(480.0 * 9525.0);
+    cy = (uint64_t)(288.0 * 9525.0);
+    if (append_chart_anchor(draw, ech->row, ech->col, cx, cy, anchor_id, rel_idx) != 0)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    return LXLSX_NO_ERROR;
+}
+
+/*
+ * Synthesise the drawing-hosted parts behind the session's images AND charts.
+ * One drawing per worksheet holds all of that sheet's images (pics) followed by
+ * its charts (graphicFrames), so a sheet may mix both. Each drawing gets its
+ * rels, the worksheet rels (patched/created), the content types and a <drawing>
+ * ref recorded on the dirty sheet. Drawing/anchor/rel ids run per drawing;
+ * media/chart part numbers and the drawing-part counter are global.
+ */
+static lxlsx_error prepare_drawings(lxlsx_edit_session *session,
+                                    lxlsx_composer *c,
+                                    lxlsx_dirty_sheet **sheets,
+                                    size_t *sheet_count,
+                                    size_t *sheet_cap,
+                                    size_t *next_drawing_io)
+{
+    size_t next_media, next_chart, chart_seq = 0, i, t;
+    lxlsx_edit_buf *ct;
+    unsigned char *ctxml = NULL;
+    size_t ctlen = 0;
+    int seen_png = 0, seen_jpeg = 0, seen_bmp = 0, seen_gif = 0;
+    const char **targets = NULL;
+    size_t ntargets = 0, tcap = 0;
+    char frag[512];
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    if (session->image_count == 0 && session->chart_count == 0)
+        return LXLSX_NO_ERROR;
+
+    next_media = max_existing_indexed(session, "xl/media/image") + 1;
+    next_chart = max_existing_indexed(session, "xl/charts/chart") + 1;
+
+    ct = composer_part_buf(c, "[Content_Types].xml", "</Types>");
+    if (!ct)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+    {
+        int idx = lxlsx_source_package_find_first(session->package, "[Content_Types].xml");
+        if (idx >= 0) {
+            err = lxlsx_source_package_read_entry(session->package, (size_t)idx,
+                                                  &ctxml, &ctlen);
+            if (err != LXLSX_NO_ERROR)
+                return err;
+        }
+    }
+
+    /* Distinct worksheets touched by an image or a chart. */
+    for (i = 0; i < session->image_count; i++)
+        if (add_unique_target(&targets, &ntargets, &tcap, session->images[i].target) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+        }
+    for (i = 0; i < session->chart_count; i++)
+        if (add_unique_target(&targets, &ntargets, &tcap, session->charts[i].target) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+        }
+
+    for (t = 0; t < ntargets; t++) {
+        const char *target = targets[t];
+        size_t drawing_num, rel_idx = 1, ws_rid = 1;
+        int anchor_id = 1, ws_rels_idx;
+        lxlsx_edit_buf draw = {0}, drels = {0};
+        char drawing_part[64], drawing_rels_part[96], ws_rels_part[96];
+        lxlsx_dirty_sheet *ds = NULL;
+
+        drawing_num = (*next_drawing_io)++;
+        snprintf(drawing_part, sizeof(drawing_part),
+                 "xl/drawings/drawing%zu.xml", drawing_num);
+        if (derive_rels_path(drawing_part, drawing_rels_part, sizeof(drawing_rels_part)) != 0 ||
+            derive_rels_path(target, ws_rels_part, sizeof(ws_rels_part)) != 0) {
+            err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done;
+        }
+
+        if (buf_append_s(&draw,
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\""
+                " xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">") != 0 ||
+            buf_append_s(&drels,
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                "<Relationships xmlns=\"" LXLSX_PKG_RELS_NS "\">") != 0)
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+        /* Images first, then charts, all into this one drawing. */
+        for (i = 0; i < session->image_count && err == LXLSX_NO_ERROR; i++) {
+            if (strcmp(session->images[i].target, target) != 0)
+                continue;
+            err = append_image_object(c, &session->images[i], &draw, &drels, ct,
+                                      ctxml, ctlen, &seen_png, &seen_jpeg,
+                                      &seen_bmp, &seen_gif, &next_media,
+                                      rel_idx, anchor_id);
+            rel_idx++;
+            anchor_id++;
+        }
+        for (i = 0; i < session->chart_count && err == LXLSX_NO_ERROR; i++) {
+            if (strcmp(session->charts[i].target, target) != 0)
+                continue;
+            err = append_chart_object(c, &session->charts[i], &draw, &drels, ct,
+                                      &next_chart, ++chart_seq, rel_idx, anchor_id);
+            rel_idx++;
+            anchor_id++;
+        }
+
+        if (err == LXLSX_NO_ERROR &&
+            (buf_append_s(&draw, "</xdr:wsDr>") != 0 ||
+             buf_append_s(&drels, "</Relationships>") != 0))
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+
+        if (err == LXLSX_NO_ERROR) {
+            composer_add_part(c, drawing_part, (const unsigned char *)draw.data, draw.len);
+            composer_add_part(c, drawing_rels_part, (const unsigned char *)drels.data, drels.len);
+        }
+        free(draw.data);
+        free(drels.data);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+
+        snprintf(frag, sizeof(frag),
+                 "<Override PartName=\"/%s\" ContentType=\"" LXLSX_DRAW_CT "\"/>",
+                 drawing_part);
+        if (buf_append_s(ct, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+
+        /* Worksheet rels: drawing relationship — patch if present, else create. */
+        ws_rels_idx = lxlsx_source_package_find_first(session->package, ws_rels_part);
+        if (ws_rels_idx >= 0) {
+            unsigned char *rxml = NULL;
+            size_t rlen = 0;
+            lxlsx_edit_buf *wsr;
+            err = lxlsx_source_package_read_entry(session->package,
+                                                  (size_t)ws_rels_idx, &rxml, &rlen);
+            if (err != LXLSX_NO_ERROR) goto done;
+            ws_rid = scan_max_after(rxml, rlen, "Id=\"rId") + 1;
+            free(rxml);
+            wsr = composer_part_buf(c, ws_rels_part, "</Relationships>");
+            if (!wsr) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            snprintf(frag, sizeof(frag),
+                     "<Relationship Id=\"rId%zu\" Type=\"" LXLSX_DRAW_REL_TYPE
+                     "\" Target=\"../drawings/drawing%zu.xml\"/>",
+                     ws_rid, drawing_num);
+            if (buf_append_s(wsr, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        } else {
+            char skel[512];
+            ws_rid = 1;
+            snprintf(skel, sizeof(skel),
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                "<Relationships xmlns=\"" LXLSX_PKG_RELS_NS "\">"
+                "<Relationship Id=\"rId1\" Type=\"" LXLSX_DRAW_REL_TYPE
+                "\" Target=\"../drawings/drawing%zu.xml\"/></Relationships>",
+                drawing_num);
+            composer_add_part(c, ws_rels_part, (const unsigned char *)skel, strlen(skel));
+        }
+
+        err = get_dirty_sheet(session, sheets, sheet_count, sheet_cap, target, &ds);
+        if (err != LXLSX_NO_ERROR) goto done;
+        if (ds->has_drawing) { err = LXLSX_ERROR_FEATURE_NOT_SUPPORTED; goto done; }
+        ds->has_drawing = 1;
+        ds->drawing_rid = ws_rid;
+
+        if (c->oom) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+    }
+
+done:
+    free(targets);
+    free(ctxml);
+    return err;
+}
+
 lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
 {
     lxlsx_dirty_sheet *dirty_sheets = NULL;
@@ -2856,7 +3462,8 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
     if (session->change_count == 0 && session->merge_count == 0 &&
         session->col_count == 0 && session->row_dim_count == 0 &&
-        session->new_sheet_count == 0)
+        session->new_sheet_count == 0 && session->image_count == 0 &&
+        session->chart_count == 0)
         return lxlsx_source_package_save_copy(session->package, path);
 
     composer_init(&composer, session);
@@ -2917,6 +3524,18 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     if (err != LXLSX_NO_ERROR)
         goto done;
 
+    /* Synthesise image + chart drawing parts. One drawing per worksheet holds
+     * both, so a sheet may mix images and charts; each records a <drawing> ref
+     * on its dirty sheet. */
+    {
+        size_t next_drawing =
+            max_existing_indexed(session, "xl/drawings/drawing") + 1;
+        err = prepare_drawings(session, &composer, &dirty_sheets, &dirty_count,
+                               &dirty_cap, &next_drawing);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+    }
+
     for (i = 0; i < dirty_count; i++) {
         if (dirty_sheets[i].change_count > 0) {
             err = patch_xml_with_changes(&dirty_sheets[i].xml,
@@ -2947,6 +3566,13 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
                                           &dirty_sheets[i].xml_len,
                                           dirty_sheets[i].row_dims,
                                           dirty_sheets[i].row_dim_count);
+            if (err != LXLSX_NO_ERROR)
+                goto done;
+        }
+        if (dirty_sheets[i].has_drawing) {
+            err = patch_xml_with_drawing(&dirty_sheets[i].xml,
+                                         &dirty_sheets[i].xml_len,
+                                         dirty_sheets[i].drawing_rid);
             if (err != LXLSX_NO_ERROR)
                 goto done;
         }

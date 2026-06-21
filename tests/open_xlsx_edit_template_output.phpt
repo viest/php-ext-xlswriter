@@ -89,7 +89,6 @@ function reject($config, $label, callable $op) {
 
 reject($config, 'insertUrl', function ($x) { $x->insertUrl(4, 0, 'https://example.org'); });
 reject($config, 'insertComment', function ($x) { $x->insertComment(5, 0, 'note'); });
-reject($config, 'insertImage', function ($x) { $x->insertImage(6, 0, __FILE__); });
 reject($config, 'autoFilter', function ($x) { $x->autoFilter('A1:B2'); });
 reject($config, 'freezePanes', function ($x) { $x->freezePanes(1, 0); });
 ?>
@@ -114,6 +113,5 @@ open_xlsx_edit_template_source.xlsx
 string(8) "in place"
 insertUrl: throw
 insertComment: throw
-insertImage: throw
 autoFilter: throw
 freezePanes: throw

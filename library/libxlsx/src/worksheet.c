@@ -10782,6 +10782,49 @@ lxlsx_worksheet_set_default_row(lxlsx_worksheet *self, double height,
 }
 
 /*
+ * Edit mode: hand a parsed image off to the edit session. The full bytes are
+ * read back from op->stream (both the file and buffer paths populate it), and
+ * the display size is computed in EMUs from the image's pixels, DPI and scale
+ * (a oneCellAnchor, so no column widths are needed).
+ */
+static lxlsx_error
+_worksheet_edit_add_image(lxlsx_worksheet *self,
+                          lxlsx_row_t row, lxlsx_col_t col,
+                          lxlsx_object_properties *op)
+{
+    unsigned char *bytes;
+    long sz;
+    double xs, ys, xdpi, ydpi;
+    uint64_t cx, cy;
+    lxlsx_error err;
+
+    if (fseek(op->stream, 0, SEEK_END) != 0 || (sz = ftell(op->stream)) <= 0)
+        return LXLSX_ERROR_IMAGE_DIMENSIONS;
+    bytes = malloc((size_t)sz);
+    if (!bytes)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    rewind(op->stream);
+    if (fread(bytes, (size_t)sz, 1, op->stream) != 1) {
+        free(bytes);
+        return LXLSX_ERROR_IMAGE_DIMENSIONS;
+    }
+
+    xs = op->x_scale > 0 ? op->x_scale : 1.0;
+    ys = op->y_scale > 0 ? op->y_scale : 1.0;
+    xdpi = op->x_dpi > 0 ? op->x_dpi : 96.0;
+    ydpi = op->y_dpi > 0 ? op->y_dpi : 96.0;
+    cx = (uint64_t)(op->width  * xs * 9525.0 * 96.0 / xdpi + 0.5);
+    cy = (uint64_t)(op->height * ys * 9525.0 * 96.0 / ydpi + 0.5);
+
+    err = lxlsx_edit_add_image(self->edit_session, self->edit_sheet_name,
+                               row, col, bytes, (size_t)sz, op->extension,
+                               cx, cy, op->x_offset, op->y_offset,
+                               op->description);
+    free(bytes);
+    return err;
+}
+
+/*
  * Insert an image with options into the worksheet.
  */
 lxlsx_error
@@ -10790,9 +10833,6 @@ lxlsx_worksheet_insert_image_opt(lxlsx_worksheet *self,
                            const char *filename,
                            lxlsx_image_options *user_options)
 {
-    if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
-
     FILE *image_stream;
     const char *description;
     lxlsx_object_properties *object_props;
@@ -10856,6 +10896,13 @@ lxlsx_worksheet_insert_image_opt(lxlsx_worksheet *self,
         object_props->y_scale = 1;
 
     if (_get_image_properties(object_props) == LXLSX_NO_ERROR) {
+        if (_worksheet_is_edit(self)) {
+            lxlsx_error err =
+                _worksheet_edit_add_image(self, row_num, col_num, object_props);
+            _free_object_properties(object_props);
+            fclose(image_stream);
+            return err;
+        }
         STAILQ_INSERT_TAIL(self->image_props, object_props, list_pointers);
         fclose(image_stream);
         return LXLSX_NO_ERROR;
@@ -10889,9 +10936,6 @@ lxlsx_worksheet_insert_image_buffer_opt(lxlsx_worksheet *self,
                                   size_t image_size,
                                   lxlsx_image_options *user_options)
 {
-    if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
-
     FILE *image_stream;
     lxlsx_object_properties *object_props;
 
@@ -10967,6 +11011,13 @@ lxlsx_worksheet_insert_image_buffer_opt(lxlsx_worksheet *self,
         object_props->y_scale = 1;
 
     if (_get_image_properties(object_props) == LXLSX_NO_ERROR) {
+        if (_worksheet_is_edit(self)) {
+            lxlsx_error err =
+                _worksheet_edit_add_image(self, row_num, col_num, object_props);
+            _free_object_properties(object_props);
+            fclose(image_stream);
+            return err;
+        }
         STAILQ_INSERT_TAIL(self->image_props, object_props, list_pointers);
         fclose(image_stream);
         return LXLSX_NO_ERROR;
@@ -11451,8 +11502,24 @@ lxlsx_error
 lxlsx_worksheet_insert_chart(lxlsx_worksheet *self,
                        lxlsx_row_t row_num, lxlsx_col_t col_num, lxlsx_chart *chart)
 {
-    if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+    if (_worksheet_is_edit(self)) {
+        lxlsx_error err;
+
+        if (!chart)
+            return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+        if (chart->in_use)
+            return LXLSX_ERROR_PARAMETER_VALIDATION;
+        if (STAILQ_EMPTY(chart->series_list))
+            return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+        /* The chart is serialised and wired up at save time by the edit
+         * session; it is owned by the workbook, so just hand over a reference. */
+        err = lxlsx_edit_add_chart(self->edit_session, self->edit_sheet_name,
+                                   row_num, col_num, chart);
+        if (err == LXLSX_NO_ERROR)
+            chart->in_use = LXLSX_TRUE;
+        return err;
+    }
 
     return lxlsx_worksheet_insert_chart_opt(self, row_num, col_num, chart, NULL);
 }

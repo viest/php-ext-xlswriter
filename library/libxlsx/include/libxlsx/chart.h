@@ -1271,6 +1271,8 @@ extern "C" {
 lxlsx_chart *lxlsx_chart_new(uint8_t type);
 void lxlsx_chart_free(lxlsx_chart *chart);
 void lxlsx_chart_assemble_xml_file(lxlsx_chart *chart);
+lxlsx_error lxlsx_chart_assemble_to_buffer(lxlsx_chart *chart, const char *tmpdir,
+                                           char **out, size_t *out_len);
 
 /**
  * @brief Add a data series to a chart.

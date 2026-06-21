@@ -20,6 +20,7 @@ extern "C" {
 #endif
 
 typedef struct lxlsx_edit_session lxlsx_edit_session;
+struct lxlsx_chart;  /* defined in chart.h; only used here as an opaque pointer */
 
 lxlsx_edit_session *lxlsx_edit_open(const char *path);
 lxlsx_error         lxlsx_edit_save_as(lxlsx_edit_session *session,
@@ -113,6 +114,35 @@ lxlsx_error lxlsx_edit_add_sheet(lxlsx_edit_session *session,
                                  const char *name,
                                  const char *xml,
                                  size_t xml_len);
+
+/*
+ * Insert an image into an existing worksheet. The image bytes are anchored at
+ * (row, col) via a oneCellAnchor sized to cx/cy EMUs (the caller computes those
+ * from the image's pixels/DPI/scale, since edit mode has no in-memory column
+ * widths for a twoCellAnchor). On save a media part, a drawing part + its rels,
+ * the worksheet <drawing> ref, the worksheet rels and the content types are all
+ * synthesised. Targeting a sheet that already has a <drawing> is rejected.
+ */
+lxlsx_error lxlsx_edit_add_image(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_row_t row, lxlsx_col_t col,
+                                 const unsigned char *data, size_t size,
+                                 const char *extension,
+                                 uint64_t cx, uint64_t cy,
+                                 int32_t x_offset, int32_t y_offset,
+                                 const char *description);
+
+/*
+ * Insert a chart into an existing worksheet. The chart object is owned by the
+ * workbook; on save it is serialised to a new xl/charts/chartN.xml, anchored via
+ * a oneCellAnchor graphicFrame in a drawing part, and wired up through the
+ * drawing/worksheet rels and content types. A sheet that already has a <drawing>
+ * is rejected.
+ */
+lxlsx_error lxlsx_edit_add_chart(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_row_t row, lxlsx_col_t col,
+                                 struct lxlsx_chart *chart);
 
 #ifdef __cplusplus
 }

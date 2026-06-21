@@ -80,6 +80,8 @@ EDIT_OUTPUTS := \
 	$(FIXTURES_DIR)/edit_numfmt.xlsx \
 	$(FIXTURES_DIR)/edit_dim.xlsx \
 	$(FIXTURES_DIR)/edit_addsheet.xlsx \
+	$(FIXTURES_DIR)/edit_image.xlsx \
+	$(FIXTURES_DIR)/edit_chart.xlsx \
 	$(FIXTURES_DIR)/edit_duplicate.zip \
 	$(FIXTURES_DIR)/edit_duplicate_noop.zip
 EDIT_FIXTURES := \

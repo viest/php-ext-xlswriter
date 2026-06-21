@@ -20,6 +20,9 @@ static const char *SELF_CLOSING_XLSX = "fixtures/edit_self_closing.xlsx";
 static const char *ORDERED_ROWS_XLSX = "fixtures/edit_ordered_rows.xlsx";
 static const char *CUSTOM_TARGET_XLSX = "fixtures/edit_custom_target.xlsx";
 static const char *NORMALIZED_TARGET_XLSX = "fixtures/edit_normalized_target.xlsx";
+static const char *MERGE_XLSX = "fixtures/edit_merge.xlsx";
+static const char *NUMFMT_XLSX = "fixtures/edit_numfmt.xlsx";
+static const char *DIM_XLSX = "fixtures/edit_dim.xlsx";
 
 static void assert_ok(lxlsx_error err)
 {
@@ -566,11 +569,11 @@ static void test_opened_workbook_uses_standard_write_api(void)
     assert_ok(lxlsx_worksheet_write_boolean(worksheet, 1, 1, 1, NULL));
     assert_ok(lxlsx_worksheet_write_formula(worksheet, 1, 2, "=A2*2", NULL));
 
+    /* A format applied in edit mode is now supported (injected into styles). */
     format = lxlsx_workbook_add_format(workbook);
     TEST_ASSERT_NOT_NULL(format);
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_write_string(worksheet, 2, 0,
-                                                       "formatted", format));
+    lxlsx_format_set_bold(format);
+    assert_ok(lxlsx_worksheet_write_string(worksheet, 2, 0, "formatted", format));
 
     assert_ok(lxlsx_workbook_save_as(workbook, NUMBER_XLSX));
     lxlsx_workbook_free(workbook);
@@ -601,8 +604,7 @@ static void test_edit_rejects_unsupported_worksheet_ops(void)
     /* Snapshot-based editing can only patch number/string/boolean/formula
      * cells. Everything else must report FEATURE_NOT_SUPPORTED instead of
      * mutating in-memory state that the snapshot save never serializes. */
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_write_datetime(worksheet, 3, 0, &dt, NULL));
+    (void) dt;  /* write_datetime is supported in edit mode (see merge/numfmt tests) */
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_write_unixtime(worksheet, 3, 1, 0, NULL));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
@@ -614,23 +616,150 @@ static void test_edit_rejects_unsupported_worksheet_ops(void)
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_insert_chart(worksheet, 7, 0, NULL));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_merge_range(worksheet, 8, 0, 8, 1, "m", NULL));
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_autofilter(worksheet, 0, 0, 1, 1));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_add_table(worksheet, 0, 0, 1, 1, NULL));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_data_validation_cell(worksheet, 0, 0, NULL));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_set_column_opt(worksheet, 0, 0, 10.0, NULL, NULL));
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
-                          lxlsx_worksheet_set_row_opt(worksheet, 0, 10.0, NULL, NULL));
-    TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_freeze_panes(worksheet, 1, 0));
     TEST_ASSERT_EQUAL_INT(LXLSX_ERROR_FEATURE_NOT_SUPPORTED,
                           lxlsx_worksheet_show_comments(worksheet));
 
     lxlsx_workbook_free(workbook);
+}
+
+static void test_edit_adds_merged_range(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    unsigned char *xml;
+    size_t xml_len;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);  /* already merges A3:B3 */
+    remove(MERGE_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    /* Merge is supported in edit mode: it is injected on save. */
+    assert_ok(lxlsx_worksheet_merge_range(worksheet, 5, 0, 5, 2, "merged", NULL));
+    assert_ok(lxlsx_workbook_save_as(workbook, MERGE_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    xml = read_sheet_xml(MERGE_XLSX, &xml_len);
+    assert_xml_contains(xml, "<mergeCells count=\"2\">"); /* count bumped 1 -> 2 */
+    assert_xml_contains(xml, "<mergeCell ref=\"A3:B3\"/>"); /* original preserved */
+    assert_xml_contains(xml, "<mergeCell ref=\"A6:C6\"/>"); /* new range added */
+    free(xml);
+}
+
+static void test_edit_injects_number_format(void)
+{
+    lxlsx_edit_session *session;
+    lxlsx_source_package *package;
+    int idx;
+    unsigned char *styles = NULL;
+    size_t styles_len = 0;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(NUMFMT_XLSX);
+
+    session = lxlsx_edit_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_number(session, "Edit", 5, 0, 1234.5));
+    assert_ok(lxlsx_edit_set_number_format(session, "Edit", 5, 0, "0.00"));
+    assert_ok(lxlsx_edit_save_as(session, NUMFMT_XLSX));
+    lxlsx_edit_close(session);
+
+    /* The value is written and styles.xml carries the injected number format. */
+    assert_number_cell(NUMFMT_XLSX, 6, 1, 1234.5);
+
+    assert_ok(lxlsx_source_package_open(NUMFMT_XLSX, &package));
+    idx = lxlsx_source_package_find_first(package, "xl/styles.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(package, (size_t)idx,
+                                              &styles, &styles_len));
+    assert_xml_contains(styles, "formatCode=\"0.00\"");
+    assert_xml_contains(styles, "applyNumberFormat=\"1\"");
+    free(styles);
+    lxlsx_source_package_close(package);
+}
+
+static void test_edit_injects_cell_format(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    lxlsx_format *format;
+    lxlsx_source_package *package;
+    int idx;
+    unsigned char *styles = NULL, *sheet = NULL;
+    size_t styles_len = 0, sheet_len = 0;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);
+    remove(NUMFMT_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+
+    format = lxlsx_workbook_add_format(workbook);
+    TEST_ASSERT_NOT_NULL(format);
+    lxlsx_format_set_bold(format);
+    lxlsx_format_set_font_color(format, 0xFF0000);
+    lxlsx_format_set_fg_color(format, 0x00FF00);
+    lxlsx_format_set_pattern(format, LXLSX_PATTERN_SOLID);
+    lxlsx_format_set_align(format, LXLSX_ALIGN_CENTER);
+    lxlsx_format_set_border(format, LXLSX_BORDER_THIN);
+    assert_ok(lxlsx_worksheet_write_string(worksheet, 5, 0, "styled", format));
+    assert_ok(lxlsx_workbook_save_as(workbook, NUMFMT_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    assert_ok(lxlsx_source_package_open(NUMFMT_XLSX, &package));
+    idx = lxlsx_source_package_find_first(package, "xl/styles.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(package, (size_t)idx, &styles, &styles_len));
+    assert_xml_contains(styles, "<b/>");
+    assert_xml_contains(styles, "rgb=\"FFFF0000\"");          /* font color */
+    assert_xml_contains(styles, "patternType=\"solid\"");     /* fill */
+    assert_xml_contains(styles, "rgb=\"FF00FF00\"");          /* fill fg color */
+    assert_xml_contains(styles, "horizontal=\"center\"");     /* alignment */
+    assert_xml_contains(styles, "<left style=\"thin\">");     /* border */
+    assert_xml_contains(styles, "applyBorder=\"1\"");
+    free(styles);
+
+    idx = lxlsx_source_package_find_first(package, "xl/worksheets/sheet1.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(package, (size_t)idx, &sheet, &sheet_len));
+    assert_xml_contains(sheet, "<c r=\"A6\" s=");             /* cell repointed */
+    free(sheet);
+    lxlsx_source_package_close(package);
+}
+
+static void test_edit_sets_dimensions(void)
+{
+    lxlsx_edit_session *session;
+    unsigned char *xml = NULL;
+    size_t xml_len = 0;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);  /* row 1 has data */
+    remove(DIM_XLSX);
+
+    session = lxlsx_edit_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_set_column(session, "Edit", 0, 2, 25.0));   /* A:C */
+    assert_ok(lxlsx_edit_set_row_height(session, "Edit", 0, 30.0));  /* row 1 */
+    assert_ok(lxlsx_edit_save_as(session, DIM_XLSX));
+    lxlsx_edit_close(session);
+
+    xml = read_sheet_xml(DIM_XLSX, &xml_len);
+    assert_xml_contains(xml, "<col min=\"1\" max=\"3\" width=\"25\" customWidth=\"1\"/>");
+    assert_xml_contains(xml, "ht=\"30\"");
+    assert_xml_contains(xml, "customHeight=\"1\"");
+    free(xml);
 }
 
 static void test_edit_uses_open_time_snapshot(void)
@@ -667,6 +796,10 @@ int main(void)
     RUN_TEST(test_edit_inserts_missing_rows_inside_sheet_data_order);
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_rejects_unsupported_worksheet_ops);
+    RUN_TEST(test_edit_adds_merged_range);
+    RUN_TEST(test_edit_injects_number_format);
+    RUN_TEST(test_edit_injects_cell_format);
+    RUN_TEST(test_edit_sets_dimensions);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();
 }

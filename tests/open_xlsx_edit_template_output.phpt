@@ -87,17 +87,9 @@ function reject($config, $label, callable $op) {
     }
 }
 
-reject($config, 'insertText+format', function ($x) {
-    $fmt = (new \Vtiful\Kernel\Format($x->getHandle()))->bold()->toResource();
-    $x->insertText(0, 0, 'styled', null, $fmt);
-});
-reject($config, 'insertDate', function ($x) { $x->insertDate(3, 0, 1700000000); });
 reject($config, 'insertUrl', function ($x) { $x->insertUrl(4, 0, 'https://example.org'); });
 reject($config, 'insertComment', function ($x) { $x->insertComment(5, 0, 'note'); });
 reject($config, 'insertImage', function ($x) { $x->insertImage(6, 0, __FILE__); });
-reject($config, 'mergeCells', function ($x) { $x->mergeCells('A8:B8', 'm'); });
-reject($config, 'setColumn', function ($x) { $x->setColumn('A:A', 30); });
-reject($config, 'setRowRange', function ($x) { $x->setRow('A1:A3', 30); });
 reject($config, 'autoFilter', function ($x) { $x->autoFilter('A1:B2'); });
 reject($config, 'freezePanes', function ($x) { $x->freezePanes(1, 0); });
 ?>
@@ -120,13 +112,8 @@ merge: yes
 protection: yes
 open_xlsx_edit_template_source.xlsx
 string(8) "in place"
-insertText+format: throw
-insertDate: throw
 insertUrl: throw
 insertComment: throw
 insertImage: throw
-mergeCells: throw
-setColumn: throw
-setRowRange: throw
 autoFilter: throw
 freezePanes: throw

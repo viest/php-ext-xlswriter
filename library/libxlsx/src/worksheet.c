@@ -7964,10 +7964,20 @@ _worksheet_is_edit(lxlsx_worksheet *self)
     return self && self->is_edit && self->edit_session;
 }
 
+/*
+ * Apply a format to a just-written cell in edit mode. The value setter must
+ * have run first (set_format attaches to the cell's pending change). A NULL
+ * format is a no-op. Font/fill/alignment/number-format are honoured; borders
+ * are not yet applied in edit mode.
+ */
 static lxlsx_error
-_worksheet_edit_reject_format(lxlsx_format *format)
+_worksheet_edit_apply_format(lxlsx_worksheet *self, lxlsx_row_t row,
+                             lxlsx_col_t col, lxlsx_format *format)
 {
-    return format ? LXLSX_ERROR_FEATURE_NOT_SUPPORTED : LXLSX_NO_ERROR;
+    if (!format)
+        return LXLSX_NO_ERROR;
+    return lxlsx_edit_set_format(self->edit_session, self->edit_sheet_name,
+                                 row, col, format);
 }
 
 /*
@@ -7982,16 +7992,16 @@ lxlsx_worksheet_write_number(lxlsx_worksheet *self,
     lxlsx_error err;
 
     if (_worksheet_is_edit(self)) {
-        err = _worksheet_edit_reject_format(format);
-        if (err)
-            return err;
-
         err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
         if (err)
             return err;
 
-        return lxlsx_edit_set_number(self->edit_session, self->edit_sheet_name,
-                                     row_num, col_num, value);
+        err = lxlsx_edit_set_number(self->edit_session, self->edit_sheet_name,
+                                    row_num, col_num, value);
+        if (err)
+            return err;
+
+        return _worksheet_edit_apply_format(self, row_num, col_num, format);
     }
 
     err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
@@ -8024,10 +8034,6 @@ lxlsx_worksheet_write_string(lxlsx_worksheet *self,
         if (!string || !*string)
             return format ? LXLSX_ERROR_FEATURE_NOT_SUPPORTED : LXLSX_NO_ERROR;
 
-        err = _worksheet_edit_reject_format(format);
-        if (err)
-            return err;
-
         err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
         if (err)
             return err;
@@ -8035,8 +8041,12 @@ lxlsx_worksheet_write_string(lxlsx_worksheet *self,
         if (_worksheet_string_exceeds_limit(string, LXLSX_STR_MAX))
             return LXLSX_ERROR_MAX_STRING_LENGTH_EXCEEDED;
 
-        return lxlsx_edit_set_string(self->edit_session, self->edit_sheet_name,
-                                     row_num, col_num, string);
+        err = lxlsx_edit_set_string(self->edit_session, self->edit_sheet_name,
+                                    row_num, col_num, string);
+        if (err)
+            return err;
+
+        return _worksheet_edit_apply_format(self, row_num, col_num, format);
     }
 
     if (!string || !*string) {
@@ -8098,10 +8108,6 @@ lxlsx_worksheet_write_formula_num(lxlsx_worksheet *self,
     char result_buf[64];
 
     if (_worksheet_is_edit(self)) {
-        err = _worksheet_edit_reject_format(format);
-        if (err)
-            return err;
-
         if (!formula)
             return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
 
@@ -8113,8 +8119,12 @@ lxlsx_worksheet_write_formula_num(lxlsx_worksheet *self,
             return err;
 
         snprintf(result_buf, sizeof(result_buf), "%.15g", result);
-        return lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
-                                      row_num, col_num, formula, result_buf);
+        err = lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
+                                     row_num, col_num, formula, result_buf);
+        if (err)
+            return err;
+
+        return _worksheet_edit_apply_format(self, row_num, col_num, format);
     }
 
     if (!formula)
@@ -8156,10 +8166,6 @@ lxlsx_worksheet_write_formula_str(lxlsx_worksheet *self,
     lxlsx_error err;
 
     if (_worksheet_is_edit(self)) {
-        err = _worksheet_edit_reject_format(format);
-        if (err)
-            return err;
-
         if (!formula)
             return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
 
@@ -8170,8 +8176,12 @@ lxlsx_worksheet_write_formula_str(lxlsx_worksheet *self,
         if (err)
             return err;
 
-        return lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
-                                      row_num, col_num, formula, result);
+        err = lxlsx_edit_set_formula(self->edit_session, self->edit_sheet_name,
+                                     row_num, col_num, formula, result);
+        if (err)
+            return err;
+
+        return _worksheet_edit_apply_format(self, row_num, col_num, format);
     }
 
     if (!formula)
@@ -8451,16 +8461,16 @@ lxlsx_worksheet_write_boolean(lxlsx_worksheet *self,
     lxlsx_error err;
 
     if (_worksheet_is_edit(self)) {
-        err = _worksheet_edit_reject_format(format);
-        if (err)
-            return err;
-
         err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
         if (err)
             return err;
 
-        return lxlsx_edit_set_boolean(self->edit_session, self->edit_sheet_name,
-                                      row_num, col_num, value);
+        err = lxlsx_edit_set_boolean(self->edit_session, self->edit_sheet_name,
+                                     row_num, col_num, value);
+        if (err)
+            return err;
+
+        return _worksheet_edit_apply_format(self, row_num, col_num, format);
     }
 
     err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
@@ -8483,12 +8493,32 @@ lxlsx_worksheet_write_datetime(lxlsx_worksheet *self,
                          lxlsx_col_t col_num, lxlsx_datetime *datetime,
                          lxlsx_format *format)
 {
-    if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
-
     lxlsx_cell *cell;
     double excel_date;
     lxlsx_error err;
+
+    /* Edit mode: write the serial value and inject the date number format
+     * (the format's other attributes are not applied in edit mode yet). */
+    if (_worksheet_is_edit(self)) {
+        err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
+        if (err)
+            return err;
+        err = lxlsx_datetime_validate(datetime);
+        if (err)
+            return err;
+        excel_date =
+            lxlsx_datetime_to_excel_date_with_epoch(datetime, self->use_1904_epoch);
+        err = lxlsx_edit_set_number(self->edit_session, self->edit_sheet_name,
+                                    row_num, col_num, excel_date);
+        if (err)
+            return err;
+        if (format && format->num_format[0])
+            err = lxlsx_edit_set_number_format(self->edit_session,
+                                               self->edit_sheet_name,
+                                               row_num, col_num,
+                                               format->num_format);
+        return err;
+    }
 
     err = _check_dimensions(self, row_num, col_num, LXLSX_FALSE, LXLSX_FALSE);
     if (err)
@@ -8998,8 +9028,11 @@ lxlsx_worksheet_set_column_opt(lxlsx_worksheet *self,
     lxlsx_col_t col;
     lxlsx_error err;
 
+    /* Edit mode: record the column width for injection into <cols> on save.
+     * (Per-column format/outline options are not applied in edit mode yet.) */
     if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+        return lxlsx_edit_set_column(self->edit_session, self->edit_sheet_name,
+                                     firstcol, lastcol, width);
 
     if (user_options) {
         hidden = user_options->hidden;
@@ -9166,8 +9199,11 @@ lxlsx_worksheet_set_row_opt(lxlsx_worksheet *self,
     lxlsx_row *row;
     lxlsx_error err;
 
+    /* Edit mode: record the row height, patched onto the existing <row> on
+     * save. (Row format/outline options are not applied in edit mode yet.) */
     if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+        return lxlsx_edit_set_row_height(self->edit_session, self->edit_sheet_name,
+                                         row_num, height);
 
     if (user_options) {
         hidden = user_options->hidden;
@@ -9267,8 +9303,12 @@ lxlsx_worksheet_merge_range(lxlsx_worksheet *self, lxlsx_row_t first_row,
     lxlsx_col_t tmp_col;
     lxlsx_error err;
 
+    /* Edit mode: record the merge for injection into the source part on save.
+     * The top-left cell's value/format is written separately by the caller via
+     * the edit-aware write_* path. */
     if (_worksheet_is_edit(self))
-        return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
+        return lxlsx_edit_set_merge(self->edit_session, self->edit_sheet_name,
+                                    first_row, first_col, last_row, last_col);
 
     /* Excel doesn't allow a single cell to be merged */
     if (first_row == last_row && first_col == last_col)

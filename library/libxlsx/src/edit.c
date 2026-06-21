@@ -37,7 +37,31 @@ typedef struct {
     int boolean;
     char *formula;
     char *cached_result;
+    char *number_format;  /* requested number-format code, or NULL */
+    lxlsx_format *style;   /* shallow snapshot of an applied format, or NULL */
+    int   style_index;    /* xf index assigned on save (-1 = keep existing) */
 } lxlsx_edit_change;
+
+typedef struct {
+    char *target;
+    lxlsx_row_t first_row;
+    lxlsx_col_t first_col;
+    lxlsx_row_t last_row;
+    lxlsx_col_t last_col;
+} lxlsx_edit_merge;
+
+typedef struct {
+    char *target;
+    lxlsx_col_t first_col;
+    lxlsx_col_t last_col;
+    double width;
+} lxlsx_edit_col;
+
+typedef struct {
+    char *target;
+    lxlsx_row_t row;
+    double height;
+} lxlsx_edit_row_dim;
 
 struct lxlsx_edit_session {
     lxlsx_source_package *package;
@@ -45,6 +69,15 @@ struct lxlsx_edit_session {
     lxlsx_edit_change *changes;
     size_t change_count;
     size_t change_cap;
+    lxlsx_edit_merge *merges;
+    size_t merge_count;
+    size_t merge_cap;
+    lxlsx_edit_col *cols;
+    size_t col_count;
+    size_t col_cap;
+    lxlsx_edit_row_dim *row_dims;
+    size_t row_dim_count;
+    size_t row_dim_cap;
 };
 
 typedef struct {
@@ -61,6 +94,15 @@ typedef struct {
     const lxlsx_edit_change **changes;
     size_t change_count;
     size_t change_cap;
+    const lxlsx_edit_merge **merges;
+    size_t merge_count;
+    size_t merge_cap;
+    const lxlsx_edit_col **cols;
+    size_t col_count;
+    size_t col_cap;
+    const lxlsx_edit_row_dim **row_dims;
+    size_t row_dim_count;
+    size_t row_dim_cap;
 } lxlsx_dirty_sheet;
 
 #define LXLSX_EDIT_CELL_CLOSE       "</c>"
@@ -580,6 +622,13 @@ static lxlsx_error append_cell_xml(lxlsx_edit_buf *buf,
                                    const char *style)
 {
     char number[64];
+    char style_buf[16];
+
+    /* A restyle change overrides the original cell's s= index. */
+    if (change->style_index >= 0) {
+        snprintf(style_buf, sizeof(style_buf), "%d", change->style_index);
+        style = style_buf;
+    }
 
     if (buf_appendf(buf, "<c r=\"%s\"", ref) != 0)
         return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
@@ -1162,6 +1211,7 @@ static lxlsx_error append_change(lxlsx_edit_session *session,
 
     change = &session->changes[session->change_count];
     memset(change, 0, sizeof(*change));
+    change->style_index = -1;
     change->target = strdup(target);
     change->row = row;
     change->col = col;
@@ -1229,8 +1279,19 @@ void lxlsx_edit_close(lxlsx_edit_session *session)
         free(session->changes[i].string);
         free(session->changes[i].formula);
         free(session->changes[i].cached_result);
+        free(session->changes[i].number_format);
+        free(session->changes[i].style);
     }
     free(session->changes);
+    for (i = 0; i < session->merge_count; i++)
+        free(session->merges[i].target);
+    free(session->merges);
+    for (i = 0; i < session->col_count; i++)
+        free(session->cols[i].target);
+    free(session->cols);
+    for (i = 0; i < session->row_dim_count; i++)
+        free(session->row_dims[i].target);
+    free(session->row_dims);
     lxlsx_reader_workbook_close(session->workbook);
     lxlsx_source_package_close(session->package);
     free(session);
@@ -1294,6 +1355,218 @@ lxlsx_error lxlsx_edit_set_formula(lxlsx_edit_session *session,
                          cached_result);
 }
 
+lxlsx_error lxlsx_edit_set_number_format(lxlsx_edit_session *session,
+                                         const char *sheet_name,
+                                         lxlsx_row_t row,
+                                         lxlsx_col_t col,
+                                         const char *format_code)
+{
+    const char *target;
+    size_t i;
+
+    if (!session || !format_code || !*format_code)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    /* Attach the format to the most recent value change for this cell (the
+     * caller writes the value immediately before requesting the format). */
+    for (i = session->change_count; i > 0; i--) {
+        lxlsx_edit_change *c = &session->changes[i - 1];
+        if (c->row == row && c->col == col && strcmp(c->target, target) == 0) {
+            char *code = strdup(format_code);
+            if (!code)
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+            free(c->number_format);
+            c->number_format = code;
+            return LXLSX_NO_ERROR;
+        }
+    }
+    return LXLSX_ERROR_PARAMETER_VALIDATION;
+}
+
+lxlsx_error lxlsx_edit_set_format(lxlsx_edit_session *session,
+                                  const char *sheet_name,
+                                  lxlsx_row_t row,
+                                  lxlsx_col_t col,
+                                  const lxlsx_format *format)
+{
+    const char *target;
+    size_t i;
+
+    if (!session || !format)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    for (i = session->change_count; i > 0; i--) {
+        lxlsx_edit_change *c = &session->changes[i - 1];
+        if (c->row == row && c->col == col && strcmp(c->target, target) == 0) {
+            /* Shallow snapshot: only scalar style fields are read later, so the
+             * format object's lifetime no longer matters. */
+            lxlsx_format *copy = (lxlsx_format *)malloc(sizeof(lxlsx_format));
+            if (!copy)
+                return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+            memcpy(copy, format, sizeof(lxlsx_format));
+
+            /* Replicate the writer's solid-fill fg/bg normalization so a
+             * Format::background() color lands in fgColor like create mode
+             * (see lxlsx_workbook fill prep). */
+            if (copy->pattern == LXLSX_PATTERN_SOLID &&
+                copy->bg_color != LXLSX_COLOR_UNSET &&
+                copy->fg_color != LXLSX_COLOR_UNSET) {
+                lxlsx_color_t t = copy->fg_color;
+                copy->fg_color = copy->bg_color;
+                copy->bg_color = t;
+            }
+            if (copy->pattern <= LXLSX_PATTERN_SOLID &&
+                copy->bg_color != LXLSX_COLOR_UNSET &&
+                copy->fg_color == LXLSX_COLOR_UNSET) {
+                copy->fg_color = copy->bg_color;
+                copy->bg_color = LXLSX_COLOR_UNSET;
+                copy->pattern = LXLSX_PATTERN_SOLID;
+            }
+            if (copy->pattern <= LXLSX_PATTERN_SOLID &&
+                copy->bg_color == LXLSX_COLOR_UNSET &&
+                copy->fg_color != LXLSX_COLOR_UNSET) {
+                copy->pattern = LXLSX_PATTERN_SOLID;
+            }
+
+            free(c->style);
+            c->style = copy;
+            return LXLSX_NO_ERROR;
+        }
+    }
+    return LXLSX_ERROR_PARAMETER_VALIDATION;
+}
+
+lxlsx_error lxlsx_edit_set_merge(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_row_t first_row,
+                                 lxlsx_col_t first_col,
+                                 lxlsx_row_t last_row,
+                                 lxlsx_col_t last_col)
+{
+    const char *target;
+    lxlsx_edit_merge *merge;
+
+    if (!session)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+    /* Normalise so first <= last. */
+    if (first_row > last_row) { lxlsx_row_t t = first_row; first_row = last_row; last_row = t; }
+    if (first_col > last_col) { lxlsx_col_t t = first_col; first_col = last_col; last_col = t; }
+    if (last_row >= LXLSX_ROW_MAX || last_col >= LXLSX_COL_MAX)
+        return LXLSX_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE;
+    if (first_row == last_row && first_col == last_col)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;  /* a single cell can't merge */
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    if (session->merge_count >= session->merge_cap) {
+        size_t cap = session->merge_cap ? session->merge_cap * 2 : 8;
+        lxlsx_edit_merge *next =
+            (lxlsx_edit_merge *)realloc(session->merges, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->merges = next;
+        session->merge_cap = cap;
+    }
+
+    merge = &session->merges[session->merge_count];
+    memset(merge, 0, sizeof(*merge));
+    merge->target = strdup(target);
+    if (!merge->target)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    merge->first_row = first_row;
+    merge->first_col = first_col;
+    merge->last_row = last_row;
+    merge->last_col = last_col;
+
+    session->merge_count++;
+    return LXLSX_NO_ERROR;
+}
+
+lxlsx_error lxlsx_edit_set_column(lxlsx_edit_session *session,
+                                 const char *sheet_name,
+                                 lxlsx_col_t first_col,
+                                 lxlsx_col_t last_col,
+                                 double width)
+{
+    const char *target;
+    lxlsx_edit_col *c;
+
+    if (!session)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+    if (first_col > last_col) { lxlsx_col_t t = first_col; first_col = last_col; last_col = t; }
+    if (last_col >= LXLSX_COL_MAX)
+        return LXLSX_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    if (session->col_count >= session->col_cap) {
+        size_t cap = session->col_cap ? session->col_cap * 2 : 8;
+        lxlsx_edit_col *next = (lxlsx_edit_col *)realloc(session->cols, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->cols = next;
+        session->col_cap = cap;
+    }
+    c = &session->cols[session->col_count];
+    memset(c, 0, sizeof(*c));
+    c->target = strdup(target);
+    if (!c->target)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    c->first_col = first_col;
+    c->last_col = last_col;
+    c->width = width;
+    session->col_count++;
+    return LXLSX_NO_ERROR;
+}
+
+lxlsx_error lxlsx_edit_set_row_height(lxlsx_edit_session *session,
+                                     const char *sheet_name,
+                                     lxlsx_row_t row,
+                                     double height)
+{
+    const char *target;
+    lxlsx_edit_row_dim *r;
+
+    if (!session)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+    if (row >= LXLSX_ROW_MAX)
+        return LXLSX_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE;
+
+    target = sheet_target(session, sheet_name);
+    if (!target)
+        return LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    if (session->row_dim_count >= session->row_dim_cap) {
+        size_t cap = session->row_dim_cap ? session->row_dim_cap * 2 : 8;
+        lxlsx_edit_row_dim *next = (lxlsx_edit_row_dim *)realloc(session->row_dims, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->row_dims = next;
+        session->row_dim_cap = cap;
+    }
+    r = &session->row_dims[session->row_dim_count];
+    memset(r, 0, sizeof(*r));
+    r->target = strdup(target);
+    if (!r->target)
+        return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    r->row = row;
+    r->height = height;
+    session->row_dim_count++;
+    return LXLSX_NO_ERROR;
+}
+
 static void free_dirty_sheets(lxlsx_dirty_sheet *sheets, size_t count)
 {
     size_t i;
@@ -1301,8 +1574,63 @@ static void free_dirty_sheets(lxlsx_dirty_sheet *sheets, size_t count)
         free(sheets[i].target);
         free(sheets[i].xml);
         free(sheets[i].changes);
+        free(sheets[i].merges);
+        free(sheets[i].cols);
+        free(sheets[i].row_dims);
     }
     free(sheets);
+}
+
+static lxlsx_error dirty_sheet_add_merge(lxlsx_dirty_sheet *sheet,
+                                         const lxlsx_edit_merge *merge)
+{
+    const lxlsx_edit_merge **next;
+    size_t next_cap;
+
+    if (sheet->merge_count >= sheet->merge_cap) {
+        next_cap = sheet->merge_cap ? sheet->merge_cap * 2 : 8;
+        next = (const lxlsx_edit_merge **)realloc(
+            sheet->merges, next_cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        sheet->merges = next;
+        sheet->merge_cap = next_cap;
+    }
+
+    sheet->merges[sheet->merge_count++] = merge;
+    return LXLSX_NO_ERROR;
+}
+
+static lxlsx_error dirty_sheet_add_col(lxlsx_dirty_sheet *sheet,
+                                       const lxlsx_edit_col *col)
+{
+    if (sheet->col_count >= sheet->col_cap) {
+        size_t nc = sheet->col_cap ? sheet->col_cap * 2 : 8;
+        const lxlsx_edit_col **next =
+            (const lxlsx_edit_col **)realloc(sheet->cols, nc * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        sheet->cols = next;
+        sheet->col_cap = nc;
+    }
+    sheet->cols[sheet->col_count++] = col;
+    return LXLSX_NO_ERROR;
+}
+
+static lxlsx_error dirty_sheet_add_row_dim(lxlsx_dirty_sheet *sheet,
+                                           const lxlsx_edit_row_dim *rd)
+{
+    if (sheet->row_dim_count >= sheet->row_dim_cap) {
+        size_t nc = sheet->row_dim_cap ? sheet->row_dim_cap * 2 : 8;
+        const lxlsx_edit_row_dim **next =
+            (const lxlsx_edit_row_dim **)realloc(sheet->row_dims, nc * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        sheet->row_dims = next;
+        sheet->row_dim_cap = nc;
+    }
+    sheet->row_dims[sheet->row_dim_count++] = rd;
+    return LXLSX_NO_ERROR;
 }
 
 static lxlsx_dirty_sheet *find_dirty_sheet(lxlsx_dirty_sheet *sheets,
@@ -1387,18 +1715,735 @@ static lxlsx_error dirty_sheet_add_change(lxlsx_dirty_sheet *sheet,
     return LXLSX_NO_ERROR;
 }
 
+/* Length-aware substring search. */
+static const char *mem_find(const char *hay, size_t haylen, const char *needle)
+{
+    size_t nl = strlen(needle);
+    size_t i;
+    if (nl == 0 || haylen < nl)
+        return NULL;
+    for (i = 0; i + nl <= haylen; i++) {
+        if (memcmp(hay + i, needle, nl) == 0)
+            return hay + i;
+    }
+    return NULL;
+}
+
+static void col_to_letters(lxlsx_col_t col, char *out)
+{
+    char tmp[8];
+    int n = 0, j = 0;
+    unsigned v = (unsigned)col + 1;
+    while (v) { tmp[n++] = (char)('A' + (v - 1) % 26); v = (v - 1) / 26; }
+    while (n) out[j++] = tmp[--n];
+    out[j] = '\0';
+}
+
+static void merge_ref(char *buf, const lxlsx_edit_merge *m)
+{
+    char c1[8], c2[8];
+    col_to_letters(m->first_col, c1);
+    col_to_letters(m->last_col, c2);
+    sprintf(buf, "%s%u:%s%u", c1, (unsigned)(m->first_row + 1),
+            c2, (unsigned)(m->last_row + 1));
+}
+
+/*
+ * Inject merged ranges into a worksheet part's <mergeCells>. Creates the
+ * element (right after </sheetData>, the schema-correct position) if absent,
+ * or splices into an existing block and bumps its count. Everything else is
+ * preserved verbatim.
+ */
+static lxlsx_error patch_xml_with_merges(unsigned char **xml, size_t *xml_len,
+                                         const lxlsx_edit_merge **merges,
+                                         size_t count)
+{
+    const char *src = (const char *)*xml;
+    size_t srclen = *xml_len;
+    lxlsx_edit_buf entries = {0};
+    lxlsx_edit_buf out = {0};
+    const char *mc, *gt;
+    char ref[32], open[48];
+    size_t i, existing = 0, total;
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    if (count == 0)
+        return LXLSX_NO_ERROR;
+
+    for (i = 0; i < count; i++) {
+        merge_ref(ref, merges[i]);
+        if (buf_append_s(&entries, "<mergeCell ref=\"") != 0 ||
+            buf_append_s(&entries, ref) != 0 ||
+            buf_append_s(&entries, "\"/>") != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+            goto done;
+        }
+    }
+
+    mc = mem_find(src, srclen, "<mergeCells");
+    if (mc) {
+        const char *cnt;
+        int self_closing;
+        gt = (const char *)memchr(mc, '>', srclen - (size_t)(mc - src));
+        if (!gt) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        self_closing = (gt > mc && *(gt - 1) == '/');
+
+        cnt = mem_find(mc, (size_t)(gt - mc), "count=\"");
+        if (cnt) {
+            cnt += strlen("count=\"");
+            while (cnt < gt && *cnt >= '0' && *cnt <= '9')
+                existing = existing * 10 + (size_t)(*cnt++ - '0');
+        }
+        total = existing + count;
+        snprintf(open, sizeof(open), "<mergeCells count=\"%zu\">", total);
+
+        if (buf_append(&out, src, (size_t)(mc - src)) != 0 ||
+            buf_append_s(&out, open) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+        }
+        if (self_closing) {
+            /* <mergeCells .../> -> <mergeCells count="K">entries</mergeCells> */
+            if (buf_append(&out, entries.data, entries.len) != 0 ||
+                buf_append_s(&out, "</mergeCells>") != 0 ||
+                buf_append(&out, gt + 1, srclen - (size_t)(gt + 1 - src)) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+            }
+        } else {
+            const char *close = mem_find(gt, srclen - (size_t)(gt - src),
+                                         "</mergeCells>");
+            if (!close) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+            /* keep existing entries, append ours before </mergeCells> */
+            if (buf_append(&out, gt + 1, (size_t)(close - (gt + 1))) != 0 ||
+                buf_append(&out, entries.data, entries.len) != 0 ||
+                buf_append(&out, close, srclen - (size_t)(close - src)) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+            }
+        }
+    } else {
+        const char *sd = mem_find(src, srclen, "</sheetData>");
+        const char *after;
+        if (!sd) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        after = sd + strlen("</sheetData>");
+        snprintf(open, sizeof(open), "<mergeCells count=\"%zu\">", count);
+        if (buf_append(&out, src, (size_t)(after - src)) != 0 ||
+            buf_append_s(&out, open) != 0 ||
+            buf_append(&out, entries.data, entries.len) != 0 ||
+            buf_append_s(&out, "</mergeCells>") != 0 ||
+            buf_append(&out, after, srclen - (size_t)(after - src)) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+        }
+    }
+
+    free(*xml);
+    *xml = (unsigned char *)out.data;
+    *xml_len = out.len;
+    out.data = NULL;
+
+done:
+    free(entries.data);
+    free(out.data);
+    return err;
+}
+
+/*
+ * Inject column widths into a worksheet's <cols> (no count attr). Creates the
+ * element right before <sheetData> (schema-correct) if absent.
+ */
+static lxlsx_error patch_xml_with_cols(unsigned char **xml, size_t *xml_len,
+                                       const lxlsx_edit_col **cols, size_t count)
+{
+    const char *src = (const char *)*xml;
+    size_t srclen = *xml_len;
+    lxlsx_edit_buf entries = {0}, out = {0};
+    const char *cc, *gt;
+    char ent[96];
+    size_t i;
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    if (count == 0)
+        return LXLSX_NO_ERROR;
+
+    for (i = 0; i < count; i++) {
+        snprintf(ent, sizeof(ent),
+                 "<col min=\"%u\" max=\"%u\" width=\"%g\" customWidth=\"1\"/>",
+                 (unsigned)(cols[i]->first_col + 1), (unsigned)(cols[i]->last_col + 1),
+                 cols[i]->width);
+        if (buf_append_s(&entries, ent) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+    }
+
+    cc = mem_find(src, srclen, "<cols");
+    if (cc) {
+        int self_closing;
+        gt = (const char *)memchr(cc, '>', srclen - (size_t)(cc - src));
+        if (!gt) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        self_closing = (gt > cc && gt[-1] == '/');
+        if (self_closing) {
+            if (buf_append(&out, src, (size_t)(cc - src)) != 0 ||
+                buf_append_s(&out, "<cols>") != 0 ||
+                buf_append(&out, entries.data, entries.len) != 0 ||
+                buf_append_s(&out, "</cols>") != 0 ||
+                buf_append(&out, gt + 1, srclen - (size_t)(gt + 1 - src)) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+            }
+        } else {
+            const char *close = mem_find(gt, srclen - (size_t)(gt - src), "</cols>");
+            if (!close) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+            if (buf_append(&out, src, (size_t)(close - src)) != 0 ||
+                buf_append(&out, entries.data, entries.len) != 0 ||
+                buf_append(&out, close, srclen - (size_t)(close - src)) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+            }
+        }
+    } else {
+        const char *sd = mem_find(src, srclen, "<sheetData");
+        if (!sd) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        if (buf_append(&out, src, (size_t)(sd - src)) != 0 ||
+            buf_append_s(&out, "<cols>") != 0 ||
+            buf_append(&out, entries.data, entries.len) != 0 ||
+            buf_append_s(&out, "</cols>") != 0 ||
+            buf_append(&out, sd, srclen - (size_t)(sd - src)) != 0) {
+            err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+        }
+    }
+
+    free(*xml);
+    *xml = (unsigned char *)out.data;
+    *xml_len = out.len;
+    out.data = NULL;
+
+done:
+    free(entries.data);
+    free(out.data);
+    return err;
+}
+
+/*
+ * Apply row heights by rewriting each existing <row r="N"> opening tag's ht /
+ * customHeight attributes. Rows that don't exist in the sheet are skipped.
+ */
+static lxlsx_error patch_xml_with_row_dims(unsigned char **xml, size_t *xml_len,
+                                           const lxlsx_edit_row_dim **rows,
+                                           size_t count)
+{
+    size_t i;
+    for (i = 0; i < count; i++) {
+        const char *src = (const char *)*xml;
+        size_t srclen = *xml_len;
+        char needle[24], attr[48];
+        const char *ts, *gt, *p, *limit;
+        lxlsx_edit_buf out = {0};
+        int self_closing;
+
+        snprintf(needle, sizeof(needle), "<row r=\"%u\"", (unsigned)(rows[i]->row + 1));
+        ts = mem_find(src, srclen, needle);
+        if (!ts)
+            continue;  /* only existing rows */
+        gt = (const char *)memchr(ts, '>', srclen - (size_t)(ts - src));
+        if (!gt)
+            return LXLSX_ERROR_PARAMETER_VALIDATION;
+        self_closing = (gt > ts && gt[-1] == '/');
+        limit = self_closing ? gt - 1 : gt;
+
+        if (buf_append(&out, src, (size_t)(ts - src)) != 0 ||
+            buf_append_s(&out, "<row") != 0) { free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
+
+        /* Copy existing attributes, dropping any ht / customHeight. */
+        p = ts + 4;  /* past "<row" */
+        while (p < limit) {
+            if ((size_t)(limit - p) >= 4 && memcmp(p, " ht=", 4) == 0) {
+                p += 4;
+                if (p < limit && *p == '"') { p++; while (p < limit && *p != '"') p++; if (p < limit) p++; }
+                continue;
+            }
+            if ((size_t)(limit - p) >= 14 && memcmp(p, " customHeight=", 14) == 0) {
+                p += 14;
+                if (p < limit && *p == '"') { p++; while (p < limit && *p != '"') p++; if (p < limit) p++; }
+                continue;
+            }
+            if (buf_append(&out, p, 1) != 0) { free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
+            p++;
+        }
+
+        snprintf(attr, sizeof(attr), " ht=\"%g\" customHeight=\"1\"", rows[i]->height);
+        if (buf_append_s(&out, attr) != 0 ||
+            buf_append_s(&out, self_closing ? "/>" : ">") != 0 ||
+            buf_append(&out, gt + 1, srclen - (size_t)(gt + 1 - src)) != 0) {
+            free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        }
+
+        free(*xml);
+        *xml = (unsigned char *)out.data;
+        *xml_len = out.len;
+    }
+    return LXLSX_NO_ERROR;
+}
+
+static int append_attr_escaped(lxlsx_edit_buf *buf, const char *s)
+{
+    for (; *s; s++) {
+        const char *rep = NULL;
+        switch (*s) {
+        case '&': rep = "&amp;"; break;
+        case '<': rep = "&lt;"; break;
+        case '>': rep = "&gt;"; break;
+        case '"': rep = "&quot;"; break;
+        default: break;
+        }
+        if (rep) { if (buf_append_s(buf, rep) != 0) return -1; }
+        else if (buf_append(buf, s, 1) != 0) return -1;
+    }
+    return 0;
+}
+
+static size_t parse_count_attr(const char *open, const char *gt)
+{
+    const char *c = mem_find(open, (size_t)(gt - open), "count=\"");
+    size_t v = 0;
+    if (c) {
+        c += strlen("count=\"");
+        while (c < gt && *c >= '0' && *c <= '9')
+            v = v * 10 + (size_t)(*c++ - '0');
+    }
+    return v;
+}
+
+/*
+ * Insert `entries` into the <tag> collection of `src`, bumping its count by
+ * `added`. If the collection is absent it is created right after the opening
+ * tag of `create_after` (a parent element). Returns a fresh buffer.
+ */
+static lxlsx_error splice_collection(const char *src, size_t srclen,
+                                     const char *tag, const char *entries,
+                                     size_t added, const char *create_after,
+                                     char **out_data, size_t *out_len)
+{
+    lxlsx_edit_buf out = {0};
+    char openpat[32], openbuf[48], closebuf[32];
+    const char *t, *gt;
+    lxlsx_error err = LXLSX_ERROR_PARAMETER_VALIDATION;
+
+    snprintf(openpat, sizeof(openpat), "<%s", tag);
+    snprintf(closebuf, sizeof(closebuf), "</%s>", tag);
+    t = mem_find(src, srclen, openpat);
+
+    if (t) {
+        size_t total;
+        int self_closing;
+        gt = (const char *)memchr(t, '>', srclen - (size_t)(t - src));
+        if (!gt) goto done;
+        self_closing = (gt > t && gt[-1] == '/');
+        total = parse_count_attr(t, gt) + added;
+        snprintf(openbuf, sizeof(openbuf), "<%s count=\"%zu\">", tag, total);
+        if (buf_append(&out, src, (size_t)(t - src)) != 0 ||
+            buf_append_s(&out, openbuf) != 0) goto oom;
+        if (self_closing) {
+            if (buf_append_s(&out, entries) != 0 ||
+                buf_append_s(&out, closebuf) != 0 ||
+                buf_append(&out, gt + 1, srclen - (size_t)(gt + 1 - src)) != 0) goto oom;
+        } else {
+            const char *close = mem_find(gt, srclen - (size_t)(gt - src), closebuf);
+            if (!close) goto done;
+            if (buf_append(&out, gt + 1, (size_t)(close - (gt + 1))) != 0 ||
+                buf_append_s(&out, entries) != 0 ||
+                buf_append(&out, close, srclen - (size_t)(close - src)) != 0) goto oom;
+        }
+    } else {
+        char parentpat[32];
+        const char *a, *agt, *after;
+        snprintf(parentpat, sizeof(parentpat), "<%s", create_after);
+        a = mem_find(src, srclen, parentpat);
+        if (!a) goto done;
+        agt = (const char *)memchr(a, '>', srclen - (size_t)(a - src));
+        if (!agt) goto done;
+        after = agt + 1;
+        snprintf(openbuf, sizeof(openbuf), "<%s count=\"%zu\">", tag, added);
+        if (buf_append(&out, src, (size_t)(after - src)) != 0 ||
+            buf_append_s(&out, openbuf) != 0 ||
+            buf_append_s(&out, entries) != 0 ||
+            buf_append_s(&out, closebuf) != 0 ||
+            buf_append(&out, after, srclen - (size_t)(after - src)) != 0) goto oom;
+    }
+
+    *out_data = out.data;
+    *out_len = out.len;
+    return LXLSX_NO_ERROR;
+
+oom:
+    err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+done:
+    free(out.data);
+    return err;
+}
+
+/*
+ * Inject one numFmt + one cellXf per unique requested number-format code into
+ * styles.xml, assign each requesting change its new xf index, and produce a
+ * styles.xml replacement. *produced is set to 1 when a replacement was made.
+ */
+static const char *h_align_str(uint8_t a)
+{
+    switch (a) {
+    case 1: return "left";   case 2: return "center"; case 3: return "right";
+    case 4: return "fill";   case 5: return "justify";
+    case 6: return "centerContinuous"; case 7: return "distributed";
+    default: return NULL;
+    }
+}
+
+static const char *v_align_str(uint8_t a)
+{
+    switch (a) {
+    case 8: return "top";    case 9: return "bottom"; case 10: return "center";
+    case 11: return "justify"; case 12: return "distributed";
+    default: return NULL;
+    }
+}
+
+static int fmt_has_fill(const lxlsx_format *f)
+{
+    return f->pattern > 0 || f->fg_color != LXLSX_COLOR_UNSET;
+}
+
+static int emit_font_fragment(lxlsx_edit_buf *b, const lxlsx_format *f)
+{
+    char tmp[48];
+    const char *name = f->font_name[0] ? f->font_name : "Calibri";
+    if (buf_append_s(b, "<font>") != 0) return -1;
+    if (f->bold && buf_append_s(b, "<b/>") != 0) return -1;
+    if (f->italic && buf_append_s(b, "<i/>") != 0) return -1;
+    if (f->font_strikeout && buf_append_s(b, "<strike/>") != 0) return -1;
+    if (f->underline) {
+        if (buf_append_s(b, f->underline == 2 ? "<u val=\"double\"/>" : "<u/>") != 0)
+            return -1;
+    }
+    snprintf(tmp, sizeof(tmp), "<sz val=\"%g\"/>", f->font_size > 0 ? f->font_size : 11.0);
+    if (buf_append_s(b, tmp) != 0) return -1;
+    if (f->font_color != LXLSX_COLOR_UNSET) {
+        snprintf(tmp, sizeof(tmp), "<color rgb=\"FF%06X\"/>",
+                 (unsigned)(f->font_color & LXLSX_COLOR_MASK));
+        if (buf_append_s(b, tmp) != 0) return -1;
+    }
+    if (buf_append_s(b, "<name val=\"") != 0 ||
+        append_attr_escaped(b, name) != 0 ||
+        buf_append_s(b, "\"/><family val=\"2\"/></font>") != 0)
+        return -1;
+    return 0;
+}
+
+static int emit_fill_fragment(lxlsx_edit_buf *b, const lxlsx_format *f)
+{
+    static const char *pats[] = {
+        "none", "solid", "mediumGray", "darkGray", "lightGray",
+        "darkHorizontal", "darkVertical", "darkDown", "darkUp", "darkGrid",
+        "darkTrellis", "lightHorizontal", "lightVertical", "lightDown",
+        "lightUp", "lightGrid", "lightTrellis", "gray125", "gray0625"
+    };
+    uint8_t p = f->pattern ? f->pattern : 1;  /* fg set but no pattern -> solid */
+    char tmp[48];
+    if (p >= sizeof(pats) / sizeof(pats[0])) p = 1;
+    if (buf_append_s(b, "<fill><patternFill patternType=\"") != 0 ||
+        buf_append_s(b, pats[p]) != 0 || buf_append_s(b, "\">") != 0)
+        return -1;
+    if (f->fg_color != LXLSX_COLOR_UNSET) {
+        snprintf(tmp, sizeof(tmp), "<fgColor rgb=\"FF%06X\"/>",
+                 (unsigned)(f->fg_color & LXLSX_COLOR_MASK));
+        if (buf_append_s(b, tmp) != 0) return -1;
+    }
+    if (f->bg_color != LXLSX_COLOR_UNSET) {
+        snprintf(tmp, sizeof(tmp), "<bgColor rgb=\"FF%06X\"/>",
+                 (unsigned)(f->bg_color & LXLSX_COLOR_MASK));
+        if (buf_append_s(b, tmp) != 0) return -1;
+    } else if (buf_append_s(b, "<bgColor indexed=\"64\"/>") != 0) {
+        return -1;
+    }
+    return buf_append_s(b, "</patternFill></fill>");
+}
+
+static int fmt_has_border(const lxlsx_format *f)
+{
+    return f->top || f->bottom || f->left || f->right ||
+           f->diag_border || f->diag_type;
+}
+
+static const char *border_style_str(uint8_t s)
+{
+    static const char *styles[] = {
+        "none", "thin", "medium", "dashed", "dotted", "thick", "double",
+        "hair", "mediumDashed", "dashDot", "mediumDashDot", "dashDotDot",
+        "mediumDashDotDot", "slantDashDot"
+    };
+    if (s >= sizeof(styles) / sizeof(styles[0])) s = 1;
+    return styles[s];
+}
+
+static int emit_sub_border(lxlsx_edit_buf *b, const char *type, uint8_t style,
+                           lxlsx_color_t color)
+{
+    char tmp[48];
+    if (!style) {
+        snprintf(tmp, sizeof(tmp), "<%s/>", type);
+        return buf_append_s(b, tmp);
+    }
+    snprintf(tmp, sizeof(tmp), "<%s style=\"%s\">", type, border_style_str(style));
+    if (buf_append_s(b, tmp) != 0) return -1;
+    if (color != LXLSX_COLOR_UNSET)
+        snprintf(tmp, sizeof(tmp), "<color rgb=\"FF%06X\"/>", (unsigned)(color & LXLSX_COLOR_MASK));
+    else
+        snprintf(tmp, sizeof(tmp), "<color auto=\"1\"/>");
+    if (buf_append_s(b, tmp) != 0) return -1;
+    snprintf(tmp, sizeof(tmp), "</%s>", type);
+    return buf_append_s(b, tmp);
+}
+
+static int emit_border_fragment(lxlsx_edit_buf *b, const lxlsx_format *f)
+{
+    uint8_t diag = f->diag_border;
+    if (f->diag_type && !diag) diag = 1;  /* thin default, mirrors writer */
+    if (buf_append_s(b, "<border") != 0) return -1;
+    if (f->diag_type == 1 && buf_append_s(b, " diagonalUp=\"1\"") != 0) return -1;
+    if (f->diag_type == 2 && buf_append_s(b, " diagonalDown=\"1\"") != 0) return -1;
+    if (f->diag_type == 3 &&
+        buf_append_s(b, " diagonalUp=\"1\" diagonalDown=\"1\"") != 0) return -1;
+    if (buf_append_s(b, ">") != 0) return -1;
+    if (emit_sub_border(b, "left", f->left, f->left_color) != 0) return -1;
+    if (emit_sub_border(b, "right", f->right, f->right_color) != 0) return -1;
+    if (emit_sub_border(b, "top", f->top, f->top_color) != 0) return -1;
+    if (emit_sub_border(b, "bottom", f->bottom, f->bottom_color) != 0) return -1;
+    if (emit_sub_border(b, "diagonal", diag, f->diag_color) != 0) return -1;
+    return buf_append_s(b, "</border>");
+}
+
+static int emit_xf_fragment(lxlsx_edit_buf *b, size_t num_id, size_t font_id,
+                            size_t fill_id, size_t border_id,
+                            const lxlsx_format *f, int has_num)
+{
+    char head[160];
+    const char *h = f ? h_align_str(f->text_h_align) : NULL;
+    const char *v = f ? v_align_str(f->text_v_align) : NULL;
+    int wrap = f ? f->text_wrap : 0;
+    int has_align = (h || v || wrap);
+
+    snprintf(head, sizeof(head),
+             "<xf numFmtId=\"%zu\" fontId=\"%zu\" fillId=\"%zu\" borderId=\"%zu\" xfId=\"0\"",
+             num_id, font_id, fill_id, border_id);
+    if (buf_append_s(b, head) != 0) return -1;
+    if (has_num && buf_append_s(b, " applyNumberFormat=\"1\"") != 0) return -1;
+    if (f && buf_append_s(b, " applyFont=\"1\"") != 0) return -1;
+    if (f && fmt_has_fill(f) && buf_append_s(b, " applyFill=\"1\"") != 0) return -1;
+    if (f && fmt_has_border(f) && buf_append_s(b, " applyBorder=\"1\"") != 0) return -1;
+    if (has_align && buf_append_s(b, " applyAlignment=\"1\"") != 0) return -1;
+    if (!has_align)
+        return buf_append_s(b, "/>");
+    if (buf_append_s(b, "><alignment") != 0) return -1;
+    if (h && (buf_append_s(b, " horizontal=\"") != 0 || buf_append_s(b, h) != 0 ||
+              buf_append_s(b, "\"") != 0)) return -1;
+    if (v && (buf_append_s(b, " vertical=\"") != 0 || buf_append_s(b, v) != 0 ||
+              buf_append_s(b, "\"") != 0)) return -1;
+    if (wrap && buf_append_s(b, " wrapText=\"1\"") != 0) return -1;
+    return buf_append_s(b, "/></xf>");
+}
+
+/*
+ * Inject the styles required by restyle/number-format edits into styles.xml:
+ * one font/fill/numFmt/xf per unique applied format (deduped), plus a numFmt+xf
+ * per unique standalone number-format code. Assigns each change its new xf index
+ * and produces a styles.xml replacement.
+ */
+static lxlsx_error inject_cell_styles(
+    lxlsx_edit_session *session, lxlsx_source_package_replacement *rep,
+    int *produced)
+{
+    unsigned char *xml = NULL;
+    size_t xmllen = 0;
+    char *b1 = NULL, *b2 = NULL, *b3 = NULL, *final = NULL;
+    size_t l1, l2, l3, finallen;
+    lxlsx_edit_buf fonts = {0}, fills = {0}, borders = {0}, numfmts = {0}, xfents = {0};
+    char *b4 = NULL; size_t l4;
+    /* dedup tables */
+    const lxlsx_format **fmts = NULL; size_t *fmt_xf = NULL, nfmt = 0, capfmt = 0;
+    const char **codes = NULL; size_t *code_xf = NULL, ncode = 0, capcode = 0;
+    size_t next_font, next_fill, next_border, next_xf, next_numid;
+    size_t nfonts_add = 0, nfills_add = 0, nborders_add = 0, nnum_add = 0, nxf_add = 0;
+    lxlsx_error err = LXLSX_NO_ERROR;
+    int entry;
+    size_t i, j;
+    const char *mc, *gt, *p, *end;
+
+    *produced = 0;
+
+    /* Nothing to do unless some change carries a style or number format. */
+    for (i = 0; i < session->change_count; i++)
+        if (session->changes[i].style || session->changes[i].number_format)
+            break;
+    if (i == session->change_count)
+        goto done;
+
+    entry = lxlsx_source_package_find_first(session->package, "xl/styles.xml");
+    if (entry < 0) { err = LXLSX_ERROR_ZIP_FILE_ADD; goto done; }
+    err = lxlsx_source_package_read_entry(session->package, (size_t)entry,
+                                          &xml, &xmllen);
+    if (err != LXLSX_NO_ERROR) goto done;
+
+    {
+        const char *t;
+        t = mem_find((const char *)xml, xmllen, "<fonts");
+        gt = t ? (const char *)memchr(t, '>', xmllen - (size_t)(t - (const char *)xml)) : NULL;
+        next_font = (t && gt) ? parse_count_attr(t, gt) : 1;
+        t = mem_find((const char *)xml, xmllen, "<fills");
+        gt = t ? (const char *)memchr(t, '>', xmllen - (size_t)(t - (const char *)xml)) : NULL;
+        next_fill = (t && gt) ? parse_count_attr(t, gt) : 2;
+        t = mem_find((const char *)xml, xmllen, "<borders");
+        gt = t ? (const char *)memchr(t, '>', xmllen - (size_t)(t - (const char *)xml)) : NULL;
+        next_border = (t && gt) ? parse_count_attr(t, gt) : 1;
+        mc = mem_find((const char *)xml, xmllen, "<cellXfs");
+        if (!mc) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        gt = (const char *)memchr(mc, '>', xmllen - (size_t)(mc - (const char *)xml));
+        if (!gt) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        next_xf = parse_count_attr(mc, gt);
+    }
+
+    /* Next custom numFmtId (custom ids are >= 164). */
+    next_numid = 163;
+    p = (const char *)xml;
+    end = p + xmllen;
+    while ((p = mem_find(p, (size_t)(end - p), "numFmtId=\"")) != NULL) {
+        size_t val = 0;
+        p += strlen("numFmtId=\"");
+        while (p < end && *p >= '0' && *p <= '9')
+            val = val * 10 + (size_t)(*p++ - '0');
+        if (val > next_numid) next_numid = val;
+    }
+    next_numid += 1;
+
+    for (i = 0; i < session->change_count; i++) {
+        lxlsx_edit_change *ch = &session->changes[i];
+
+        if (ch->style) {
+            size_t font_id, fill_id = 0, border_id = 0, num_id = 0;
+            int has_num = 0, found = 0;
+            for (j = 0; j < nfmt; j++) {
+                if (memcmp(fmts[j], ch->style, sizeof(lxlsx_format)) == 0) {
+                    ch->style_index = (int)fmt_xf[j];
+                    found = 1; break;
+                }
+            }
+            if (found) continue;
+
+            font_id = next_font++; nfonts_add++;
+            if (emit_font_fragment(&fonts, ch->style) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            if (fmt_has_fill(ch->style)) {
+                fill_id = next_fill++; nfills_add++;
+                if (emit_fill_fragment(&fills, ch->style) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            }
+            if (fmt_has_border(ch->style)) {
+                border_id = next_border++; nborders_add++;
+                if (emit_border_fragment(&borders, ch->style) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            }
+            if (ch->style->num_format[0]) {
+                char head[48];
+                num_id = next_numid++; nnum_add++; has_num = 1;
+                snprintf(head, sizeof(head), "<numFmt numFmtId=\"%zu\" formatCode=\"", num_id);
+                if (buf_append_s(&numfmts, head) != 0 ||
+                    append_attr_escaped(&numfmts, ch->style->num_format) != 0 ||
+                    buf_append_s(&numfmts, "\"/>") != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            }
+            if (emit_xf_fragment(&xfents, num_id, font_id, fill_id, border_id, ch->style, has_num) != 0) {
+                err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
+            }
+            nxf_add++;
+            ch->style_index = (int)next_xf++;
+
+            if (nfmt >= capfmt) {
+                size_t nc = capfmt ? capfmt * 2 : 8;
+                const lxlsx_format **nf = (const lxlsx_format **)realloc(fmts, nc * sizeof(*nf));
+                size_t *nx = (size_t *)realloc(fmt_xf, nc * sizeof(*nx));
+                if (!nf || !nx) { free(nf); free(nx); err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+                fmts = nf; fmt_xf = nx; capfmt = nc;
+            }
+            fmts[nfmt] = ch->style; fmt_xf[nfmt] = (size_t)ch->style_index; nfmt++;
+        } else if (ch->number_format) {
+            char head[48];
+            size_t num_id;
+            int found = 0;
+            for (j = 0; j < ncode; j++) {
+                if (strcmp(codes[j], ch->number_format) == 0) {
+                    ch->style_index = (int)code_xf[j]; found = 1; break;
+                }
+            }
+            if (found) continue;
+
+            num_id = next_numid++; nnum_add++;
+            snprintf(head, sizeof(head), "<numFmt numFmtId=\"%zu\" formatCode=\"", num_id);
+            if (buf_append_s(&numfmts, head) != 0 ||
+                append_attr_escaped(&numfmts, ch->number_format) != 0 ||
+                buf_append_s(&numfmts, "\"/>") != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            if (emit_xf_fragment(&xfents, num_id, 0, 0, 0, NULL, 1) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+            nxf_add++;
+            ch->style_index = (int)next_xf++;
+
+            if (ncode >= capcode) {
+                size_t nc = capcode ? capcode * 2 : 8;
+                const char **ncc = (const char **)realloc(codes, nc * sizeof(*ncc));
+                size_t *nx = (size_t *)realloc(code_xf, nc * sizeof(*nx));
+                if (!ncc || !nx) { free(ncc); free(nx); err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+                codes = ncc; code_xf = nx; capcode = nc;
+            }
+            codes[ncode] = ch->number_format; code_xf[ncode] = (size_t)ch->style_index; ncode++;
+        }
+    }
+
+    if (nxf_add == 0)
+        goto done;
+
+    /* Splice each collection (order doesn't matter between distinct tags). */
+    err = splice_collection((const char *)xml, xmllen, "fonts",
+                            fonts.data ? fonts.data : "", nfonts_add, "styleSheet", &b1, &l1);
+    if (err != LXLSX_NO_ERROR) goto done;
+    err = splice_collection(b1, l1, "fills",
+                            fills.data ? fills.data : "", nfills_add, "styleSheet", &b2, &l2);
+    if (err != LXLSX_NO_ERROR) goto done;
+    err = splice_collection(b2, l2, "borders",
+                            borders.data ? borders.data : "", nborders_add, "styleSheet", &b3, &l3);
+    if (err != LXLSX_NO_ERROR) goto done;
+    err = splice_collection(b3, l3, "numFmts",
+                            numfmts.data ? numfmts.data : "", nnum_add, "styleSheet", &b4, &l4);
+    if (err != LXLSX_NO_ERROR) goto done;
+    err = splice_collection(b4, l4, "cellXfs",
+                            xfents.data ? xfents.data : "", nxf_add, "styleSheet", &final, &finallen);
+    if (err != LXLSX_NO_ERROR) goto done;
+
+    rep->entry_index = (size_t)entry;
+    rep->data = (const unsigned char *)final;
+    rep->size = finallen;
+    final = NULL;
+    *produced = 1;
+
+done:
+    free(fmts); free(fmt_xf); free(codes); free(code_xf);
+    free(xml); free(b1); free(b2); free(b3); free(b4); free(final);
+    free(fonts.data); free(fills.data); free(borders.data);
+    free(numfmts.data); free(xfents.data);
+    return err;
+}
+
 lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
 {
     lxlsx_dirty_sheet *dirty_sheets = NULL;
     size_t dirty_count = 0;
     size_t dirty_cap = 0;
     lxlsx_source_package_replacement *replacements = NULL;
+    lxlsx_source_package_replacement styles_rep;
+    int styles_produced = 0;
+    size_t rep_count;
     lxlsx_error err = LXLSX_NO_ERROR;
     size_t i;
 
+    memset(&styles_rep, 0, sizeof(styles_rep));
+
     if (!session || !path)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
-    if (session->change_count == 0)
+    if (session->change_count == 0 && session->merge_count == 0 &&
+        session->col_count == 0 && session->row_dim_count == 0)
         return lxlsx_source_package_save_copy(session->package, path);
 
     for (i = 0; i < session->change_count; i++) {
@@ -1412,17 +2457,82 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
             goto done;
     }
 
-    for (i = 0; i < dirty_count; i++) {
-        err = patch_xml_with_changes(&dirty_sheets[i].xml,
-                                     &dirty_sheets[i].xml_len,
-                                     dirty_sheets[i].changes,
-                                     dirty_sheets[i].change_count);
+    for (i = 0; i < session->merge_count; i++) {
+        lxlsx_dirty_sheet *sheet = NULL;
+        err = get_dirty_sheet(session, &dirty_sheets, &dirty_count, &dirty_cap,
+                              session->merges[i].target, &sheet);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+        err = dirty_sheet_add_merge(sheet, &session->merges[i]);
         if (err != LXLSX_NO_ERROR)
             goto done;
     }
 
+    for (i = 0; i < session->col_count; i++) {
+        lxlsx_dirty_sheet *sheet = NULL;
+        err = get_dirty_sheet(session, &dirty_sheets, &dirty_count, &dirty_cap,
+                              session->cols[i].target, &sheet);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+        err = dirty_sheet_add_col(sheet, &session->cols[i]);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+    }
+
+    for (i = 0; i < session->row_dim_count; i++) {
+        lxlsx_dirty_sheet *sheet = NULL;
+        err = get_dirty_sheet(session, &dirty_sheets, &dirty_count, &dirty_cap,
+                              session->row_dims[i].target, &sheet);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+        err = dirty_sheet_add_row_dim(sheet, &session->row_dims[i]);
+        if (err != LXLSX_NO_ERROR)
+            goto done;
+    }
+
+    /* Resolve number-format restyles into styles.xml (sets per-change style
+     * indices that the cell patcher below reads). */
+    err = inject_cell_styles(session, &styles_rep, &styles_produced);
+    if (err != LXLSX_NO_ERROR)
+        goto done;
+
+    for (i = 0; i < dirty_count; i++) {
+        if (dirty_sheets[i].change_count > 0) {
+            err = patch_xml_with_changes(&dirty_sheets[i].xml,
+                                         &dirty_sheets[i].xml_len,
+                                         dirty_sheets[i].changes,
+                                         dirty_sheets[i].change_count);
+            if (err != LXLSX_NO_ERROR)
+                goto done;
+        }
+        if (dirty_sheets[i].merge_count > 0) {
+            err = patch_xml_with_merges(&dirty_sheets[i].xml,
+                                        &dirty_sheets[i].xml_len,
+                                        dirty_sheets[i].merges,
+                                        dirty_sheets[i].merge_count);
+            if (err != LXLSX_NO_ERROR)
+                goto done;
+        }
+        if (dirty_sheets[i].col_count > 0) {
+            err = patch_xml_with_cols(&dirty_sheets[i].xml,
+                                      &dirty_sheets[i].xml_len,
+                                      dirty_sheets[i].cols,
+                                      dirty_sheets[i].col_count);
+            if (err != LXLSX_NO_ERROR)
+                goto done;
+        }
+        if (dirty_sheets[i].row_dim_count > 0) {
+            err = patch_xml_with_row_dims(&dirty_sheets[i].xml,
+                                          &dirty_sheets[i].xml_len,
+                                          dirty_sheets[i].row_dims,
+                                          dirty_sheets[i].row_dim_count);
+            if (err != LXLSX_NO_ERROR)
+                goto done;
+        }
+    }
+
     replacements = (lxlsx_source_package_replacement *)calloc(
-        dirty_count, sizeof(*replacements));
+        dirty_count + 1, sizeof(*replacements));
     if (!replacements) {
         err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto done;
@@ -1433,12 +2543,20 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
         replacements[i].data = dirty_sheets[i].xml;
         replacements[i].size = dirty_sheets[i].xml_len;
     }
+    rep_count = dirty_count;
+    if (styles_produced) {
+        replacements[rep_count].entry_index = styles_rep.entry_index;
+        replacements[rep_count].data = styles_rep.data;
+        replacements[rep_count].size = styles_rep.size;
+        rep_count++;
+    }
 
     err = lxlsx_source_package_save_with_replacements(session->package, path,
-                                                      replacements, dirty_count);
+                                                      replacements, rep_count);
 
 done:
     free(replacements);
+    free((void *)styles_rep.data);
     free_dirty_sheets(dirty_sheets, dirty_count);
     return err;
 }

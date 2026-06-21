@@ -369,6 +369,14 @@ ZEND_BEGIN_ARG_INFO_EX(xls_get_formula_ast_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0, formula)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(xls_evaluate_formula_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0, formula)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(xls_compute_formula_arginfo, 0, 0, 0)
+    ZEND_ARG_INFO(0, enable)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(xls_get_page_setup_arginfo, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -1336,10 +1344,14 @@ PHP_METHOD(vtiful_xls, insertFormula)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    if (argc == 4 && lxlsx_format_handle != NULL) {
-        formula_writer(formula, row, column, &obj->write_ptr, zval_get_format(lxlsx_format_handle));
+    lxlsx_format *fmt = (argc == 4 && lxlsx_format_handle != NULL)
+        ? zval_get_format(lxlsx_format_handle)
+        : obj->lxlsx_format_ptr.format;
+
+    if (obj->compute_formula) {
+        formula_writer_calc(formula, row, column, &obj->write_ptr, fmt);
     } else {
-        formula_writer(formula, row, column, &obj->write_ptr, obj->lxlsx_format_ptr.format);
+        formula_writer(formula, row, column, &obj->write_ptr, fmt);
     }
 }
 /* }}} */
@@ -3175,6 +3187,154 @@ PHP_METHOD(vtiful_xls, getFormulaAst)
 }
 /* }}} */
 
+/*
+ * Resolve a cell reference for evaluateFormula() against the in-memory write
+ * worksheet. Only cells retained in memory are visible — in constant-memory
+ * mode already-flushed cells read back as blank. Allocates out->string with
+ * libc strdup because the engine frees it with free().
+ */
+void formula_resolver(void *ctx, lxlsx_row_t row, lxlsx_col_t col,
+                              lxlsx_value *out)
+{
+    lxlsx_worksheet *ws = (lxlsx_worksheet *) ctx;
+    lxlsx_row *r;
+    lxlsx_cell *c;
+
+    out->kind = LXLSX_VAL_BLANK;
+    out->number = 0.0;
+    out->string = NULL;
+    out->error = LXLSX_FERR_NONE;
+
+    if (!ws)
+        return;
+
+    r = lxlsx_worksheet_find_row(ws, row);
+    if (!r)
+        return;
+    c = lxlsx_worksheet_find_cell_in_row(r, col);
+    if (!c)
+        return;
+
+    switch (c->type) {
+    case NUMBER_CELL:
+        out->kind = LXLSX_VAL_NUMBER;
+        out->number = c->data.writer.value.number;
+        break;
+    case BOOLEAN_CELL:
+        out->kind = LXLSX_VAL_BOOL;
+        out->number = c->data.writer.value.boolean ? 1.0 : 0.0;
+        break;
+    case STRING_CELL:
+        if (c->data.writer.value.shared_string.string) {
+            out->kind = LXLSX_VAL_STRING;
+            out->string = strdup(c->data.writer.value.shared_string.string);
+        }
+        break;
+    case INLINE_STRING_CELL:
+        if (c->data.writer.value.string) {
+            out->kind = LXLSX_VAL_STRING;
+            out->string = strdup(c->data.writer.value.string);
+        }
+        break;
+    case FORMULA_CELL:
+        /* Use the formula's cached result. */
+        if (c->data.writer.value.formula) {
+            if (c->data.writer.value.formula->result_string) {
+                out->kind = LXLSX_VAL_STRING;
+                out->string = strdup(c->data.writer.value.formula->result_string);
+            } else {
+                out->kind = LXLSX_VAL_NUMBER;
+                out->number = c->data.writer.value.formula->result;
+            }
+        }
+        break;
+    default:
+        break;  /* blank / rich / array-formula -> blank */
+    }
+}
+
+/** {{{ \Vtiful\Kernel\Excel::evaluateFormula(string $formula): mixed
+ *  Evaluate an Excel formula and return the computed value (int/float/string/
+ *  bool, or the Excel error string like "#DIV/0!"). Cell references resolve
+ *  against the cells written so far in the current worksheet; without an open
+ *  workbook (or for cells already flushed in constant-memory mode) references
+ *  read as blank. Leading '=' is optional.
+ */
+PHP_METHOD(vtiful_xls, evaluateFormula)
+{
+    zend_string *formula = NULL;
+    xls_object *obj;
+    lxlsx_worksheet *ws;
+    lxlsx_value out;
+    lxlsx_error err;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(formula)
+    ZEND_PARSE_PARAMETERS_END();
+
+    obj = Z_XLS_P(getThis());
+    ws = obj->write_ptr.workbook ? obj->write_ptr.worksheet : NULL;
+
+    err = lxlsx_formula_eval(ZSTR_VAL(formula),
+                             ws ? formula_resolver : NULL, ws, &out);
+    if (err != LXLSX_NO_ERROR) {
+        zend_throw_exception(vtiful_exception_ce, "Evaluate formula failed", err);
+        return;
+    }
+
+    switch (out.kind) {
+    case LXLSX_VAL_NUMBER: {
+        double d = out.number;
+        if (d == (double) (zend_long) d) {
+            RETVAL_LONG((zend_long) d);
+        } else {
+            RETVAL_DOUBLE(d);
+        }
+        break;
+    }
+    case LXLSX_VAL_BOOL:
+        RETVAL_BOOL(out.number != 0.0);
+        break;
+    case LXLSX_VAL_STRING:
+        RETVAL_STRING(out.string ? out.string : "");
+        break;
+    case LXLSX_VAL_ERROR:
+        RETVAL_STRING(lxlsx_formula_error_string(out.error));
+        break;
+    case LXLSX_VAL_BLANK:
+    default:
+        RETVAL_NULL();
+        break;
+    }
+
+    lxlsx_value_free(&out);
+}
+/* }}} */
+
+/** {{{ \Vtiful\Kernel\Excel::computeFormula(bool $enable = true): static
+ *  Enable compute-on-write: subsequent insertFormula() calls evaluate the
+ *  formula against the cells written so far and store the computed value as the
+ *  cached result, so the saved file shows correct values before Excel recalcs.
+ *  Off by default (formulas keep a 0 cached result). Best in normal mode;
+ *  in constant-memory mode references to flushed cells resolve as blank.
+ */
+PHP_METHOD(vtiful_xls, computeFormula)
+{
+    zend_bool enable = 1;
+    xls_object *obj;
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(enable)
+    ZEND_PARSE_PARAMETERS_END();
+
+    ZVAL_COPY(return_value, getThis());
+
+    obj = Z_XLS_P(getThis());
+    obj->compute_formula = enable ? 1 : 0;
+}
+/* }}} */
+
 /** {{{ \Vtiful\Kernel\Excel::getDataValidations()
  *  Returns [{type, operator, formula1, formula2, allow_blank, show_drop_down,
  *  show_input_message, show_error_message, error_style, prompt, prompt_title,
@@ -4241,6 +4401,8 @@ zend_function_entry xls_methods[] = {
         PHP_ME(vtiful_xls, getDataValidations,    xls_get_data_validations_arginfo,    ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getAutoFilter,         xls_get_auto_filter_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getFormulaAst,         xls_get_formula_ast_arginfo,         ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+        PHP_ME(vtiful_xls, evaluateFormula,       xls_evaluate_formula_arginfo,        ZEND_ACC_PUBLIC)
+        PHP_ME(vtiful_xls, computeFormula,        xls_compute_formula_arginfo,         ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getPageSetup,          xls_get_page_setup_arginfo,          ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, nextRowRich,           xls_next_row_rich_arginfo,           ZEND_ACC_PUBLIC)
         PHP_ME(vtiful_xls, getConditionalFormats, xls_get_conditional_formats_arginfo, ZEND_ACC_PUBLIC)

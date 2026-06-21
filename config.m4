@@ -63,6 +63,7 @@ if test "$PHP_XLSWRITER" != "no"; then
     library/libxlsx/src/rich_value_types.c \
     library/libxlsx/src/source_package.c \
     library/libxlsx/src/edit.c \
+    library/libxlsx/src/formula.c \
     library/libxlsx/src/common.c \
     library/libxlsx/src/xlsx_util.c \
     library/libxlsx/src/zip_io.c \

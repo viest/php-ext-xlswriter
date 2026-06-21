@@ -81,6 +81,7 @@ if (PHP_XLSWRITER != "no") {
                 rich_value_types.c \
                 source_package.c \
                 edit.c \
+                formula.c \
                 common.c \
                 xlsx_util.c \
                 zip_io.c \

@@ -402,6 +402,52 @@ void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_re
         lxlsx_worksheet_write_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, ZSTR_VAL(value), format));
 }
 
+/*
+ * Like formula_writer but evaluates the formula against the cells written so
+ * far and stores the computed value as the cached result (compute-on-write).
+ * References to not-yet-written cells (or already-flushed cells in
+ * constant-memory mode) resolve as blank, matching evaluateFormula().
+ */
+void formula_writer_calc(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format)
+{
+    const char *f = ZSTR_VAL(value);
+    lxlsx_value out;
+    lxlsx_error err;
+
+    if (lxlsx_formula_eval(f, formula_resolver, res->worksheet, &out) != LXLSX_NO_ERROR) {
+        /* engine-level failure: fall back to a plain formula (cached 0). */
+        WORKSHEET_WRITER_EXCEPTION(
+            lxlsx_worksheet_write_formula(res->worksheet, (lxlsx_row_t)row, (lxlsx_col_t)columns, f, format));
+        return;
+    }
+
+    switch (out.kind) {
+    case LXLSX_VAL_NUMBER:
+    case LXLSX_VAL_BOOL:
+        err = lxlsx_worksheet_write_formula_num(res->worksheet, (lxlsx_row_t)row,
+                                                (lxlsx_col_t)columns, f, format, out.number);
+        break;
+    case LXLSX_VAL_STRING:
+        err = lxlsx_worksheet_write_formula_str(res->worksheet, (lxlsx_row_t)row,
+                                                (lxlsx_col_t)columns, f, format,
+                                                out.string ? out.string : "");
+        break;
+    case LXLSX_VAL_ERROR:
+        err = lxlsx_worksheet_write_formula_str(res->worksheet, (lxlsx_row_t)row,
+                                                (lxlsx_col_t)columns, f, format,
+                                                lxlsx_formula_error_string(out.error));
+        break;
+    case LXLSX_VAL_BLANK:
+    default:
+        err = lxlsx_worksheet_write_formula_num(res->worksheet, (lxlsx_row_t)row,
+                                                (lxlsx_col_t)columns, f, format, 0.0);
+        break;
+    }
+
+    lxlsx_value_free(&out);
+    WORKSHEET_WRITER_EXCEPTION(err);
+}
+
 void dynamic_formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format)
 {
     WORKSHEET_WRITER_EXCEPTION(

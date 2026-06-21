@@ -29,6 +29,7 @@
 #include "libxlsx.h"
 #include "libxlsx/packager.h"
 #include "libxlsx/format.h"
+#include "libxlsx/formula.h"
 
 #include "common.h"
 #include "php_xlswriter.h"
@@ -130,6 +131,7 @@ typedef struct _vtiful_xls_object {
     xls_resource_format_t        lxlsx_format_ptr;
     xls_resource_formats_cache_t formats_cache_ptr;
     lxlsx_row_col_options          *row_options;
+    uint8_t                      compute_formula;  /* auto-evaluate insertFormula */
     zend_object                  zo;
 } xls_object;
 
@@ -458,6 +460,8 @@ lxlsx_error lxlsx_worksheet_set_rows(lxlsx_row_t start, lxlsx_row_t end, double 
 void image_writer(zval *value, zend_long row, zend_long columns, double width, double height, xls_resource_write_t *res);
 void image_opt_writer(zval *value, zend_long row, zend_long columns, lxlsx_image_options *options, xls_resource_write_t *res);
 void formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format);
+void formula_writer_calc(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format);
+void formula_resolver(void *ctx, lxlsx_row_t row, lxlsx_col_t col, lxlsx_value *out);
 void dynamic_formula_writer(zend_string *value, zend_long row, zend_long columns, xls_resource_write_t *res, lxlsx_format *format);
 void dynamic_array_formula_writer(zend_string *value, zend_long first_row, zend_long first_col,
                                   zend_long last_row, zend_long last_col,

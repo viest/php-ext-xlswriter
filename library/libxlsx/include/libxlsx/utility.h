@@ -276,11 +276,14 @@ size_t lxlsx_utf8_strlen(const char *str);
 void lxlsx_str_tolower(char *str);
 uint8_t lxlsx_str_is_empty(const char *str);
 
-/* Define a portable version of strcasecmp(). */
+/* Define a portable version of strcasecmp()/strncasecmp(). MSVC has no POSIX
+ * case-insensitive compares; use the _stricmp/_strnicmp equivalents there. */
 #ifdef _MSC_VER
-#define lxlsx_strcasecmp _stricmp
+#define lxlsx_strcasecmp  _stricmp
+#define lxlsx_strncasecmp _strnicmp
 #else
-#define lxlsx_strcasecmp strcasecmp
+#define lxlsx_strcasecmp  strcasecmp
+#define lxlsx_strncasecmp strncasecmp
 #endif
 
 FILE *lxlsx_tmpfile(const char *tmpdir);

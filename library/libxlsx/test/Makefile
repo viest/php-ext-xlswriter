@@ -62,6 +62,9 @@ INTEGRATION_TEST_SRCS := $(wildcard $(INTEGRATION_TEST_DIR)/test_*.c)
 INTEGRATION_TEST_BINS := $(patsubst $(INTEGRATION_TEST_DIR)/%.c,$(INTEGRATION_TEST_DIR)/%,$(INTEGRATION_TEST_SRCS))
 EDIT_TEST_SRCS := $(wildcard $(EDIT_TEST_DIR)/test_*.c)
 EDIT_TEST_BINS := $(patsubst $(EDIT_TEST_DIR)/%.c,$(EDIT_TEST_DIR)/%,$(EDIT_TEST_SRCS))
+FORMULA_TEST_DIR := formula
+FORMULA_TEST_SRCS := $(wildcard $(FORMULA_TEST_DIR)/test_*.c)
+FORMULA_TEST_BINS := $(patsubst $(FORMULA_TEST_DIR)/%.c,$(FORMULA_TEST_DIR)/%,$(FORMULA_TEST_SRCS))
 INTEGRATION_OUTPUTS := $(FIXTURES_DIR)/integration_roundtrip.xlsx
 EDIT_OUTPUTS := \
 	$(FIXTURES_DIR)/edit_source.xlsx \
@@ -88,11 +91,11 @@ PUBLIC_HEADERS := $(patsubst $(INC_DIR)/%,%, \
 	$(wildcard $(INC_DIR)/libxlsx/*.h))
 HEADER_TEST_STAMPS := $(patsubst %.h,$(OBJ_DIR)/headers/%.ok,$(PUBLIC_HEADERS))
 
-.PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test edit-fixtures header-test
+.PHONY: all test clean writer-test reader-test reader-fixtures integration-test edit-test edit-fixtures formula-test header-test
 
 all: $(LIB_TEST)
 
-test: writer-test reader-test integration-test edit-test header-test
+test: writer-test reader-test integration-test edit-test formula-test header-test
 
 writer-test: $(WRITER_TEST_BIN)
 	$(Q)./$(WRITER_TEST_BIN)
@@ -107,6 +110,9 @@ edit-test: edit-fixtures $(EDIT_TEST_BINS)
 	$(Q)set -e; for test_bin in $(EDIT_TEST_BINS); do printf '==> %s\n' "$$test_bin"; ./$$test_bin; done
 
 edit-fixtures: $(EDIT_FIXTURES)
+
+formula-test: $(FORMULA_TEST_BINS)
+	$(Q)set -e; for test_bin in $(FORMULA_TEST_BINS); do printf '==> %s\n' "$$test_bin"; ./$$test_bin; done
 
 header-test: $(HEADER_TEST_STAMPS)
 
@@ -152,6 +158,9 @@ $(INTEGRATION_TEST_DIR)/%: $(INTEGRATION_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST
 $(EDIT_TEST_DIR)/%: $(EDIT_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
 
+$(FORMULA_TEST_DIR)/%: $(FORMULA_TEST_DIR)/%.c $(LIB_TEST) $(READER_TEST_DIR)/unity.h
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIB_TEST) $(LIBS_O)
+
 $(OBJ_DIR)/headers/%.ok: $(INC_DIR)/%.h
 	$(Q)mkdir -p $(@D)
 	$(Q)printf '#include "%s"\nint main(void) { return 0; }\n' "$*.h" > $(@:.ok=.c)
@@ -180,4 +189,5 @@ clean:
 	$(Q)rm -rf $(OBJ_DIR) $(LIB_TEST) $(WRITER_TEST_BIN) $(READER_TEST_BINS) $(READER_FIXTURES) \
 		$(READER_TEST_DIR)/*.dSYM $(INTEGRATION_TEST_BINS) $(INTEGRATION_TEST_DIR)/*.dSYM \
 		$(EDIT_TEST_BINS) $(EDIT_TEST_DIR)/*.dSYM \
+		$(FORMULA_TEST_BINS) $(FORMULA_TEST_DIR)/*.dSYM \
 		$(INTEGRATION_OUTPUTS) $(EDIT_OUTPUTS) $(EDIT_FIXTURES)

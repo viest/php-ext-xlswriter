@@ -5873,6 +5873,8 @@ lxlsx_worksheet *lxlsx_worksheet_new(lxlsx_worksheet_init_data *init_data);
 void lxlsx_worksheet_free(lxlsx_worksheet *worksheet);
 void lxlsx_worksheet_assemble_xml_file(lxlsx_worksheet *worksheet);
 void lxlsx_worksheet_write_single_row(lxlsx_worksheet *worksheet);
+lxlsx_error lxlsx_worksheet_assemble_to_buffer(lxlsx_worksheet *worksheet,
+                                               char **out, size_t *out_len);
 
 void lxlsx_worksheet_prepare_image(lxlsx_worksheet *worksheet,
                                  uint32_t image_ref_id, uint32_t lxlsx_drawing_id,

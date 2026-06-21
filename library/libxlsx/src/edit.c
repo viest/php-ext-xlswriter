@@ -63,6 +63,13 @@ typedef struct {
     double height;
 } lxlsx_edit_row_dim;
 
+typedef struct {
+    char  *name;      /* sheet display name */
+    char  *xml;       /* assembled sheetN.xml content (owned) */
+    size_t xml_len;
+    char  *filename;  /* assigned part name, e.g. xl/worksheets/sheet3.xml */
+} lxlsx_edit_new_sheet;
+
 struct lxlsx_edit_session {
     lxlsx_source_package *package;
     lxlsx_reader_workbook *workbook;
@@ -78,6 +85,9 @@ struct lxlsx_edit_session {
     lxlsx_edit_row_dim *row_dims;
     size_t row_dim_count;
     size_t row_dim_cap;
+    lxlsx_edit_new_sheet *new_sheets;
+    size_t new_sheet_count;
+    size_t new_sheet_cap;
 };
 
 typedef struct {
@@ -1292,6 +1302,12 @@ void lxlsx_edit_close(lxlsx_edit_session *session)
     for (i = 0; i < session->row_dim_count; i++)
         free(session->row_dims[i].target);
     free(session->row_dims);
+    for (i = 0; i < session->new_sheet_count; i++) {
+        free(session->new_sheets[i].name);
+        free(session->new_sheets[i].xml);
+        free(session->new_sheets[i].filename);
+    }
+    free(session->new_sheets);
     lxlsx_reader_workbook_close(session->workbook);
     lxlsx_source_package_close(session->package);
     free(session);
@@ -1489,6 +1505,37 @@ lxlsx_error lxlsx_edit_set_merge(lxlsx_edit_session *session,
     merge->last_col = last_col;
 
     session->merge_count++;
+    return LXLSX_NO_ERROR;
+}
+
+lxlsx_error lxlsx_edit_add_sheet(lxlsx_edit_session *session,
+                                 const char *name,
+                                 const char *xml,
+                                 size_t xml_len)
+{
+    lxlsx_edit_new_sheet *s;
+
+    if (!session || !name || !*name || !xml)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    if (session->new_sheet_count >= session->new_sheet_cap) {
+        size_t cap = session->new_sheet_cap ? session->new_sheet_cap * 2 : 4;
+        lxlsx_edit_new_sheet *next =
+            (lxlsx_edit_new_sheet *)realloc(session->new_sheets, cap * sizeof(*next));
+        if (!next)
+            return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+        session->new_sheets = next;
+        session->new_sheet_cap = cap;
+    }
+    s = &session->new_sheets[session->new_sheet_count];
+    memset(s, 0, sizeof(*s));
+    s->name = strdup(name);
+    s->xml = (char *)malloc(xml_len + 1);
+    if (!s->name || !s->xml) { free(s->name); free(s->xml); return LXLSX_ERROR_MEMORY_MALLOC_FAILED; }
+    memcpy(s->xml, xml, xml_len);
+    s->xml[xml_len] = '\0';
+    s->xml_len = xml_len;
+    session->new_sheet_count++;
     return LXLSX_NO_ERROR;
 }
 
@@ -1729,6 +1776,68 @@ static const char *mem_find(const char *hay, size_t haylen, const char *needle)
     return NULL;
 }
 
+/*
+ * ECMA-376 child element order for <worksheet>. Used to insert a new child at
+ * the schema-correct position when it is absent — so we never place, say,
+ * <mergeCells> before <sheetProtection> just because it followed </sheetData>.
+ */
+static const char *const WS_CHILD_ORDER[] = {
+    "sheetPr", "dimension", "sheetViews", "sheetFormatPr", "cols", "sheetData",
+    "sheetCalcPr", "sheetProtection", "protectedRanges", "scenarios",
+    "autoFilter", "sortState", "dataConsolidate", "customSheetViews",
+    "mergeCells", "phoneticPr", "conditionalFormatting", "dataValidations",
+    "hyperlinks", "printOptions", "pageMargins", "pageSetup", "headerFooter",
+    "rowBreaks", "colBreaks", "customProperties", "cellWatches",
+    "ignoredErrors", "smartTags", "drawing", "legacyDrawing", "legacyDrawingHF",
+    "picture", "oleObjects", "controls", "webPublishItems", "tableParts",
+    "extLst"
+};
+
+static int ws_child_rank(const char *tag)
+{
+    size_t i;
+    for (i = 0; i < sizeof(WS_CHILD_ORDER) / sizeof(WS_CHILD_ORDER[0]); i++)
+        if (strcmp(WS_CHILD_ORDER[i], tag) == 0)
+            return (int)i;
+    return -1;
+}
+
+/* Find an element start "<name" whose name is delimited (not a prefix match). */
+static const char *find_element(const char *src, size_t len, const char *name)
+{
+    size_t nl = strlen(name);
+    const char *p = src, *end = src + len;
+    while ((p = mem_find(p, (size_t)(end - p), "<")) != NULL) {
+        if (p + 1 + nl <= end && memcmp(p + 1, name, nl) == 0) {
+            char c = (p + 1 + nl < end) ? p[1 + nl] : '\0';
+            if (c == ' ' || c == '>' || c == '/' || c == '\t' || c == '\n' || c == '\r')
+                return p;
+        }
+        p += 1;
+    }
+    return NULL;
+}
+
+/*
+ * Byte position within [src, src+len) at which a new <tag> worksheet child
+ * should be inserted: before the first existing child that must sort after it,
+ * else before </worksheet>.
+ */
+static const char *ws_insert_point(const char *src, size_t len, const char *tag)
+{
+    int rank = ws_child_rank(tag);
+    const char *best = NULL;
+    size_t i;
+    if (rank >= 0) {
+        for (i = (size_t)rank + 1; i < sizeof(WS_CHILD_ORDER) / sizeof(WS_CHILD_ORDER[0]); i++) {
+            const char *pos = find_element(src, len, WS_CHILD_ORDER[i]);
+            if (pos && (!best || pos < best))
+                best = pos;
+        }
+    }
+    return best ? best : mem_find(src, len, "</worksheet>");
+}
+
 static void col_to_letters(lxlsx_col_t col, char *out)
 {
     char tmp[8];
@@ -1750,9 +1859,9 @@ static void merge_ref(char *buf, const lxlsx_edit_merge *m)
 
 /*
  * Inject merged ranges into a worksheet part's <mergeCells>. Creates the
- * element (right after </sheetData>, the schema-correct position) if absent,
- * or splices into an existing block and bumps its count. Everything else is
- * preserved verbatim.
+ * element at its schema-correct position (per the worksheet child order) if
+ * absent, or splices into an existing block and bumps its count. Everything
+ * else is preserved verbatim.
  */
 static lxlsx_error patch_xml_with_merges(unsigned char **xml, size_t *xml_len,
                                          const lxlsx_edit_merge **merges,
@@ -1820,16 +1929,14 @@ static lxlsx_error patch_xml_with_merges(unsigned char **xml, size_t *xml_len,
             }
         }
     } else {
-        const char *sd = mem_find(src, srclen, "</sheetData>");
-        const char *after;
-        if (!sd) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
-        after = sd + strlen("</sheetData>");
+        const char *at = ws_insert_point(src, srclen, "mergeCells");
+        if (!at) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
         snprintf(open, sizeof(open), "<mergeCells count=\"%zu\">", count);
-        if (buf_append(&out, src, (size_t)(after - src)) != 0 ||
+        if (buf_append(&out, src, (size_t)(at - src)) != 0 ||
             buf_append_s(&out, open) != 0 ||
             buf_append(&out, entries.data, entries.len) != 0 ||
             buf_append_s(&out, "</mergeCells>") != 0 ||
-            buf_append(&out, after, srclen - (size_t)(after - src)) != 0) {
+            buf_append(&out, at, srclen - (size_t)(at - src)) != 0) {
             err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
         }
     }
@@ -1847,7 +1954,7 @@ done:
 
 /*
  * Inject column widths into a worksheet's <cols> (no count attr). Creates the
- * element right before <sheetData> (schema-correct) if absent.
+ * element at its schema-correct position (per the worksheet child order) if absent.
  */
 static lxlsx_error patch_xml_with_cols(unsigned char **xml, size_t *xml_len,
                                        const lxlsx_edit_col **cols, size_t count)
@@ -1895,13 +2002,13 @@ static lxlsx_error patch_xml_with_cols(unsigned char **xml, size_t *xml_len,
             }
         }
     } else {
-        const char *sd = mem_find(src, srclen, "<sheetData");
-        if (!sd) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
-        if (buf_append(&out, src, (size_t)(sd - src)) != 0 ||
+        const char *at = ws_insert_point(src, srclen, "cols");
+        if (!at) { err = LXLSX_ERROR_PARAMETER_VALIDATION; goto done; }
+        if (buf_append(&out, src, (size_t)(at - src)) != 0 ||
             buf_append_s(&out, "<cols>") != 0 ||
             buf_append(&out, entries.data, entries.len) != 0 ||
             buf_append_s(&out, "</cols>") != 0 ||
-            buf_append(&out, sd, srclen - (size_t)(sd - src)) != 0) {
+            buf_append(&out, at, srclen - (size_t)(at - src)) != 0) {
             err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done;
         }
     }
@@ -2426,6 +2533,167 @@ done:
     return err;
 }
 
+/* Largest N among existing xl/worksheets/sheetN.xml parts. */
+static size_t max_existing_sheet_num(lxlsx_edit_session *session)
+{
+    size_t n = lxlsx_source_package_entry_count(session->package), i, maxv = 0;
+    for (i = 0; i < n; i++) {
+        const lxlsx_source_package_entry_info *info =
+            lxlsx_source_package_entry_info_at(session->package, i);
+        size_t pos = 19, v = 0;
+        int has = 0;
+        if (!info || info->name_len < 24) continue;
+        if (memcmp(info->name, "xl/worksheets/sheet", 19) != 0) continue;
+        while (pos < info->name_len && info->name[pos] >= '0' && info->name[pos] <= '9') {
+            v = v * 10 + (size_t)(info->name[pos] - '0'); pos++; has = 1;
+        }
+        if (has && info->name_len - pos == 4 &&
+            memcmp(info->name + pos, ".xml", 4) == 0 && v > maxv)
+            maxv = v;
+    }
+    return maxv;
+}
+
+/* Largest integer following each occurrence of `needle` in [buf, buf+len). */
+static size_t scan_max_after(const unsigned char *buf, size_t len, const char *needle)
+{
+    const char *p = (const char *)buf, *end = p + len;
+    size_t maxv = 0;
+    while ((p = mem_find(p, (size_t)(end - p), needle)) != NULL) {
+        size_t v = 0;
+        p += strlen(needle);
+        while (p < end && *p >= '0' && *p <= '9') v = v * 10 + (size_t)(*p++ - '0');
+        if (v > maxv) maxv = v;
+    }
+    return maxv;
+}
+
+/* Read a package part, insert `insert` before `close_tag`, produce a replacement. */
+static lxlsx_error part_insert_before(lxlsx_edit_session *session,
+                                      const char *part, const char *close_tag,
+                                      const char *insert,
+                                      lxlsx_source_package_replacement *rep)
+{
+    unsigned char *xml = NULL;
+    size_t xmllen = 0;
+    int idx;
+    const char *pos;
+    lxlsx_edit_buf out = {0};
+    lxlsx_error err;
+
+    idx = lxlsx_source_package_find_first(session->package, part);
+    if (idx < 0) return LXLSX_ERROR_ZIP_FILE_ADD;
+    err = lxlsx_source_package_read_entry(session->package, (size_t)idx, &xml, &xmllen);
+    if (err != LXLSX_NO_ERROR) return err;
+    pos = mem_find((const char *)xml, xmllen, close_tag);
+    if (!pos) { free(xml); return LXLSX_ERROR_PARAMETER_VALIDATION; }
+
+    if (buf_append(&out, (const char *)xml, (size_t)(pos - (const char *)xml)) != 0 ||
+        buf_append_s(&out, insert) != 0 ||
+        buf_append(&out, pos, xmllen - (size_t)(pos - (const char *)xml)) != 0) {
+        free(xml); free(out.data); return LXLSX_ERROR_MEMORY_MALLOC_FAILED;
+    }
+    free(xml);
+    rep->entry_index = (size_t)idx;
+    rep->data = (const unsigned char *)out.data;
+    rep->size = out.len;
+    return LXLSX_NO_ERROR;
+}
+
+#define LXLSX_WS_REL_TYPE "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
+#define LXLSX_WS_CT "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
+
+/*
+ * Build the additions (new sheetN.xml parts) and the workbook.xml /
+ * workbook.xml.rels / [Content_Types].xml replacements needed to register the
+ * session's new worksheets. meta_reps must have room for 3 entries.
+ */
+static lxlsx_error prepare_new_sheets(lxlsx_edit_session *session,
+                                      lxlsx_source_package_addition **add_out,
+                                      size_t *n_add_out,
+                                      lxlsx_source_package_replacement *meta_reps,
+                                      size_t *n_meta_out)
+{
+    lxlsx_source_package_addition *adds = NULL;
+    lxlsx_edit_buf wb = {0}, rel = {0}, ct = {0};
+    unsigned char *wbxml = NULL, *relxml = NULL;
+    size_t wblen = 0, rellen = 0;
+    size_t next_num, next_sid, next_rid, i;
+    int idx;
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    *add_out = NULL; *n_add_out = 0; *n_meta_out = 0;
+    if (session->new_sheet_count == 0)
+        return LXLSX_NO_ERROR;
+
+    next_num = max_existing_sheet_num(session) + 1;
+
+    /* Parse next sheetId from workbook.xml and next rId from its rels. */
+    idx = lxlsx_source_package_find_first(session->package, "xl/workbook.xml");
+    if (idx < 0) { err = LXLSX_ERROR_ZIP_FILE_ADD; goto done; }
+    err = lxlsx_source_package_read_entry(session->package, (size_t)idx, &wbxml, &wblen);
+    if (err != LXLSX_NO_ERROR) goto done;
+    next_sid = scan_max_after(wbxml, wblen, "sheetId=\"") + 1;
+
+    idx = lxlsx_source_package_find_first(session->package, "xl/_rels/workbook.xml.rels");
+    if (idx < 0) { err = LXLSX_ERROR_ZIP_FILE_ADD; goto done; }
+    err = lxlsx_source_package_read_entry(session->package, (size_t)idx, &relxml, &rellen);
+    if (err != LXLSX_NO_ERROR) goto done;
+    next_rid = scan_max_after(relxml, rellen, "Id=\"rId") + 1;
+
+    adds = (lxlsx_source_package_addition *)calloc(session->new_sheet_count, sizeof(*adds));
+    if (!adds) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+
+    for (i = 0; i < session->new_sheet_count; i++) {
+        lxlsx_edit_new_sheet *s = &session->new_sheets[i];
+        char fn[48], frag[256];
+        size_t num = next_num + i, sid = next_sid + i, rid = next_rid + i;
+
+        snprintf(fn, sizeof(fn), "xl/worksheets/sheet%zu.xml", num);
+        free(s->filename);
+        s->filename = strdup(fn);
+        if (!s->filename) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        adds[i].name = s->filename;
+        adds[i].data = (const unsigned char *)s->xml;
+        adds[i].size = s->xml_len;
+
+        snprintf(frag, sizeof(frag), "<sheet name=\"");
+        if (buf_append_s(&wb, frag) != 0 || append_attr_escaped(&wb, s->name) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        snprintf(frag, sizeof(frag), "\" sheetId=\"%zu\" r:id=\"rId%zu\"/>", sid, rid);
+        if (buf_append_s(&wb, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+
+        snprintf(frag, sizeof(frag),
+                 "<Relationship Id=\"rId%zu\" Type=\"%s\" Target=\"worksheets/sheet%zu.xml\"/>",
+                 rid, LXLSX_WS_REL_TYPE, num);
+        if (buf_append_s(&rel, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+
+        snprintf(frag, sizeof(frag),
+                 "<Override PartName=\"/xl/worksheets/sheet%zu.xml\" ContentType=\"%s\"/>",
+                 num, LXLSX_WS_CT);
+        if (buf_append_s(&ct, frag) != 0) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+    }
+
+    err = part_insert_before(session, "xl/workbook.xml", "</sheets>", wb.data, &meta_reps[0]);
+    if (err != LXLSX_NO_ERROR) goto done;
+    err = part_insert_before(session, "xl/_rels/workbook.xml.rels", "</Relationships>", rel.data, &meta_reps[1]);
+    if (err != LXLSX_NO_ERROR) { free((void *)meta_reps[0].data); goto done; }
+    err = part_insert_before(session, "[Content_Types].xml", "</Types>", ct.data, &meta_reps[2]);
+    if (err != LXLSX_NO_ERROR) { free((void *)meta_reps[0].data); free((void *)meta_reps[1].data); goto done; }
+
+    *add_out = adds; adds = NULL;
+    *n_add_out = session->new_sheet_count;
+    *n_meta_out = 3;
+
+done:
+    free(adds);
+    free(wbxml);
+    free(relxml);
+    free(wb.data);
+    free(rel.data);
+    free(ct.data);
+    return err;
+}
+
 lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
 {
     lxlsx_dirty_sheet *dirty_sheets = NULL;
@@ -2433,17 +2701,22 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     size_t dirty_cap = 0;
     lxlsx_source_package_replacement *replacements = NULL;
     lxlsx_source_package_replacement styles_rep;
+    lxlsx_source_package_replacement meta_reps[3];
+    lxlsx_source_package_addition *additions = NULL;
+    size_t add_count = 0, meta_count = 0;
     int styles_produced = 0;
     size_t rep_count;
     lxlsx_error err = LXLSX_NO_ERROR;
     size_t i;
 
     memset(&styles_rep, 0, sizeof(styles_rep));
+    memset(meta_reps, 0, sizeof(meta_reps));
 
     if (!session || !path)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
     if (session->change_count == 0 && session->merge_count == 0 &&
-        session->col_count == 0 && session->row_dim_count == 0)
+        session->col_count == 0 && session->row_dim_count == 0 &&
+        session->new_sheet_count == 0)
         return lxlsx_source_package_save_copy(session->package, path);
 
     for (i = 0; i < session->change_count; i++) {
@@ -2496,6 +2769,11 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     if (err != LXLSX_NO_ERROR)
         goto done;
 
+    /* Build new-sheet parts + their workbook/rels/content-type registrations. */
+    err = prepare_new_sheets(session, &additions, &add_count, meta_reps, &meta_count);
+    if (err != LXLSX_NO_ERROR)
+        goto done;
+
     for (i = 0; i < dirty_count; i++) {
         if (dirty_sheets[i].change_count > 0) {
             err = patch_xml_with_changes(&dirty_sheets[i].xml,
@@ -2532,7 +2810,7 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     }
 
     replacements = (lxlsx_source_package_replacement *)calloc(
-        dirty_count + 1, sizeof(*replacements));
+        dirty_count + 1 + meta_count, sizeof(*replacements));
     if (!replacements) {
         err = LXLSX_ERROR_MEMORY_MALLOC_FAILED;
         goto done;
@@ -2545,18 +2823,22 @@ lxlsx_error lxlsx_edit_save_as(lxlsx_edit_session *session, const char *path)
     }
     rep_count = dirty_count;
     if (styles_produced) {
-        replacements[rep_count].entry_index = styles_rep.entry_index;
-        replacements[rep_count].data = styles_rep.data;
-        replacements[rep_count].size = styles_rep.size;
-        rep_count++;
+        replacements[rep_count++] = styles_rep;
+    }
+    for (i = 0; i < meta_count; i++) {
+        replacements[rep_count++] = meta_reps[i];
     }
 
-    err = lxlsx_source_package_save_with_replacements(session->package, path,
-                                                      replacements, rep_count);
+    err = lxlsx_source_package_save_with_changes(session->package, path,
+                                                 replacements, rep_count,
+                                                 additions, add_count);
 
 done:
     free(replacements);
     free((void *)styles_rep.data);
+    for (i = 0; i < meta_count; i++)
+        free((void *)meta_reps[i].data);
+    free(additions);
     free_dirty_sheets(dirty_sheets, dirty_count);
     return err;
 }

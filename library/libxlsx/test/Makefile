@@ -75,9 +75,11 @@ EDIT_OUTPUTS := \
 	$(FIXTURES_DIR)/edit_ordered_rows.xlsx \
 	$(FIXTURES_DIR)/edit_snapshot.xlsx \
 	$(FIXTURES_DIR)/edit_raw_copy.xlsx \
+	$(FIXTURES_DIR)/edit_added.xlsx \
 	$(FIXTURES_DIR)/edit_merge.xlsx \
 	$(FIXTURES_DIR)/edit_numfmt.xlsx \
 	$(FIXTURES_DIR)/edit_dim.xlsx \
+	$(FIXTURES_DIR)/edit_addsheet.xlsx \
 	$(FIXTURES_DIR)/edit_duplicate.zip \
 	$(FIXTURES_DIR)/edit_duplicate_noop.zip
 EDIT_FIXTURES := \

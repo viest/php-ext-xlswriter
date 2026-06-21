@@ -7952,6 +7952,82 @@ lxlsx_worksheet_assemble_xml_file(lxlsx_worksheet *self)
     lxlsx_xml_end_tag(self->file, "worksheet");
 }
 
+/*
+ * Assemble a worksheet into an in-memory XML buffer. Edit mode uses this to
+ * serialise a sheet added after openFile() (it is then handed to the edit
+ * session as a brand-new part). Mirrors the packager's worksheet path: flush
+ * any pending constant-memory row, assemble into a captured file handle, then
+ * copy the bytes out. Caller owns *out and must free() it.
+ */
+lxlsx_error
+lxlsx_worksheet_assemble_to_buffer(lxlsx_worksheet *self, char **out,
+                                   size_t *out_len)
+{
+    char *buffer = NULL;
+    size_t buffer_size = 0;
+    FILE *prev_file;
+    lxlsx_error err = LXLSX_NO_ERROR;
+
+    if (!self || !out || !out_len)
+        return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
+
+    *out = NULL;
+    *out_len = 0;
+    prev_file = self->file;
+
+    /* Flush the last buffered row first, like the packager does. */
+    if (self->optimize_row)
+        lxlsx_worksheet_write_single_row(self);
+
+    self->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
+    if (!self->file) {
+        self->file = prev_file;
+        return LXLSX_ERROR_CREATING_TMPFILE;
+    }
+
+    lxlsx_worksheet_assemble_xml_file(self);
+
+    /* Recover the bytes. open_memstream backs `buffer` (valid after fflush);
+     * the tmpfile fallback leaves buffer == NULL, so read it back manually. */
+    if (fflush(self->file)) {
+        err = LXLSX_ERROR_CREATING_TMPFILE;
+        goto done;
+    }
+
+    if (buffer) {
+        *out = malloc(buffer_size + 1);
+        if (!*out) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        memcpy(*out, buffer, buffer_size);
+        (*out)[buffer_size] = '\0';
+        *out_len = buffer_size;
+    }
+    else {
+        long size;
+        if (fseek(self->file, 0L, SEEK_END)) {
+            err = LXLSX_ERROR_CREATING_TMPFILE; goto done;
+        }
+        size = ftell(self->file);
+        if (size < 0) { err = LXLSX_ERROR_CREATING_TMPFILE; goto done; }
+        *out = malloc((size_t) size + 1);
+        if (!*out) { err = LXLSX_ERROR_MEMORY_MALLOC_FAILED; goto done; }
+        rewind(self->file);
+        if (size > 0 && fread(*out, (size_t) size, 1, self->file) < 1) {
+            free(*out);
+            *out = NULL;
+            err = LXLSX_ERROR_CREATING_TMPFILE;
+            goto done;
+        }
+        (*out)[size] = '\0';
+        *out_len = (size_t) size;
+    }
+
+done:
+    fclose(self->file);
+    free(buffer);
+    self->file = prev_file;
+    return err;
+}
+
 /*****************************************************************************
  *
  * Public functions.

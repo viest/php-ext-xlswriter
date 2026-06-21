@@ -40,6 +40,13 @@ typedef struct {
     size_t               size;
 } lxlsx_source_package_replacement;
 
+/* A brand-new part to append to the package (e.g. a new worksheet). */
+typedef struct {
+    const char          *name;   /* zip member name, e.g. xl/worksheets/sheet3.xml */
+    const unsigned char *data;
+    size_t               size;
+} lxlsx_source_package_addition;
+
 lxlsx_error lxlsx_source_package_open(const char *path,
                                       lxlsx_source_package **out);
 lxlsx_error lxlsx_source_package_open_memory(const void *data, size_t len,
@@ -78,6 +85,15 @@ lxlsx_error lxlsx_source_package_save_with_replacements(
     const char *path,
     const lxlsx_source_package_replacement *replacements,
     size_t replacement_count);
+
+/* Like save_with_replacements but also appends brand-new parts. */
+lxlsx_error lxlsx_source_package_save_with_changes(
+    const lxlsx_source_package *package,
+    const char *path,
+    const lxlsx_source_package_replacement *replacements,
+    size_t replacement_count,
+    const lxlsx_source_package_addition *additions,
+    size_t addition_count);
 
 #ifdef __cplusplus
 }

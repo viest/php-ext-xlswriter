@@ -104,6 +104,16 @@ lxlsx_error lxlsx_edit_set_row_height(lxlsx_edit_session *session,
                                       lxlsx_row_t row,
                                       double height);
 
+/*
+ * Append a brand-new worksheet to the workbook. `xml` is the complete
+ * worksheet part content. On save it becomes a new xl/worksheets/sheetN.xml and
+ * is registered in workbook.xml, workbook.xml.rels and [Content_Types].xml.
+ */
+lxlsx_error lxlsx_edit_add_sheet(lxlsx_edit_session *session,
+                                 const char *name,
+                                 const char *xml,
+                                 size_t xml_len);
+
 #ifdef __cplusplus
 }
 #endif

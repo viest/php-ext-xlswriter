@@ -2010,9 +2010,12 @@ lxlsx_workbook_open(const char *filename)
         return NULL;
     }
 
-    workbook->is_edit = LXLSX_TRUE;
     workbook->edit_session = session;
 
+    /* Create the in-memory shells for existing sheets BEFORE flipping is_edit,
+     * so add_worksheet leaves them non-optimized (they are patched in place via
+     * the edit session, never re-serialised). Only sheets added afterwards via
+     * addSheet() see is_edit == TRUE and become inline-string sheets. */
     sheet_count = lxlsx_edit_sheet_count(session);
     for (i = 0; i < sheet_count; i++) {
         const char *sheet_name = lxlsx_edit_sheet_name(session, i);
@@ -2041,18 +2044,64 @@ lxlsx_workbook_open(const char *filename)
         return NULL;
     }
 
+    workbook->is_edit = LXLSX_TRUE;
+
     return workbook;
+}
+
+/*
+ * Serialise every sheet added after openFile() (is_edit == FALSE) into the edit
+ * session as a new part. Existing sheets (is_edit == TRUE) are patched in place
+ * and skipped here.
+ */
+static lxlsx_error
+_workbook_flush_added_sheets(lxlsx_workbook *workbook)
+{
+    lxlsx_sheet *sheet;
+
+    STAILQ_FOREACH(sheet, workbook->sheets, list_pointers) {
+        lxlsx_worksheet *worksheet;
+        char *xml = NULL;
+        size_t xml_len = 0;
+        lxlsx_error err;
+
+        if (sheet->is_chartsheet)
+            continue;
+
+        worksheet = sheet->u.worksheet;
+        if (worksheet->is_edit)
+            continue;
+
+        err = lxlsx_worksheet_assemble_to_buffer(worksheet, &xml, &xml_len);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+
+        err = lxlsx_edit_add_sheet(workbook->edit_session, worksheet->name,
+                                   xml, xml_len);
+        free(xml);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+    }
+
+    return LXLSX_NO_ERROR;
 }
 
 lxlsx_error
 lxlsx_workbook_save_as(lxlsx_workbook *workbook, const char *path)
 {
+    lxlsx_error err;
+
     if (!workbook)
         return LXLSX_ERROR_NULL_PARAMETER_IGNORED;
 
-    if (workbook->is_edit)
+    if (workbook->is_edit) {
+        err = _workbook_flush_added_sheets(workbook);
+        if (err != LXLSX_NO_ERROR)
+            return err;
+
         return lxlsx_edit_save_as(workbook->edit_session,
                                   path ? path : workbook->filename);
+    }
 
     return LXLSX_ERROR_FEATURE_NOT_SUPPORTED;
 }
@@ -2109,7 +2158,11 @@ lxlsx_workbook_add_worksheet(lxlsx_workbook *self, const char *sheetname)
     init_data.hidden = 0;
     init_data.index = self->num_sheets;
     init_data.sst = self->sst;
-    init_data.optimize = self->options.constant_memory;
+    /* Sheets added after openFile() (edit mode) emit inline strings so we
+     * never have to regenerate the shared-string table; constant-memory mode
+     * uses inline strings too. Existing sheets opened for editing are created
+     * before is_edit is set (see lxlsx_workbook_open) and stay non-optimized. */
+    init_data.optimize = self->options.constant_memory || self->is_edit;
     init_data.active_sheet = &self->active_sheet;
     init_data.first_sheet = &self->first_sheet;
     init_data.tmpdir = self->options.tmpdir;

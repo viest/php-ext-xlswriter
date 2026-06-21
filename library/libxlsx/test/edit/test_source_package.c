@@ -16,6 +16,7 @@ static const char *NOOP_XLSX = "fixtures/edit_noop.xlsx";
 static const char *RAW_COPY_XLSX = "fixtures/edit_raw_copy.xlsx";
 static const char *DUP_ZIP = "fixtures/edit_duplicate.zip";
 static const char *DUP_NOOP_ZIP = "fixtures/edit_duplicate_noop.zip";
+static const char *ADDED_XLSX = "fixtures/edit_added.xlsx";
 
 #define ZIP_METHOD_DEFLATE 8
 
@@ -306,6 +307,38 @@ static void test_zip64_entries_are_explicitly_unsupported(void)
     TEST_ASSERT_NULL(package);
 }
 
+static void test_save_with_additions_appends_new_part(void)
+{
+    lxlsx_source_package *package = NULL, *saved = NULL;
+    lxlsx_source_package_addition add;
+    const char *payload = "<x>hi</x>";
+    unsigned char *content = NULL;
+    size_t content_len = 0;
+    int idx;
+
+    write_source_workbook();
+    remove(ADDED_XLSX);
+
+    assert_ok(lxlsx_source_package_open(SOURCE_XLSX, &package));
+    add.name = "xl/extra.xml";
+    add.data = (const unsigned char *)payload;
+    add.size = strlen(payload);
+    assert_ok(lxlsx_source_package_save_with_changes(package, ADDED_XLSX,
+                                                     NULL, 0, &add, 1));
+    lxlsx_source_package_close(package);
+
+    /* Reopen: the new part is present and readable, originals preserved. */
+    assert_ok(lxlsx_source_package_open(ADDED_XLSX, &saved));
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(saved, "xl/worksheets/sheet1.xml") >= 0);
+    idx = lxlsx_source_package_find_first(saved, "xl/extra.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(saved, (size_t)idx, &content, &content_len));
+    TEST_ASSERT_EQUAL_INT((int)strlen(payload), (int)content_len);
+    TEST_ASSERT_EQUAL_STRING(payload, (const char *)content);
+    free(content);
+    lxlsx_source_package_close(saved);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -313,5 +346,6 @@ int main(void)
     RUN_TEST(test_replacement_preserves_untouched_raw_local_record);
     RUN_TEST(test_duplicate_entries_noop_save_preserves_bytes);
     RUN_TEST(test_zip64_entries_are_explicitly_unsupported);
+    RUN_TEST(test_save_with_additions_appends_new_part);
     return UNITY_END();
 }

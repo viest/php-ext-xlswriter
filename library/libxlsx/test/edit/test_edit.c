@@ -23,6 +23,7 @@ static const char *NORMALIZED_TARGET_XLSX = "fixtures/edit_normalized_target.xls
 static const char *MERGE_XLSX = "fixtures/edit_merge.xlsx";
 static const char *NUMFMT_XLSX = "fixtures/edit_numfmt.xlsx";
 static const char *DIM_XLSX = "fixtures/edit_dim.xlsx";
+static const char *ADDSHEET_XLSX = "fixtures/edit_addsheet.xlsx";
 
 static void assert_ok(lxlsx_error err)
 {
@@ -209,8 +210,9 @@ static void assert_formula_cell(const char *path, size_t row, size_t col,
     lxlsx_reader_workbook_close(workbook);
 }
 
-static void assert_string_cell(const char *path, size_t row, size_t col,
-                               const char *expected)
+static void assert_string_cell_in_sheet(const char *path, const char *sheet_name,
+                                        size_t row, size_t col,
+                                        const char *expected)
 {
     lxlsx_reader_workbook *workbook = NULL;
     lxlsx_reader_worksheet *worksheet = NULL;
@@ -221,7 +223,7 @@ static void assert_string_cell(const char *path, size_t row, size_t col,
                           lxlsx_reader_workbook_open(path, &workbook));
     TEST_ASSERT_EQUAL_INT(LXLSX_READER_NO_ERROR,
                           lxlsx_reader_workbook_get_worksheet_by_name(
-                              workbook, "Edit", LXLSX_READER_SKIP_NONE,
+                              workbook, sheet_name, LXLSX_READER_SKIP_NONE,
                               &worksheet));
 
     while (lxlsx_reader_worksheet_next_row(worksheet) == LXLSX_READER_NO_ERROR) {
@@ -241,6 +243,12 @@ static void assert_string_cell(const char *path, size_t row, size_t col,
     TEST_ASSERT_TRUE(found);
     lxlsx_reader_worksheet_close(worksheet);
     lxlsx_reader_workbook_close(workbook);
+}
+
+static void assert_string_cell(const char *path, size_t row, size_t col,
+                               const char *expected)
+{
+    assert_string_cell_in_sheet(path, "Edit", row, col, expected);
 }
 
 static void assert_boolean_cell(const char *path, size_t row, size_t col,
@@ -739,6 +747,95 @@ static void test_edit_injects_cell_format(void)
     lxlsx_source_package_close(package);
 }
 
+static void test_edit_adds_worksheet(void)
+{
+    static const char *SHEET_XML =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+        "<sheetData><row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>hi</t></is></c></row></sheetData>"
+        "</worksheet>";
+    lxlsx_edit_session *session;
+    lxlsx_source_package *pkg = NULL;
+    unsigned char *wb = NULL;
+    size_t wb_len = 0;
+    int idx;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);  /* one sheet "Edit" */
+    remove(ADDSHEET_XLSX);
+
+    session = lxlsx_edit_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    assert_ok(lxlsx_edit_add_sheet(session, "Added", SHEET_XML, strlen(SHEET_XML)));
+    assert_ok(lxlsx_edit_save_as(session, ADDSHEET_XLSX));
+    lxlsx_edit_close(session);
+
+    /* Reopening must show two sheets (workbook.xml + rels stayed consistent). */
+    session = lxlsx_edit_open(ADDSHEET_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    TEST_ASSERT_EQUAL_INT(2, (int)lxlsx_edit_sheet_count(session));
+    TEST_ASSERT_EQUAL_STRING("Added", lxlsx_edit_sheet_name(session, 1));
+    lxlsx_edit_close(session);
+
+    /* The new part exists and the metadata files were patched. */
+    assert_ok(lxlsx_source_package_open(ADDSHEET_XLSX, &pkg));
+    TEST_ASSERT_TRUE(lxlsx_source_package_find_first(pkg, "xl/worksheets/sheet2.xml") >= 0);
+    idx = lxlsx_source_package_find_first(pkg, "xl/workbook.xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &wb, &wb_len));
+    assert_xml_contains(wb, "<sheet name=\"Added\"");
+    free(wb);
+    idx = lxlsx_source_package_find_first(pkg, "[Content_Types].xml");
+    TEST_ASSERT_TRUE(idx >= 0);
+    assert_ok(lxlsx_source_package_read_entry(pkg, (size_t)idx, &wb, &wb_len));
+    assert_xml_contains(wb, "/xl/worksheets/sheet2.xml");
+    free(wb);
+    lxlsx_source_package_close(pkg);
+}
+
+/*
+ * End-to-end add-sheet via the standard workbook write API (the path the PHP
+ * addSheet() takes in edit mode): open, add_worksheet, write with the normal
+ * setters, save. The new sheet must serialise to inline strings and be
+ * registered without disturbing the existing sheet.
+ */
+static void test_edit_add_sheet_via_workbook_api(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *added;
+    lxlsx_edit_session *session;
+
+    write_edit_workbook(SOURCE_XLSX, 1.0, 111.0);  /* one sheet "Edit" */
+    remove(ADDSHEET_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    TEST_ASSERT_TRUE(lxlsx_workbook_is_edit(workbook));
+
+    added = lxlsx_workbook_add_worksheet(workbook, "Added");
+    TEST_ASSERT_NOT_NULL(added);
+    assert_ok(lxlsx_worksheet_write_string(added, 0, 0, "hello new", NULL));
+    assert_ok(lxlsx_worksheet_write_number(added, 1, 0, 99.0, NULL));
+    assert_ok(lxlsx_worksheet_write_string(added, 2, 0, "second", NULL));
+
+    assert_ok(lxlsx_workbook_save_as(workbook, ADDSHEET_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    /* Two sheets: original first, new one appended in workbook order. */
+    session = lxlsx_edit_open(ADDSHEET_XLSX);
+    TEST_ASSERT_NOT_NULL(session);
+    TEST_ASSERT_EQUAL_INT(2, (int)lxlsx_edit_sheet_count(session));
+    TEST_ASSERT_EQUAL_STRING("Edit", lxlsx_edit_sheet_name(session, 0));
+    TEST_ASSERT_EQUAL_STRING("Added", lxlsx_edit_sheet_name(session, 1));
+    lxlsx_edit_close(session);
+
+    /* Original sheet survives untouched. */
+    assert_number_cell_in_sheet(ADDSHEET_XLSX, "Edit", 1, 1, 1.0);
+    /* New sheet's inline-string + number values read back. */
+    assert_string_cell_in_sheet(ADDSHEET_XLSX, "Added", 1, 1, "hello new");
+    assert_number_cell_in_sheet(ADDSHEET_XLSX, "Added", 2, 1, 99.0);
+    assert_string_cell_in_sheet(ADDSHEET_XLSX, "Added", 3, 1, "second");
+}
+
 static void test_edit_sets_dimensions(void)
 {
     lxlsx_edit_session *session;
@@ -759,6 +856,50 @@ static void test_edit_sets_dimensions(void)
     assert_xml_contains(xml, "<col min=\"1\" max=\"3\" width=\"25\" customWidth=\"1\"/>");
     assert_xml_contains(xml, "ht=\"30\"");
     assert_xml_contains(xml, "customHeight=\"1\"");
+    free(xml);
+}
+
+static void write_protected_no_merge(const char *path)
+{
+    lxlsx_workbook *wb;
+    lxlsx_worksheet *ws;
+    remove(path);
+    wb = lxlsx_workbook_new(path);
+    TEST_ASSERT_NOT_NULL(wb);
+    ws = lxlsx_workbook_add_worksheet(wb, "Edit");
+    TEST_ASSERT_NOT_NULL(ws);
+    assert_ok(lxlsx_worksheet_write_number(ws, 0, 0, 1.0, NULL));
+    lxlsx_worksheet_protect(ws, "pw", NULL);   /* <sheetProtection>, no merge */
+    assert_ok(lxlsx_workbook_close(wb));
+}
+
+static void test_edit_merge_orders_after_protection(void)
+{
+    lxlsx_workbook *workbook;
+    lxlsx_worksheet *worksheet;
+    unsigned char *xml = NULL;
+    size_t xml_len = 0;
+    const char *prot, *merge;
+
+    /* Source has <sheetProtection> (after sheetData) but no <mergeCells>. */
+    write_protected_no_merge(SOURCE_XLSX);
+    remove(MERGE_XLSX);
+
+    workbook = lxlsx_workbook_open(SOURCE_XLSX);
+    TEST_ASSERT_NOT_NULL(workbook);
+    worksheet = lxlsx_workbook_get_worksheet_by_name(workbook, "Edit");
+    TEST_ASSERT_NOT_NULL(worksheet);
+    assert_ok(lxlsx_worksheet_merge_range(worksheet, 4, 0, 4, 2, "m", NULL));
+    assert_ok(lxlsx_workbook_save_as(workbook, MERGE_XLSX));
+    lxlsx_workbook_free(workbook);
+
+    /* The created <mergeCells> must sort AFTER <sheetProtection>. */
+    xml = read_sheet_xml(MERGE_XLSX, &xml_len);
+    prot = strstr((const char *)xml, "<sheetProtection");
+    merge = strstr((const char *)xml, "<mergeCells");
+    TEST_ASSERT_NOT_NULL(prot);
+    TEST_ASSERT_NOT_NULL(merge);
+    TEST_ASSERT_TRUE(merge > prot);
     free(xml);
 }
 
@@ -797,9 +938,12 @@ int main(void)
     RUN_TEST(test_opened_workbook_uses_standard_write_api);
     RUN_TEST(test_edit_rejects_unsupported_worksheet_ops);
     RUN_TEST(test_edit_adds_merged_range);
+    RUN_TEST(test_edit_merge_orders_after_protection);
     RUN_TEST(test_edit_injects_number_format);
     RUN_TEST(test_edit_injects_cell_format);
     RUN_TEST(test_edit_sets_dimensions);
+    RUN_TEST(test_edit_adds_worksheet);
+    RUN_TEST(test_edit_add_sheet_via_workbook_api);
     RUN_TEST(test_edit_uses_open_time_snapshot);
     return UNITY_END();
 }

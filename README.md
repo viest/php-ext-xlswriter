@@ -37,7 +37,7 @@ The chart below compares xlswriter with PhpSpreadsheet (the maintained successor
 
 > The two xlswriter modes track within ~10% of each other on time. Fixed-memory mode is marginally faster because it streams each row straight to disk and frees it immediately — a single pass, with no full in-memory model to build up and then serialize a second time at the end. The trade-off is that, unlike normal mode, it can no longer revisit a cell once it has been written (and its strings are stored inline rather than de-duplicated, so the file can be slightly larger). Normal mode keeps the whole workbook in memory, which is what lets you write cells in any order and re-style them before saving.
 
-xlswriter is a PHP C Extension that can be used to write text, numbers, formulas and hyperlinks to multiple worksheets in an Excel 2007+ XLSX file. It supports features such as:
+xlswriter is a PHP C Extension for Excel 2007+ XLSX files. It writes text, numbers, formulas, dates, charts, images and hyperlinks to new workbooks, opens existing files to edit them and save the result, reads their contents back, and evaluates formulas to a computed value. It supports features such as:
 
 ###### Writer
 
@@ -48,7 +48,11 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 * Autofilters.
 * Charts.
 * Data validation and drop down lists.
+* Conditional formatting.
+* Rich text, comments and hyperlinks.
 * Worksheet PNG/JPEG images.
+* Edit existing workbooks — open a file, update cell values, styles, merged ranges and row/column sizes, add worksheets, images and charts, then save the result.
+* Formula calculation — evaluate a formula and get its computed value, and write formulas with a pre-computed cached result.
 * Memory optimization mode for writing large files.
 * Works on Linux, FreeBSD, OpenBSD, OS X, Windows.
 * Compiles for 32 and 64 bit.
@@ -57,9 +61,12 @@ xlswriter is a PHP C Extension that can be used to write text, numbers, formulas
 
 ###### Reader
 
-* Full read data
-* Cursor read data
-* Read by data type
+* Full read mode and cursor read mode.
+* Read by data type.
+* Read cell styles and number formats.
+* Read merged cells.
+* Read images, charts and comments.
+* Read formulas together with their cached values.
 
 #### Install
 

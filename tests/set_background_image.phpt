@@ -26,7 +26,8 @@ var_dump(is_file('./tests/set_background_image.xlsx'));
 
 /* Round-trip: each sheet has <picture r:id="..."/> after pageMargins AND the
  * referenced media is actually bundled at xl/media/imageN.png. No reader API
- * for the worksheet background; probe the raw OOXML. */
+ * for the worksheet background; probe the raw OOXML. Both sheets use identical
+ * image bytes, so they share a single de-duplicated media part (mediaCount 1). */
 $path = './tests/set_background_image.xlsx';
 foreach (['sheet1', 'sheet2'] as $s) {
     $xml = shell_exec('unzip -p ' . escapeshellarg($path) . ' xl/worksheets/' . $s . '.xml');
@@ -45,4 +46,4 @@ echo "mediaCount: " . $mediaCount . "\n";
 bool(true)
 sheet1 hasPicture: true
 sheet2 hasPicture: true
-mediaCount: 2
+mediaCount: 1

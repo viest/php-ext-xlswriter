@@ -139,14 +139,14 @@ void data_to_null(zval *zv_result_t)
     }
 }
 
-void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index)
+void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index, int uses_1904)
 {
     if (type == 0) goto STRING;
     if (!is_number(string_value)) goto STRING;
 
     if (type & READ_TYPE_DATETIME) {
         if (string_value_length == 0) { data_to_null(zv_result_t); return; }
-        zend_long timestamp = date_double_to_timestamp(zend_strtod(string_value, NULL));
+        zend_long timestamp = date_double_to_timestamp(zend_strtod(string_value, NULL), uses_1904);
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) add_index_long(zv_result_t, zv_hashtable_index, timestamp);
         else                                   ZVAL_LONG(zv_result_t, timestamp);
         return;
@@ -161,8 +161,11 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
 
     if (type & READ_TYPE_INT) {
         if (string_value_length == 0) { data_to_null(zv_result_t); return; }
-        zend_long _long_value;
-        sscanf(string_value, ZEND_LONG_FMT, &_long_value);
+        /* is_number() accepts shapes like "." / "1.2.3" that sscanf can't
+         * convert; initialise and check the return so we never write an
+         * uninitialised value, falling back to string handling instead. */
+        zend_long _long_value = 0;
+        if (sscanf(string_value, ZEND_LONG_FMT, &_long_value) != 1) goto STRING;
         if (Z_TYPE_P(zv_result_t) == IS_ARRAY) add_index_long(zv_result_t, zv_hashtable_index, _long_value);
         else                                   ZVAL_LONG(zv_result_t, _long_value);
         return;
@@ -215,14 +218,14 @@ int sheet_read_row(lxlsx_reader_worksheet *ws)
 /* Apply user type (or global default) to either a real cell or a synthesised
  * blank, writing the result into zv_result_t at index idx (0-based). */
 static void emit_typed_value(zval *zv_result_t, zend_array *za_type, zend_long data_type_default,
-                             const char *str, size_t str_len, zend_ulong idx)
+                             const char *str, size_t str_len, zend_ulong idx, int uses_1904)
 {
     zend_long _type = data_type_default;
     if (za_type) {
         zval *t = zend_hash_index_find(za_type, (zend_long)idx);
         if (t && Z_TYPE_P(t) == IS_LONG) _type = Z_LVAL_P(t);
     }
-    data_to_custom_type(str, str_len, (zend_ulong)_type, zv_result_t, idx);
+    data_to_custom_type(str, str_len, (zend_ulong)_type, zv_result_t, idx, uses_1904);
 }
 
 unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv_result_t,
@@ -245,6 +248,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
     size_t        row_max_col      = 0;
     int           saw_real_cell    = 0;
     size_t        row_nr           = lxlsx_reader_worksheet_current_row(r->sheet_t);
+    int           uses_1904        = r->file_t ? lxlsx_reader_workbook_uses_1904_dates(r->file_t) : 0;
     lxlsx_cell      cell;
 
     if (Z_TYPE_P(zv_result_t) != IS_ARRAY) {
@@ -275,7 +279,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
                     add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
                 } else {
                     emit_typed_value(zv_result_t, za_type, data_type_default,
-                                     "", 0, (zend_ulong)(expected_col - 1));
+                                     "", 0, (zend_ulong)(expected_col - 1), uses_1904);
                 }
                 expected_col++;
             }
@@ -290,7 +294,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
             add_index_null(zv_result_t, (zend_ulong)(cur_col - 1));
         } else {
             emit_typed_value(zv_result_t, za_type, data_type_default,
-                             str, str_len, (zend_ulong)(cur_col - 1));
+                             str, str_len, (zend_ulong)(cur_col - 1), uses_1904);
         }
 
         expected_col  = cur_col + 1;
@@ -308,7 +312,7 @@ unsigned int load_sheet_current_row_data(struct xls_resource_read_t *r, zval *zv
                 add_index_null(zv_result_t, (zend_ulong)(expected_col - 1));
             } else {
                 emit_typed_value(zv_result_t, za_type, data_type_default,
-                                 "", 0, (zend_ulong)(expected_col - 1));
+                                 "", 0, (zend_ulong)(expected_col - 1), uses_1904);
             }
             expected_col++;
         }
@@ -387,13 +391,13 @@ static int lxlsx_reader_cell_bridge(const lxlsx_cell *c, void *callback_data)
     }
 
     if (Z_TYPE_P(_cd->zv_type_t) != IS_ARRAY && _cd->data_type_default != READ_TYPE_EMPTY) {
-        data_to_custom_type(str, str_len, _cd->data_type_default, &args[2], 0);
+        data_to_custom_type(str, str_len, _cd->data_type_default, &args[2], 0, _cd->uses_1904);
     }
 
     if (Z_TYPE_P(_cd->zv_type_t) == IS_ARRAY) {
         zval      *t     = zend_hash_index_find(Z_ARR_P(_cd->zv_type_t), (zend_long)(c->col_num - 1));
         zend_ulong _type = (t && Z_TYPE_P(t) == IS_LONG) ? Z_LVAL_P(t) : READ_TYPE_EMPTY;
-        data_to_custom_type(str, str_len, _type, &args[2], 0);
+        data_to_custom_type(str, str_len, _type, &args[2], 0, _cd->uses_1904);
     }
 
     CALL:

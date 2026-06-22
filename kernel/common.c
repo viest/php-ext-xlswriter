@@ -19,7 +19,10 @@ void xls_file_path(zend_string *file_name, zval *dir_path, zval *file_path)
 
     zstr_path = zval_get_string(dir_path);
 
-    if (Z_STRVAL_P(dir_path)[Z_STRLEN_P(dir_path)-1] == '/') {
+    /* Guard the [len-1] index: Z_STRLEN is size_t, so an empty path would
+     * underflow to SIZE_MAX and read out of bounds. An empty dir falls through
+     * to the else-branch (which prepends '/'). */
+    if (Z_STRLEN_P(dir_path) > 0 && Z_STRVAL_P(dir_path)[Z_STRLEN_P(dir_path)-1] == '/') {
         full_path = zend_string_extend(zstr_path, ZSTR_LEN(zstr_path) + ZSTR_LEN(file_name), 0);
         memcpy(ZSTR_VAL(full_path)+ZSTR_LEN(zstr_path), ZSTR_VAL(file_name), ZSTR_LEN(file_name)+1);
     } else {

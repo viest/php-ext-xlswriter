@@ -2330,10 +2330,14 @@ lxlsx_workbook_add_format(lxlsx_workbook *self)
 }
 
 /*
- * Call finalization code and close file.
+ * Run workbook finalization and package the xlsx, WITHOUT freeing the workbook.
+ * Split out of lxlsx_workbook_close() so callers that own the workbook lifetime
+ * (e.g. the PHP extension's resource, which frees the workbook in its object
+ * destructor) can assemble and then free separately. This is the single source
+ * of truth for the finalization pipeline.
  */
 lxlsx_error
-lxlsx_workbook_close(lxlsx_workbook *self)
+lxlsx_workbook_assemble(lxlsx_workbook *self)
 {
     lxlsx_sheet *sheet = NULL;
     lxlsx_worksheet *worksheet = NULL;
@@ -2488,6 +2492,17 @@ lxlsx_workbook_close(lxlsx_workbook *self)
 
 mem_error:
     lxlsx_packager_free(packager);
+    return error;
+}
+
+/*
+ * Call finalization code and close file. Assembles the package and then frees
+ * the workbook (the historical lxlsx_workbook_close() contract).
+ */
+lxlsx_error
+lxlsx_workbook_close(lxlsx_workbook *self)
+{
+    lxlsx_error error = lxlsx_workbook_assemble(self);
     lxlsx_workbook_free(self);
     return error;
 }

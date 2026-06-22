@@ -681,6 +681,20 @@ lxlsx_chart *lxlsx_workbook_add_chart(lxlsx_workbook *workbook, uint8_t lxlsx_ch
 lxlsx_error lxlsx_workbook_close(lxlsx_workbook *workbook);
 
 /**
+ * @brief Run finalization and package the xlsx without freeing the workbook.
+ *
+ * Same finalization pipeline as @ref lxlsx_workbook_close() but it does NOT free
+ * the workbook afterwards. Intended for callers that own the workbook lifetime
+ * separately (e.g. a host binding that frees the workbook in its own teardown).
+ * After this returns the workbook is still valid and the caller must eventually
+ * free it with @ref lxlsx_workbook_free().
+ *
+ * @param workbook Pointer to a lxlsx_workbook instance.
+ * @return A #lxlsx_error code.
+ */
+lxlsx_error lxlsx_workbook_assemble(lxlsx_workbook *workbook);
+
+/**
  * @brief Set the document properties such as Title, Author etc.
  *
  * @param workbook   Pointer to a lxlsx_workbook instance.

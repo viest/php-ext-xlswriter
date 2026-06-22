@@ -17,7 +17,7 @@
 
 unsigned int file_exists(const char *path);
 unsigned int directory_exists(const char *path);
-zend_long date_double_to_timestamp(double value);
+zend_long date_double_to_timestamp(double value, int uses_1904);
 lxlsx_row_col_options* default_row_col_options();
 
 #endif //PHP_EXT_XLS_EXPORT_HELP_H

@@ -50,3 +50,14 @@ xlswriter-*.tgz
 benchmark.c
 plans
 CLAUDE.md
+
+# libxlsx standalone C test build artifacts (test_*.c / test_*.h sources are kept)
+library/libxlsx/src/*.a
+library/libxlsx/test/.test_obj/
+library/libxlsx/test/**/test_*
+!library/libxlsx/test/**/test_*.c
+!library/libxlsx/test/**/test_*.h
+library/libxlsx/test/**/*.dSYM/
+# generated fixtures (the gen_*.py generators stay tracked)
+library/libxlsx/test/fixtures/*.xlsx
+library/libxlsx/test/fixtures/*.zip

@@ -575,9 +575,9 @@ PHP_METHOD(vtiful_xls, __construct)
         return;
     }
 
-    if(Z_TYPE_P(c_path) != IS_STRING)
+    if(Z_TYPE_P(c_path) != IS_STRING || Z_STRLEN_P(c_path) == 0)
     {
-        zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a string type", 120);
+        zend_throw_exception(vtiful_exception_ce, "Configure 'path' must be a non-empty string type", 120);
         return;
     }
 
@@ -1851,7 +1851,9 @@ PHP_METHOD(vtiful_xls, timestampFromDateDouble)
         RETURN_LONG(0);
     }
 
-    RETURN_LONG(date_double_to_timestamp(date));
+    /* Standalone serial→timestamp helper has no workbook context; keep the
+     * historical 1900 date system to preserve this method's existing output. */
+    RETURN_LONG(date_double_to_timestamp(date, 0));
 }
 /* }}} */
 
@@ -3704,6 +3706,7 @@ PHP_METHOD(vtiful_xls, nextCellCallback)
 
     callback_data.fci = &fci;
     callback_data.fci_cache = &fci_cache;
+    callback_data.uses_1904 = obj->read_ptr.file_t ? lxlsx_reader_workbook_uses_1904_dates(obj->read_ptr.file_t) : 0;
 
     load_sheet_current_row_data_callback(zs_sheet_name, obj->read_ptr.file_t, &callback_data);
 }

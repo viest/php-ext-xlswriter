@@ -41,29 +41,54 @@ PHP_VTIFUL_API zend_object *validation_objects_new(zend_class_entry *ce)
 
 /* {{{ validation_objects_free
  */
+/* Validation owns copies of its string fields: estrdup on set, efree in dtor.
+ * libxlsx deep-copies them again at validation() time, so the copy only needs
+ * to outlive the Validation object. Mirrors conditional_format's cf_set_str and
+ * removes the dangling-raw-pointer fragility of storing ZSTR_VAL directly. */
+static void vld_set_str(const char **slot, zend_string *zs)
+{
+    if (*slot) {
+        efree((void *)*slot);
+    }
+    *slot = estrdup(ZSTR_VAL(zs));
+}
+
 static void validation_objects_free(zend_object *object)
 {
     validation_object *intern = php_vtiful_validation_fetch_object(object);
 
-    if (intern->ptr.validation->value_list != NULL) {
-        int index = 0;
-
-        do {
-            if (intern->ptr.validation->value_list[index] == NULL) {
-                break;
-            }
-
-            /* value_list is `const char **` in libxlsxwriter; we allocated the
-             * strings ourselves, so cast away const for efree (mirrors valueList). */
-            efree((void *)intern->ptr.validation->value_list[index]);
-            index++;
-        } while (1);
-
-        efree((void *)intern->ptr.validation->value_list);
-    }
-
+    /* Guard NULL first: an object created via newInstanceWithoutConstructor()
+     * never allocates ptr.validation, so value_list must not be touched yet. */
     if (intern->ptr.validation != NULL) {
-        efree(intern->ptr.validation);
+        lxlsx_data_validation *v = intern->ptr.validation;
+
+        if (v->value_list != NULL) {
+            int index = 0;
+
+            do {
+                if (v->value_list[index] == NULL) {
+                    break;
+                }
+
+                /* value_list is `const char **` in libxlsxwriter; we allocated the
+                 * strings ourselves, so cast away const for efree (mirrors valueList). */
+                efree((void *)v->value_list[index]);
+                index++;
+            } while (1);
+
+            efree((void *)v->value_list);
+        }
+
+        /* free the owned string copies set via vld_set_str */
+        if (v->value_formula)   efree((void *)v->value_formula);
+        if (v->minimum_formula) efree((void *)v->minimum_formula);
+        if (v->maximum_formula) efree((void *)v->maximum_formula);
+        if (v->input_title)     efree((void *)v->input_title);
+        if (v->input_message)   efree((void *)v->input_message);
+        if (v->error_title)     efree((void *)v->error_title);
+        if (v->error_message)   efree((void *)v->error_message);
+
+        efree(v);
     }
 
     zend_object_std_dtor(&intern->zo);
@@ -424,7 +449,7 @@ PHP_METHOD(vtiful_validation, valueFormula)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->value_formula = ZSTR_VAL(zs_value_formula);
+    vld_set_str(&obj->ptr.validation->value_formula, zs_value_formula);
 }
 /* }}} */
 
@@ -585,7 +610,7 @@ PHP_METHOD(vtiful_validation, minimumFormula)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->minimum_formula = ZSTR_VAL(zs_minimum_formula);
+    vld_set_str(&obj->ptr.validation->minimum_formula, zs_minimum_formula);
 }
 /* }}} */
 
@@ -652,7 +677,7 @@ PHP_METHOD(vtiful_validation, maximumFormula)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->maximum_formula = ZSTR_VAL(zs_maximum_formula);
+    vld_set_str(&obj->ptr.validation->maximum_formula, zs_maximum_formula);
 }
 /* }}} */
 
@@ -696,7 +721,7 @@ PHP_METHOD(vtiful_validation, inputTitle)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->input_title = ZSTR_VAL(zs_input_title);
+    vld_set_str(&obj->ptr.validation->input_title, zs_input_title);
 }
 /* }}} */
 
@@ -719,7 +744,7 @@ PHP_METHOD(vtiful_validation, inputMessage)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->input_message = ZSTR_VAL(zs_input_message);
+    vld_set_str(&obj->ptr.validation->input_message, zs_input_message);
 }
 /* }}} */
 
@@ -742,7 +767,7 @@ PHP_METHOD(vtiful_validation, errorTitle)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->error_title = ZSTR_VAL(zs_error_title);
+    vld_set_str(&obj->ptr.validation->error_title, zs_error_title);
 }
 /* }}} */
 
@@ -765,7 +790,7 @@ PHP_METHOD(vtiful_validation, errorMessage)
 
     ZVAL_COPY(return_value, getThis());
 
-    obj->ptr.validation->error_message = ZSTR_VAL(zs_error_message);
+    vld_set_str(&obj->ptr.validation->error_message, zs_error_message);
 }
 /* }}} */
 

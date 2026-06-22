@@ -38,6 +38,6 @@ void load_sheet_row_data(struct xls_resource_read_t *r, zend_long sheet_flag, zv
 unsigned int load_sheet_current_row_data         (struct xls_resource_read_t *r, zval *zv_result_t, zval *zv_type, zend_long data_type_default, unsigned int flag);
 unsigned int load_sheet_current_row_data_callback(zend_string *zs_sheet_name_t, lxlsx_reader_workbook *wb, void *callback_data);
 
-void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index);
+void data_to_custom_type(const char *string_value, const size_t string_value_length, const zend_ulong type, zval *zv_result_t, const zend_ulong zv_hashtable_index, int uses_1904);
 
 #endif //PHP_READ_INCLUDE_H

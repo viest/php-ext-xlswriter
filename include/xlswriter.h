@@ -69,6 +69,7 @@ typedef struct {
     zval                  *zv_type_t;
     zend_fcall_info       *fci;
     zend_fcall_info_cache *fci_cache;
+    int                   uses_1904;
 } xls_read_callback_data;
 
 enum xlswriter_boolean {

@@ -45,7 +45,8 @@ echo "odd_header: " . $ps['odd_header'] . "\n";
 echo "odd_footer: " . $ps['odd_footer'] . "\n";
 
 /* Round-trip: the image variant emits &G tokens in the header/footer strings
- * and bundles the referenced media inside the zip. */
+ * and bundles the referenced media inside the zip. Header and footer reuse the
+ * same image bytes, so they share a single de-duplicated media part. */
 $ps2 = (new \Vtiful\Kernel\Excel($config))
     ->openFile('set_header_footer_imgs.xlsx')->openSheet()->getPageSetup();
 echo "imgs.odd_header_hasG: " . var_export(strpos((string)$ps2['odd_header'], '&G') !== false, true) . "\n";
@@ -66,4 +67,4 @@ odd_header: &L&\"Calibri,Bold\"&14Hello&R&P/&N
 odd_footer: &L&D&R&T
 imgs.odd_header_hasG: true
 imgs.odd_footer_hasG: true
-imgs.mediaCount: 2
+imgs.mediaCount: 1

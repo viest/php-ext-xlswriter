@@ -2103,6 +2103,14 @@ typedef struct lxlsx_worksheet {
     FILE *optimize_tmpfile;
     char *optimize_buffer;
     size_t optimize_buffer_size;
+
+    /* Fast streaming output buffer for constant_memory mode. Cell/row XML is
+     * assembled here with hand-rolled formatters and flushed to `file` in
+     * large blocks, bypassing per-cell fprintf (whose format-string parsing
+     * and locale locking dominate the bulk-write hot path). */
+    char *obuf;
+    size_t obuf_len;
+    size_t obuf_cap;
     struct lxlsx_table_rows *table;
     struct lxlsx_table_rows *hyperlinks;
     struct lxlsx_table_rows *comments;
@@ -5873,6 +5881,11 @@ lxlsx_worksheet *lxlsx_worksheet_new(lxlsx_worksheet_init_data *init_data);
 void lxlsx_worksheet_free(lxlsx_worksheet *worksheet);
 void lxlsx_worksheet_assemble_xml_file(lxlsx_worksheet *worksheet);
 void lxlsx_worksheet_write_single_row(lxlsx_worksheet *worksheet);
+
+/* Drain the constant_memory streaming buffer into the worksheet's current
+ * file handle. Called at the end of the row-writing phase, before the file is
+ * repointed at the assembled sheet XML. No-op outside constant_memory mode. */
+void lxlsx_worksheet_obuf_flush(lxlsx_worksheet *worksheet);
 lxlsx_error lxlsx_worksheet_assemble_to_buffer(lxlsx_worksheet *worksheet,
                                                char **out, size_t *out_len);
 

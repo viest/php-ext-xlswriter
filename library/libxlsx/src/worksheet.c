@@ -29,6 +29,9 @@
 
 #define LXLSX_STR_MAX                      32767
 #define LXLSX_BUFFER_SIZE                  4096
+/* constant_memory streaming buffer size. Largest single cell fragment is well
+ * under 1 KiB; 256 KiB amortises the flush over hundreds of rows. */
+#define LXLSX_OBUF_CAP                     (256 * 1024)
 #define LXLSX_PRINT_ACROSS                 1
 #define LXLSX_VALIDATION_MAX_TITLE_LENGTH  32
 #define LXLSX_VALIDATION_MAX_STRING_LENGTH 255
@@ -219,6 +222,11 @@ lxlsx_worksheet_new(lxlsx_worksheet_init_data *init_data)
         worksheet->optimize_tmpfile = tmpfile;
         GOTO_LABEL_ON_MEM_ERROR(worksheet->optimize_tmpfile, mem_error);
         worksheet->file = worksheet->optimize_tmpfile;
+
+        worksheet->obuf_cap = LXLSX_OBUF_CAP;
+        worksheet->obuf = malloc(worksheet->obuf_cap);
+        GOTO_LABEL_ON_MEM_ERROR(worksheet->obuf, mem_error);
+        worksheet->obuf_len = 0;
     }
 
     worksheet->lxlsx_drawing_rel_ids =
@@ -830,6 +838,7 @@ lxlsx_worksheet_free(lxlsx_worksheet *worksheet)
     if (worksheet->optimize_tmpfile)
         fclose(worksheet->optimize_tmpfile);
     free(worksheet->optimize_buffer);
+    free(worksheet->obuf);
 
     if (worksheet->drawing)
         lxlsx_drawing_free(worksheet->drawing);
@@ -4444,6 +4453,148 @@ mem_error:
  ****************************************************************************/
 
 /*
+ * Fast streaming output buffer (constant_memory mode).
+ *
+ * In constant_memory mode the worksheet XML is produced one row at a time and
+ * streamed to a temp file. The original code emitted every cell with an
+ * fprintf() whose format-string parsing and locale-aware number conversion
+ * dominated the bulk-write profile. These helpers assemble cell/row XML with
+ * hand-rolled formatters into a large heap buffer and flush it to `self->file`
+ * in big blocks, so the per-cell cost is a few memcpy's instead of a vfprintf.
+ */
+
+STATIC void
+_obuf_flush(lxlsx_worksheet *self)
+{
+    if (self->obuf_len) {
+        (void) fwrite(self->obuf, 1, self->obuf_len, self->file);
+        self->obuf_len = 0;
+    }
+}
+
+/* Public wrapper: drain the stream buffer at the end of the row-writing phase. */
+void
+lxlsx_worksheet_obuf_flush(lxlsx_worksheet *self)
+{
+    if (self->obuf)
+        _obuf_flush(self);
+}
+
+/* Append `n` bytes, flushing first if needed. Fragments larger than the buffer
+ * (e.g. a long inline string) are written straight through. */
+static inline void
+_obuf_write(lxlsx_worksheet *self, const char *s, size_t n)
+{
+    if (n > self->obuf_cap) {
+        _obuf_flush(self);
+        (void) fwrite(s, 1, n, self->file);
+        return;
+    }
+    if (self->obuf_len + n > self->obuf_cap)
+        _obuf_flush(self);
+    memcpy(self->obuf + self->obuf_len, s, n);
+    self->obuf_len += n;
+}
+
+/* Write an unsigned 32-bit value as decimal at `p`, return the digit count. */
+static inline int
+_u32_dec(char *p, uint32_t v)
+{
+    char tmp[10];
+    int n = 0;
+    do {
+        tmp[n++] = (char) ('0' + (v % 10));
+        v /= 10;
+    } while (v);
+    {
+        int i;
+        for (i = 0; i < n; i++)
+            p[i] = tmp[n - 1 - i];
+    }
+    return n;
+}
+
+/* Write an unsigned 64-bit value as decimal at `p`, return the digit count. */
+static inline int
+_u64_dec(char *p, uint64_t v)
+{
+    char tmp[20];
+    int n = 0;
+    do {
+        tmp[n++] = (char) ('0' + (v % 10));
+        v /= 10;
+    } while (v);
+    {
+        int i;
+        for (i = 0; i < n; i++)
+            p[i] = tmp[n - 1 - i];
+    }
+    return n;
+}
+
+/* Write a signed 64-bit value as decimal at `p`, return the char count.
+ * Caller guarantees v is within the safe range (no INT64_MIN edge). */
+static inline int
+_i64_dec(char *p, int64_t v)
+{
+    if (v < 0) {
+        p[0] = '-';
+        return 1 + _u64_dec(p + 1, (uint64_t) (-v));
+    }
+    return _u64_dec(p, (uint64_t) v);
+}
+
+/* Write the column letters (A, B, ... XFD) for a zero-based column at `p`,
+ * return the letter count. Mirrors lxlsx_col_to_name() without the strlen. */
+static inline int
+_col_letters(char *p, uint32_t col)
+{
+    char tmp[4];
+    int n = 0;
+    col++;
+    while (col) {
+        int rem = col % 26;
+        if (rem == 0)
+            rem = 26;
+        tmp[n++] = (char) ('A' + rem - 1);
+        col = (col - 1) / 26;
+    }
+    {
+        int i;
+        for (i = 0; i < n; i++)
+            p[i] = tmp[n - 1 - i];
+    }
+    return n;
+}
+
+/* Emit the common cell prefix: <c r="A1"[ s="N"][[t-attr]]> opener up to and
+ * including the '>' or the open of the value. Returns bytes written into p. */
+static inline int
+_cell_ref_prefix(char *p, lxlsx_row_t row_num, lxlsx_col_t col_num,
+                 int32_t style_index)
+{
+    int n = 0;
+    p[n++] = '<';
+    p[n++] = 'c';
+    p[n++] = ' ';
+    p[n++] = 'r';
+    p[n++] = '=';
+    p[n++] = '"';
+    n += _col_letters(p + n, col_num);
+    n += _u32_dec(p + n, (uint32_t) (row_num + 1));
+    p[n++] = '"';
+    if (style_index) {
+        p[n++] = ' ';
+        p[n++] = 's';
+        p[n++] = '=';
+        p[n++] = '"';
+        n += _u32_dec(p + n, (uint32_t) style_index);
+        p[n++] = '"';
+    }
+    return n;
+}
+
+/*
  * Write out a number worksheet cell. Doesn't use the xml functions as an
  * optimization in the inner cell writing loop.
  */
@@ -4451,6 +4602,46 @@ STATIC void
 _write_number_cell(lxlsx_worksheet *self, char *range,
                    int32_t style_index, lxlsx_cell *cell)
 {
+    /* constant_memory fast path: assemble straight into the stream buffer. */
+    if (self->optimize) {
+        char buf[64 + LXLSX_ATTR_32];
+        double value = cell->data.writer.value.number;
+        int n = _cell_ref_prefix(buf, cell->row_num, cell->col_num,
+                                 style_index);
+        buf[n++] = '>';
+        buf[n++] = '<';
+        buf[n++] = 'v';
+        buf[n++] = '>';
+
+        /* Integer fast path: most bulk numeric data is integral, and the
+         * general double formatter (emyg_dtoa) dominates the write profile.
+         * An integral value in safe int64 range formats byte-identically via
+         * a plain itoa, skipping the float algorithm entirely. The bound stays
+         * inside INT64_MAX/MIN so the cast and negation below are well-defined. */
+        if (value >= -9.2e18 && value <= 9.2e18
+            && value == (double) (int64_t) value) {
+            n += _i64_dec(buf + n, (int64_t) value);
+        }
+        else {
+            char num[LXLSX_ATTR_32];
+#ifdef USE_DTOA_LIBRARY
+            lxlsx_sprintf_dbl(num, value);
+#else
+            lxlsx_snprintf(num, LXLSX_ATTR_32, "%.16G", value);
+#endif
+            {
+                size_t len = strlen(num);
+                memcpy(buf + n, num, len);
+                n += (int) len;
+            }
+        }
+
+        memcpy(buf + n, "</v></c>", 8);
+        n += 8;
+        _obuf_write(self, buf, (size_t) n);
+        return;
+    }
+
 #ifdef USE_DTOA_LIBRARY
     char data[LXLSX_ATTR_32];
 
@@ -4483,6 +4674,19 @@ STATIC void
 _write_string_cell(lxlsx_worksheet *self, char *range,
                    int32_t style_index, lxlsx_cell *cell)
 {
+    /* constant_memory fast path. */
+    if (self->optimize) {
+        char buf[80];
+        int n = _cell_ref_prefix(buf, cell->row_num, cell->col_num,
+                                 style_index);
+        memcpy(buf + n, " t=\"s\"><v>", 10);
+        n += 10;
+        n += _u32_dec(buf + n, (uint32_t) cell->data.writer.value.shared_string.id);
+        memcpy(buf + n, "</v></c>", 8);
+        n += 8;
+        _obuf_write(self, buf, (size_t) n);
+        return;
+    }
 
     if (style_index)
         fprintf(self->file,
@@ -4504,10 +4708,35 @@ _write_inline_string_cell(lxlsx_worksheet *self, char *range,
                           int32_t style_index, lxlsx_cell *cell)
 {
     char *string = lxlsx_escape_data(cell->data.writer.value.string);
+    size_t slen = strlen(string);
+
+    /* constant_memory fast path. The escaped string may exceed the buffer, so
+     * it is appended through _obuf_write which streams oversized fragments. */
+    if (self->optimize) {
+        char buf[96];
+        int preserve = slen
+            && (isspace((unsigned char) string[0])
+                || isspace((unsigned char) string[slen - 1]));
+        int n = _cell_ref_prefix(buf, cell->row_num, cell->col_num,
+                                 style_index);
+        if (preserve) {
+            memcpy(buf + n, " t=\"inlineStr\"><is><t xml:space=\"preserve\">", 43);
+            n += 43;
+        }
+        else {
+            memcpy(buf + n, " t=\"inlineStr\"><is><t>", 22);
+            n += 22;
+        }
+        _obuf_write(self, buf, (size_t) n);
+        _obuf_write(self, string, slen);
+        _obuf_write(self, "</t></is></c>", 13);
+        free(string);
+        return;
+    }
 
     /* Add attribute to preserve leading or trailing whitespace. */
     if (isspace((unsigned char) string[0])
-        || isspace((unsigned char) string[strlen(string) - 1])) {
+        || isspace((unsigned char) string[slen - 1])) {
 
         if (style_index)
             fprintf(self->file,
@@ -4688,7 +4917,11 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
     lxlsx_col_t col_num = cell->col_num;
     int32_t style_index = 0;
 
-    lxlsx_rowcol_to_cell(range, row_num, col_num);
+    /* In constant_memory mode the hot cell writers below build their own cell
+     * reference from row/col, so skip the snprintf-backed range conversion
+     * here; cold cell types recompute it after flushing the stream buffer. */
+    if (!self->optimize)
+        lxlsx_rowcol_to_cell(range, row_num, col_num);
 
     if (cell->data.writer.format) {
         style_index = lxlsx_format_get_xf_index(cell->data.writer.format);
@@ -4714,6 +4947,15 @@ _write_cell(lxlsx_worksheet *self, lxlsx_cell *cell, lxlsx_format *row_format)
     if (cell->type == INLINE_STRING_CELL) {
         _write_inline_string_cell(self, range, style_index, cell);
         return;
+    }
+
+    /* Remaining cell types are rare in bulk writes and still use the fprintf /
+     * lxlsx_xml path writing directly to self->file. In constant_memory mode,
+     * flush the stream buffer (to preserve ordering) and materialise the cell
+     * reference that the hot path skipped. */
+    if (self->optimize) {
+        _obuf_flush(self);
+        lxlsx_rowcol_to_cell(range, row_num, col_num);
     }
 
     if (cell->type == INLINE_RICH_STRING_CELL) {
@@ -4832,12 +5074,38 @@ lxlsx_worksheet_write_single_row(lxlsx_worksheet *self)
 
     /* Write the cells if the row contains data. */
     if (!row->data_changed) {
-        /* Row data only. No cells. */
+        /* Row data only. No cells. Flush any buffered rows first so the
+         * directly-written row tag keeps its place in the stream. */
+        _obuf_flush(self);
         _write_row(self, row, NULL);
     }
     else {
-        /* Row and cell data. */
-        _write_row(self, row, NULL);
+        /* Row and cell data. Emit the row opener straight into the stream
+         * buffer for the common plain-row case; fall back to the attribute
+         * builder (after flushing) when the row carries formatting. */
+        int plain = !row->format && !row->height_changed && !row->hidden
+            && !row->level && !row->collapsed && self->excel_version != 2010;
+
+        if (plain) {
+            char rb[24];
+            int n = 0;
+            rb[n++] = '<';
+            rb[n++] = 'r';
+            rb[n++] = 'o';
+            rb[n++] = 'w';
+            rb[n++] = ' ';
+            rb[n++] = 'r';
+            rb[n++] = '=';
+            rb[n++] = '"';
+            n += _u32_dec(rb + n, (uint32_t) (row->row_num + 1));
+            rb[n++] = '"';
+            rb[n++] = '>';
+            _obuf_write(self, rb, (size_t) n);
+        }
+        else {
+            _obuf_flush(self);
+            _write_row(self, row, NULL);
+        }
 
         for (col = self->dim_colmin; col <= self->dim_colmax; col++) {
             if (self->array[col]) {
@@ -4847,7 +5115,7 @@ lxlsx_worksheet_write_single_row(lxlsx_worksheet *self)
             }
         }
 
-        lxlsx_xml_end_tag(self->file, "row");
+        _obuf_write(self, "</row>", 6);
     }
 
     /* Reset the row. */
@@ -7986,8 +8254,10 @@ lxlsx_worksheet_assemble_to_buffer(lxlsx_worksheet *self, char **out,
 
     /* Flush the last buffered row first (constant-memory mode), like the
      * packager does. */
-    if (self->optimize)
+    if (self->optimize) {
         lxlsx_worksheet_write_single_row(self);
+        lxlsx_worksheet_obuf_flush(self);
+    }
 
     self->file = lxlsx_get_filehandle(&buffer, &buffer_size, self->tmpdir);
     if (!self->file) {

@@ -310,8 +310,12 @@ _write_worksheet_files(lxlsx_packager *self)
         lxlsx_snprintf(sheetname, LXLSX_FILENAME_LENGTH,
                      "xl/worksheets/sheet%d.xml", index++);
 
-        if (worksheet->optimize_row)
+        if (worksheet->optimize_row) {
             lxlsx_worksheet_write_single_row(worksheet);
+            /* Drain the streaming buffer into the temp file before `file` is
+             * repointed at the real sheet XML below. */
+            lxlsx_worksheet_obuf_flush(worksheet);
+        }
 
         worksheet->file = lxlsx_get_filehandle(&buffer, &buffer_size,
                                              self->tmpdir);

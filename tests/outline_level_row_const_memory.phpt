@@ -170,6 +170,6 @@ array(13) {
     [0]=>
     string(10) "hidden row"
     [1]=>
-    string(1) "0"
+    int(0)
   }
 }

@@ -43,7 +43,12 @@ $excel->fileName('printed_scale.xlsx', 'sheet1')
 
 var_dump($excel);
 
-/* Round-trip: each printed-* writer setting is recoverable via getPageSetup. */
+/* Round-trip: each printed-* writer setting is recoverable via getPageSetup.
+ * printed_portrait guards the bug where setPortrait() was silently overwritten
+ * by an unconditional set_landscape(), so the file always came back landscape. */
+$psPortrait = (new \Vtiful\Kernel\Excel($config))->openFile('printed_portrait.xlsx')->openSheet()->getPageSetup();
+echo "portrait.orientation: " . $psPortrait['orientation'] . "\n";
+
 foreach (['printed_landscape' => 'landscape', 'printed_scale' => null] as $name => $expectedOrient) {
     $ps = (new \Vtiful\Kernel\Excel($config))->openFile($name . '.xlsx')->openSheet()->getPageSetup();
     if ($name === 'printed_landscape') {
@@ -95,5 +100,6 @@ object(Vtiful\Kernel\Excel)#%d (3) {
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }
+portrait.orientation: portrait
 landscape.orientation: landscape
 scale.scale: 180

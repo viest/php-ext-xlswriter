@@ -183,7 +183,12 @@ PHP_METHOD(vtiful_table, style)
         Z_PARAM_LONG(type)
         Z_PARAM_LONG(number)
     ZEND_PARSE_PARAMETERS_END();
+
     TABLE_THIS();
+
+    U8_RANGE_EXCEPTION(type);
+    U8_RANGE_EXCEPTION(number);
+
     _obj->ptr.opts->style_type        = (uint8_t)type;
     _obj->ptr.opts->style_type_number = (uint8_t)number;
 }
@@ -231,7 +236,10 @@ PHP_METHOD(vtiful_table, columns)
         if (v && Z_TYPE_P(v) == IS_STRING) col->total_string = estrdup(Z_STRVAL_P(v));
 
         v = zend_hash_str_find(Z_ARRVAL_P(entry), "total_function", sizeof("total_function") - 1);
-        if (v && Z_TYPE_P(v) == IS_LONG) col->total_function = (uint8_t)Z_LVAL_P(v);
+
+        if (v && Z_TYPE_P(v) == IS_LONG && Z_LVAL_P(v) >= 0 && Z_LVAL_P(v) <= 255) {
+            col->total_function = (uint8_t)Z_LVAL_P(v);
+        }
 
         v = zend_hash_str_find(Z_ARRVAL_P(entry), "total_value", sizeof("total_value") - 1);
         if (v) col->total_value = zval_get_double(v);

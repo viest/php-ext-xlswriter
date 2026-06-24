@@ -112,7 +112,14 @@ PHP_METHOD(vtiful_chart, __construct)
     ZVAL_COPY(return_value, getThis());
 
     xls_res = zval_get_resource(handle);
-    obj     = Z_CHART_P(getThis());
+
+    if (xls_res == NULL) {
+        return;
+    }
+
+    obj = Z_CHART_P(getThis());
+
+    U8_RANGE_EXCEPTION(type);
 
     if (obj->ptr.chart == NULL) {
         obj->ptr.chart = lxlsx_workbook_add_chart(xls_res->workbook, (uint8_t)type);
@@ -180,6 +187,8 @@ PHP_METHOD(vtiful_chart, style)
     ZVAL_COPY(return_value, getThis());
 
     obj = Z_CHART_P(getThis());
+
+    U8_RANGE_EXCEPTION(style);
 
     lxlsx_chart_set_style(obj->ptr.chart, (uint8_t)style);
 }
@@ -256,6 +265,8 @@ PHP_METHOD(vtiful_chart, legendSetPosition)
     ZVAL_COPY(return_value, getThis());
 
     obj = Z_CHART_P(getThis());
+
+    U8_RANGE_EXCEPTION(type);
 
     lxlsx_chart_legend_set_position(obj->ptr.chart, (uint8_t)type);
 }

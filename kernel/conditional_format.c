@@ -122,132 +122,218 @@ PHP_METHOD(vtiful_cond_format, __construct)
 PHP_METHOD(vtiful_cond_format, type)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->type = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, criteria)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->criteria = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, value)
 {
     double v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_DOUBLE(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_DOUBLE(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->value = v;
 }
 
 PHP_METHOD(vtiful_cond_format, valueString)
 {
     zend_string *v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
-    cf_set_str(&_obj->ptr.value_string,
-               &CF_FIELD()->value_string, ZSTR_VAL(v));
+
+    cf_set_str(&_obj->ptr.value_string, &CF_FIELD()->value_string, ZSTR_VAL(v));
 }
 
 PHP_METHOD(vtiful_cond_format, minimum)
 {
     double v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_DOUBLE(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_DOUBLE(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->min_value = v;
 }
 
 PHP_METHOD(vtiful_cond_format, minimumString)
 {
     zend_string *v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
-    cf_set_str(&_obj->ptr.min_value_string,
-               &CF_FIELD()->min_value_string, ZSTR_VAL(v));
+
+    cf_set_str(&_obj->ptr.min_value_string, &CF_FIELD()->min_value_string, ZSTR_VAL(v));
 }
 
 PHP_METHOD(vtiful_cond_format, minimumRule)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->min_rule_type = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, minimumColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->min_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, middle)
 {
     double v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_DOUBLE(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_DOUBLE(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->mid_value = v;
 }
 
 PHP_METHOD(vtiful_cond_format, middleString)
 {
     zend_string *v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
-    cf_set_str(&_obj->ptr.mid_value_string,
-               &CF_FIELD()->mid_value_string, ZSTR_VAL(v));
+
+    cf_set_str(&_obj->ptr.mid_value_string, &CF_FIELD()->mid_value_string, ZSTR_VAL(v));
 }
 
 PHP_METHOD(vtiful_cond_format, middleRule)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->mid_rule_type = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, middleColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->mid_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, maximum)
 {
     double v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_DOUBLE(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_DOUBLE(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->max_value = v;
 }
 
 PHP_METHOD(vtiful_cond_format, maximumString)
 {
     zend_string *v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
-    cf_set_str(&_obj->ptr.max_value_string,
-               &CF_FIELD()->max_value_string, ZSTR_VAL(v));
+
+    cf_set_str(&_obj->ptr.max_value_string, &CF_FIELD()->max_value_string, ZSTR_VAL(v));
 }
 
 PHP_METHOD(vtiful_cond_format, maximumRule)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->max_rule_type = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, maximumColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->max_color = (lxlsx_color_t)v;
 }
 
@@ -266,10 +352,8 @@ PHP_METHOD(vtiful_cond_format, format)
     CF_THIS();
 
     if (Z_TYPE_P(handle) == IS_RESOURCE) {
-        fmt = (lxlsx_format *)zend_fetch_resource(
-            Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer);
-    } else if (Z_TYPE_P(handle) == IS_OBJECT &&
-               instanceof_function(Z_OBJCE_P(handle), vtiful_format_ce)) {
+        fmt = (lxlsx_format *)zend_fetch_resource(Z_RES_P(handle), VTIFUL_RESOURCE_NAME, le_xls_writer);
+    } else if (Z_TYPE_P(handle) == IS_OBJECT && instanceof_function(Z_OBJCE_P(handle), vtiful_format_ce)) {
         lxlsx_format_object *fo = Z_FORMAT_P(handle);
         fmt = fo->ptr.format;
     }
@@ -281,128 +365,221 @@ PHP_METHOD(vtiful_cond_format, format)
 PHP_METHOD(vtiful_cond_format, barColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barOnly)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_only = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, dataBar2010)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->data_bar_2010 = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, barSolid)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_solid = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, barNegativeColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_negative_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barBorderColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_border_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barNegativeBorderColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_negative_border_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barNoBorder)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_no_border = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, barDirection)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->bar_direction = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barAxisPosition)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->bar_axis_position = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, barAxisColor)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->bar_axis_color = (lxlsx_color_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, iconStyle)
 {
     zend_long v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_LONG(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_LONG(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
+    U8_RANGE_EXCEPTION(v);
+
     CF_FIELD()->icon_style = (uint8_t)v;
 }
 
 PHP_METHOD(vtiful_cond_format, reverseIcons)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->reverse_icons = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, iconsOnly)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->icons_only = on ? 1 : 0;
 }
 
 PHP_METHOD(vtiful_cond_format, multiRange)
 {
     zend_string *v;
-    ZEND_PARSE_PARAMETERS_START(1, 1) Z_PARAM_STR(v) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     cf_set_str(&_obj->ptr.multi_range, &CF_FIELD()->multi_range, ZSTR_VAL(v));
 }
 
 PHP_METHOD(vtiful_cond_format, stopIfTrue)
 {
     zend_bool on = 1;
-    ZEND_PARSE_PARAMETERS_START(0, 1) Z_PARAM_OPTIONAL Z_PARAM_BOOL(on) ZEND_PARSE_PARAMETERS_END();
+
+    ZEND_PARSE_PARAMETERS_START(0, 1)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(on)
+    ZEND_PARSE_PARAMETERS_END();
+
     CF_THIS();
+
     CF_FIELD()->stop_if_true = on ? 1 : 0;
 }
 
@@ -452,10 +629,12 @@ VTIFUL_STARTUP_FUNCTION(conditional_format)
     zend_class_entry ce;
 
     INIT_NS_CLASS_ENTRY(ce, "Vtiful\\Kernel", "ConditionalFormat", cond_format_methods);
+
     ce.create_object       = cond_format_objects_new;
     vtiful_cond_format_ce  = zend_register_internal_class(&ce);
 
     memcpy(&cond_format_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+
     cond_format_handlers.offset   = offsetof(cond_format_object, zo);
     cond_format_handlers.free_obj = cond_format_objects_free;
 

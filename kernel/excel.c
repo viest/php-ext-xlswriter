@@ -695,7 +695,15 @@ PHP_METHOD(vtiful_xls, addSheet)
     xls_auto_widths_flush(&obj->write_ptr);
     xls_auto_widths_reset(&obj->write_ptr);
 
-    obj->write_ptr.worksheet = lxlsx_workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
+    lxlsx_worksheet *new_worksheet = lxlsx_workbook_add_worksheet(obj->write_ptr.workbook, sheet_name);
+
+    if (new_worksheet == NULL) {
+        zend_throw_exception(vtiful_exception_ce, "Add worksheet failed", 132);
+
+        return;
+    }
+
+    obj->write_ptr.worksheet = new_worksheet;
 }
 /* }}} */
 
@@ -1212,7 +1220,13 @@ PHP_METHOD(vtiful_xls, insertChart)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    lxlsx_chart_writer(row, column, zval_get_chart(lxlsx_chart_resource), &obj->write_ptr);
+    xls_resource_chart_t *xls_chart = zval_get_chart(lxlsx_chart_resource);
+
+    if (xls_chart == NULL) {
+        return;
+    }
+
+    lxlsx_chart_writer(row, column, xls_chart, &obj->write_ptr);
 }
 /* }}} */
 
@@ -1306,12 +1320,24 @@ PHP_METHOD(vtiful_xls, insertImageOpt)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     memset(&o, 0, sizeof(o));
-    o.x_offset        = (int32_t)zarr_long(options, "x_offset",      sizeof("x_offset") - 1, 0);
-    o.y_offset        = (int32_t)zarr_long(options, "y_offset",      sizeof("y_offset") - 1, 0);
-    o.x_scale         = zarr_double      (options, "x_scale",        sizeof("x_scale") - 1, 1.0);
-    o.y_scale         = zarr_double      (options, "y_scale",        sizeof("y_scale") - 1, 1.0);
-    o.object_position = (uint8_t)zarr_long(options, "object_position", sizeof("object_position") - 1, 0);
-    o.decorative      = (uint8_t)zarr_long(options, "decorative",    sizeof("decorative") - 1, 0);
+
+    o.x_offset = (int32_t)zarr_long(options, "x_offset", sizeof("x_offset") - 1, 0);
+    o.y_offset = (int32_t)zarr_long(options, "y_offset", sizeof("y_offset") - 1, 0);
+
+    o.x_scale  = zarr_double(options, "x_scale", sizeof("x_scale") - 1, 1.0);
+    o.y_scale  = zarr_double(options, "y_scale", sizeof("y_scale") - 1, 1.0);
+
+    zend_long image_decorative = zarr_long(options, "decorative", sizeof("decorative") - 1, 0);
+
+    U8_RANGE_EXCEPTION(image_decorative);
+
+    zend_long image_object_position = zarr_long(options, "object_position", sizeof("object_position") - 1, 0);
+
+    U8_RANGE_EXCEPTION(image_object_position);
+
+    o.decorative      = (uint8_t)image_decorative;
+    o.object_position = (uint8_t)image_object_position;
+
     if ((s = zarr_str(options, "description", sizeof("description") - 1))) o.description = s;
     if ((s = zarr_str(options, "url",         sizeof("url") - 1)))         o.url         = s;
     if ((s = zarr_str(options, "tip",         sizeof("tip") - 1)))         o.tip         = s;
@@ -1656,6 +1682,8 @@ PHP_METHOD(vtiful_xls, setPaper)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     paper(&obj->write_ptr, type);
 }
 /* }}} */
@@ -1677,6 +1705,8 @@ PHP_METHOD(vtiful_xls, setMargins)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     // units: inches to cm
     margins(&obj->write_ptr, left / 2.54, right / 2.54, top / 2.54, bottom / 2.54);
@@ -1754,6 +1784,8 @@ PHP_METHOD(vtiful_xls, outlineSettings)
 
     xls_object *obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     outline_settings(&obj->write_ptr, visible, below, right, auto_style);
 }
 /* }}} */
@@ -1772,6 +1804,8 @@ PHP_METHOD(vtiful_xls, freezePanes)
     ZVAL_COPY(return_value, getThis());
 
     xls_object *obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     freeze_panes(&obj->write_ptr, row, column);
 }
@@ -1871,6 +1905,8 @@ PHP_METHOD(vtiful_xls, gridline)
 
     xls_object* obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     gridlines(&obj->write_ptr, option);
 }
 /* }}} */
@@ -1897,6 +1933,8 @@ PHP_METHOD(vtiful_xls, zoom)
 
     xls_object* obj = Z_XLS_P(getThis());
 
+    WORKBOOK_NOT_INITIALIZED(obj);
+
     zoom(&obj->write_ptr, scale);
 }
 /* }}} */
@@ -1915,6 +1953,8 @@ PHP_METHOD(vtiful_xls, protection)
     ZVAL_COPY(return_value, getThis());
 
     xls_object* obj = Z_XLS_P(getThis());
+
+    WORKBOOK_NOT_INITIALIZED(obj);
 
     protection(&obj->write_ptr, password);
 }
@@ -2042,19 +2082,31 @@ PHP_METHOD(vtiful_xls, insertCommentOpt)
     WORKBOOK_NOT_INITIALIZED(obj);
 
     memset(&o, 0, sizeof(o));
+
     if ((s = zarr_str(options, "author",     sizeof("author") - 1)))     o.author    = (char *)s;
     if ((s = zarr_str(options, "font_name",  sizeof("font_name") - 1)))  o.font_name = (char *)s;
-    o.x_offset    = zarr_long  (options, "x_offset",    sizeof("x_offset") - 1, 0);
-    o.y_offset    = zarr_long  (options, "y_offset",    sizeof("y_offset") - 1, 0);
-    o.x_scale     = zarr_double(options, "x_scale",     sizeof("x_scale") - 1, 0);
-    o.y_scale     = zarr_double(options, "y_scale",     sizeof("y_scale") - 1, 0);
-    o.color       = (lxlsx_color_t)zarr_long(options, "color",      sizeof("color") - 1, 0);
-    o.font_size   = zarr_double(options, "font_size",   sizeof("font_size") - 1, 0);
-    o.visible     = (uint8_t)zarr_long(options, "visible", sizeof("visible") - 1, 0);
-    o.width       = zarr_double(options, "width",       sizeof("width") - 1, 0);
-    o.height      = zarr_double(options, "height",      sizeof("height") - 1, 0);
-    o.start_row   = (lxlsx_row_t)zarr_long(options, "start_row", sizeof("start_row") - 1, 0);
-    o.start_col   = (lxlsx_col_t)zarr_long(options, "start_col", sizeof("start_col") - 1, 0);
+
+    o.x_offset = zarr_long  (options, "x_offset", sizeof("x_offset") - 1, 0);
+    o.y_offset = zarr_long  (options, "y_offset", sizeof("y_offset") - 1, 0);
+
+    o.x_scale = zarr_double(options, "x_scale", sizeof("x_scale") - 1, 0);
+    o.y_scale = zarr_double(options, "y_scale", sizeof("y_scale") - 1, 0);
+
+    o.color = (lxlsx_color_t)zarr_long(options, "color", sizeof("color") - 1, 0);
+
+    o.font_size = zarr_double(options, "font_size", sizeof("font_size") - 1, 0);
+
+    zend_long comment_visible = zarr_long(options, "visible", sizeof("visible") - 1, 0);
+
+    U8_RANGE_EXCEPTION(comment_visible);
+
+    o.visible = (uint8_t)comment_visible;
+
+    o.width  = zarr_double(options, "width",       sizeof("width") - 1, 0);
+    o.height = zarr_double(options, "height",      sizeof("height") - 1, 0);
+
+    o.start_row = (lxlsx_row_t)zarr_long(options, "start_row", sizeof("start_row") - 1, 0);
+    o.start_col = (lxlsx_col_t)zarr_long(options, "start_col", sizeof("start_col") - 1, 0);
 
     comment_opt_writer(text, row, col, &o, &obj->write_ptr);
 }
@@ -2086,12 +2138,19 @@ PHP_METHOD(vtiful_xls, insertImageBuffer)
         const char *url, *desc;
         o.x_offset = zarr_long  (options, "x_offset", sizeof("x_offset") - 1, 0);
         o.y_offset = zarr_long  (options, "y_offset", sizeof("y_offset") - 1, 0);
-        o.x_scale  = zarr_double(options, "x_scale",  sizeof("x_scale") - 1, 1.0);
-        o.y_scale  = zarr_double(options, "y_scale",  sizeof("y_scale") - 1, 1.0);
-        o.object_position = (uint8_t)zarr_long(options, "object_position",
-                                               sizeof("object_position") - 1, 2);
+
+        o.x_scale = zarr_double(options, "x_scale",  sizeof("x_scale") - 1, 1.0);
+        o.y_scale = zarr_double(options, "y_scale",  sizeof("y_scale") - 1, 1.0);
+
+        zend_long buf_object_position = zarr_long(options, "object_position", sizeof("object_position") - 1, 2);
+
+        U8_RANGE_EXCEPTION(buf_object_position);
+
+        o.object_position = (uint8_t)buf_object_position;
+
         if ((url  = zarr_str(options, "url",         sizeof("url") - 1)))         o.url         = (char *)url;
         if ((desc = zarr_str(options, "description", sizeof("description") - 1))) o.description = (char *)desc;
+
         has_opts = 1;
     }
 
@@ -2631,7 +2690,13 @@ PHP_METHOD(vtiful_xls, validation)
 
     WORKBOOK_NOT_INITIALIZED(obj);
 
-    validation(&obj->write_ptr, range, zval_get_validation(validation_handle));
+    lxlsx_data_validation *validation_ptr = zval_get_validation(validation_handle);
+
+    if (validation_ptr == NULL) {
+        return;
+    }
+
+    validation(&obj->write_ptr, range, validation_ptr);
 }
 /* }}} */
 
@@ -2683,10 +2748,19 @@ PHP_METHOD(vtiful_xls, openFile)
 
     reset_write_workbook_state(obj);
 
+    lxlsx_worksheet *edit_worksheet = lxlsx_workbook_get_worksheet_by_name(edit_workbook, lxlsx_reader_workbook_sheet_name(wb, 0));
+
+    if (edit_worksheet == NULL) {
+        lxlsx_workbook_free(edit_workbook);
+        lxlsx_reader_workbook_close(wb);
+        zval_ptr_dtor(&file_path);
+        zend_throw_exception(vtiful_exception_ce, "Open worksheet for editing failed", 133);
+        return;
+    }
+
     obj->read_ptr.file_t = wb;
     obj->write_ptr.workbook = edit_workbook;
-    obj->write_ptr.worksheet = lxlsx_workbook_get_worksheet_by_name(
-        edit_workbook, lxlsx_reader_workbook_sheet_name(wb, 0));
+    obj->write_ptr.worksheet = edit_worksheet;
 
     add_property_zval(return_value, V_XLS_FIL, &file_path);
     zval_ptr_dtor(&file_path);
@@ -2724,13 +2798,20 @@ PHP_METHOD(vtiful_xls, openSheet)
 
     obj->read_ptr.sheet_flag = zl_flag;
     obj->read_ptr.sheet_t = sheet_open(obj->read_ptr.file_t, zs_sheet_name, zl_flag);
-    if (obj->read_ptr.sheet_t != NULL && obj->write_ptr.workbook != NULL &&
-        lxlsx_workbook_is_edit(obj->write_ptr.workbook)) {
+    if (obj->read_ptr.sheet_t != NULL && obj->write_ptr.workbook != NULL && lxlsx_workbook_is_edit(obj->write_ptr.workbook)) {
         const char *sheet_name = zs_sheet_name != NULL
             ? ZSTR_VAL(zs_sheet_name)
             : lxlsx_reader_workbook_sheet_name(obj->read_ptr.file_t, 0);
-        obj->write_ptr.worksheet = lxlsx_workbook_get_worksheet_by_name(
-            obj->write_ptr.workbook, sheet_name);
+
+        lxlsx_worksheet *edit_worksheet = lxlsx_workbook_get_worksheet_by_name(obj->write_ptr.workbook, sheet_name);
+
+        if (edit_worksheet == NULL) {
+            zend_throw_exception(vtiful_exception_ce, "Worksheet not found for editing", 134);
+
+            return;
+        }
+
+        obj->write_ptr.worksheet = edit_worksheet;
     }
 }
 /* }}} */

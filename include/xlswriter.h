@@ -219,6 +219,17 @@ typedef struct _vtiful_table_object {
         }                                                                                                           \
     } while(0);
 
+/* Reject a PHP long that would not survive a narrowing cast to uint8_t. Silent
+ * truncation turned out-of-range enum/option values into a different valid byte
+ * and produced corrupt XLSX. */
+#define U8_RANGE_EXCEPTION(value)                                                                  \
+    do {                                                                                           \
+        if ((value) < 0 || (value) > 255) {                                                        \
+            zend_throw_exception(vtiful_exception_ce, "value out of range (must be 0-255)", 192);  \
+            return;                                                                                \
+        }                                                                                          \
+    } while(0);
+
 #define WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(xls_resource_write_t, error)                                \
     do {                                                                                                                \
         if(xls_resource_write_t->worksheet->optimize && error == LXLSX_ERROR_WORKSHEET_INDEX_OUT_OF_RANGE) {              \

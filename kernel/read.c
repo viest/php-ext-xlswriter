@@ -127,6 +127,11 @@ void sheet_list_with_meta(lxlsx_reader_workbook *wb, zval *zv_result_t)
 
 int is_number(const char *value)
 {
+    /* Deliberately lenient: the typed READ_TYPE_INT path relies on this
+     * accepting partially-numeric shapes like "1.2.3" (it extracts the leading
+     * integer via sscanf) and "." (sscanf then rejects it). Strict numeric
+     * validation for the *untyped* path lives in data_to_custom_type's
+     * is_numeric_string() fallback below, not here. */
     return strspn(value, ".0123456789") == strlen(value) ? XLSWRITER_TRUE : XLSWRITER_FALSE;
 }
 
@@ -175,26 +180,29 @@ void data_to_custom_type(const char *string_value, const size_t string_value_len
     {
         if (!(type & READ_TYPE_STRING)) {
             zend_long _long = 0; double _double = 0;
-            is_numeric_string(string_value, string_value_length, &_long, &_double, 0);
+            /* Dispatch on the parser's returned type, not a `> 0` test: the old
+             * guard dropped 0 and every negative number into the string branch.
+             * A value that fits zend_long is emitted exactly; a double is
+             * emitted only when its magnitude is within long range, so huge
+             * integer-strings (e.g. 61 nines) stay strings and keep their exact
+             * digits instead of collapsing to 1e61. */
+            zend_uchar _num_type = is_numeric_string(string_value, string_value_length, &_long, &_double, 0);
 
-            if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
-                if (_double > 0 && _double <= (double)ZEND_LONG_MAX) {
-                    add_index_double(zv_result_t, zv_hashtable_index, _double);
-                    return;
-                }
-                if (_long > 0 && _long <= ZEND_LONG_MAX) {
+            if (_num_type == IS_LONG) {
+                if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
                     add_index_long(zv_result_t, zv_hashtable_index, _long);
-                    return;
-                }
-            } else {
-                if (_double > 0 && _double <= (double)ZEND_LONG_MAX) {
-                    ZVAL_DOUBLE(zv_result_t, _double);
-                    return;
-                }
-                if (_long > 0 && _long <= ZEND_LONG_MAX) {
+                } else {
                     ZVAL_LONG(zv_result_t, _long);
-                    return;
                 }
+                return;
+            }
+            if (_num_type == IS_DOUBLE && _double >= -(double)ZEND_LONG_MAX && _double <= (double)ZEND_LONG_MAX) {
+                if (Z_TYPE_P(zv_result_t) == IS_ARRAY) {
+                    add_index_double(zv_result_t, zv_hashtable_index, _double);
+                } else {
+                    ZVAL_DOUBLE(zv_result_t, _double);
+                }
+                return;
             }
         }
 

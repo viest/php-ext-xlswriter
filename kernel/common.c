@@ -139,6 +139,13 @@ lxlsx_format* object_format(xls_object *obj, zend_string *format, lxlsx_format *
         }
 
         lxlsx_format *new_format = lxlsx_workbook_add_format((&obj->write_ptr)->workbook);
+
+        if (new_format == NULL) {
+            zend_string_release(_format_key);
+
+            return lxlsx_format_handle;
+        }
+
         lxlsx_format_copy(new_format, lxlsx_format_handle);
         lxlsx_format_set_num_format(new_format, ZSTR_VAL(format));
 
@@ -161,6 +168,11 @@ lxlsx_format* object_format(xls_object *obj, zend_string *format, lxlsx_format *
         }
 
         lxlsx_format *new_format = lxlsx_workbook_add_format((&obj->write_ptr)->workbook);
+
+        if (new_format == NULL) {
+            return NULL;
+        }
+
         lxlsx_format_set_num_format(new_format, ZSTR_VAL(format));
 
         zend_hash_str_add_ptr(obj->formats_cache_ptr.maps, ZSTR_VAL(format), ZSTR_LEN(format), new_format);

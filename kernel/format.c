@@ -158,7 +158,12 @@ PHP_METHOD(vtiful_format, __construct)
     ZVAL_COPY(return_value, getThis());
 
     xls_res = zval_get_resource(handle);
-    obj     = Z_FORMAT_P(getThis());
+
+    if (xls_res == NULL) {
+        return;
+    }
+
+    obj = Z_FORMAT_P(getThis());
 
     if (obj->ptr.format == NULL) {
         obj->ptr.format = lxlsx_workbook_add_format(xls_res->workbook);

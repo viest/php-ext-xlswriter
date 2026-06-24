@@ -70,11 +70,11 @@ array(2) {
   [0]=>
   string(5) "Total"
   [1]=>
-  string(1) "0"
+  int(0)
 }
 array(2) {
   [0]=>
   string(22) "Total (default format)"
   [1]=>
-  string(1) "0"
+  int(0)
 }

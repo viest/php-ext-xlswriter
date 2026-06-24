@@ -177,9 +177,7 @@ void type_writer(zval *value, zend_long row, zend_long columns, xls_resource_wri
 
     zend_uchar value_type = Z_TYPE_P(value);
 
-    /* Track the cell's display width for autoSize() — only when the user
-     * has opted in, so writes pay no cost otherwise. */
-    if (res->auto_size_enabled) {
+    if (res->auto_size_enabled && lxlsx_col >= res->auto_size_first_col && lxlsx_col <= res->auto_size_last_col) {
         xls_track_auto_width(res, lxlsx_col, xls_estimate_cell_width(value));
     }
 
@@ -269,8 +267,17 @@ void rich_string_writer(zend_long row, zend_long columns, xls_resource_write_t *
     lxlsx_rich_string_tuple **rich_string_list = (lxlsx_rich_string_tuple **)ecalloc(resource_count + 1,sizeof(lxlsx_rich_string_tuple *));
 
     ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(rich_strings), zv_rich_string)
+        /* Mirror the first pass, which skipped non-objects when counting; the
+         * allocation above is sized for objects only. Without the same guard a
+         * plain scalar (e.g. mixed input [new RichString(...), "plain"]) would
+         * be dereferenced as a rich_string_object and crash. */
+        if (Z_TYPE_P(zv_rich_string) != IS_OBJECT) {
+            continue;
+        }
+
         rich_string_object *obj = Z_RICH_STR_P(zv_rich_string);
         rich_string_list[index] = obj->ptr.tuple;
+
         index++;
     ZEND_HASH_FOREACH_END();
 
@@ -673,6 +680,8 @@ void printed_direction(xls_resource_write_t *res, unsigned int direction)
 {
     if (direction == XLSWRITER_PRINTED_PORTRAIT) {
         lxlsx_worksheet_set_portrait(res->worksheet);
+
+        return;
     }
 
     lxlsx_worksheet_set_landscape(res->worksheet);
@@ -819,9 +828,14 @@ void v_pagebreaks_writer(xls_resource_write_t *res, lxlsx_col_t *breaks)
     WORKSHEET_WRITER_EXCEPTION(error);
 }
 
-void fit_to_pages_writer(xls_resource_write_t *res,
-                         zend_long width, zend_long height)
+void fit_to_pages_writer(xls_resource_write_t *res, zend_long width, zend_long height)
 {
+    if (width < 0 || width > 65535 || height < 0 || height > 65535) {
+        zend_throw_exception(vtiful_exception_ce, "fitToPages width/height out of range (must be 0-65535)", 193);
+
+        return;
+    }
+
     lxlsx_worksheet_fit_to_pages(res->worksheet, (uint16_t)width, (uint16_t)height);
 }
 

@@ -51,6 +51,12 @@ xls_resource_chart_t *zval_get_chart(zval *resource)
 {
     xls_resource_chart_t *res;
 
+    if (resource == NULL || Z_TYPE_P(resource) != IS_RESOURCE) {
+        zend_throw_exception(vtiful_exception_ce, "chart resources resolution fail", 210);
+
+        return NULL;
+    }
+
     if((res = (xls_resource_chart_t *)zend_fetch_resource(Z_RES_P(resource), VTIFUL_RESOURCE_NAME, le_xls_writer)) == NULL) {
         zend_throw_exception(vtiful_exception_ce, "chart resources resolution fail", 210);
     }

@@ -6,19 +6,21 @@ Passing a foreign resource to Chart/Format throws instead of crashing
 <?php
 /* zval_get_resource() throws on a non-xlswriter resource but still returns
  * NULL; the Chart/Format constructors used to dereference that NULL. They must
- * bail on the thrown exception instead of crashing. */
+ * bail on the thrown exception instead of crashing. The `@` suppresses the
+ * version-dependent "supplied resource is not a valid xlsx resource" warning
+ * that zend_fetch_resource() emits on PHP 7.x but not on PHP 8.x. */
 $dir   = __DIR__;
 $excel = new \Vtiful\Kernel\Excel(['path' => $dir]);
 $excel->fileName('foreign_resource_guard.xlsx');
 
 $fh = fopen('php://memory', 'r+');
 try {
-    new \Vtiful\Kernel\Chart($fh, 1);
+    @new \Vtiful\Kernel\Chart($fh, 1);
 } catch (\Vtiful\Kernel\Exception $e) {
     echo "chart: " . $e->getCode() . "\n";
 }
 try {
-    new \Vtiful\Kernel\Format($fh);
+    @new \Vtiful\Kernel\Format($fh);
 } catch (\Vtiful\Kernel\Exception $e) {
     echo "format: " . $e->getCode() . "\n";
 }

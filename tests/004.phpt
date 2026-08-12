@@ -6,9 +6,13 @@ Check for vtiful presence
 <?php
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
-$fileFd = $excel->fileName('tutorial01.xlsx');
+$fileFd = $excel->fileName('004.xlsx');
 $setHeader = $fileFd->header(['Item', 'Cost']);
 var_dump($setHeader);
+?>
+--CLEAN--
+<?php
+@unlink(__DIR__ . "/004.xlsx");
 ?>
 --EXPECTF--
 object(Vtiful\Kernel\Excel)#%d (3) {
@@ -18,7 +22,7 @@ object(Vtiful\Kernel\Excel)#%d (3) {
     string(7) "./tests"
   }
   ["fileName":"Vtiful\Kernel\Excel":private]=>
-  string(23) "./tests/tutorial01.xlsx"
+  string(16) "./tests/004.xlsx"
   ["read_row_type":"Vtiful\Kernel\Excel":private]=>
   NULL
 }

@@ -15,7 +15,7 @@ $filePath = $excel->fileName('xlsx_to_csv_callback.xlsx', 'TestSheet1')
     ])
     ->output();
 
-$fp = fopen('./tests/file.csv', 'w');
+$fp = fopen('./tests/xlsx_to_csv_callback.csv', 'w');
 
 $csvResult = $excel->openFile('xlsx_to_csv_callback.xlsx')
     ->openSheet()
@@ -27,7 +27,7 @@ fclose($fp);
 
 var_dump($csvResult);
 
-$fp = fopen('./tests/file.csv', 'r');
+$fp = fopen('./tests/xlsx_to_csv_callback.csv', 'r');
 
 var_dump(fgetcsv($fp, 1000, ',', '"', '\\'));
 var_dump(fgetcsv($fp, 1000, ',', '"', '\\'));
@@ -35,7 +35,7 @@ var_dump(fgetcsv($fp, 1000, ',', '"', '\\'));
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/xlsx_to_csv_callback.xlsx');
-@unlink(__DIR__ . '/file.csv');
+@unlink(__DIR__ . '/xlsx_to_csv_callback.csv');
 ?>
 --EXPECT--
 bool(true)

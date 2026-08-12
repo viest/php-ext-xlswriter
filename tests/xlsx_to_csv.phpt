@@ -15,7 +15,7 @@ $filePath = $excel->fileName('xlsx_to_csv.xlsx', 'TestSheet1')
     ])
     ->output();
 
-$fp = fopen('./tests/file.csv', 'w');
+$fp = fopen('./tests/xlsx_to_csv.csv', 'w');
 
 $csvResult = $excel->openFile('xlsx_to_csv.xlsx')
     ->openSheet()
@@ -26,7 +26,7 @@ var_dump($csvResult);
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/xlsx_to_csv.xlsx');
-@unlink(__DIR__ . '/file.csv');
+@unlink(__DIR__ . '/xlsx_to_csv.csv');
 ?>
 --EXPECT--
 bool(true)

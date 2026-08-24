@@ -534,19 +534,30 @@ void merge_cells(zend_string *range, zval *value, xls_resource_write_t *res, lxl
 {
     char *_range = ZSTR_VAL(range);
 
-    int error = lxlsx_worksheet_merge_range(res->worksheet, RANGE(_range), "", format);
+    lxlsx_row_t first_row = lxlsx_name_to_row(_range);
+    lxlsx_col_t first_col = lxlsx_name_to_col(_range);
 
-    // Cells that have been placed cannot be modified using optimization mode
-    WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+    lxlsx_row_t end_row = lxlsx_name_to_row_2(_range);
+    lxlsx_col_t end_col = lxlsx_name_to_col_2(_range);
 
-    // Worksheet row or column index out of range
-    WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+    // Excel cannot merge a range that covers a single cell, e.g. "C1:C1".
+    // Callers compute ranges at runtime and such a degenerate range is common,
+    // so write the value without merging instead of raising an error.
+    if (first_row != end_row || first_col != end_col) {
+        int error = lxlsx_worksheet_merge_range(res->worksheet, first_row, first_col, end_row, end_col, "", format);
 
-    // Any other error, e.g. unsupported in edit mode
-    WORKSHEET_WRITER_EXCEPTION(error);
+        // Cells that have been placed cannot be modified using optimization mode
+        WORKSHEET_INDEX_OUT_OF_CHANGE_IN_OPTIMIZE_EXCEPTION(res, error)
+
+        // Worksheet row or column index out of range
+        WORKSHEET_INDEX_OUT_OF_CHANGE_EXCEPTION(error)
+
+        // Any other error, e.g. unsupported in edit mode
+        WORKSHEET_WRITER_EXCEPTION(error);
+    }
 
     // writer merge cell
-    type_writer(value, lxlsx_name_to_row(_range), lxlsx_name_to_col(_range), res, NULL, format);
+    type_writer(value, first_row, first_col, res, NULL, format);
 }
 
 /*

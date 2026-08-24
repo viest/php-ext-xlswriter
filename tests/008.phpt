@@ -7,7 +7,7 @@ Check for vtiful presence
 $config = ['path' => './tests'];
 
 $excel  = new \Vtiful\Kernel\Excel($config);
-$handle = $excel->fileName('tutorial01.xlsx')->getHandle();
+$handle = $excel->fileName('008.xlsx')->getHandle();
 
 $format      = new \Vtiful\Kernel\Format($handle);
 $italicStyle = $format->italic()->toResource();
@@ -16,7 +16,7 @@ var_dump($italicStyle);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . "/tutorial01.xlsx");
+@unlink(__DIR__ . "/008.xlsx");
 ?>
 --EXPECTF--
 resource(%d) of type (xlsx)

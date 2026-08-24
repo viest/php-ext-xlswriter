@@ -15,7 +15,7 @@ $filePath = $excel->fileName('xlsx_to_csv_custom_delimiter.xlsx', 'TestSheet1')
     ])
     ->output();
 
-$fp = fopen('./tests/file.csv', 'w');
+$fp = fopen('./tests/xlsx_to_csv_custom_delimiter.csv', 'w');
 
 $csvResult = $excel->openFile('xlsx_to_csv_custom_delimiter.xlsx')
     ->openSheet()
@@ -23,7 +23,7 @@ $csvResult = $excel->openFile('xlsx_to_csv_custom_delimiter.xlsx')
 
 var_dump($csvResult);
 
-if (($csvHandler = fopen('./tests/file.csv', 'r')) === FALSE) {
+if (($csvHandler = fopen('./tests/xlsx_to_csv_custom_delimiter.csv', 'r')) === FALSE) {
     die('csv file open failure');
 }
 
@@ -34,7 +34,7 @@ while (($data = fgetcsv($csvHandler, 1000, ';', '"', '\\')) !== FALSE) {
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/xlsx_to_csv_custom_delimiter.xlsx');
-@unlink(__DIR__ . '/file.csv');
+@unlink(__DIR__ . '/xlsx_to_csv_custom_delimiter.csv');
 ?>
 --EXPECT--
 bool(true)

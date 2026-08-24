@@ -6,13 +6,13 @@ Check for vtiful presence
 <?php
 $config = ['path' => './tests'];
 $excel = new \Vtiful\Kernel\Excel($config);
-$handle = $excel->fileName('tutorial01.xlsx')
+$handle = $excel->fileName('006.xlsx')
     ->getHandle();
 var_dump($handle);
 ?>
 --CLEAN--
 <?php
-@unlink(__DIR__ . "/tutorial01.xlsx");
+@unlink(__DIR__ . "/006.xlsx");
 ?>
 --EXPECTF--
 resource(%d) of type (xlsx)

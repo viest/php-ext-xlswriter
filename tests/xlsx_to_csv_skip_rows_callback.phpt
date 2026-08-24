@@ -17,7 +17,7 @@ $filePath = $excel->fileName('xlsx_to_csv_skip_rows_callback.xlsx', 'TestSheet1'
     ])
     ->output();
 
-$fp = fopen('./tests/file.csv', 'w');
+$fp = fopen('./tests/xlsx_to_csv_skip_rows_callback.csv', 'w');
 
 $csvResult = $excel->openFile('xlsx_to_csv_skip_rows_callback.xlsx')
     ->openSheet()
@@ -29,12 +29,12 @@ $csvResult = $excel->openFile('xlsx_to_csv_skip_rows_callback.xlsx')
 fclose($fp);
 
 var_dump($csvResult);
-var_dump(file_get_contents('./tests/file.csv'));
+var_dump(file_get_contents('./tests/xlsx_to_csv_skip_rows_callback.csv'));
 ?>
 --CLEAN--
 <?php
 @unlink(__DIR__ . '/xlsx_to_csv_skip_rows_callback.xlsx');
-@unlink(__DIR__ . '/file.csv');
+@unlink(__DIR__ . '/xlsx_to_csv_skip_rows_callback.csv');
 ?>
 --EXPECT--
 bool(true)
